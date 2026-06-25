@@ -44,9 +44,9 @@ def _get_parent_if_constrain_enabled(parent: QWidget | None = None) -> QWidget |
         parent is None
         and hasattr(app_globals, "MAIN_WINDOW")
         and app_globals.MAIN_WINDOW
-        and hasattr(app_globals, "SETTINGS_CONTROLLER")
-        and app_globals.SETTINGS_CONTROLLER
-        and app_globals.SETTINGS_CONTROLLER.settings.constrain_dialogues_to_main_window_monitor
+        and hasattr(app_globals, "SETTINGS")
+        and app_globals.SETTINGS
+        and app_globals.SETTINGS.constrain_dialogues_to_main_window_monitor
     ):
         return app_globals.MAIN_WINDOW
     return parent
@@ -266,9 +266,7 @@ def show_fatal_error(
     :param details: text to pass to setDetailedText
     :param parent: The parent widget
     """
-    logger.info(
-        f"Showing fatal error box with input: [{title}], [{text}], [{information}], [{details}]"
-    )
+    logger.error(f"Fatal error: [{title}] [{text}] [{information}] [{details}]")
 
     parent = _get_parent_if_constrain_enabled(parent)
 
@@ -297,16 +295,16 @@ def show_internet_connection_error(
         title="No Internet Connection",
         text="RimSort requires an active internet connection to perform this operation.",
         information=(
-            f"{failed_urls_str}\n\n"
-            "If you are connected but still see this message, your firewall or security software may be blocking RimSort. \n"
-            "To resolve this issue: \n\n"
-            "Add RimSort to your firewall's allowed applications. \n"
+            f"{failed_urls_str}<br><br>"
+            "If you are connected but still see this message, your firewall or security software may be blocking RimSort. <br>"
+            "To resolve this issue: <br><br>"
+            "Add RimSort to your firewall's allowed applications. <br>"
             "You may need to add RimSort to your firewall's allowed list."
         ),
         details=(
-            "On Windows: Open Windows Security > Firewall & network protection > Allow an app through firewall. \n"
-            "Find RimSort or add it manually if needed. \n"
-            "On other systems, check your firewall or security software settings. \n"
+            "On Windows: Open Windows Security > Firewall & network protection > Allow an app through firewall. <br>"
+            "Find RimSort or add it manually if needed. <br>"
+            "On other systems, check your firewall or security software settings. <br>"
             "If you need more help, Please reach out to us on Github Issues page or Discord server."
         ),
         parent=parent,
@@ -605,10 +603,12 @@ class FatalErrorDialog(_BaseDialogue):
 
         txt = QLabel(self.text)
         txt.setWordWrap(True)
-        r_layout.addWidget(QLabel(self.text))
+        txt.setTextFormat(Qt.TextFormat.RichText)
+        r_layout.addWidget(txt)
 
         info = QLabel(self.information)
         info.setWordWrap(True)
+        info.setTextFormat(Qt.TextFormat.RichText)
         r_layout.addWidget(info)
 
         r_layout.addLayout(btn_layout)

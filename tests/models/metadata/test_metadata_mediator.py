@@ -25,12 +25,7 @@ def test_initial_state(mediator: MetadataMediator) -> None:
     assert mediator.steam_db is None
     assert mediator.game_version == "Unknown"
 
-    try:
-        assert mediator.mods_metadata is None
-    except ValueError:
-        pass
-    else:
-        assert False
+    assert mediator.mods_metadata == {}
 
 
 def test_refresh_metadata(mediator: MetadataMediator) -> None:
@@ -128,8 +123,23 @@ def test_mediator_loads_no_version_warning(tmp_path: Path) -> None:
 
 
 def test_mediator_loads_use_this_instead(tmp_path: Path) -> None:
-    """Mediator loads Use This Instead from JSON file."""
-    uti_data = {"old.mod.a": {"replacement": "new.mod.b"}}
+    """Mediator loads Use This Instead from JSON file, indexed by oldWorkshopId."""
+    uti_data = {
+        "version": "2026-01-01T00:00:00Z",
+        "rules": [
+            {
+                "oldWorkshopId": "111111",
+                "oldName": "Old Mod",
+                "oldPackageId": "old.mod.a",
+                "newWorkshopId": "222222",
+                "newName": "New Mod",
+                "newPackageId": "new.mod.b",
+                "newAuthor": "Author",
+                "oldVersions": ["1.4"],
+                "newVersions": ["1.5"],
+            }
+        ],
+    }
     uti_path = tmp_path / "use_this_instead.json"
     uti_path.write_text(json.dumps(uti_data))
 
@@ -144,4 +154,7 @@ def test_mediator_loads_use_this_instead(tmp_path: Path) -> None:
     )
     mediator._load_use_this_instead()
     assert mediator.use_this_instead is not None
-    assert "old.mod.a" in mediator.use_this_instead
+    assert "111111" in mediator.use_this_instead
+    entry = mediator.use_this_instead["111111"]
+    assert entry["newName"] == "New Mod"
+    assert entry["newPackageId"] == "new.mod.b"

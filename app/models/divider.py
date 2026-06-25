@@ -22,6 +22,11 @@ class DividerData:
         self.name = name
         self.collapsed = collapsed
 
+    @property
+    def path(self) -> str:
+        """Alias for uuid, enabling uniform .path access on both mods and dividers."""
+        return self.uuid
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "uuid": self.uuid,

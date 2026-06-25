@@ -189,11 +189,19 @@ def _write_csv_metadata(panel: BaseModsPanel, writer: Any) -> None:
 
     # Add SteamCMD ACF path if available (AcfLogReader has this)
     acf_path = None
-    if hasattr(panel, "metadata_manager") and hasattr(
-        panel.metadata_manager, "steamcmd_wrapper"
+    if hasattr(panel, "metadata_controller") and hasattr(
+        panel.metadata_controller, "steamcmd_wrapper"
     ):
         acf_path = getattr(
-            panel.metadata_manager.steamcmd_wrapper,
+            panel.metadata_controller.steamcmd_wrapper,
+            "steamcmd_appworkshop_acf_path",
+            None,
+        )
+    elif hasattr(panel, "metadata_controller") and hasattr(
+        panel.metadata_controller, "steamcmd_wrapper"
+    ):
+        acf_path = getattr(
+            panel.metadata_controller.steamcmd_wrapper,
             "steamcmd_appworkshop_acf_path",
             None,
         )

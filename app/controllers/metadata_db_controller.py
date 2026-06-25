@@ -38,10 +38,12 @@ class AuxMetadataController(MetadataDbController):
         self._migrate_schema()
 
     def _migrate_schema(self) -> None:
-        """Add columns that may be missing from older database versions."""
+        """Add columns that may be missing from older database versions
+        and migrate column types that have changed."""
         with self.engine.connect() as conn:
             rows = conn.execute(text("PRAGMA table_info(auxiliary_metadata)"))
-            existing_columns = {row[1] for row in rows}
+            columns = {row[1]: row for row in rows}
+            existing_columns = set(columns.keys())
             for col in ("external_time_created", "external_time_updated"):
                 if col not in existing_columns:
                     conn.execute(
@@ -50,6 +52,53 @@ class AuxMetadataController(MetadataDbController):
                         )
                     )
                     logger.info(f"Migrated auxiliary_metadata: added column '{col}'")
+
+            # Migrate published_file_id from NOT NULL INTEGER to nullable TEXT.
+            # Can't UPDATE to NULL on the old table (NOT NULL constraint),
+            # so we rebuild via rename-create-copy-drop with conversion in the COPY.
+            if "published_file_id" in columns:
+                col_info = columns["published_file_id"]
+                col_notnull = col_info[3]  # notnull flag
+                col_type = col_info[2]  # type string
+                if col_notnull or col_type.upper() == "INTEGER":
+                    old_col_names = list(columns.keys())
+                    conn.execute(
+                        text(
+                            "ALTER TABLE auxiliary_metadata "
+                            "RENAME TO _auxiliary_metadata_old"
+                        )
+                    )
+                    conn.commit()
+                    Base.metadata.create_all(self.engine)
+                    new_rows = conn.execute(
+                        text("PRAGMA table_info(auxiliary_metadata)")
+                    )
+                    new_col_set = {row[1] for row in new_rows}
+                    shared = [c for c in old_col_names if c in new_col_set]
+                    select_exprs = []
+                    for col in shared:
+                        if col == "published_file_id":
+                            select_exprs.append(
+                                "CASE WHEN published_file_id IN (-1, '-1') "
+                                "THEN NULL "
+                                "ELSE CAST(published_file_id AS TEXT) END"
+                            )
+                        else:
+                            select_exprs.append(col)
+                    col_list = ", ".join(shared)
+                    select_list = ", ".join(select_exprs)
+                    conn.execute(
+                        text(
+                            f"INSERT INTO auxiliary_metadata ({col_list}) "
+                            f"SELECT {select_list} FROM _auxiliary_metadata_old"
+                        )
+                    )
+                    conn.execute(text("DROP TABLE _auxiliary_metadata_old"))
+                    logger.info(
+                        "Migrated auxiliary_metadata: "
+                        "published_file_id NOT NULL INTEGER -> nullable TEXT"
+                    )
+
             conn.commit()
 
     @classmethod

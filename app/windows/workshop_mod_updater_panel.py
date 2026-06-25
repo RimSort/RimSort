@@ -2,7 +2,8 @@ from typing import Any
 
 from loguru import logger
 
-from app.utils.metadata import MetadataManager
+from app.controllers.metadata_controller import MetadataController
+from app.models.operation_mode import OperationMode
 from app.utils.mod_info import ModInfo
 from app.utils.mod_utils import filter_eligible_mods_for_update
 from app.windows.base_mods_panel import (
@@ -10,7 +11,6 @@ from app.windows.base_mods_panel import (
     ButtonConfig,
     ButtonType,
     ColumnIndex,
-    OperationMode,
 )
 
 
@@ -23,7 +23,10 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
     keep their mods up-to-date with the latest versions from the Workshop.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        metadata_controller: MetadataController,
+    ) -> None:
         """
         Initialize the WorkshopModUpdaterPanel.
 
@@ -31,7 +34,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         for updating via SteamCMD or Steam client (if enabled).
         """
         logger.debug("Initializing WorkshopModUpdaterPanel")
-        self.metadata_manager = MetadataManager.instance()
+        self._metadata_controller = metadata_controller
         self.eligible_metadata: list[tuple[str, dict[str, Any]]] = []
 
         super().__init__(
@@ -42,6 +45,7 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                 "\nThe following table displays Workshop mods available for update from Steam."
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=self._metadata_controller,
         )
 
         button_configs = [
@@ -85,17 +89,14 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
         Filter mods that are eligible for update.
 
         Returns:
-            List of (uuid, metadata) tuples for mods eligible for update.
+            List of (path, compat_metadata) tuples for mods eligible for update.
         """
         eligible_mods = filter_eligible_mods_for_update(
-            self.metadata_manager.internal_local_metadata
+            self.metadata_controller.mods_metadata
         )
-        # Return tuples of (uuid, metadata) by looking up UUIDs from internal_local_metadata
-        return [
-            (uuid, metadata)
-            for uuid, metadata in self.metadata_manager.internal_local_metadata.items()
-            if metadata in eligible_mods
-        ]
+        # eligible_mods is already a list of compat-dict metadata items with "path" key
+        # Return tuples of (path, metadata) for each eligible mod
+        return [(metadata.get("path", ""), metadata) for metadata in eligible_mods]
 
     def _populate_from_metadata(self) -> None:
         """

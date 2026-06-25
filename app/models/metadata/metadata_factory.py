@@ -284,15 +284,23 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     elif mod.package_id in get_dlc_packageid_appid_map():
         mod.steam_app_id = int(get_dlc_packageid_appid_map()[mod.package_id])
 
+    # Official DLC About.xml files omit <name> and <description>
+    dlc_appid = get_dlc_packageid_appid_map().get(mod.package_id)
+    dlc_meta = RIMWORLD_DLC_METADATA.get(dlc_appid, {}) if dlc_appid else {}
+
     name = value_extractor(mod_data.get("name", False))
     if isinstance(name, str):
         mod.name = name
+    elif dlc_meta:
+        mod.name = dlc_meta["name"]
     else:
         mod.name = mod.package_id
 
     description = value_extractor(mod_data.get("description", False))
     if isinstance(description, str):
         mod.description = description
+    elif dlc_meta:
+        mod.description = dlc_meta["description"]
 
     author = value_extractor(mod_data.get("author", False))
     authors = value_extractor(mod_data.get("authors", False))
@@ -489,6 +497,8 @@ def create_base_rules(
 
     for dependency in mod_dependencies:
         if isinstance(dependency, dict):
+            if not dependency or dependency.get("@isNull") == "True":
+                continue
             deps: dict[str, Any] = {}
             for key, value in dependency.items():
                 if isinstance(value, str):
@@ -512,6 +522,10 @@ def create_base_rules(
                     # Store as a normalized list for create_mod_dependency
                     if alt_list:
                         deps["alternativePackageIds"] = alt_list
+                elif isinstance(value, dict) and (
+                    not value or value.get("@isNull") == "True"
+                ):
+                    continue
                 else:
                     logger.warning(
                         f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid."
@@ -525,7 +539,7 @@ def create_base_rules(
                 )
             else:
                 rules.dependencies[dep.package_id] = dep
-        else:
+        elif dependency:
             logger.warning(
                 f"Skipping invalid dependency: {dependency}. This mod may be invalid."
             )
@@ -706,6 +720,22 @@ def create_rules_from_external_rules(external_rule: ExternalRule) -> Rules:
     return rules
 
 
+def _find_about_xml(mod_path: Path) -> Path | None:
+    """Case-insensitive lookup for About/About.xml inside a mod directory."""
+    for entry in mod_path.iterdir():
+        if entry.name.lower() == "about" and entry.is_dir():
+            for child in entry.iterdir():
+                if child.name.lower() == "about.xml" and child.is_file():
+                    if entry.name != "About" or child.name != "About.xml":
+                        logger.warning(
+                            f"Mod at {mod_path} uses non-standard About.xml path: "
+                            f"{child.relative_to(mod_path)} (expected About/About.xml)"
+                        )
+                    return child
+            break
+    return None
+
+
 def create_listed_mod_from_path(
     path: Path,
     target_version: str,
@@ -713,6 +743,7 @@ def create_listed_mod_from_path(
     rimworld_path: Path,
     workshop_path: Path | None,
     prefer_versioned: bool = True,
+    case_insensitive_about_xml: bool = True,
 ) -> tuple[bool, ListedMod]:
     """
     Create a ListedMod object from the given path.
@@ -724,14 +755,20 @@ def create_listed_mod_from_path(
     :param workshop_path: The path to the workshop folder.
     :param prefer_versioned: When True, ByVersion keys override base values
         (non-additive). When False, ByVersion keys are ignored.
+    :param case_insensitive_about_xml: When True, use case-insensitive About.xml
+        lookup. When False, require exact "About/About.xml" path.
     :return: A tuple containing a boolean indicating if the mod is valid and the mod object.
     """
 
     # Check if path is a directory
     if path.is_dir():
-        # Check if About.xml exists
-        about_xml_path = path / Path("About/About.xml")
-        if about_xml_path.exists():
+        about_xml_path: Path | None
+        if case_insensitive_about_xml:
+            about_xml_path = _find_about_xml(path)
+        else:
+            candidate = path / "About" / "About.xml"
+            about_xml_path = candidate if candidate.exists() else None
+        if about_xml_path is not None:
             success, about_mod = _create_about_mod_from_xml(
                 path, about_xml_path, target_version, prefer_versioned
             )
@@ -789,13 +826,19 @@ def read_rules_db(
         logger.info(
             "DB exists!",
         )
-        with open(path, encoding="utf-8") as f:
-            json_string = f.read()
-            logger.info("Reading info from rules DB")
-            rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
-            rule_data.rules = {k.lower(): v for k, v in rule_data.rules.items()}
-            logger.info(f"Loaded {len(rule_data.rules)} additional rules")
-            return rule_data
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from rules DB")
+                rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
+                rule_data.rules = {k.lower(): v for k, v in rule_data.rules.items()}
+                logger.info(f"Loaded {len(rule_data.rules)} additional rules")
+                return rule_data
+        except msgspec.DecodeError as e:
+            logger.error(
+                f"Rules DB at {path} could not be decoded: {e}. Try re-downloading the database."
+            )
+            return None
     else:  # Assume db_data_missing
         logger.warning("Rules DB not found at specified path.")
         return None
@@ -836,15 +879,21 @@ def read_steam_db(path: Path) -> SteamDbSchema | None:
         logger.info(
             "DB exists!",
         )
-        with open(path, encoding="utf-8") as f:
-            json_string = f.read()
-            logger.info("Reading info from SteamDB")
-            steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
-            steam_db.database = {k.lower(): v for k, v in steam_db.database.items()}
-            logger.info(
-                f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from SteamDB")
+                steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
+                steam_db.database = {k.lower(): v for k, v in steam_db.database.items()}
+                logger.info(
+                    f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
+                )
+                return steam_db
+        except msgspec.DecodeError as e:
+            logger.error(
+                f"SteamDB at {path} could not be decoded: {e}. Try re-downloading the database."
             )
-            return steam_db
+            return None
     else:  # Assume db_data_missing
         logger.warning("SteamDB not found at specified path.")
         return None

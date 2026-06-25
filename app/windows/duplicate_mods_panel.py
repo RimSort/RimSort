@@ -1,8 +1,7 @@
-from typing import Any
-
 from loguru import logger
 
-from app.controllers.settings_controller import SettingsController
+from app.controllers.metadata_controller import MetadataController
+from app.utils.mod_info import ModInfo
 from app.windows.base_mods_panel import (
     BaseModsPanel,
 )
@@ -19,25 +18,22 @@ class DuplicateModsPanel(BaseModsPanel):
     Attributes:
         duplicate_mods (dict[str, list[str]]): Dictionary mapping package IDs to lists of UUIDs
             of duplicate mods.
-        settings_controller (SettingsController): Controller for application settings.
-        metadata_manager: MetadataManager instance from base class for accessing mod data.
+        metadata_controller: MetadataController instance from base class for accessing mod data.
     """
 
     def __init__(
         self,
         duplicate_mods: dict[str, list[str]],
-        settings_controller: SettingsController,
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the DuplicateModsPanel with duplicate mods data.
 
         Args:
             duplicate_mods: Dictionary mapping package IDs to lists of UUIDs of duplicate mods.
-            settings_controller: Controller for managing application settings.
         """
         logger.debug("Initializing DuplicateModsPanel")
         self.duplicate_mods = duplicate_mods
-        self.settings_controller = settings_controller
 
         super().__init__(
             object_name="duplicateModsPanel",
@@ -48,6 +44,7 @@ class DuplicateModsPanel(BaseModsPanel):
                 "Select which versions to keep and choose an action."
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=metadata_controller,
         )
 
         button_configs = self._get_base_button_configs()
@@ -69,22 +66,20 @@ class DuplicateModsPanel(BaseModsPanel):
         Populate the table with duplicate mod data.
         """
         try:
-            # Convert duplicate_mods dict to the format expected by _populate_mods
-            groups: dict[str, list[tuple[str, dict[str, Any]]]] = {}
-            for packageid, uuids in self.duplicate_mods.items():
-                mod_list = []
-                for uuid in uuids:
-                    metadata = self.metadata_manager.internal_local_metadata.get(uuid)
-                    if metadata:
-                        mod_list.append((uuid, metadata))
+            self._clear_table_model()
+
+            for packageid, paths in self.duplicate_mods.items():
+                # Add group header
+                self._add_group_header_row(packageid)
+
+                for path in paths:
+                    mod = self.metadata_controller.get_mod(path)
+                    if mod is not None:
+                        mod_info = ModInfo.from_listed_mod(mod)
+                        self._add_mod_row(mod_info)
                     else:
                         logger.warning(
-                            f"Metadata not found for UUID: {uuid} in package group {packageid}"
+                            f"Metadata not found for path: {path} in package group {packageid}"
                         )
-                if mod_list:  # Only add groups that have mods
-                    groups[packageid] = mod_list
-
-            # Use the refactored base class method to populate grouped mods
-            self._populate_mods(groups, add_group_headers=True)
         except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")

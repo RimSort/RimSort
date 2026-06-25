@@ -81,14 +81,16 @@ def assert_diamond_ordering(result: list[str]) -> None:
 
 
 @pytest.fixture
-def metadata_manager_mock() -> Generator[MagicMock, None, None]:
-    """Mock MetadataManager.instance() for mod_sorting tests (PR 3 scope).
+def metadata_controller_mock() -> Generator[MagicMock, None, None]:
+    """Mock MetadataController.instance() for mod_sorting tests (PR 3 scope).
 
-    Sets up an empty internal_local_metadata dict. Tests should populate
-    it via the returned mock: mock.internal_local_metadata = {...}
+    Sets up an empty mods_metadata dict. Tests should populate
+    it via the returned mock: mock.mods_metadata = {...}
     """
-    with patch("app.utils.metadata.MetadataManager.instance") as mock_instance:
+    with patch(
+        "app.controllers.metadata_controller.MetadataController.instance"
+    ) as mock_instance:
         mock = MagicMock()
-        mock.internal_local_metadata = {}
+        mock.mods_metadata = {}
         mock_instance.return_value = mock
         yield mock

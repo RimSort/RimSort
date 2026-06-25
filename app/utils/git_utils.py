@@ -573,50 +573,124 @@ def git_discover(
         return None
 
 
+@dataclass
+class ParsedGitUrl:
+    """Parsed components of a git URL.
+
+    :param clone_url: The URL suitable for git clone (browse suffixes stripped).
+    :param branch: The branch name extracted from the URL, or None.
+    :param repo_name: The repository folder name (without .git suffix).
+    """
+
+    clone_url: str
+    branch: Optional[str]
+    repo_name: str
+
+
+_BROWSE_PATH_SEGMENTS = {"tree", "blob", "commit", "releases", "issues", "pull"}
+
+
+def parse_git_url(repo_url: str) -> Optional[ParsedGitUrl]:
+    """Parse a git URL, handling GitHub/GitLab browse URLs.
+
+    Extracts the clone URL, optional branch, and repository name from URLs
+    that may include browse-path suffixes like ``/tree/<branch>``.
+
+    :param repo_url: A git remote URL or hosting-site browse URL.
+    :return: Parsed components, or None if the URL is invalid.
+
+    Examples:
+        >>> parse_git_url("https://github.com/user/repo.git")
+        ParsedGitUrl(clone_url='https://github.com/user/repo.git', branch=None, repo_name='repo')
+        >>> parse_git_url("https://github.com/user/repo/tree/dev-1.6")
+        ParsedGitUrl(clone_url='https://github.com/user/repo', branch='dev-1.6', repo_name='repo')
+        >>> parse_git_url("git@github.com:user/repo.git")
+        ParsedGitUrl(clone_url='git@github.com:user/repo.git', branch=None, repo_name='repo')
+        >>> parse_git_url("invalid-url") is None
+        True
+    """
+    if not repo_url or not isinstance(repo_url, str):
+        return None
+
+    try:
+        if repo_url.startswith(("http://", "https://")):
+            return _parse_https_git_url(repo_url)
+        elif repo_url.startswith("git@"):
+            return _parse_ssh_git_url(repo_url)
+        else:
+            return None
+    except Exception as e:
+        logger.warning(f"Failed to parse git URL '{repo_url}': {e}")
+        return None
+
+
+def _parse_https_git_url(repo_url: str) -> Optional[ParsedGitUrl]:
+    """Parse an HTTPS git URL, stripping browse-path suffixes."""
+    parsed = urlparse(repo_url)
+    segments = [s for s in parsed.path.strip("/").split("/") if s]
+
+    # Need at least owner/repo
+    if len(segments) < 2:
+        return None
+
+    owner = segments[0]
+    repo_with_ext = segments[1]
+    repo_name = repo_with_ext.removesuffix(".git")
+
+    branch: Optional[str] = None
+    if len(segments) >= 3 and segments[2] in _BROWSE_PATH_SEGMENTS:
+        if segments[2] in ("tree", "blob") and len(segments) >= 4:
+            branch = "/".join(segments[3:])
+
+    clone_path = f"/{owner}/{repo_with_ext}"
+    clone_url = parsed._replace(path=clone_path, query="", fragment="").geturl()
+
+    return ParsedGitUrl(clone_url=clone_url, branch=branch, repo_name=repo_name)
+
+
+def _parse_ssh_git_url(repo_url: str) -> Optional[ParsedGitUrl]:
+    """Parse an SSH git URL (git@host:user/repo.git)."""
+    if ":" not in repo_url:
+        return None
+
+    path = repo_url.split(":")[-1]
+    if not path:
+        return None
+
+    repo_name = Path(path).name.removesuffix(".git")
+    if not repo_name:
+        return None
+
+    return ParsedGitUrl(clone_url=repo_url, branch=None, repo_name=repo_name)
+
+
 def git_get_repo_name(repo_url: str) -> str:
     """Gets the repository folder name from a git URL.
 
-    Args:
-        repo_url: The URL of the repository.
+    Handles GitHub/GitLab browse URLs that include ``/tree/<branch>``
+    path segments, extracting the actual repository name rather than the
+    branch name.
 
-    Returns:
-        The repository folder name. If the URL is not valid, returns an empty string.
+    :param repo_url: The URL of the repository.
+    :return: The repository folder name, or an empty string if invalid.
 
     Examples:
         >>> git_get_repo_name("https://github.com/user/repo.git")
         'repo'
         >>> git_get_repo_name("git@github.com:user/repo.git")
         'repo'
+        >>> git_get_repo_name("https://github.com/user/repo/tree/dev-1.6")
+        'repo'
         >>> git_get_repo_name("invalid-url")
         ''
     """
-    if not repo_url or not isinstance(repo_url, str):
+    result = parse_git_url(repo_url)
+    if result is None:
         logger.warning(f"Invalid repository URL: {repo_url}")
         return ""
 
-    try:
-        # Handle both HTTPS and SSH URLs
-        if repo_url.startswith(("http://", "https://")):
-            parsed = urlparse(repo_url)
-            path = parsed.path.strip("/")
-        elif repo_url.startswith("git@"):
-            # SSH URL format: git@host:user/repo.git
-            path = repo_url.split(":")[-1] if ":" in repo_url else ""
-        else:
-            # Assume it's a path-like format
-            path = repo_url
-
-        if not path:
-            return ""
-
-        # Extract repository name
-        repo_name = Path(path).stem  # This removes .git extension automatically
-        logger.debug(f"Extracted repository name '{repo_name}' from URL: {repo_url}")
-        return repo_name
-
-    except Exception as e:
-        logger.warning(f"Failed to extract repository name from URL '{repo_url}': {e}")
-        return ""
+    logger.debug(f"Extracted repository name '{result.repo_name}' from URL: {repo_url}")
+    return result.repo_name
 
 
 def git_clone(
@@ -1000,8 +1074,8 @@ def git_pull(
                     logger.info(
                         "Aborted merge due to conflicts and reset repository state."
                     )
-                except Exception as e:
-                    logger.error(f"Failed to abort merge and reset state: {e}")
+                except Exception:
+                    logger.exception("Failed to abort merge and reset state")
 
                 return GitPullResult.CONFLICT
             else:
@@ -1770,6 +1844,8 @@ def get_repository_latest_commit(
 
 
 __all__ = [
+    "ParsedGitUrl",
+    "parse_git_url",
     "git_check_updates",
     "git_pull",
     "git_push",

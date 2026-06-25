@@ -7,10 +7,11 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from app.controllers.settings_controller import SettingsController
+from app.controllers.metadata_controller import MetadataController
 from app.models.divider import is_divider_uuid
+from app.models.metadata.metadata_structure import AboutXmlMod, ModType
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
-from app.utils.metadata import MetadataManager
 from app.utils.rentry.wrapper import RentryUpload
 from app.utils.schema import generate_rimworld_mods_list
 from app.utils.steam.webapi.wrapper import (
@@ -40,11 +41,11 @@ class ImportExportService:
 
     def __init__(
         self,
-        metadata_manager: MetadataManager,
-        settings_controller: SettingsController,
+        metadata_controller: MetadataController,
+        settings: Settings,
     ) -> None:
-        self.metadata_manager = metadata_manager
-        self.settings_controller = settings_controller
+        self.metadata_controller = metadata_controller
+        self.settings = settings
 
     def collect_active_mods(
         self,
@@ -64,11 +65,11 @@ class ImportExportService:
             if is_divider_uuid(uuid):
                 continue
 
-            mod = self.metadata_manager.internal_local_metadata.get(uuid)
-            if mod is None:
+            mod = self.metadata_controller.get_mod(uuid)
+            if mod is None or not isinstance(mod, AboutXmlMod):
                 continue
 
-            package_id = mod["packageid"]
+            package_id = str(mod.package_id)
             if package_id in seen:
                 logger.critical(
                     f"Tried to export more than 1 identical package ids to the same mod list. "
@@ -79,15 +80,15 @@ class ImportExportService:
             seen.add(package_id)
 
             if duplicate_mods and package_id in duplicate_mods:
-                if mod.get("data_source") == "workshop":
+                if mod.mod_type == ModType.STEAM_WORKSHOP:
                     data.active_mods.append(package_id + "_steam")
                     continue
 
             data.active_mods.append(package_id)
             data.packageid_to_uuid[package_id] = uuid
 
-            if mod.get("steamcmd") or mod.get("data_source") == "workshop":
-                publishedfileid = mod.get("publishedfileid")
+            if mod.mod_type in (ModType.STEAM_CMD, ModType.STEAM_WORKSHOP):
+                publishedfileid = mod.published_file_id
                 if publishedfileid:
                     data.steam_packageid_to_pfid[package_id] = publishedfileid
                     data.pfids.append(publishedfileid)
@@ -104,8 +105,8 @@ class ImportExportService:
         if not pfids:
             return pfid_to_preview_url
 
-        webapi_response = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
-        if webapi_response is not None:
+        webapi_response, _, _ = ISteamRemoteStorage_GetPublishedFileDetails(pfids)
+        if webapi_response:
             for metadata_entry in webapi_response:
                 pfid = metadata_entry["publishedfileid"]
                 if metadata_entry["result"] != 1:
@@ -124,7 +125,7 @@ class ImportExportService:
         :raises Exception: on write failure
         """
         mods_config_data = generate_rimworld_mods_list(
-            self.metadata_manager.game_version, active_mods
+            self.metadata_controller.game_version, active_mods
         )
         target = file_path if file_path.endswith(".xml") else file_path + ".xml"
         json_to_xml_write(mods_config_data, target)
@@ -143,16 +144,22 @@ class ImportExportService:
         report = (
             f"Created with RimSort {AppInfo().app_version}"
             f"\nRimWorld game version this list was created for: "
-            f"{self.metadata_manager.game_version}"
+            f"{self.metadata_controller.game_version}"
             f"\nTotal # of mods: {len(active_mods)}\n"
         )
         for package_id in active_mods:
             uuid = packageid_to_uuid.get(package_id)
             if uuid is None:
                 continue
-            mod = self.metadata_manager.internal_local_metadata.get(uuid, {})
-            name = mod.get("name", "No name specified")
-            url = mod.get("url") or mod.get("steam_url") or "No url specified"
+            mod = self.metadata_controller.get_mod(uuid)
+            if mod is None:
+                continue
+            name = mod.name or "No name specified"
+            url: str = "No url specified"
+            if isinstance(mod, AboutXmlMod) and mod.url:
+                url = mod.url
+            elif mod.published_file_id:
+                url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={mod.published_file_id}"
             report += f"\n{name} [{package_id}][{url}]"
         return report
 
@@ -178,7 +185,7 @@ class ImportExportService:
             "# RimWorld mod list       "
             "![](https://github.com/RimSort/RimSort/blob/main/docs/rentry_preview.png?raw=true)"
             f"\nCreated with RimSort {AppInfo().app_version}"
-            f"\nMod list was created for game version: `{self.metadata_manager.game_version}`"
+            f"\nMod list was created for game version: `{self.metadata_controller.game_version}`"
             "\n!!! info Local mods are marked as yellow labels with packageid in brackets."
             f"\n\n\n\n!!! note Mod list length: `{len(mods)}`{truncated_note}\n"
         )
@@ -187,10 +194,21 @@ class ImportExportService:
             uuid = packageid_to_uuid.get(package_id)
             if uuid is None:
                 continue
-            mod = self.metadata_manager.internal_local_metadata.get(uuid, {})
-            name = mod.get("name", "No name specified")
+            mod = self.metadata_controller.get_mod(uuid)
+            if mod is None:
+                continue
+            name = mod.name or "No name specified"
+
+            # Derive steam URL from published_file_id if available
+            steam_url: str | None = None
+            if mod.published_file_id:
+                steam_url = f"https://steamcommunity.com/sharedfiles/filedetails/?id={mod.published_file_id}"
+
+            # Determine the mod's direct URL (About.xml url field)
+            mod_url = mod.url if isinstance(mod, AboutXmlMod) else None
+
             is_steam_mod = (
-                mod.get("steamcmd") or mod.get("data_source") == "workshop"
+                mod.mod_type in (ModType.STEAM_CMD, ModType.STEAM_WORKSHOP)
             ) and steam_packageid_to_pfid.get(package_id)
 
             if is_steam_mod:
@@ -202,7 +220,7 @@ class ImportExportService:
                     )
                 else:
                     preview_url = "https://github.com/RimSort/RimSort/blob/main/docs/rentry_steam_icon.png?raw=true"
-                url = mod.get("steam_url") or mod.get("url")
+                url = steam_url or mod_url
                 if url:
                     report += (
                         f"\n{count}. ![]({preview_url}) "
@@ -213,7 +231,7 @@ class ImportExportService:
                         f"\n{count}. ![]({preview_url}) {name} packageid: {package_id}"
                     )
             else:
-                url = mod.get("url") or mod.get("steam_url")
+                url = mod_url or steam_url
                 if url:
                     report += (
                         f"\n!!! warning {count}. [{name}]({url}) "
@@ -271,14 +289,12 @@ class ImportExportService:
         :return: the path to the saved file
         :raises Exception: on write failure
         """
-        current_instance = self.settings_controller.settings.current_instance
-        config_folder = self.settings_controller.settings.instances[
-            current_instance
-        ].config_folder
+        current_instance = self.settings.current_instance
+        config_folder = self.settings.instances[current_instance].config_folder
         mods_config_path = str(Path(config_folder) / "ModsConfig.xml")
 
         mods_config_data = generate_rimworld_mods_list(
-            self.metadata_manager.game_version, active_mods
+            self.metadata_controller.game_version, active_mods
         )
         json_to_xml_write(mods_config_data, mods_config_path)
         return mods_config_path

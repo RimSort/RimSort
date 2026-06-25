@@ -5,17 +5,20 @@ from typing import Any, Generator, Optional
 
 from loguru import logger
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QCheckBox
+from PySide6.QtWidgets import QCheckBox, QLabel, QPushButton
 
-from app.utils.metadata import MetadataManager
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    ListedMod,
+    ReplacementInfo,
+)
+from app.utils.button_factory import ButtonConfig, ButtonType
 from app.utils.mod_info import ModInfo
-from app.views import dialogue
 from app.windows.base_mods_panel import (
     BaseModsPanel,
-    ButtonConfig,
-    ButtonType,
     ColumnIndex,
-    MenuItem,
+    UIElements,
 )
 
 
@@ -24,27 +27,6 @@ class InstallationStatus(Enum):
 
     INSTALLED = "Installed"
     NOT_INSTALLED = "Not Installed"
-
-
-@dataclass
-class ReplacementInfo:
-    """
-    Represents information about a replacement mod.
-
-    Attributes:
-        name: Name of the replacement mod.
-        author: Author of the replacement mod.
-        packageid: Package ID of the replacement mod.
-        pfid: Published file ID of the replacement mod.
-        supportedversions: Supported versions of the replacement mod.
-    """
-
-    name: str
-    author: str
-    packageid: str
-    pfid: str
-    supportedversions: Any
-    source: str
 
 
 @dataclass
@@ -69,7 +51,11 @@ class UseThisInsteadPanel(BaseModsPanel):
     Groups mods by replacement mod and provides actions for subscription, unsubscription, and deletion.
     """
 
-    def __init__(self, mod_metadata: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        mod_metadata: dict[str, Any],
+        metadata_controller: MetadataController,
+    ) -> None:
         """
         Initialize the UseThisInsteadPanel with mod metadata.
 
@@ -88,42 +74,19 @@ class UseThisInsteadPanel(BaseModsPanel):
                 'according to the "Use This Instead" database, grouped by replacement mod.'
             ),
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=metadata_controller,
         )
 
         steam_client_integration_enabled = self._get_steam_client_integration_enabled()
 
-        button_configs = [
-            ButtonConfig(
-                button_type=ButtonType.SELECT,
-                text=self.tr("Select"),
-                menu_items=[
-                    MenuItem(
-                        text=self.tr("Select all Originals"),
-                        callback=self._select_all_originals,
-                    ),
-                    MenuItem(
-                        text=self.tr("Select all Replacements"),
-                        callback=self._select_all_replacements,
-                    ),
-                ],
-            ),
-        ]
-        button_configs.extend(self._get_base_button_configs())
+        button_configs = list(self._get_base_button_configs())
 
         if steam_client_integration_enabled:
-            button_configs.extend(
-                [
-                    ButtonConfig(
-                        button_type=ButtonType.SUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                        completion_callback=self._on_subscribe_completed,
-                    ),
-                    ButtonConfig(
-                        button_type=ButtonType.UNSUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                        completion_callback=self._on_unsubscribe_completed,
-                    ),
-                ]
+            button_configs.append(
+                ButtonConfig(
+                    button_type=ButtonType.STEAM,
+                    pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
+                ),
             )
 
         button_configs.append(
@@ -137,6 +100,28 @@ class UseThisInsteadPanel(BaseModsPanel):
         # Initialize row index trackers for bulk selection operations
         self._original_rows: set[int] = set()
         self._replacement_rows: set[int] = set()
+
+    def _initialize_ui_elements(self) -> None:
+        """Initialize UI elements with custom select button."""
+        self.ui_elements = UIElements(
+            title=QLabel(),
+            details_label=QLabel(),
+            editor_select_all_button=self._create_custom_select_button(),
+            editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
+        )
+        self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
+
+    def _create_custom_select_button(self) -> QPushButton:
+        """Create the select button with Originals/Replacements dropdown."""
+        factory = self.get_button_factory()
+        return factory.create_dropdown_button(
+            "Select",
+            "actionButton",
+            [
+                ("Select all Originals", self._select_all_originals),
+                ("Select all Replacements", self._select_all_replacements),
+            ],
+        )
 
     def show_if_has_alternatives(self) -> bool:
         """
@@ -152,31 +137,6 @@ class UseThisInsteadPanel(BaseModsPanel):
             self.showNormal()
             return True
         return False
-
-    def _on_mod_action_completed(self, action: str, count: int) -> None:
-        """Handle successful mod action completion."""
-        dialogue.show_information(
-            self.tr("Use This Instead"),
-            self.tr(f"Successfully {action}d {count} mods"),
-        )
-
-    def _on_subscribe_completed(self) -> None:
-        """Handle subscribe completion."""
-        count = self._get_selected_count()
-        self._on_mod_action_completed("subscribe", count)
-
-    def _on_unsubscribe_completed(self) -> None:
-        """Handle unsubscribe completion."""
-        count = self._get_selected_count()
-        self._on_mod_action_completed("unsubscribe", count)
-
-    def _get_selected_count(self) -> int:
-        """Get the count of selected mods."""
-        count = 0
-        for row in range(self.editor_model.rowCount()):
-            if self._row_is_checked(row):
-                count += 1
-        return count
 
     def _populate_from_metadata(self) -> None:
         """
@@ -255,35 +215,42 @@ class UseThisInsteadPanel(BaseModsPanel):
             originals: List of original mod group items.
 
         Returns:
-            List of (uuid, metadata) tuples.
+            List of (key, metadata) tuples.
         """
-        mod_list = []
+        mod_list: list[tuple[str | None, dict[str, Any]]] = []
         for mod_item in originals:
-            metadata_copy = self._create_original_metadata(mod_item)
-            path = mod_item.metadata.get("path")
-            uuid = self._extract_uuid_from_path(path) if isinstance(path, str) else None
-            mod_list.append((uuid, metadata_copy))
+            mod_info = self._create_original_mod_info(mod_item)
+            key = mod_info.key
+            metadata: dict[str, Any] = {"type": "Original", "path": mod_info.path}
+            mod_list.append((key, metadata))
 
         # Add replacement mod
         mod_replacement = originals[0].replacement if originals else None
         if mod_replacement is not None:
-            uuid, fake_metadata = self._create_replacement_metadata(mod_replacement)
-            mod_list.append((uuid, fake_metadata))
+            key, fake_metadata = self._create_replacement_metadata(mod_replacement)
+            mod_list.append((key, fake_metadata))
         return mod_list
 
-    def _create_original_metadata(self, mod_item: ModGroupItem) -> dict[str, Any]:
+    def _create_original_mod_info(self, mod_item: ModGroupItem) -> ModInfo:
         """
-        Create metadata for an original mod with type.
+        Create ModInfo for an original mod.
 
         Args:
             mod_item: The mod group item.
 
         Returns:
-            Metadata dictionary with type.
+            ModInfo with type set to "Original".
         """
-        metadata_copy = mod_item.metadata.copy()
-        metadata_copy["type"] = "Original"
-        return metadata_copy
+        metadata = mod_item.metadata
+        key = mod_item.mod_id
+        if isinstance(metadata, ListedMod):
+            mod_info = ModInfo.from_listed_mod(metadata, type="Original")
+            mod_info.key = key
+        else:
+            metadata_copy = metadata.copy()
+            metadata_copy["type"] = "Original"
+            mod_info = ModInfo.from_metadata(key, metadata_copy)
+        return mod_info
 
     def _create_replacement_metadata(
         self, mod_replacement: ReplacementInfo
@@ -295,58 +262,65 @@ class UseThisInsteadPanel(BaseModsPanel):
             mod_replacement: The replacement mod information.
 
         Returns:
-            Tuple of (uuid, metadata).
+            Tuple of (key, metadata).
         """
         # Check if the replacement mod already exists locally
-        exists_locally, uuid = self._check_replacement_exists_locally(
+        exists_locally, key = self._check_replacement_exists_locally(
             mod_replacement.pfid
         )
 
         fake_metadata = self._build_replacement_metadata(
-            mod_replacement, exists_locally, uuid
+            mod_replacement, exists_locally, key
         )
-        return uuid, fake_metadata
+        return key, fake_metadata
 
     def _check_replacement_exists_locally(self, pfid: str) -> tuple[bool, str | None]:
         """
-        Check if replacement mod exists locally and get its UUID.
+        Check if replacement mod exists locally and get its path key.
 
         Args:
             pfid: Published file ID.
 
         Returns:
-            Tuple of (exists_locally, uuid).
+            Tuple of (exists_locally, path_key).
         """
-        exists_locally = any(
-            mod.get("publishedfileid") == pfid
-            for mod in self.metadata_manager.internal_local_metadata.values()
-        )
-        uuid = None
-        if exists_locally:
-            for (
-                mod_uuid,
-                mod_metadata,
-            ) in self.metadata_manager.internal_local_metadata.items():
-                if mod_metadata.get("publishedfileid") == pfid:
-                    uuid = mod_uuid
-                    break
-        return exists_locally, uuid
+        for path, mod in self.metadata_controller.mods_metadata.items():
+            if mod.published_file_id == pfid:
+                return True, path
+        return False, None
 
     def _get_local_metadata_for_replacement(
-        self, uuid: str | None
+        self, path: str | None
     ) -> dict[str, Any] | None:
         """
-        Retrieve local metadata for a replacement mod if it exists.
+        Retrieve local metadata for a replacement mod as a compat dict, if it exists.
 
         Args:
-            uuid: UUID of the replacement mod.
+            path: Path key of the replacement mod.
 
         Returns:
-            Local metadata dictionary or None if not found.
+            Local metadata as a compat dictionary or None if not found.
         """
-        if uuid and uuid in self.metadata_manager.internal_local_metadata:
-            return self.metadata_manager.internal_local_metadata[uuid]
-        return None
+        if not path:
+            return None
+        mod = self.metadata_controller.get_mod(path)
+        if mod is None:
+            return None
+        # Build a compat dict for downstream merge
+        compat: dict[str, Any] = {
+            "path": str(mod.mod_path) if mod.mod_path else "",
+            "internal_time_touched": mod.internal_time_touched,
+            "source": str(mod.mod_type.value) if mod.mod_type else "",
+        }
+        if isinstance(mod, AboutXmlMod):
+            compat["supportedversions"] = sorted(mod.supported_versions)
+        else:
+            compat["supportedversions"] = None
+        # Get external_time_updated from aux DB
+        _, aux_entry = self.metadata_controller.get_metadata_with_path(path)
+        if aux_entry is not None:
+            compat["external_time_updated"] = aux_entry.external_time_updated
+        return compat
 
     def _merge_local_and_external_metadata(
         self, external_metadata: dict[str, Any], local_metadata: dict[str, Any] | None
@@ -409,7 +383,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         }
 
     def _build_replacement_metadata(
-        self, mod_replacement: ReplacementInfo, exists_locally: bool, uuid: str | None
+        self, mod_replacement: ReplacementInfo, exists_locally: bool, key: str | None
     ) -> dict[str, Any]:
         """
         Build metadata dictionary for replacement mod.
@@ -417,7 +391,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         Args:
             mod_replacement: Replacement mod info.
             exists_locally: Whether it exists locally.
-            uuid: UUID if exists locally.
+            key: Path key if exists locally.
 
         Returns:
             Metadata dictionary.
@@ -425,7 +399,7 @@ class UseThisInsteadPanel(BaseModsPanel):
         fake_metadata = self._create_base_replacement_metadata(
             mod_replacement, exists_locally
         )
-        local_metadata = self._get_local_metadata_for_replacement(uuid)
+        local_metadata = self._get_local_metadata_for_replacement(key)
         return self._merge_local_and_external_metadata(fake_metadata, local_metadata)
 
     def _filter_and_group_mods(self) -> dict[str, list[ModGroupItem]]:
@@ -476,10 +450,9 @@ class UseThisInsteadPanel(BaseModsPanel):
             Dictionary of mods with their alternatives.
         """
         try:
-            metadata_manager = MetadataManager.instance()
             alternatives: dict[str, Any] = {}
             for mod in self.mod_metadata:
-                alt = metadata_manager.has_alternative_mod(mod)
+                alt = self.metadata_controller.has_alternative_mod(mod)
                 if alt is not None:
                     alternatives[mod] = alt
             return alternatives
@@ -562,26 +535,13 @@ class UseThisInsteadPanel(BaseModsPanel):
             is_original: Whether this is an original mod or a replacement.
         """
         try:
-            # Use modified metadata for originals to include type
             if is_original:
-                metadata = self._create_original_metadata(mod_item)
+                mod_info = self._create_original_mod_info(mod_item)
             else:
                 metadata = mod_item.metadata
+                key = mod_item.mod_id
+                mod_info = self._extract_mod_info_from_metadata(key, metadata)
 
-            # Retrieve UUID for the mod from the directory mapper
-            path = metadata.get("path")
-            uuid = (
-                self.metadata_manager.mod_metadata_dir_mapper.get(path)
-                if isinstance(path, str)
-                else None
-            )
-
-            # Create ModInfo from metadata
-            mod_info = self._extract_mod_info_from_metadata(uuid, metadata)
-
-            mod_info.name = mod_info.name
-
-            # Use base class method to add the mod row
             self._add_mod_row(mod_info)
             if is_original:
                 self._original_rows.add(current_row)
@@ -600,31 +560,18 @@ class UseThisInsteadPanel(BaseModsPanel):
         Returns:
             tuple:
                 - exists_locally (bool): True if exists locally.
-                - uuid (str | None): UUID if exists locally.
-                - local_metadata (dict | None): Local metadata dict or None.
+                - path (str | None): Path key if exists locally.
+                - local_metadata (dict | None): Compat metadata dict or None.
         """
-        exists_locally = False
-        uuid = None
-        local_metadata = None
         try:
-            exists_locally = any(
-                mod.get("publishedfileid") == pfid
-                for mod in self.metadata_manager.internal_local_metadata.values()
-            )
-            if exists_locally:
-                for (
-                    mod_uuid,
-                    mod_metadata,
-                ) in self.metadata_manager.internal_local_metadata.items():
-                    if mod_metadata.get("publishedfileid") == pfid:
-                        uuid = mod_uuid
-                        local_metadata = mod_metadata
-                        break
+            exists_locally, path = self._check_replacement_exists_locally(pfid)
+            local_metadata = self._get_local_metadata_for_replacement(path)
+            return exists_locally, path, local_metadata
         except Exception as e:
             logger.error(
                 f"Error checking local replacement metadata for pfid {pfid}: {e}"
             )
-        return exists_locally, uuid, local_metadata
+        return False, None, None
 
     def _create_replacement_mod_info(self, mod_replacement: Any) -> "ModInfo":
         """
@@ -636,15 +583,14 @@ class UseThisInsteadPanel(BaseModsPanel):
         Returns:
             ModInfo object for the replacement mod.
         """
-        exists_locally, uuid, local_metadata = (
+        exists_locally, key, local_metadata = (
             self._check_and_get_replacement_local_metadata(mod_replacement.pfid)
         )
 
-        if exists_locally and uuid and local_metadata is not None:
-            local_metadata_copy = dict(local_metadata)
-            local_metadata_copy["type"] = "Replacement"
-            local_metadata_copy["installed_status"] = self.tr("Installed")
-            return ModInfo.from_metadata(uuid, local_metadata_copy)
+        if exists_locally and key and local_metadata is not None:
+            metadata = self._create_base_replacement_metadata(mod_replacement, True)
+            metadata = self._merge_local_and_external_metadata(metadata, local_metadata)
+            return ModInfo.from_metadata(key, metadata)
         else:
             metadata = self._create_base_replacement_metadata(mod_replacement, False)
             return ModInfo.from_metadata(None, metadata)

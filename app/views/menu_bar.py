@@ -7,15 +7,13 @@ from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QMenuBar
 
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.system_info import SystemInfo
 
 
 class MenuBar(QObject):
-    def __init__(
-        self, menu_bar: QMenuBar, settings_controller: SettingsController
-    ) -> None:
+    def __init__(self, menu_bar: QMenuBar, settings: Settings) -> None:
         """
         Initialize the MenuBar object.
 
@@ -25,7 +23,7 @@ class MenuBar(QObject):
         super().__init__()
 
         self.menu_bar: QMenuBar = menu_bar
-        self.settings_controller: SettingsController = settings_controller
+        self.settings: Settings = settings
 
         # Declare actions and submenus as class variables
         # to be used by menu_bar_controller
@@ -62,6 +60,7 @@ class MenuBar(QObject):
         self.add_zip_mod_action: QAction
         self.browse_workshop_action: QAction
         self.update_workshop_mods_action: QAction
+        self.github_mods_action: QAction
         self.steam_verify_game_files_action: QAction
         self.backup_instance_action: QAction
         self.restore_instance_action: QAction
@@ -158,7 +157,7 @@ class MenuBar(QObject):
         )
         file_menu.addMenu(self.upload_submenu)
 
-        if self.settings_controller.settings.text_editor_location:
+        if self.settings.text_editor_location:
             file_menu.addSeparator()
 
             self.default_open_logs_submenu = self._create_logfile_submenu(
@@ -223,8 +222,8 @@ class MenuBar(QObject):
             return action
 
         def rimworld_log_path(suffix: str) -> Path | None:
-            config_str = self.settings_controller.settings.instances[
-                self.settings_controller.settings.current_instance
+            config_str = self.settings.instances[
+                self.settings.current_instance
             ].config_folder
             if config_str:
                 return Path(config_str).parent / suffix
@@ -307,6 +306,10 @@ class MenuBar(QObject):
         )
         self.update_workshop_mods_action = self._add_action(
             download_menu, self.tr("Update Workshop Mods")
+        )
+        download_menu.addSeparator()
+        self.github_mods_action = self._add_action(
+            download_menu, self.tr("GitHub Mods")
         )
         download_menu.addSeparator()
         self.steam_verify_game_files_action = self._add_action(

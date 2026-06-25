@@ -8,10 +8,14 @@ from PySide6.QtCore import QEventLoop, QObject, Slot
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.constants as app_constants
-import app.utils.metadata as metadata
 import app.views.dialogue as dialogue
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import ModType
+from app.models.settings import Settings
 from app.utils.app_info import AppInfo
+from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
+from app.utils.steam.db_builder_thread import SteamDatabaseBuilder
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -37,19 +41,19 @@ class DatabaseBuilder(QObject):
             cls._instance = super(DatabaseBuilder, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, settings_controller: metadata.SettingsController) -> None:
+    def __init__(self, settings: Settings) -> None:
         """
         Initialize the Database Builder singleton.
 
         Args:
-            settings_controller: The settings controller for the application.
+            settings: The settings model for the application.
         """
         if not hasattr(self, "initialized"):
             super(DatabaseBuilder, self).__init__()
             logger.info("Initializing DatabaseBuilder")
 
-            self.settings_controller = settings_controller
-            self.metadata_manager = metadata.MetadataManager.instance()
+            self.settings = settings
+            self.metadata_controller = MetadataController.instance()
             self.query_runner: RunnerPanel | None = None
 
             logger.info("Finished DatabaseBuilder initialization")
@@ -102,7 +106,7 @@ class DatabaseBuilder(QObject):
 
     def _create_database_builder(
         self, mode: str, output_path: str
-    ) -> metadata.SteamDatabaseBuilder:
+    ) -> SteamDatabaseBuilder:
         """
         Factory method to create SteamDatabaseBuilder with appropriate settings.
 
@@ -119,19 +123,19 @@ class DatabaseBuilder(QObject):
             - MODE_ALL_MODS: Includes locally available mod metadata with packageids.
         """
         base_kwargs: dict[str, Any] = {
-            "apikey": self.settings_controller.settings.steam_apikey,
+            "apikey": self.settings.steam_apikey,
             "appid": self.RIMWORLD_APPID,
-            "database_expiry": self.settings_controller.settings.database_expiry,
+            "database_expiry": self.settings.database_expiry,
             "mode": mode,
             "output_database_path": output_path,
-            "get_appid_deps": self.settings_controller.settings.build_steam_database_dlc_data,
-            "update": self.settings_controller.settings.build_steam_database_update_toggle,
+            "get_appid_deps": self.settings.build_steam_database_dlc_data,
+            "update": self.settings.build_steam_database_update_toggle,
         }
 
         if mode == self.MODE_ALL_MODS:
-            base_kwargs["mods"] = self.metadata_manager.internal_local_metadata
+            base_kwargs["mods"] = self.metadata_controller.mods_metadata
 
-        return metadata.SteamDatabaseBuilder(**base_kwargs)
+        return SteamDatabaseBuilder(**base_kwargs)
 
     def _setup_query_runner(self, title: str) -> RunnerPanel:
         """
@@ -162,7 +166,7 @@ class DatabaseBuilder(QObject):
             logger.debug("USER ACTION: cancelled selection")
             return
 
-        mode = self.settings_controller.settings.db_builder_include
+        mode = self.settings.db_builder_include
         self.db_builder = self._create_database_builder(mode, output_path)
         self._setup_query_runner(f"RimSort - DB Builder ({mode})")
         self.db_builder.start()
@@ -182,18 +186,15 @@ class DatabaseBuilder(QObject):
         """
         existing_ids: set[str] = set()
 
-        for mod_metadata in self.metadata_manager.internal_local_metadata.values():
-            mod_pfid = mod_metadata.get("publishedfileid")
+        for mod in self.metadata_controller.mods_metadata.values():
+            mod_pfid = mod.published_file_id
             if not mod_pfid:
                 continue
 
-            if check_mode == "steamcmd" and mod_metadata.get("steamcmd"):
+            if check_mode == "steamcmd" and mod.mod_type == ModType.STEAM_CMD:
                 logger.debug(f"Skipping download of existing SteamCMD mod: {mod_pfid}")
                 existing_ids.add(mod_pfid)
-            elif (
-                check_mode == "steamworks"
-                and mod_metadata.get("data_source") == "workshop"
-            ):
+            elif check_mode == "steamworks" and mod.mod_type == ModType.STEAM_WORKSHOP:
                 logger.warning(f"Skipping download of existing Steam mod: {mod_pfid}")
                 existing_ids.add(mod_pfid)
 
@@ -210,10 +211,10 @@ class DatabaseBuilder(QObject):
             Queries the Steam WebAPI to retrieve all available mod PublishedFileIDs,
             filters out existing mods, and emits appropriate download signals.
         """
-        self.db_builder = metadata.SteamDatabaseBuilder(
-            apikey=self.settings_controller.settings.steam_apikey,
+        self.db_builder = SteamDatabaseBuilder(
+            apikey=self.settings.steam_apikey,
             appid=self.RIMWORLD_APPID,
-            database_expiry=self.settings_controller.settings.database_expiry,
+            database_expiry=self.settings.database_expiry,
             mode=self.MODE_PFIDS_BY_APPID,
         )
 
@@ -230,7 +231,7 @@ class DatabaseBuilder(QObject):
                 text=self.tr("DB Builder query did not return any PublishedFileIDs!"),
                 information=self.tr(
                     "This is typically caused by invalid/missing Steam WebAPI key, "
-                    "or a connectivity issue to the Steam WebAPI.\n"
+                    "or a connectivity issue to the Steam WebAPI.<br>"
                     "PublishedFileIDs are needed to retrieve mods from Steam!"
                 ),
             )
@@ -397,10 +398,10 @@ class DatabaseBuilder(QObject):
                 "This operation will compare 2 databases, A & B, by checking dependencies from A with dependencies from B."
             ),
             information=self.tr(
-                "- This will produce an accurate comparison of dependency data between 2 Steam DBs.\n"
-                "A report of discrepancies is generated. You will be prompted for these paths in order:\n"
-                "\n\t1) Select input A"
-                "\n\t2) Select input B"
+                "- This will produce an accurate comparison of dependency data between 2 Steam DBs.<br>"
+                "A report of discrepancies is generated. You will be prompted for these paths in order:<br>"
+                "<br>\t1) Select input A"
+                "<br>\t2) Select input B"
             ),
         )
 
@@ -461,14 +462,14 @@ class DatabaseBuilder(QObject):
                 "This operation will merge 2 databases, A & B, by recursively updating A with B, barring exceptions."
             ),
             information=self.tr(
-                "- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.\n"
-                "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.\n"
-                "- The following exceptions will be made:\n"
-                "\n\t{DB_BUILDER_RECURSE_EXCEPTIONS}\n\n"
-                "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:\n"
-                "\n\t1) Select input A (db to-be-updated)"
-                "\n\t2) Select input B (update source)"
-                "\n\t3) Select output C (resultant db)"
+                "- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.<br>"
+                "- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.<br>"
+                "- The following exceptions will be made:<br>"
+                "<br>\t{DB_BUILDER_RECURSE_EXCEPTIONS}<br><br>"
+                "The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:<br>"
+                "<br>\t1) Select input A (db to-be-updated)"
+                "<br>\t2) Select input B (update source)"
+                "<br>\t3) Select output C (resultant db)"
             ).format(
                 DB_BUILDER_RECURSE_EXCEPTIONS=app_constants.DB_BUILDER_RECURSE_EXCEPTIONS
             ),
@@ -496,7 +497,7 @@ class DatabaseBuilder(QObject):
 
         # Merge databases
         db_output_c = copy.deepcopy(db_input_a)
-        metadata.recursively_update_dict(
+        recursively_update_dict(
             db_output_c,
             db_input_b,
             prune_exceptions=app_constants.DB_BUILDER_PRUNE_EXCEPTIONS,

@@ -9,7 +9,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 from app.utils import http
 from app.utils.http import DEFAULT_TIMEOUT
 from app.views.dialogue import (
@@ -164,9 +164,7 @@ class RentryUpload:
 class RentryImport:
     """Class to handle importing Rentry.co links and extracting package IDs."""
 
-    def __init__(
-        self, settings_controller: SettingsController, rentry_auth_code: bool = False
-    ) -> None:
+    def __init__(self, settings: Settings, rentry_auth_code: bool = False) -> None:
         """Initialize the Rentry Import instance and prompt for a link."""
         self.package_ids: list[
             str
@@ -174,19 +172,17 @@ class RentryImport:
         self.publishedfileids: list[
             str
         ] = []  # Initialize an empty list for publishedfileids
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.rentry_auth_code = rentry_auth_code
 
         # If user does not have an auth code, show a warning
-        if settings_controller.settings.rentry_auth_code == "":
+        if settings.rentry_auth_code == "":
             self.rentry_auth_code = False
             RentryError().show_missing_rentry_auth_warning()
             self.input_dialog()  # Call the input_dialog method to set up the UI
         else:
             # Retrieve auth code from user settings
-            _HEADERS.update(
-                {"rentry-auth": settings_controller.settings.rentry_auth_code}
-            )
+            _HEADERS.update({"rentry-auth": settings.rentry_auth_code})
             self.rentry_auth_code = True
             self.input_dialog()  # Call the input_dialog method to set up the UI
 

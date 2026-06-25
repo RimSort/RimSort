@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from app.views.main_window import MainWindow
 
 
-def make_stub_main_window() -> MainWindow:
+def make_stub_main_window(metadata_controller: MagicMock | None = None) -> MainWindow:
     """Create a MainWindow instance without running MainWindow.__init__.
 
     Calls QMainWindow.__init__ to satisfy the C++ side (Shiboken),
@@ -39,6 +39,7 @@ def make_stub_main_window() -> MainWindow:
     QMainWindow.__init__(instance)
     instance.main_content_panel = MagicMock()
     instance.watchdog_event_handler = None
+    instance.metadata_controller = metadata_controller or MagicMock()
     return instance
 
 
@@ -90,7 +91,7 @@ def make_mod_data(
     description: str = "A test mod.",
     mod_color: QColor | None = None,
 ) -> dict[str, Any]:
-    """Factory for mod metadata dicts matching the internal_local_metadata structure."""
+    """Factory for mod metadata dicts (legacy format, used by context menu code)."""
     if uuid is None:
         uuid = str(uuid_module.uuid4())
 

@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Settings
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
@@ -316,9 +316,9 @@ class PlayerLogTab(QWidget):
     _error_pattern = re.compile(r"\b(error|failed|fatal)\b|\[E\]", re.IGNORECASE)
     _exception_pattern = re.compile(r"exception", re.IGNORECASE)
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(self, settings: Settings) -> None:
         super().__init__()
-        self.settings_controller = settings_controller
+        self.settings = settings
         self.player_log_path: Optional[Path] = None
         self.log_storage = LogContentStorage()  # Use new memory-efficient storage
         self.current_log_content: str = ""
@@ -382,14 +382,14 @@ class PlayerLogTab(QWidget):
         return collapsed_lines
 
     def _delayed_load_log(self) -> None:
-        if self.settings_controller.settings.auto_load_player_log_on_startup:
+        if self.settings.auto_load_player_log_on_startup:
             self.player_log_path = self._get_player_log_path()
             if self.player_log_path is not None:
                 self.load_log()
 
     def _on_auto_load_player_log_on_startup_toggled(self, checked: bool) -> None:
-        self.settings_controller.settings.auto_load_player_log_on_startup = checked
-        self.settings_controller.settings.save()
+        self.settings.auto_load_player_log_on_startup = checked
+        self.settings.save()
 
     def set_highlight_color(self, color: QColor) -> None:
         self.highlighter.set_highlight_color(color)
@@ -429,10 +429,8 @@ class PlayerLogTab(QWidget):
 
     def _get_player_log_path(self) -> Optional[Path]:
         try:
-            current_instance: str = self.settings_controller.settings.current_instance
-            config_folder: str = self.settings_controller.settings.instances[
-                current_instance
-            ].config_folder
+            current_instance: str = self.settings.current_instance
+            config_folder: str = self.settings.instances[current_instance].config_folder
             player_log_path: Path = Path(config_folder).parent / "Player.log"
             if player_log_path.exists():
                 return player_log_path
@@ -460,6 +458,7 @@ class PlayerLogTab(QWidget):
         self.log_display.customContextMenuRequested.connect(self.show_context_menu)
 
         self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.horizontal_splitter.setObjectName("logSplitter")
         self.horizontal_splitter.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
@@ -501,6 +500,7 @@ class PlayerLogTab(QWidget):
         self.middle_layout.setContentsMargins(8, 8, 8, 8)
 
         self.log_display = QTextEdit()
+        self.log_display.setObjectName("logDisplay")
         self.log_display.setReadOnly(True)
         self.log_display.setFont(QFont("Consolas", 10))
         self.log_display.setMinimumSize(400, 200)
@@ -515,6 +515,7 @@ class PlayerLogTab(QWidget):
 
     def _init_file_info_group(self) -> None:
         file_info_group = QGroupBox(self.tr("File Info"))
+        file_info_group.setObjectName("fileInfoGroup")
         file_info_layout = QVBoxLayout()
         file_info_group.setLayout(file_info_layout)
 
@@ -526,17 +527,20 @@ class PlayerLogTab(QWidget):
         )
 
         self.file_path_label = QLabel(self.tr("Path:"))
+        self.file_path_label.setObjectName("filePathLabel")
         self.file_path_label.setWordWrap(True)
         file_info_layout.addWidget(self.file_path_label)
 
         self.file_size_label = QLabel(self.tr("Size:"))
+        self.file_size_label.setObjectName("fileSizeLabel")
         file_info_layout.addWidget(self.file_size_label)
 
         self.last_modified_label = QLabel(self.tr("Modified:"))
+        self.last_modified_label.setObjectName("lastModifiedLabel")
         file_info_layout.addWidget(self.last_modified_label)
 
         self.growth_label = QLabel("")
-        self.growth_label.setStyleSheet("color: green; font-weight: bold;")
+        self.growth_label.setObjectName("growthLabel")
         file_info_layout.addWidget(self.growth_label)
 
         self.left_layout.addWidget(file_info_group)
@@ -553,16 +557,17 @@ class PlayerLogTab(QWidget):
 
     def _init_statistics_group(self) -> None:
         stats_group = QGroupBox(self.tr("Statistics"))
+        stats_group.setObjectName("statsGroup")
         stats_layout = QVBoxLayout()
         stats_group.setLayout(stats_layout)
         stats_layout.setSpacing(1)
         stats_layout.setContentsMargins(1, 1, 1, 1)
 
-        def create_stat_button(text: str, color: str, filter_name: str) -> QPushButton:
+        def create_stat_button(
+            text: str, obj_name: str, filter_name: str
+        ) -> QPushButton:
             btn = QPushButton(text)
-            btn.setStyleSheet(
-                f"color: {color}; background: transparent; border: none; text-align: left;"
-            )
+            btn.setObjectName(obj_name)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFlat(True)
             btn.clicked.connect(lambda: self._on_stat_button_clicked(filter_name))
@@ -570,28 +575,28 @@ class PlayerLogTab(QWidget):
             return btn
 
         self.total_lines_label = create_stat_button(
-            self.tr("Total Lines: 0"), "#00FF00", self.tr("All Entries")
+            self.tr("Total Lines: 0"), "statButtonGreen", self.tr("All Entries")
         )
         self.info_label = create_stat_button(
-            self.tr("Infos: 0"), "#00FF00", self.tr("Infos Only")
+            self.tr("Infos: 0"), "statButtonGreen", self.tr("Infos Only")
         )
         self.keybind_label = create_stat_button(
-            self.tr("Keybinds: 0"), "#EEFF00", self.tr("Keybinds Only")
+            self.tr("Keybinds: 0"), "statButtonYellow", self.tr("Keybinds Only")
         )
         self.mod_issues_label = create_stat_button(
-            self.tr("Mod Issues: 0"), "#FF8C00", self.tr("Mod Issues")
+            self.tr("Mod Issues: 0"), "statButtonOrange", self.tr("Mod Issues")
         )
         self.warnings_label = create_stat_button(
-            self.tr("Warnings: 0"), "#FF8C00", self.tr("Warnings Only")
+            self.tr("Warnings: 0"), "statButtonOrange", self.tr("Warnings Only")
         )
         self.errors_label = create_stat_button(
-            self.tr("Errors: 0"), "#FF0000", self.tr("Errors Only")
+            self.tr("Errors: 0"), "statButtonRed", self.tr("Errors Only")
         )
         self.exceptions_label = create_stat_button(
-            self.tr("Exceptions: 0"), "#FF0000", self.tr("Exceptions Only")
+            self.tr("Exceptions: 0"), "statButtonRed", self.tr("Exceptions Only")
         )
         self.all_issues_label = create_stat_button(
-            self.tr("All Issues: 0"), "#FF0000", self.tr("All Issues")
+            self.tr("All Issues: 0"), "statButtonRed", self.tr("All Issues")
         )
 
         stats_layout.addWidget(self.total_lines_label)
@@ -614,6 +619,7 @@ class PlayerLogTab(QWidget):
 
     def _init_controls_group(self) -> None:
         controls_group = QGroupBox(self.tr("Controls"))
+        controls_group.setObjectName("controlsGroup")
         controls_layout = QVBoxLayout()
         controls_group.setLayout(controls_layout)
         controls_layout.setSpacing(1)
@@ -627,7 +633,7 @@ class PlayerLogTab(QWidget):
         )
         controls_layout.addWidget(self.auto_load_player_log_on_startup_checkbox)
         self.auto_load_player_log_on_startup_checkbox.setChecked(
-            self.settings_controller.settings.auto_load_player_log_on_startup
+            self.settings.auto_load_player_log_on_startup
         )
         self.auto_load_player_log_on_startup_checkbox.toggled.connect(
             self._on_auto_load_player_log_on_startup_toggled
@@ -681,6 +687,7 @@ class PlayerLogTab(QWidget):
         controls_layout.addLayout(load_buttons_layout)
 
         self.progress_bar = QProgressBar()
+        self.progress_bar.setObjectName("logProgressBar")
         self.progress_bar.setVisible(False)
         controls_layout.addWidget(self.progress_bar)
         controls_group.setLayout(controls_layout)
@@ -690,6 +697,7 @@ class PlayerLogTab(QWidget):
     def _init_search_filter_group(self) -> None:
         """Initialize the Search and Filter group UI components."""
         search_filter_group = QGroupBox(self.tr("Search and Filter"))
+        search_filter_group.setObjectName("searchFilterGroup")
         search_filter_layout = QVBoxLayout()
         search_filter_group.setLayout(search_filter_layout)
         search_filter_layout.setSpacing(1)
@@ -699,6 +707,7 @@ class PlayerLogTab(QWidget):
         search_input_layout = QHBoxLayout()
         search_input_layout.setSpacing(1)
         self.search_input = QLineEdit()
+        self.search_input.setObjectName("searchInput")
         self.search_input.setPlaceholderText(self.tr("Search log entries..."))
         self._search_debounce_timer = QTimer(self)
         self._search_debounce_timer.setSingleShot(True)
@@ -716,6 +725,7 @@ class PlayerLogTab(QWidget):
         filter_layout = QHBoxLayout()
         filter_layout.setSpacing(1)
         self.filter_combo = QComboBox()
+        self.filter_combo.setObjectName("filterCombo")
         self.filter_combo.setMinimumWidth(140)
         self.filter_combo.addItems(
             [
@@ -735,6 +745,7 @@ class PlayerLogTab(QWidget):
         filter_layout.addWidget(self.filter_combo)
 
         self.mod_filter_input = QLineEdit()
+        self.mod_filter_input.setObjectName("modFilterInput")
         self.mod_filter_input.setPlaceholderText(self.tr("Filter by mod name..."))
         self.mod_filter_input.textChanged.connect(
             lambda _: self.apply_filter(clear_log=True, filter_type="Search")
@@ -780,6 +791,7 @@ class PlayerLogTab(QWidget):
             text: str, tooltip: str, callback: Callable[[], None]
         ) -> QPushButton:
             btn = QPushButton(text)
+            btn.setObjectName("navButton")
             btn.setToolTip(tooltip)
             btn.clicked.connect(callback)
             btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -789,6 +801,7 @@ class PlayerLogTab(QWidget):
             return btn
 
         self.nav_group = QGroupBox(self.tr("Quick Navigation"))
+        self.nav_group.setObjectName("navGroup")
         nav_layout = QGridLayout()
         self.nav_group.setLayout(nav_layout)
         nav_layout.setSpacing(4)
@@ -818,6 +831,7 @@ class PlayerLogTab(QWidget):
                 self._make_next_callback(pattern),
             )
             label = QLabel(label_text)
+            label.setObjectName("navLabel")
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setMinimumWidth(80)
             label.setMaximumWidth(100)
@@ -1394,11 +1408,10 @@ class PlayerLogTab(QWidget):
         menu.exec(self.log_display.mapToGlobal(pos))
 
     def open_file(self, file_path: str) -> None:
-        if self.settings_controller.settings.text_editor_location:
+        if self.settings.text_editor_location:
             launch_process(
-                self.settings_controller.settings.text_editor_location,
-                self.settings_controller.settings.text_editor_file_arg.split(" ")
-                + [file_path],
+                self.settings.text_editor_location,
+                self.settings.text_editor_file_arg.split(" ") + [file_path],
                 str(AppInfo().application_folder),
             )
 

@@ -30,8 +30,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.app_info import AppInfo
-from app.utils.metadata import MetadataManager
 from app.views.dialogue import show_warning
 
 
@@ -116,8 +117,27 @@ class RuleEditor(QWidget):
     community_rules_button: QPushButton
     user_rules_button: QPushButton
 
+    @staticmethod
+    def _rules_schema_to_dict(
+        schema: Any,
+    ) -> dict[str, Any]:
+        """Convert an ExternalRulesSchema to a mutable plain dict for editing.
+
+        The RuleEditor mutates rules in-place (adding/removing keys, nested
+        dict manipulation) so we need plain dicts rather than typed structs.
+
+        :param schema: ExternalRulesSchema or None
+        :return: Deep plain-dict copy of the rules, or empty dict
+        """
+        import msgspec
+
+        if schema is None:
+            return {}
+        return msgspec.to_builtins(schema.rules)
+
     def __init__(
         self,
+        metadata_controller: MetadataController,
         initial_mode: str,
         compact: bool | None = None,
         edit_packageid: str | None = None,
@@ -125,8 +145,8 @@ class RuleEditor(QWidget):
         super().__init__()
         logger.debug("Initializing RuleEditor")
 
-        # Cache MetadataManager instance
-        self.metadata_manager = MetadataManager.instance()
+        # Cache MetadataController instance
+        self.metadata_controller = metadata_controller
 
         # STYLESHEET
         self.setObjectName("RuleEditor")
@@ -140,29 +160,19 @@ class RuleEditor(QWidget):
         self.initial_mode = initial_mode
         # THE METADATA
         self.local_rules_hidden: bool = False
-        self.community_rules = (
-            self.metadata_manager.external_community_rules.copy()
-            if self.metadata_manager.external_community_rules
-            else {}
+        self.community_rules = self._rules_schema_to_dict(
+            self.metadata_controller.community_rules
         )
         self.community_rules_hidden: bool = False
-        self.user_rules = (
-            self.metadata_manager.external_user_rules.copy()
-            if self.metadata_manager.external_user_rules
-            else {}
+        self.user_rules = self._rules_schema_to_dict(
+            self.metadata_controller.user_rules
         )
         self.user_rules_hidden: bool = False
         # Can be used to get proper names for mods found in list
         # items that are not locally available
-        self.steam_workshop_metadata_packageids_to_name = {}
-        external_steam_metadata = self.metadata_manager.external_steam_metadata
-        if external_steam_metadata and len(external_steam_metadata.keys()) > 0:
-            for metadata in external_steam_metadata.values():
-                package_id = metadata.get("packageId") or metadata.get("packageid")
-                if package_id:
-                    self.steam_workshop_metadata_packageids_to_name[package_id] = (
-                        metadata["name"]
-                    )
+        self.steam_workshop_metadata_packageids_to_name: dict[str, str] = (
+            self.metadata_controller.steamdb_packageid_to_name.copy()
+        )
 
         # MOD LABEL
         self.mod_label = QLabel(self.tr("No mod currently being edited"))
@@ -842,56 +852,65 @@ class RuleEditor(QWidget):
     def _populate_from_metadata(self) -> None:
         logger.debug(f"Populating editor from metadata with mod: {self.edit_packageid}")
         logger.debug("Parsing local metadata")
-        if (
-            self.metadata_manager.internal_local_metadata
-            and len(self.metadata_manager.internal_local_metadata.keys()) > 0
-        ):
-            for metadata in self.metadata_manager.internal_local_metadata.values():
+        mods_metadata = self.metadata_controller.mods_metadata
+        if mods_metadata and len(mods_metadata) > 0:
+            for mod in mods_metadata.values():
                 # Local metadata rule
-                # Additionally, populate anything that is not exit_packageid into the mods list
+                # Additionally, populate anything that is not edit_packageid into the mods list
+                packageid = (
+                    str(mod.package_id) if isinstance(mod, AboutXmlMod) else None
+                )
                 if (
-                    metadata.get("packageid")
+                    packageid
                     and self.edit_packageid
-                    and metadata["packageid"].lower() == self.edit_packageid.lower()
+                    and packageid.lower() == self.edit_packageid.lower()
                 ):
-                    self.edit_name = metadata["name"]
+                    self.edit_name = mod.name or ""
                     self.mod_label.setText(
                         self.tr("Editing rules for: {name}").format(name=self.edit_name)
                     )
-                    # All Lowercase!!!
-                    # cSpell:enableCompoundWords
-                    rule_types = {
-                        "loadafter": self.local_metadata_loadAfter_list,
-                        "loadbefore": self.local_metadata_loadBefore_list,
-                        "incompatiblewith": self.local_metadata_incompatibilities_list,
-                    }
+                    if isinstance(mod, AboutXmlMod):
+                        # Map about_rules fields to the UI lists
+                        # All Lowercase!!!
+                        # cSpell:enableCompoundWords
+                        rule_types: dict[str, tuple[Any, QListWidget]] = {
+                            "loadafter": (
+                                mod.about_rules.load_after,
+                                self.local_metadata_loadAfter_list,
+                            ),
+                            "loadbefore": (
+                                mod.about_rules.load_before,
+                                self.local_metadata_loadBefore_list,
+                            ),
+                            "incompatiblewith": (
+                                mod.about_rules.incompatible_with,
+                                self.local_metadata_incompatibilities_list,
+                            ),
+                        }
 
-                    for rule_type, _list in rule_types.items():
-                        if metadata.get(rule_type) and metadata[rule_type].get("li"):
-                            rules = metadata[rule_type]["li"]
-                            if isinstance(rules, str):
-                                rules = [rules]
-                            if isinstance(rules, list):
-                                for rule in rules:
-                                    name = self.steam_workshop_metadata_packageids_to_name.get(
+                        for rule_type, (rule_set, _list) in rule_types.items():
+                            for rule in rule_set:
+                                name = (
+                                    self.steam_workshop_metadata_packageids_to_name.get(
                                         rule.lower(), rule
                                     )
-                                    # Ensure name is a string
-                                    name_str = str(name) if name is not None else rule
-                                    self._create_list_item(_list=_list, title=name_str)
-                                    self._add_rule_to_table(
-                                        name=name_str,
-                                        packageid=rule,
-                                        rule_source="About.xml",
-                                        rule_type=rule_type,
-                                        comment="Added from mod metadata",
-                                        hidden=self.local_rules_hidden,
-                                    )
+                                )
+                                # Ensure name is a string
+                                name_str = str(name) if name is not None else rule
+                                self._create_list_item(_list=_list, title=name_str)
+                                self._add_rule_to_table(
+                                    name=name_str,
+                                    packageid=rule,
+                                    rule_source="About.xml",
+                                    rule_type=rule_type,
+                                    comment="Added from mod metadata",
+                                    hidden=self.local_rules_hidden,
+                                )
                 else:  # Otherwise, add everything else to the mod list
                     self._create_list_item(
                         _list=self.mods_list,
-                        title=metadata.get("name"),
-                        metadata=metadata.get("packageid"),
+                        title=mod.name,
+                        metadata=packageid,
                     )
 
         def _parse_rules(
@@ -1100,8 +1119,8 @@ class RuleEditor(QWidget):
         else:
             raise ValueError(f"Invalid rule source: {rules_source}")
         self.update_database_signal.emit([rules_source, metadata])
-        # Ensure cache and UI are refreshed after saving
-        self.metadata_manager.refresh_cache()
+        # The signal handler (_do_update_rules_database) handles disk write and
+        # refreshes metadata via _do_refresh after the user confirms.
         self._clear_widget()
         self._populate_from_metadata()
 

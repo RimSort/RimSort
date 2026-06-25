@@ -9,7 +9,6 @@ import pytest
 if "steamworks" not in sys.modules:
     sys.modules["steamworks"] = MagicMock()
 
-from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_mediator import MetadataMediator
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -65,7 +64,7 @@ def test_mods_are_parsed(parity_mods: dict[str, ListedMod]) -> None:
 
 def test_compile_produces_valid_graph(parity_mods: dict[str, ListedMod]) -> None:
     """compile() produces valid CompiledDependencyData."""
-    compiled = MetadataController._build_compiled_data(parity_mods)
+    compiled = CompiledDependencyData.build(parity_mods)
 
     assert isinstance(compiled, CompiledDependencyData)
     assert isinstance(compiled.deps_graph, dict)
@@ -80,7 +79,7 @@ def test_compile_reverse_graph_is_inverse_of_forward_graph(
     parity_mods: dict[str, ListedMod],
 ) -> None:
     """rev_deps_graph is the exact inverse of deps_graph."""
-    compiled = MetadataController._build_compiled_data(parity_mods)
+    compiled = CompiledDependencyData.build(parity_mods)
 
     # For every edge A -> B in deps_graph, there must be B -> A in rev_deps_graph
     for pkg_id, deps in compiled.deps_graph.items():
@@ -103,7 +102,7 @@ def test_compile_tier_zero_contains_core(
     parity_mods: dict[str, ListedMod],
 ) -> None:
     """tier_zero_mods contains ludeon.rimworld (Core)."""
-    compiled = MetadataController._build_compiled_data(parity_mods)
+    compiled = CompiledDependencyData.build(parity_mods)
     assert "ludeon.rimworld" in compiled.tier_zero_mods
 
 
@@ -113,7 +112,7 @@ def test_compile_cores_force_load_before_creates_dependency_edges(
     """Core's forceLoadBefore creates dependency edges for DLCs."""
     # Core has forceLoadBefore: Ludeon.RimWorld.Ideology, Ludeon.RimWorld.Royalty
     # This means those DLCs should depend on Core (Core must load before them)
-    compiled = MetadataController._build_compiled_data(parity_mods)
+    compiled = CompiledDependencyData.build(parity_mods)
 
     # Royalty should depend on Core (because Core has forceLoadBefore Royalty)
     royalty_deps = compiled.deps_graph.get("ludeon.rimworld.royalty", set())
@@ -144,3 +143,31 @@ def test_game_version_is_parsed(parity_mediator: MetadataMediator) -> None:
     assert "1.5" in parity_mediator.game_version, (
         f"Expected version to contain '1.5', got: {parity_mediator.game_version}"
     )
+
+
+def test_compile_incompatibilities_are_bidirectional(
+    parity_mods: dict[str, ListedMod],
+) -> None:
+    """Every incompatibility edge has a reverse edge."""
+    compiled = CompiledDependencyData.build(parity_mods)
+
+    for pkg_id, incompatibles in compiled.incompatibilities.items():
+        for incompat in incompatibles:
+            assert pkg_id in compiled.incompatibilities.get(incompat, set()), (
+                f"incompatibilities has {pkg_id} -> {incompat}, "
+                f"but missing reverse {incompat} -> {pkg_id}"
+            )
+
+
+def test_compile_declared_is_subset_of_incompatibilities(
+    parity_mods: dict[str, ListedMod],
+) -> None:
+    """declared_incompatibilities is always a subset of incompatibilities."""
+    compiled = CompiledDependencyData.build(parity_mods)
+
+    for pkg_id, declared in compiled.declared_incompatibilities.items():
+        full = compiled.incompatibilities.get(pkg_id, set())
+        assert declared <= full, (
+            f"declared_incompatibilities[{pkg_id}] has entries not in "
+            f"incompatibilities: {declared - full}"
+        )

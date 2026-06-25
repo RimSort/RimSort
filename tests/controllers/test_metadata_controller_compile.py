@@ -8,7 +8,6 @@ import pytest
 if "steamworks" not in sys.modules:
     sys.modules["steamworks"] = MagicMock()
 
-from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     BaseRules,
@@ -45,8 +44,8 @@ def _make_mod(
 
 
 def _compile(mods: dict[str, ListedMod], **kwargs: bool) -> CompiledDependencyData:
-    """Shorthand for MetadataController._build_compiled_data."""
-    return MetadataController._build_compiled_data(mods, **kwargs)
+    """Shorthand for CompiledDependencyData.build."""
+    return CompiledDependencyData.build(mods, **kwargs)
 
 
 @pytest.fixture
@@ -131,6 +130,62 @@ def test_compile_empty_mods() -> None:
     assert compiled.rev_deps_graph == {}
     assert compiled.tier_three_mods == set()
     assert compiled.incompatibilities == {}
+    assert compiled.declared_incompatibilities == {}
+
+
+def test_compile_incompatibility_is_bidirectional() -> None:
+    """When mod.a declares incompatibility with mod.b, mod.b also gets mod.a."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", incompatible_with=["mod.b"]),
+        "/mods/b": _make_mod("mod.b", "/mods/b"),
+    }
+    compiled = _compile(mods)
+
+    assert "mod.b" in compiled.incompatibilities.get("mod.a", set())
+    assert "mod.a" in compiled.incompatibilities.get("mod.b", set())
+
+
+def test_compile_declared_incompatibilities_tracked() -> None:
+    """declared_incompatibilities tracks what each mod explicitly declared.
+
+    mod.a declares incompat with mod.b -> mod.a has mod.b in
+    declared_incompatibilities, but mod.b does NOT have mod.a.
+    """
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", incompatible_with=["mod.b"]),
+        "/mods/b": _make_mod("mod.b", "/mods/b"),
+    }
+    compiled = _compile(mods)
+
+    assert "mod.b" in compiled.declared_incompatibilities.get("mod.a", set())
+    assert "mod.a" not in compiled.declared_incompatibilities.get("mod.b", set())
+
+
+def test_compile_mutual_incompatibility_both_declared() -> None:
+    """When both mods declare each other incompatible, both appear everywhere."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", incompatible_with=["mod.b"]),
+        "/mods/b": _make_mod("mod.b", "/mods/b", incompatible_with=["mod.a"]),
+    }
+    compiled = _compile(mods)
+
+    # Both in incompatibilities (bidirectional)
+    assert "mod.b" in compiled.incompatibilities.get("mod.a", set())
+    assert "mod.a" in compiled.incompatibilities.get("mod.b", set())
+    # Both in declared_incompatibilities (each declared it)
+    assert "mod.b" in compiled.declared_incompatibilities.get("mod.a", set())
+    assert "mod.a" in compiled.declared_incompatibilities.get("mod.b", set())
+
+
+def test_compile_incompatibility_reverse_skips_nonexistent() -> None:
+    """Reverse not added for mods not in the mod set."""
+    mods: dict[str, ListedMod] = {
+        "/mods/a": _make_mod("mod.a", "/mods/a", incompatible_with=["mod.nonexistent"]),
+    }
+    compiled = _compile(mods)
+
+    assert compiled.incompatibilities == {}
+    assert compiled.declared_incompatibilities == {}
 
 
 def test_compile_nonexistent_deps_not_in_graph() -> None:

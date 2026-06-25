@@ -32,11 +32,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.controllers.settings_controller import SettingsController
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.utils.csv_export_utils import export_to_csv
 from app.utils.event_bus import EventBus
 from app.utils.generic import format_time_display
-from app.utils.metadata import MetadataManager
 from app.utils.mod_info import ModInfo
 from app.windows.base_mods_panel import BaseModsPanel, ColumnIndex
 
@@ -69,19 +69,17 @@ class AcfLogReader(BaseModsPanel):
 
     def __init__(
         self,
-        settings_controller: SettingsController,
+        metadata_controller: MetadataController,
         active_mods_list: object | None = None,
     ) -> None:
         """
         Initialize ACF Log Reader using BaseModsPanel.
 
         Args:
-            settings_controller: Settings controller instance
             active_mods_list: Optional active mods list for highlighting
         """
-        self.settings_controller = settings_controller
         self.active_mods_list = active_mods_list
-        self.metadata_manager = MetadataManager.instance()
+        self.metadata_controller = metadata_controller
         # Set of PFIDs that are currently active in the game
         self.active_pfids: set[str] = set()
         # Timer for debouncing search input (300ms delay)
@@ -100,6 +98,7 @@ class AcfLogReader(BaseModsPanel):
             title_text="Workshop Items from ACF Files",
             details_text="Displays all mods in your SteamCMD and Steam ACF data",
             additional_columns=self._get_standard_mod_columns(),
+            metadata_controller=self.metadata_controller,
         )
 
         # Set up BaseModsPanel buttons (Refresh, etc.)
@@ -327,25 +326,25 @@ class AcfLogReader(BaseModsPanel):
         if not self.active_mods_list:
             return
 
-        if not hasattr(self.active_mods_list, "uuids"):
+        if not hasattr(self.active_mods_list, "paths"):
             return
 
-        uuids = getattr(self.active_mods_list, "uuids", [])
-        for mod_uuid in uuids:
-            metadata = self.metadata_manager.internal_local_metadata.get(mod_uuid)
-            if metadata:
-                pfid = metadata.get("publishedfileid")
+        paths = getattr(self.active_mods_list, "paths", [])
+        for mod_uuid in paths:
+            mod = self.metadata_controller.get_mod(mod_uuid)
+            if mod is not None:
+                pfid = mod.published_file_id
                 if pfid:
-                    self.active_pfids.add(str(pfid))
+                    self.active_pfids.add(pfid)
 
         # Repaint table viewport to apply active mod highlighting
         self.editor_table_view.viewport().update()
 
     def _populate_from_metadata(self) -> None:
         """
-        Populate the ACF table from MetadataManager's ACF and metadata.
+        Populate the ACF table from MetadataController's ACF and metadata.
 
-        Reads steamcmd_acf_data and workshop_acf_data from MetadataManager and displays
+        Reads steamcmd_acf_data and workshop_acf_data from MetadataController and displays
         all workshop items in the table with the following process:
         1. Updates active PFID set for mod highlighting
         2. Extracts workshop entries from both ACF sources
@@ -363,14 +362,14 @@ class AcfLogReader(BaseModsPanel):
         try:
             self._clear_table_model()
 
-            # Get ACF data from MetadataManager
-            steamcmd_acf_data = self.metadata_manager.steamcmd_acf_data
-            workshop_acf_data = self.metadata_manager.workshop_acf_data
+            # Get ACF data from MetadataController
+            steamcmd_acf_data = self.metadata_controller.steamcmd_acf_data
+            workshop_acf_data = self.metadata_controller.workshop_acf_data
 
             logger.debug(
                 f"SteamCMD ACF data loaded: {bool(steamcmd_acf_data)}, "
                 f"Workshop ACF data loaded: {bool(workshop_acf_data)}, "
-                f"Internal metadata count: {len(self.metadata_manager.internal_local_metadata)}"
+                f"Mods metadata count: {len(self.metadata_controller.mods_metadata)}"
             )
 
             # Extract workshop items from both sources
@@ -486,21 +485,37 @@ class AcfLogReader(BaseModsPanel):
         """
         Extract mod metadata for ACF PFIDs.
 
-        Builds a dictionary of PFID to (UUID, metadata) for fast lookup.
+        Builds a dictionary of PFID to (path, metadata_dict) for fast lookup.
+        Converts ListedMod objects to dicts for compatibility with row builders.
 
-        Args:
-            acf_pfids: Set of PFIDs from ACF files
-
-        Returns:
-            Dictionary mapping PFID to (UUID, metadata) tuple
+        :param acf_pfids: Set of PFIDs from ACF files
+        :return: Dictionary mapping PFID to (path, metadata_dict) tuple
         """
         pfid_to_mod: dict[str, tuple[str, dict[str, Any]]] = {}
-        for uuid, metadata in self.metadata_manager.internal_local_metadata.items():
-            pfid = metadata.get("publishedfileid")
-            if pfid:
-                pfid_str = str(pfid)
-                if pfid_str in acf_pfids:
-                    pfid_to_mod[pfid_str] = (uuid, metadata)
+        for path, mod in self.metadata_controller.mods_metadata.items():
+            pfid = mod.published_file_id
+            if pfid and pfid in acf_pfids:
+                # Convert ListedMod to dict for compatibility with _batch_add_acf_rows
+                metadata: dict[str, Any] = {
+                    "name": mod.name,
+                    "path": str(mod.mod_path) if mod.mod_path else "",
+                    "publishedfileid": pfid,
+                    "supportedversions": mod.supported_versions,
+                    "internal_time_touched": mod.internal_time_touched,
+                }
+                if isinstance(mod, AboutXmlMod):
+                    metadata["authors"] = ", ".join(mod.authors) if mod.authors else ""
+                    metadata["packageid"] = str(mod.package_id)
+                else:
+                    metadata["authors"] = ""
+                    metadata["packageid"] = ""
+                # Get external timestamps from aux DB
+                _, aux_entry = self.metadata_controller.get_metadata_with_path(path)
+                if aux_entry is not None:
+                    metadata["external_time_updated"] = getattr(
+                        aux_entry, "external_time_updated", None
+                    )
+                pfid_to_mod[pfid] = (path, metadata)
         return pfid_to_mod
 
     def _on_import_acf_clicked(self) -> None:

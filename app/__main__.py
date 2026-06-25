@@ -39,6 +39,8 @@ from loguru import logger
 
 from app.controllers.app_controller import AppController
 from app.utils.app_info import AppInfo
+from app.utils.obfuscate_message import obfuscate_message
+from app.utils.single_instance import SingleInstanceLock
 from app.views.dialogue import show_fatal_error
 
 SYSTEM = platform.system()
@@ -198,4 +200,34 @@ if __name__ == "__main__":
         logger.debug("Running using Nuitka bundle")
 
     logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
-    main_thread()
+
+    # Single-instance lock: prevent multiple RimSort instances from running
+    lock: SingleInstanceLock | None = None
+    try:
+        lock = SingleInstanceLock(AppInfo().app_storage_folder / "rimsort.lock")
+        if not lock.acquire():
+            from PySide6.QtWidgets import QApplication, QMessageBox
+
+            _app = QApplication(sys.argv)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("RimSort Already Running")
+            msg.setText("Another instance of RimSort is already running.")
+            msg.setInformativeText(
+                "Please close the existing instance before starting a new one."
+            )
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
+            sys.exit(1)
+    except Exception:
+        logger.warning(
+            "Failed to acquire single-instance lock, continuing without lock",
+            exc_info=True,
+        )
+        lock = None
+
+    try:
+        main_thread()
+    finally:
+        if lock is not None:
+            lock.release()

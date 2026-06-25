@@ -9,7 +9,7 @@ from typing import Any, Callable, Sequence, TypeVar
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QAction, QKeyEvent, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QKeyEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -18,18 +18,19 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLayout,
-    QMenu,
     QPushButton,
     QTableView,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from app.utils.button_factory import ButtonFactory, MenuItem
+from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.models.operation_mode import OperationMode
+from app.models.settings import Settings
+from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
-from app.utils.metadata import MetadataManager
 from app.utils.mod_info import ModInfo
 from app.utils.mod_utils import get_mod_path_from_pfid
 from app.views.deletion_menu import ModDeletionMenu
@@ -46,7 +47,6 @@ class UIElements:
 
     title: QLabel
     details_label: QLabel
-    editor_deselect_all_button: QPushButton
     editor_select_all_button: QPushButton
     editor_cancel_button: QPushButton
 
@@ -81,56 +81,14 @@ class ColumnIndex(Enum):
     WORKSHOP_PAGE = 10
 
 
-class ButtonType(Enum):
-    """Enumeration of button types for standardized button creation."""
-
-    REFRESH = "refresh"
-    STEAMCMD = "steamcmd"
-    SUBSCRIBE = "subscribe"
-    UNSUBSCRIBE = "unsubscribe"
-    DELETE = "delete"
-    SELECT = "select"
-    CUSTOM = "custom"
-
-
-class OperationMode(Enum):
-    """Enumeration for mod update operation modes."""
-
-    STEAMCMD = "SteamCMD"
-    STEAM = "Steam"
-
-
-@dataclass
-class ButtonConfig:
-    """Configuration for creating standardized buttons."""
-
-    button_type: ButtonType
-    text: str = ""
-    pfid_column: int | None = None
-    # Callbacks to refresh the panel after deletion
-    completion_callback: Callable[[], None] | None = None
-    menu_items: list[MenuItem] | None = None
-    # For delete buttons
-    get_selected_mod_metadata: Callable[[], list[dict[str, Any]]] | None = None
-    # deletion menu
-    menu_title: str | None = None
-    enable_delete_mod: bool = True
-    enable_delete_keep_dds: bool = False
-    enable_delete_dds_only: bool = False
-    enable_delete_and_unsubscribe: bool = True
-    enable_delete_and_resubscribe: bool = False
-    # For custom buttons
-    custom_callback: Callable[[], None] | None = None
-
-
 class BaseModsPanel(QWidget):
     """
     Base class used for multiple panels that display a list of mods.
     """
 
     # Type hints for instance variables
-    metadata_manager: MetadataManager
-    settings_controller: Any
+    metadata_controller: MetadataController
+    settings: Any
     editor_model: QStandardItemModel
     editor_table_view: QTableView
     ui_elements: UIElements
@@ -149,9 +107,12 @@ class BaseModsPanel(QWidget):
     COL_WORKSHOP_PAGE = "Workshop Page"
 
     def _setup_metadata(self) -> None:
-        """Set up metadata manager and settings controller."""
-        self.metadata_manager = MetadataManager.instance()
-        self.settings_controller = self.metadata_manager.settings_controller
+        """Set up metadata controller and settings controller."""
+        self.metadata_controller = self._metadata_controller
+        self.settings = self.metadata_controller.settings
+        self.metadata_controller.metadata_refreshed.connect(
+            self._populate_from_metadata
+        )
 
     def _get_steam_client_integration_enabled(self) -> bool:
         """
@@ -160,8 +121,8 @@ class BaseModsPanel(QWidget):
         Returns:
             True if Steam client integration is enabled, False otherwise.
         """
-        return self.settings_controller.settings.instances[
-            self.settings_controller.settings.current_instance
+        return self.settings.instances[
+            self.settings.current_instance
         ].steam_client_integration
 
     def _setup_ui_elements(
@@ -175,9 +136,11 @@ class BaseModsPanel(QWidget):
         self.installEventFilter(self)
         self.setObjectName(object_name)
         self.ui_elements.title = QLabel(title_text)
+        self.ui_elements.title.setObjectName("baseModsPanelTitle")
         self.ui_elements.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.ui_elements.details_label = QLabel(details_text)
+        self.ui_elements.details_label.setObjectName("baseModsPanelDetails")
         self.ui_elements.details_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.setWindowTitle(window_title)
@@ -258,16 +221,6 @@ class BaseModsPanel(QWidget):
             self.layouts.editor_exit_actions_layout
         )
 
-        self.ui_elements.editor_deselect_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, False)
-        )
-        self.layouts.editor_checkbox_actions_layout.addWidget(
-            self.ui_elements.editor_deselect_all_button
-        )
-
-        self.ui_elements.editor_select_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, True)
-        )
         self.layouts.editor_checkbox_actions_layout.addWidget(
             self.ui_elements.editor_select_all_button
         )
@@ -323,13 +276,14 @@ class BaseModsPanel(QWidget):
 
     def _initialize_ui_elements(self) -> None:
         """Initialize UI elements dataclasses."""
+        factory = self.get_button_factory()
         self.ui_elements = UIElements(
             title=QLabel(),
             details_label=QLabel(),
-            editor_deselect_all_button=QPushButton(self.tr("Deselect all")),
-            editor_select_all_button=QPushButton(self.tr("Select all")),
+            editor_select_all_button=factory.create_select_all_button(),
             editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
         )
+        self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
 
     def _initialize_layouts(self) -> None:
         """Initialize layout dataclasses."""
@@ -351,8 +305,10 @@ class BaseModsPanel(QWidget):
         title_text: str,
         details_text: str,
         additional_columns: Sequence[HeaderColumn],
+        metadata_controller: MetadataController,
     ):
         super().__init__()
+        self._metadata_controller = metadata_controller
         self._initialize_ui_elements()
         self._initialize_layouts()
         self._initialize_components()
@@ -599,9 +555,7 @@ class BaseModsPanel(QWidget):
     def _delete_selected_mods(
         self, pfid_column: int, mode: OperationMode | str | int
     ) -> None:
-        delete_before_update_state = (
-            self.settings_controller.settings.steamcmd_delete_before_update
-        )
+        delete_before_update_state = self.settings.steamcmd_delete_before_update
         if delete_before_update_state:
             pfid_fn = self._get_selected_text_by_column(pfid_column)
             get_mode = self._resolve_mode_getter(mode)
@@ -616,7 +570,9 @@ class BaseModsPanel(QWidget):
                         try:
                             shutil.rmtree(mod_path)
                         except Exception as e:
-                            print(f"Error deleting mod directory {mod_path}: {e}")
+                            logger.error(
+                                f"Error deleting mod directory {mod_path}: {e}"
+                            )
 
     def _configure_button(
         self,
@@ -677,125 +633,9 @@ class BaseModsPanel(QWidget):
         label.setObjectName(object_name)
         return label
 
-    def _create_button(
-        self,
-        text: str,
-        callback: Callable[[], None] | None = None,
-        object_name: str = "",
-    ) -> QPushButton:
-        """
-        Create a standardized button.
-
-        Args:
-            text: Button text.
-            callback: Optional callback function.
-            object_name: Optional object name for the button.
-
-        Returns:
-            QPushButton: Configured button.
-        """
-        button = QPushButton()
-        button.setText(text)
-        if object_name:
-            button.setObjectName(object_name)
-        if callback is not None:
-            button.clicked.connect(callback)
-        return button
-
-    def _create_standardized_button(
-        self,
-        button_type: ButtonType,
-        pfid_column: int | None = None,
-        completion_callback: Callable[[], None] | None = None,
-        custom_callback: Callable[[], None] | None = None,
-        text: str = "",
-    ) -> QPushButton:
-        """
-        Create a standardized button based on type.
-
-        Args:
-            button_type: Type of button to create.
-            pfid_column: Column index for published file ID (for Steam-related buttons).
-            completion_callback: Callback after operation completes.
-            custom_callback: Custom callback for custom buttons.
-            text: Custom text for the button.
-
-        Returns:
-            Configured QPushButton.
-        """
-        if button_type == ButtonType.REFRESH:
-            return self._create_button(self.tr("Refresh"), custom_callback)
-        elif button_type == ButtonType.STEAMCMD:
-            if pfid_column is not None:
-                return self._create_button(
-                    self.tr("Download selected with SteamCMD"),
-                    self._create_update_callback(pfid_column, OperationMode.STEAMCMD),
-                )
-        elif button_type == ButtonType.SUBSCRIBE:
-            if pfid_column is not None:
-                return self._create_button(
-                    self.tr("Subscribe selected"),
-                    self._create_update_callback(
-                        pfid_column,
-                        OperationMode.STEAM,
-                        "subscribe",
-                        completion_callback,
-                    ),
-                )
-        elif button_type == ButtonType.UNSUBSCRIBE:
-            if pfid_column is not None:
-                return self._create_button(
-                    self.tr("Unsubscribe selected"),
-                    self._create_update_callback(
-                        pfid_column,
-                        OperationMode.STEAM,
-                        "unsubscribe",
-                        completion_callback,
-                    ),
-                )
-        elif button_type == ButtonType.CUSTOM:
-            return self._create_button(text, custom_callback)
-
-        # Fallback
-        return self._create_button(text or "Button", custom_callback)
-
-    def _create_refresh_button(
-        self, callback: Callable[[], None] | None
-    ) -> QPushButton:
-        """Create a standardized refresh button."""
-        return self._create_standardized_button(
-            ButtonType.REFRESH, custom_callback=callback
-        )
-
-    def _create_steamcmd_button(self, pfid_column: int) -> QPushButton:
-        """Create a standardized SteamCMD button."""
-        return self._create_standardized_button(
-            ButtonType.STEAMCMD, pfid_column=pfid_column
-        )
-
-    def _create_subscribe_button(
-        self, pfid_column: int, completion_callback: Callable[[], None] | None = None
-    ) -> QPushButton:
-        """Create a standardized subscribe button."""
-        return self._create_standardized_button(
-            ButtonType.SUBSCRIBE,
-            pfid_column=pfid_column,
-            completion_callback=completion_callback,
-        )
-
-    def _create_unsubscribe_button(
-        self, pfid_column: int, completion_callback: Callable[[], None] | None = None
-    ) -> QPushButton:
-        """Create a standardized unsubscribe button."""
-        return self._create_standardized_button(
-            ButtonType.UNSUBSCRIBE,
-            pfid_column=pfid_column,
-            completion_callback=completion_callback,
-        )
-
     def _create_deletion_button(
         self,
-        settings_controller: Any,
+        settings: Settings,
         get_selected_mod_metadata: Callable[[], list[dict[str, Any]]],
         completion_callback: Callable[[], None] | None,
         menu_title: str,
@@ -809,7 +649,7 @@ class BaseModsPanel(QWidget):
         Create a standardized deletion button with menu.
 
         Args:
-            settings_controller: The settings controller instance.
+            settings: The settings model instance.
             get_selected_mod_metadata: Function to get selected mod metadata.
             menu_title: Title for the deletion menu.
             completion_callback: Callback after deletion completes.
@@ -823,15 +663,17 @@ class BaseModsPanel(QWidget):
             QPushButton: Configured deletion button with dropdown menu.
         """
         # Check if Steam client integration is enabled
-        steam_client_integration_enabled = settings_controller.settings.instances[
-            settings_controller.settings.current_instance
+        steam_client_integration_enabled = settings.instances[
+            settings.current_instance
         ].steam_client_integration
 
         button = QPushButton()
         button.setText(self.tr("Delete"))
+        button.setObjectName("dangerButton")
         deletion_menu = ModDeletionMenu(
-            settings_controller=settings_controller,
+            settings=settings,
             get_selected_mod_metadata=get_selected_mod_metadata,
+            metadata_controller=self.metadata_controller,
             completion_callback=completion_callback,
             menu_title=menu_title,
             enable_delete_mod=enable_delete_mod,
@@ -889,16 +731,13 @@ class BaseModsPanel(QWidget):
             return self._create_refresh_button_from_config(config, factory)
         elif config.button_type == ButtonType.STEAMCMD:
             return self._create_steamcmd_button_from_config(config, factory)
-        elif config.button_type == ButtonType.SUBSCRIBE:
-            return self._create_subscribe_button_from_config(config, factory)
-        elif config.button_type == ButtonType.UNSUBSCRIBE:
-            return self._create_unsubscribe_button_from_config(config, factory)
+        elif config.button_type == ButtonType.STEAM:
+            return self._create_steam_button_from_config(config, factory)
         elif config.button_type == ButtonType.DELETE:
             return self._create_delete_button_from_config(config, factory)
         elif config.button_type == ButtonType.CUSTOM:
             return self._create_custom_button_from_config(config, factory)
-        elif config.button_type == ButtonType.SELECT:
-            return self._create_select_button_from_config(config, factory)
+
         return None
 
     def _create_refresh_button_from_config(
@@ -915,22 +754,12 @@ class BaseModsPanel(QWidget):
             return factory.create_steamcmd_button(config.pfid_column)
         return None
 
-    def _create_subscribe_button_from_config(
+    def _create_steam_button_from_config(
         self, config: ButtonConfig, factory: ButtonFactory
     ) -> QWidget | None:
-        """Create a subscribe button from config."""
+        """Create a Steam button from config."""
         if config.pfid_column is not None:
-            return factory.create_subscribe_button(
-                config.pfid_column, config.completion_callback
-            )
-        return None
-
-    def _create_unsubscribe_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
-        """Create an unsubscribe button from config."""
-        if config.pfid_column is not None:
-            return factory.create_unsubscribe_button(
+            return factory.create_steam_button(
                 config.pfid_column, config.completion_callback
             )
         return None
@@ -959,14 +788,6 @@ class BaseModsPanel(QWidget):
             return factory.create_custom_button(config.text, config.custom_callback)
         return None
 
-    def _create_select_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
-        """Create a select button from config."""
-        if config.menu_items:
-            return factory.create_select_button(config.text, config.menu_items)
-        return None
-
     def _create_custom_button(
         self, text: str, callback: Callable[[], None]
     ) -> QPushButton:
@@ -981,45 +802,22 @@ class BaseModsPanel(QWidget):
             Configured custom button
         """
         button = QPushButton(text)
+        button.setObjectName("primaryButton")
         button.clicked.connect(callback)
-        return button
-
-    def _create_select_button(
-        self, text: str, menu_items: list[MenuItem]
-    ) -> QToolButton:
-        """
-        Create a select button with dropdown menu.
-
-        Args:
-            text: Button text
-            menu_items: List of menu items for the dropdown
-
-        Returns:
-            Configured select button with menu
-        """
-        button = QToolButton()
-        button.setText(text)
-        menu = QMenu(button)
-        for menu_item in menu_items:
-            action = QAction(menu_item.text, self)
-            action.triggered.connect(menu_item.callback)
-            menu.addAction(action)
-        button.setMenu(menu)
-        button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         return button
 
     # ===== CENTRALIZED METADATA HANDLING =====
 
-    def _get_uuid_from_row(self, row: int, name_column: int = 1) -> str | None:
+    def _get_key_from_row(self, row: int, name_column: int = 1) -> str | None:
         """
-        Extract UUID from a table row's name column.
+        Extract the mod path key from a table row's name column.
 
         Args:
-            row: Row index to extract UUID from
-            name_column: Column index containing the name item with UUID data
+            row: Row index to extract key from
+            name_column: Column index containing the name item with key data
 
         Returns:
-            UUID string if found, None otherwise
+            Path key string if found, None otherwise
         """
         try:
             if row >= self.editor_model.rowCount():
@@ -1031,25 +829,45 @@ class BaseModsPanel(QWidget):
 
             return name_item.data(Qt.ItemDataRole.UserRole)
         except Exception as e:
-            logger.warning(f"Error accessing UUID from row {row}: {e}")
+            logger.warning(f"Error accessing key from row {row}: {e}")
             return None
 
     def _get_selected_mod_metadata(self) -> list[dict[str, Any]]:
         """
         Get metadata for selected mods in the table.
 
+        Returns a list of compat dicts with keys expected by ModDeletionMenu.
+        Note: the "uuid" key is a legacy name; the value is the mod path key.
+
         Returns:
-            List of ModMetadata objects for selected mods
+            List of ModMetadata compat dicts for selected mods
         """
-        selected_mods = []
+        selected_mods: list[dict[str, Any]] = []
         try:
             for row in range(self.editor_model.rowCount()):
                 if self._row_is_checked(row):
-                    uuid = self._get_uuid_from_row(row)
-                    if uuid and uuid in self.metadata_manager.internal_local_metadata:
-                        selected_mods.append(
-                            self.metadata_manager.internal_local_metadata[uuid]
-                        )
+                    path = self._get_key_from_row(row)
+                    if path:
+                        mod = self.metadata_controller.get_mod(path)
+                        if mod is not None:
+                            compat: dict[str, Any] = {
+                                "path": str(mod.mod_path) if mod.mod_path else "",
+                                "uuid": path,
+                                "name": mod.name or "",
+                                "publishedfileid": mod.published_file_id or "",
+                                "steamcmd": mod.mod_type == ModType.STEAM_CMD,
+                            }
+                            if mod.mod_type == ModType.LUDEON:
+                                compat["data_source"] = "expansion"
+                            elif mod.mod_type == ModType.STEAM_WORKSHOP:
+                                compat["data_source"] = "workshop"
+                            elif mod.mod_type == ModType.LOCAL:
+                                compat["data_source"] = "local"
+                            else:
+                                compat["data_source"] = str(mod.mod_type.value)
+                            if isinstance(mod, AboutXmlMod):
+                                compat["packageid"] = str(mod.package_id)
+                            selected_mods.append(compat)
         except Exception as e:
             logger.warning(f"Error getting selected mod metadata: {e}")
         return selected_mods
@@ -1060,12 +878,12 @@ class BaseModsPanel(QWidget):
         Refreshes the metadata cache and repopulates the table.
 
         This refreshes the metadata cache and repopulates the table with the updated mod data.
+        ``_populate_from_metadata`` is triggered automatically via
+        ``metadata_refreshed`` signal.
         """
-        logger.warning("Refreshing metadata cache and repopulating table")
-        # Refresh the metadata cache to reflect deletion changes
-        self.metadata_manager.refresh_cache(is_initial=False)
-        # Repopulate the table with updated data
-        self._populate_from_metadata()
+        logger.warning("Refreshing metadata and repopulating table")
+        # Refresh the metadata to reflect deletion changes
+        self.metadata_controller.refresh_metadata()
 
     def get_button_factory(self) -> ButtonFactory:
         """Get a button factory instance for this panel."""
@@ -1158,9 +976,9 @@ class BaseModsPanel(QWidget):
         if additional_items:
             base_items.extend(additional_items)
 
-        # Set UUID data on name item for metadata lookup
-        if mod_info.uuid:
-            base_items[0].setData(mod_info.uuid, Qt.ItemDataRole.UserRole)
+        # Set path key on name item for metadata lookup
+        if mod_info.key:
+            base_items[0].setData(mod_info.key, Qt.ItemDataRole.UserRole)
 
         self._add_row(base_items, default_checkbox_state)
 
@@ -1197,31 +1015,37 @@ class BaseModsPanel(QWidget):
         self.editor_model.appendRow(items)
 
     def _extract_mod_info_from_metadata(
-        self, uuid: str | None, metadata: dict[str, Any]
+        self, key: str | None, metadata: dict[str, Any] | ListedMod
     ) -> ModInfo:
         """
-        Extract ModInfo from metadata dictionary.
+        Extract ModInfo from metadata dictionary or ListedMod object.
 
         Args:
-            uuid: UUID of the mod
-            metadata: Metadata dictionary
+            key: Path key of the mod in metadata
+            metadata: Metadata dictionary or ListedMod instance
 
         Returns:
             ModInfo object
         """
-        return ModInfo.from_metadata(uuid, metadata)
+        if isinstance(metadata, ListedMod):
+            mod_info = ModInfo.from_listed_mod(metadata)
+            mod_info.key = key
+            return mod_info
+        return ModInfo.from_metadata(key, metadata)
 
-    def _extract_uuid_from_path(self, path: str) -> str | None:
+    def _resolve_path_key(self, path: str) -> str | None:
         """
-        Extract UUID from mod path using metadata manager.
+        Verify a mod path exists in metadata and return it as a key.
 
         Args:
-            path: Mod path
+            path: Mod path to verify
 
         Returns:
-            UUID if found, None otherwise
+            The path if found in metadata, None otherwise
         """
-        return self.metadata_manager.mod_metadata_dir_mapper.get(path)
+        if self.metadata_controller.has_mod(path):
+            return path
+        return None
 
     def _reconfigure_table_sorting(self, sorting_enabled: bool) -> None:
         """
@@ -1240,14 +1064,14 @@ class BaseModsPanel(QWidget):
 
     def _populate_mods(
         self,
-        groups: dict[str, list[tuple[str, dict[str, Any]]]],
+        groups: dict[str, list[tuple[str, dict[str, Any] | ListedMod]]],
         add_group_headers: bool = False,
     ) -> None:
         """
         Populate the table with mod groups.
 
         Args:
-            groups: Dictionary of groups, where key is group name, value is list of (uuid, metadata) tuples.
+            groups: Dictionary of groups, where key is group name, value is list of (path_key, metadata) tuples.
             add_group_headers: Whether to add header rows for each group.
         """
         self._clear_table_model()
@@ -1256,8 +1080,8 @@ class BaseModsPanel(QWidget):
             if add_group_headers and group_key:
                 self._add_group_header_row(group_key)
 
-            for uuid, metadata in mod_list:
-                mod_info = self._extract_mod_info_from_metadata(uuid, metadata)
+            for path_key, metadata in mod_list:
+                mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
                 self._add_mod_row(mod_info)
 
     def _get_standard_mod_columns(self) -> list[HeaderColumn]:
@@ -1312,17 +1136,11 @@ class BaseModsPanel(QWidget):
         """
         steam_client_integration_enabled = self._get_steam_client_integration_enabled()
         if steam_client_integration_enabled:
-            button_configs.extend(
-                [
-                    ButtonConfig(
-                        button_type=ButtonType.SUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                    ),
-                    ButtonConfig(
-                        button_type=ButtonType.UNSUBSCRIBE,
-                        pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
-                    ),
-                ]
+            button_configs.append(
+                ButtonConfig(
+                    button_type=ButtonType.STEAM,
+                    pfid_column=ColumnIndex.PUBLISHED_FILE_ID.value,
+                ),
             )
         return button_configs
 
@@ -1389,11 +1207,11 @@ class BaseModsPanel(QWidget):
     ) -> bool:
         """Check if a mod at given row has missing Publish Field ID."""
         if use_explicit_mode:
-            uuid = self._get_uuid_from_row(row)
+            key = self._get_key_from_row(row)
             return bool(
-                uuid
+                key
                 and missing_publishfieldid_mods
-                and uuid in missing_publishfieldid_mods
+                and key in missing_publishfieldid_mods
             )
         else:
             pfid_item = self.editor_model.item(row, ColumnIndex.PUBLISHED_FILE_ID.value)

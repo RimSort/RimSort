@@ -658,6 +658,50 @@ QWidget#baseModsPanel {
     color: #d6e0f3;
 }
 
+/* GitHubModsPanel styling */
+QWidget#githubModsPanel {
+    background-color: #101820;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #d6e0f3;
+}
+
+/* DuplicateModsPanel styling */
+QWidget#duplicateModsPanel {
+    background-color: #101820;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #d6e0f3;
+}
+
+/* MissingModPropertiesPanel styling */
+QWidget#missingModPropertiesPanel {
+    background-color: #101820;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #d6e0f3;
+}
+
+/* AcfLogReader styling */
+QWidget#AcfLogReader {
+    background-color: #101820;
+    border-style: solid;
+    border-color: #3b4a64;
+    border-width: 1px;
+    border-radius: 3px;
+    margin: 7px;
+    color: #d6e0f3;
+}
+
 /* MissingDependenciesDialog styling */
 QDialog#missingDependenciesDialog {
     background-color: #101820;
@@ -667,6 +711,35 @@ QDialog#missingDependenciesDialog {
     border-radius: 3px;
     margin: 7px;
     color: #d6e0f3;
+}
+
+/* Missing dependencies description */
+QLabel#missingDepsDescription {
+    color: #bfbfbf; /* Subtext */
+    font-size: 12px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    line-height: 1.3;
+}
+
+/* Missing dependencies scroll content */
+QWidget#missingDepsContent {
+    background-color: #1a2a34; /* Secondary Background */
+    border: none;
+}
+
+/* Missing dependencies summary header */
+QLabel#missingDepsHeader {
+    background-color: #1f2e38; /* Tertiary Background */
+    color: #d6e0f3; /* White */
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 4px;
+    border-bottom: 1px solid #2b4a6f; /* Tertiary Background */
+    qproperty-alignment: AlignCenter;
 }
 
 /* Local dependencies label */
@@ -983,4 +1056,216 @@ QListWidget#TagEditDialogList::indicator:checked {
 QListWidget#TagEditDialogList::indicator:unchecked {
     border: 1px solid #4a5a7a;
     background-color: #3b4a64;
+}
+
+/* Player Log Tab styling */
+QLabel#growthLabel {
+    color: green;
+    font-weight: bold;
+}
+
+QPushButton#statButtonGreen {
+    color: #00FF00;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonGreen:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonGreen:pressed {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonYellow {
+    color: #EEFF00;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonYellow:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonYellow:pressed {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonOrange {
+    color: #FF8C00;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonOrange:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonOrange:pressed {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonRed {
+    color: #FF0000;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+QPushButton#statButtonRed:hover {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#statButtonRed:pressed {
+    background: transparent;
+    border: none;
+}
+
+/* Player Log Tab - Group boxes */
+QGroupBox#fileInfoGroup,
+QGroupBox#statsGroup,
+QGroupBox#controlsGroup,
+QGroupBox#searchFilterGroup,
+QGroupBox#navGroup {
+    background-color: transparent;
+    border: 1px solid #2b4a6f;
+    border-radius: 4px;
+    margin-top: 14px;
+    padding: 12px 4px 4px 4px;
+    font-size: 12px;
+}
+
+QGroupBox#fileInfoGroup::title,
+QGroupBox#statsGroup::title,
+QGroupBox#controlsGroup::title,
+QGroupBox#searchFilterGroup::title,
+QGroupBox#navGroup::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 2px 8px;
+    background-color: #1f2e38;
+    color: #d6e0f3;
+    border-radius: 3px;
+}
+
+/* Player Log Tab - Log display */
+QTextEdit#logDisplay {
+    background-color: #0a1218;
+    color: #d6e0f3;
+    border: 1px solid #2b4a6f;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+/* Player Log Tab - Splitter */
+QSplitter#logSplitter::handle {
+    background-color: #2b4a6f;
+    width: 1px;
+}
+
+/* Player Log Tab - File info labels */
+QLabel#filePathLabel,
+QLabel#fileSizeLabel,
+QLabel#lastModifiedLabel {
+    color: #bfbfbf;
+    font-size: 11px;
+    padding: 2px 4px;
+}
+
+/* Player Log Tab - Navigation buttons */
+QPushButton#navButton {
+    background-color: #1f2e38;
+    color: #d6e0f3;
+    border: 1px solid #2b3d4e;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 11px;
+}
+
+QPushButton#navButton:hover {
+    background-color: #2b3d4e;
+}
+
+QPushButton#navButton:pressed {
+    background-color: #1a2a34;
+}
+
+/* Player Log Tab - Navigation labels */
+QLabel#navLabel {
+    color: #d6e0f3;
+    font-size: 11px;
+    padding: 0px 4px;
+}
+
+/* Player Log Tab - Match count label */
+QLabel#match_count_label {
+    color: #bfbfbf;
+    font-size: 11px;
+    padding: 0px 4px;
+}
+
+/* Player Log Tab - Progress bar */
+QProgressBar#logProgressBar {
+    background-color: #101820;
+    border: 1px solid #2b4a6f;
+    border-radius: 3px;
+    text-align: center;
+    color: #d6e0f3;
+    font-size: 11px;
+    height: 18px;
+}
+
+QProgressBar#logProgressBar::chunk {
+    background-color: #1f2e38;
+    border-radius: 2px;
+}
+
+/* ===== Filter Panel (app/views/filter_panel.py) ===== */
+QFrame#FilterPanel {
+    background-color: #121c24;
+    border: 1px solid #2b4a6f;
+    border-radius: 8px;
+}
+
+QFrame#TagChip {
+    background-color: #1f2e38;
+    border: 1px solid #3b4a64;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #d6e0f3;
+}
+
+QFrame#TagChip[active="true"] {
+    background-color: #2d6aa3;
+    border-color: #2d6aa3;
+}
+
+QFrame#TagChip[active="false"] {
+    background-color: #1f2e38;
+    border-color: #3b4a64;
+    color: #bfbfbf;
+}
+
+QFrame#TagChip:hover {
+    background-color: #2e3a4f;
+    border-color: #4a5a7a;
+}
+
+QLabel#FilterBadge {
+    background-color: #c4334d;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: bold;
 }

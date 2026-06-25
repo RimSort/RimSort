@@ -14,7 +14,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.symlink as symlink
-from app.controllers.settings_controller import SettingsController
+from app.models.settings import Instance, Settings
 from app.utils import http
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
@@ -389,7 +389,8 @@ class SteamcmdInterface:
         self,
         runner: RunnerPanel | None = None,
         ask_ignore: bool = False,
-        settings_controller: SettingsController | None = None,
+        settings: Settings | None = None,
+        active_instance: Instance | None = None,
     ) -> bool:
         """Asks if the user wants to setup SteamCMD. If the user chooses to ignore the dialogue, set the steamcmd ignore flag in the settings.
 
@@ -397,8 +398,10 @@ class SteamcmdInterface:
         :type runner: RunnerPanel | None, optional
         :param ask_ignore: Whether to ask the user to ignore the dialogue, defaults to False
         :type ask_ignore: bool, optional
-        :param settings_controller: The settings controller used to set steamcmd ignore flag, defaults to None
-        :type settings_controller: SettingsController | None, optional
+        :param settings: The settings model used to save steamcmd ignore flag, defaults to None
+        :type settings: Settings | None, optional
+        :param active_instance: The active instance used to set steamcmd ignore flag, defaults to None
+        :type active_instance: Instance | None, optional
         :return: Whenever or not the user chose to ignore the dialogue
         :rtype: bool
         """
@@ -415,9 +418,9 @@ class SteamcmdInterface:
             title=self.translate("SteamcmdInterface", "RimSort - SteamCMD setup"),
             text=self.translate(
                 "SteamcmdInterface",
-                "RimSort was unable to find SteamCMD installed in the configured prefix:\n",
+                "RimSort was unable to find SteamCMD installed in the configured prefix:<br>",
             ),
-            information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}\n\n"
+            information=f"{self.steamcmd_prefix if self.steamcmd_prefix else '<None>'}<br><br>"
             + self.translate("SteamcmdInterface", "Do you want to setup SteamCMD?"),
             button_text_override=translated_btn_text,
         )
@@ -430,9 +433,9 @@ class SteamcmdInterface:
             runner.close()
 
         if ask_ignore and answer == dont_ask_text:
-            if settings_controller is not None:
-                settings_controller.active_instance.steamcmd_ignore = True
-                settings_controller.settings.save()
+            if settings is not None and active_instance is not None:
+                active_instance.steamcmd_ignore = True
+                settings.save()
 
             return True
         return False
@@ -535,7 +538,7 @@ class SteamcmdInterface:
                 show_fatal_error(
                     "SteamcmdInterface",
                     f"Failed to download steamcmd for {self.system}",
-                    "Did the file/url change?\nDoes your environment have access to the internet?",
+                    "Did the file/url change?<br>Does your environment have access to the internet?",
                     details=f"Error: {type(e).__name__}: {str(e)}",
                 )
         else:
@@ -582,7 +585,7 @@ class SteamcmdInterface:
                     ),
                     self.translate(
                         "SteamcmdInterface",
-                        "Existing symlink: {symlink_destination_path}\n\nNew symlink:\n[{symlink_source_path}] -> ",
+                        "Existing symlink: {symlink_destination_path}<br><br>New symlink:<br>[{symlink_source_path}] -> ",
                     ).format(
                         symlink_source_path=symlink_source_path,
                         symlink_destination_path=symlink_destination_path,
@@ -613,7 +616,7 @@ class SteamcmdInterface:
                     ),
                     self.translate(
                         "SteamcmdInterface",
-                        "Existing destination: {symlink_destination_path}\n\nNew symlink:\n[{symlink_source_path}] -> ",
+                        "Existing destination: {symlink_destination_path}<br><br>New symlink:<br>[{symlink_source_path}] -> ",
                     ).format(
                         symlink_source_path=symlink_source_path,
                         symlink_destination_path=symlink_destination_path,
@@ -638,7 +641,8 @@ class SteamcmdInterface:
                         + " and is required for SteamCMD mod downloads to work correctly.",
                     ),
                     self.translate(
-                        "SteamcmdInterface", "New symlink:\n[{symlink_source_path}] -> "
+                        "SteamcmdInterface",
+                        "New symlink:<br>[{symlink_source_path}] -> ",
                     ).format(
                         symlink_source_path=symlink_source_path,
                     )

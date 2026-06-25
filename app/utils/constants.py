@@ -7,6 +7,9 @@ INSTANCE_FOLDER_NAME = "instances"
 STEAMCMD_FOLDER_NAME = "steamcmd"
 STEAM_FOLDER_NAME = "steam"
 
+# Steam App ID for RimWorld
+RIMWORLD_STEAM_APP_ID = "294100"
+
 # Default packageId for mods with missing or invalid packageId
 DEFAULT_MISSING_PACKAGEID = "missing.packageid"
 
@@ -22,7 +25,6 @@ DB_BUILDER_PRUNE_EXCEPTIONS = [
 ]
 DB_BUILDER_PURGE_KEYS = ["external_time_created", "external_time_updated"]
 DB_BUILDER_RECURSE_EXCEPTIONS = [
-    "dependencies",
     "incompatibleWith",
     "loadBefore",
     "loadAfter",
@@ -75,16 +77,6 @@ RIMWORLD_DLC_METADATA = {
     },
 }
 RIMWORLD_PACKAGE_IDS = [v["packageid"] for v in RIMWORLD_DLC_METADATA.values()]
-SEARCH_DATA_SOURCE_FILTER_INDEXES = [
-    "all",
-    "expansion",
-    "local",
-    "git_repo",
-    "steamcmd",
-    "workshop",
-    "csharp",
-    "xml",
-]
 KNOWN_MOD_REPLACEMENTS = {
     "brrainz.harmony": {"zetrith.prepatcher", "jikulopo.prepatcher"},
     "aoba.motorization.engine": {"rimthunder.core"},
@@ -100,6 +92,13 @@ KNOWN_TIER_ZERO_MODS = {
     "ludeon.rimworld.anomaly",
     "ludeon.rimworld.odyssey",
 }
+DATABASE_DISPLAY_NAMES: dict[str, str] = {
+    "community_rules": "Community Rules",
+    "steam_workshop": "Steam Workshop",
+    "no_version_warning": "No Version Warning",
+    "use_this_instead": "Use This Instead",
+}
+
 KNOWN_TIER_ONE_MODS = {
     "adaptive.storage.framework",
     "aoba.framework",

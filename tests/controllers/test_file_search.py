@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -301,10 +301,6 @@ def test_filter_results(setup_test_files: str) -> None:
 def test_xml_search_only_xml_files(setup_test_files: str) -> None:
     """Test that xml_search only processes .xml files."""
     from app.utils.file_search import FileSearch
-    from app.utils.metadata import MetadataManager
-
-    # Mock settings_controller
-    mock_settings_controller = MagicMock()
 
     # Patch the instance method of SteamcmdInterface
     with patch(
@@ -312,9 +308,9 @@ def test_xml_search_only_xml_files(setup_test_files: str) -> None:
     ) as mock_instance_method:
         mock_instance_method.return_value = MagicMock()  # Return a mock instance
 
-        # Create a FileSearch instance with mocked MetadataManager
-        mock_metadata_manager = MetadataManager(mock_settings_controller)
-        file_search = FileSearch(metadata_manager=mock_metadata_manager)
+        # Create a FileSearch instance with mocked MetadataController
+        mock_metadata_controller = MagicMock()
+        file_search = FileSearch(metadata_controller=mock_metadata_controller)
 
         # Define search parameters
         search_text = "<modmetadata>"
@@ -335,3 +331,144 @@ def test_xml_search_only_xml_files(setup_test_files: str) -> None:
 
         # Ensure results are not empty
         assert results, "No results found, but .xml files exist in the test setup."
+
+
+def test_skip_translations_excludes_language_files(setup_test_files: str) -> None:
+    """Test that skip_translations actually excludes files in Languages/ directories."""
+    from app.utils.file_search import FileSearch
+
+    file_search = FileSearch(metadata_controller=MagicMock())
+
+    search_text = "test"
+    root_paths = [setup_test_files]
+
+    # Search WITHOUT skip_translations — should find Languages files
+    options_no_skip: dict[str, Any] = {"file_extensions": [".xml"]}
+    results_no_skip = list(
+        file_search.xml_search(search_text, root_paths, options_no_skip)
+    )
+    language_files_no_skip = [
+        (mod, fname, path)
+        for mod, fname, path in results_no_skip
+        if "Languages" in Path(path).parts
+    ]
+    assert len(language_files_no_skip) > 0, (
+        "Expected to find at least one file in Languages/ when skip is off"
+    )
+
+    # Search WITH skip_translations — should NOT find Languages files
+    file_search.reset()
+    options_skip: dict[str, Any] = {
+        "file_extensions": [".xml"],
+        "exclude_options": {"skip_translations": True},
+    }
+    results_skip = list(file_search.xml_search(search_text, root_paths, options_skip))
+    language_files_skip = [
+        (mod, fname, path)
+        for mod, fname, path in results_skip
+        if "Languages" in Path(path).parts
+    ]
+    assert len(language_files_skip) == 0, (
+        f"Expected no files in Languages/ when skip is on, got {language_files_skip}"
+    )
+
+
+def test_skip_directories_excludes_matching_folders(setup_test_files: str) -> None:
+    """Test that skip_git, skip_source, and skip_textures exclude their directories."""
+    from app.utils.file_search import FileSearch
+
+    # Create additional test directories with searchable XML files
+    test_mod = Path(setup_test_files) / "TestMod1"
+
+    git_dir = test_mod / ".git"
+    git_dir.mkdir(exist_ok=True)
+    (git_dir / "config.xml").write_text("<git>test searchable content</git>")
+
+    source_dir = test_mod / "Source"
+    source_dir.mkdir(exist_ok=True)
+    (source_dir / "Main.xml").write_text("<source>test searchable content</source>")
+
+    textures_dir = test_mod / "Textures"
+    textures_dir.mkdir(exist_ok=True)
+    (textures_dir / "info.xml").write_text(
+        "<textures>test searchable content</textures>"
+    )
+
+    file_search = FileSearch(metadata_controller=MagicMock())
+    search_text = "searchable"
+    root_paths = [setup_test_files]
+
+    # Search WITHOUT excludes — should find files in all dirs
+    options_no_skip: dict[str, Any] = {"file_extensions": [".xml"]}
+    results_no_skip = list(
+        file_search.xml_search(search_text, root_paths, options_no_skip)
+    )
+    found_dirs = {
+        "git": any(".git" in Path(p).parts for _, _, p in results_no_skip),
+        "source": any("Source" in Path(p).parts for _, _, p in results_no_skip),
+        "textures": any("Textures" in Path(p).parts for _, _, p in results_no_skip),
+    }
+    assert all(found_dirs.values()), (
+        f"Expected to find files in .git, Source, Textures when skips are off: {found_dirs}"
+    )
+
+    # Search WITH all excludes
+    file_search.reset()
+    options_skip: dict[str, Any] = {
+        "file_extensions": [".xml"],
+        "exclude_options": {
+            "skip_git": True,
+            "skip_source": True,
+            "skip_textures": True,
+        },
+    }
+    results_skip = list(file_search.xml_search(search_text, root_paths, options_skip))
+    excluded_files = [
+        (mod, fname, path)
+        for mod, fname, path in results_skip
+        if set(Path(path).parts) & {".git", "Source", "Textures"}
+    ]
+    assert len(excluded_files) == 0, (
+        f"Expected no files from excluded dirs, got {excluded_files}"
+    )
+
+
+def test_skip_translations_works_with_standard_search(setup_test_files: str) -> None:
+    """Test that exclude_options work through standard_search, not just xml_search."""
+    from app.utils.file_search import FileSearch
+
+    file_search = FileSearch(metadata_controller=MagicMock())
+
+    search_text = "test"
+    root_paths = [setup_test_files]
+
+    # standard_search WITHOUT skip — should find Languages files
+    options_no_skip: dict[str, Any] = {}
+    results_no_skip = list(
+        file_search.standard_search(search_text, root_paths, options_no_skip)
+    )
+    language_files_no_skip = [
+        (mod, fname, path)
+        for mod, fname, path in results_no_skip
+        if "Languages" in Path(path).parts
+    ]
+    assert len(language_files_no_skip) > 0, (
+        "Expected Languages/ files in standard_search when skip is off"
+    )
+
+    # standard_search WITH skip — should NOT find Languages files
+    file_search.reset()
+    options_skip: dict[str, Any] = {
+        "exclude_options": {"skip_translations": True},
+    }
+    results_skip = list(
+        file_search.standard_search(search_text, root_paths, options_skip)
+    )
+    language_files_skip = [
+        (mod, fname, path)
+        for mod, fname, path in results_skip
+        if "Languages" in Path(path).parts
+    ]
+    assert len(language_files_skip) == 0, (
+        f"Expected no Languages/ files in standard_search when skip is on, got {language_files_skip}"
+    )

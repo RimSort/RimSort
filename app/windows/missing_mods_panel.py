@@ -6,12 +6,13 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
+from app.controllers.metadata_controller import MetadataController
+from app.models.operation_mode import OperationMode
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
     ButtonType,
-    OperationMode,
 )
 
 
@@ -27,6 +28,7 @@ class MissingModsPrompt(BaseModsPanel):
     def __init__(
         self,
         packageids: list[str],
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the MissingModsPrompt.
@@ -53,6 +55,7 @@ class MissingModsPrompt(BaseModsPanel):
                 self.tr(self.COL_PUBLISHED_FILE_ID),
                 self.tr(self.COL_WORKSHOP_PAGE),
             ],
+            metadata_controller=metadata_controller,
         )
 
         self.data_by_variants: dict[str, dict[str, Any]] = {}
@@ -154,6 +157,18 @@ class MissingModsPrompt(BaseModsPanel):
         """
         return self.packageids
 
+    def _get_steam_database(self) -> dict[str, Any] | None:
+        """
+        Get the Steam database dictionary, with null safety.
+
+        Returns:
+            The Steam database dict, or None if unavailable.
+        """
+        steam_db = self.metadata_controller.steam_db
+        if steam_db is None:
+            return None
+        return steam_db.database
+
     def _build_variant_data_from_steam_metadata(self) -> dict[str, dict[str, Any]]:
         """
         Build variant data from Steam metadata, grouping by package ID.
@@ -162,7 +177,7 @@ class MissingModsPrompt(BaseModsPanel):
             Dictionary mapping package IDs to their variant data.
         """
         if not hasattr(self, "_cached_steam_metadata"):
-            self._cached_steam_metadata = self.metadata_manager.external_steam_metadata
+            self._cached_steam_metadata = self._get_steam_database()
 
         steam_metadata = self._cached_steam_metadata
         if steam_metadata and len(steam_metadata) > 500:
@@ -172,19 +187,17 @@ class MissingModsPrompt(BaseModsPanel):
 
         variants_by_packageid: dict[str, dict[str, Any]] = {}
         if steam_metadata:
-            for published_file_id, metadata in steam_metadata.items():
-                name = metadata.get(
-                    "steamName", metadata.get("name", "Not found in steam database")
-                )
-                packageid = metadata.get("packageId", "").lower()
-                game_versions = metadata.get(
-                    "gameVersions", ["Not found in steam database"]
-                )
+            for published_file_id, entry in steam_metadata.items():
+                name = entry.steamName or entry.name or "Not found in steam database"
+                packageid = (entry.packageId or "").lower()
+                game_versions: list[str] | str | None = entry.gameVersions
+                if not game_versions:
+                    game_versions = ["Not found in steam database"]
 
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
                     key: value
-                    for key, value in metadata.get("dependencies", {}).items()
+                    for key, value in entry.dependencies.items()
                     if key not in RIMWORLD_DLC_METADATA.keys()
                 }
 
@@ -336,7 +349,7 @@ class MissingModsPrompt(BaseModsPanel):
         """
         try:
             # Cache Steam metadata to avoid repeated access
-            self._cached_steam_metadata = self.metadata_manager.external_steam_metadata
+            self._cached_steam_metadata = self._get_steam_database()
             if (
                 self._cached_steam_metadata
                 and len(self._cached_steam_metadata.keys()) > 0

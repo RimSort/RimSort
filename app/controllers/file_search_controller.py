@@ -9,15 +9,14 @@ from loguru import logger
 from psutil import Process
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
-import app.utils.metadata as metadata
-from app.controllers.settings_controller import SettingsController
+from app.controllers.metadata_controller import MetadataController
 from app.models.divider import is_divider_uuid
 from app.models.search_result import SearchResult
 from app.models.settings import Settings
 from app.utils.file_search import FileSearch
 from app.utils.generic import format_file_size
 from app.utils.ignore_extensions import IGNORE_EXTENSIONS
-from app.utils.mod_utils import get_mod_paths_from_uuids
+from app.utils.mod_utils import get_mod_paths
 from app.views.dialogue import show_warning
 from app.views.file_search_dialog import FileSearchDialog
 from app.views.mods_panel import ModsPanel
@@ -517,28 +516,6 @@ class SearchWorker(QThread):
             scope == "inactive mods" and not is_active
         )
 
-    def _should_exclude(self, file_path: str) -> bool:
-        """Check if a file or directory should be excluded based on exclude_options."""
-        exclude_options = self.options.get("exclude_options", {})
-
-        # Skip translations
-        if exclude_options.get("skip_translations") and "Languages" in file_path:
-            return True
-
-        # Skip .git folders
-        if exclude_options.get("skip_git") and ".git" in file_path:
-            return True
-
-        # Skip Source folders
-        if exclude_options.get("skip_source") and "Source" in file_path:
-            return True
-
-        # Skip Textures folders
-        if exclude_options.get("skip_textures") and "Textures" in file_path:
-            return True
-
-        return False
-
     def run(self) -> None:
         try:
             logger.info(f"Starting search with text: {self.pattern}")
@@ -616,8 +593,8 @@ class FileSearchController(QObject):
     def __init__(
         self,
         settings: Settings,
-        settings_controller: SettingsController,
         dialog: FileSearchDialog,
+        metadata_controller: MetadataController,
         active_mod_ids: Optional[set[str]] = None,
     ) -> None:
         """
@@ -625,25 +602,24 @@ class FileSearchController(QObject):
 
         Args:
             settings (Settings): Application settings instance.
-            settings_controller (SettingsController): Controller for settings management.
             dialog (FileSearchDialog): The file search dialog UI component.
+            metadata_controller (MetadataController): Metadata controller instance.
             active_mod_ids (Optional[Set[str]]): Set of active mod IDs for filtering.
         """
         super().__init__()
         self.settings = settings
         self.dialog = dialog
-        self.settings_controller = settings_controller
+        self.metadata_controller = metadata_controller
         self.mods_panel = ModsPanel(
-            settings_controller=self.settings_controller,
+            settings=self.settings,
+            metadata_controller=metadata_controller,
         )
         self.active_mod_ids = (
             active_mod_ids or set()
         )  # This is used for the controller, not the worker
         self.search_results: list[SearchResult] = []
         self.search_worker: Optional[SearchWorker] = None
-        self.searcher = FileSearch()
-        # Initialize MetadataManager
-        self.metadata_manager = metadata.MetadataManager.instance()
+        self.searcher = FileSearch(metadata_controller=metadata_controller)
 
         # connect signals
         self.dialog.search_button.clicked.connect(self._on_search_clicked)
@@ -797,11 +773,11 @@ class FileSearchController(QObject):
             # Get all mod IDs by combining active and inactive mods (exclude dividers)
             all_uuids = {
                 u
-                for u in self.mods_panel.active_mods_list.uuids
+                for u in self.mods_panel.active_mods_list.paths
                 if not is_divider_uuid(u)
-            } | set(self.mods_panel.inactive_mods_list.uuids)
+            } | set(self.mods_panel.inactive_mods_list.paths)
             # Use our helper method to get paths and extract IDs
-            all_paths = self._get_mod_paths_from_uuids(list(all_uuids))
+            all_paths = self._get_mod_paths(list(all_uuids))
             for path in all_paths:
                 mod_id = os.path.basename(path)
                 mod_ids_for_search.add(mod_id)
@@ -879,7 +855,7 @@ class FileSearchController(QObject):
             mod_ids (Optional[Set[str]]): Set of mod IDs for filtering.
             scope (str): Search scope ("active mods", "inactive mods", "all mods", etc.).
         """
-        self.searcher = FileSearch()
+        self.searcher = FileSearch(metadata_controller=self.metadata_controller)
 
         # Update the dialog's search paths
         self.dialog.set_search_paths(root_paths)
@@ -911,7 +887,7 @@ class FileSearchController(QObject):
 
         return root_paths
 
-    def _get_mod_paths_from_uuids(self, uuids: list[str]) -> list[str]:
+    def _get_mod_paths(self, uuids: list[str]) -> list[str]:
         """
         Helper method to get mod paths from a list of UUIDs.
 
@@ -926,10 +902,11 @@ class FileSearchController(QObject):
 
         for uuid in uuids:
             # Check if the mod is in local metadata
-            if uuid in self.metadata_manager.internal_local_metadata:
-                mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
-                if os.path.isdir(mod_path):
-                    mod_paths.append(mod_path)
+            mod = self.metadata_controller.get_mod(uuid)
+            if mod is not None:
+                mod_path = mod.mod_path
+                if mod_path is not None and os.path.isdir(mod_path):
+                    mod_paths.append(str(mod_path))
                     logger.debug(f"Added mod path: {mod_path}")
 
         logger.info(f"Found {len(mod_paths)} mod paths from {len(uuids)} UUIDs")
@@ -976,12 +953,13 @@ class FileSearchController(QObject):
         Returns:
             List[str]: List of active mod folder paths.
         """
-        # Use metadata.get_mods_from_list to get active mod UUIDs
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
-        active_uuids, _, _, _ = metadata.get_mods_from_list(mod_list_path)
+        active_uuids, _, _, _ = MetadataController.instance().get_mods_from_list(
+            mod_list_path
+        )
         logger.info(f"Getting paths for {len(active_uuids)} active mods from mod list")
-        return get_mod_paths_from_uuids(active_uuids)
+        return get_mod_paths(active_uuids)
 
     def get_inactive_mods_paths(self) -> list[str]:
         """
@@ -990,14 +968,15 @@ class FileSearchController(QObject):
         Returns:
             List[str]: List of inactive mod folder paths.
         """
-        # Use metadata.get_mods_from_list to get inactive mod UUIDs
         instance = self.settings.instances[self.settings.current_instance]
         mod_list_path = os.path.join(instance.config_folder, "ModsConfig.xml")
-        _, inactive_uuids, _, _ = metadata.get_mods_from_list(mod_list_path)
+        _, inactive_uuids, _, _ = MetadataController.instance().get_mods_from_list(
+            mod_list_path
+        )
         logger.info(
             f"Getting paths for {len(inactive_uuids)} inactive mods from mod list"
         )
-        return get_mod_paths_from_uuids(inactive_uuids)
+        return get_mod_paths(inactive_uuids)
 
     def _on_stop_clicked(self) -> None:
         """
@@ -1059,7 +1038,7 @@ class FileSearchController(QObject):
                     "There was an error with your regular expression pattern."
                 ),
                 information=self.tr(
-                    "{error_msg}\n\nTry simplifying your pattern or check for syntax errors."
+                    "{error_msg}<br><br>Try simplifying your pattern or check for syntax errors."
                 ).format(error_msg=error_msg),
             )
         elif "permission" in error_msg.lower() or "access" in error_msg.lower():
@@ -1067,7 +1046,7 @@ class FileSearchController(QObject):
                 title=self.tr("File Access Error"),
                 text=self.tr("RimSort doesn't have permission to access some files."),
                 information=self.tr(
-                    "{error_msg}\n\nTry running RimSort with administrator privileges or check folder permissions."
+                    "{error_msg}<br><br>Try running RimSort with administrator privileges or check folder permissions."
                 ).format(error_msg=error_msg),
             )
         elif "memory" in error_msg.lower():
@@ -1075,7 +1054,7 @@ class FileSearchController(QObject):
                 title=self.tr("Memory Error"),
                 text=self.tr("RimSort ran out of memory while searching."),
                 information=self.tr(
-                    "{error_msg}\n\nTry searching in smaller batches or use the 'streaming search' method for very large files."
+                    "{error_msg}<br><br>Try searching in smaller batches or use the 'streaming search' method for very large files."
                 ).format(error_msg=error_msg),
             )
         else:
@@ -1083,7 +1062,7 @@ class FileSearchController(QObject):
                 title=self.tr("Search Error"),
                 text=self.tr("An error occurred during the search."),
                 information=self.tr(
-                    "{error_msg}\n\nPlease check your settings and try again."
+                    "{error_msg}<br><br>Please check your settings and try again."
                 ).format(error_msg=error_msg),
             )
 

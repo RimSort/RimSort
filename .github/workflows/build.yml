@@ -47,43 +47,28 @@ jobs:
             env:
               BUILD_OUTPUT: "app.app"
               Executable: RimSort
+
           - os: macos-latest
             platform: "Darwin"
             arch: "arm"
             env:
               BUILD_OUTPUT: "app.app"
               Executable: RimSort
+
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: "RimSort"
+
           - os: ubuntu-24.04
             platform: "Ubuntu-24.04"
             arch: "x86_64"
             env:
               BUILD_OUTPUT: "app.dist"
               Executable: RimSort
-          # TODO(debt): Fedora/RPM builds disabled — the container: key was never
-          # applied at the job level so these always ran on Ubuntu. Revisit once
-          # AppImage support lands (see PR for appimage-distribution branch).
-          # - os: ubuntu-latest
-          #   container: fedora:42
-          #   platform: "Fedora-42"
-          #   arch: "x86_64"
-          #   env:
-          #     BUILD_OUTPUT: "app.dist"
-          #     Executable: RimSort
-          #     BUILD_RPM: "true"
-          # - os: ubuntu-latest
-          #   container: fedora:43
-          #   platform: "Fedora-43"
-          #   arch: "x86_64"
-          #   env:
-          #     BUILD_OUTPUT: "app.dist"
-          #     Executable: RimSort
-          #     BUILD_RPM: "true"
+
           - os: windows-latest
             platform: "Windows"
             arch: "x86_64"
@@ -238,7 +223,7 @@ jobs:
           wix extension add WixToolset.Util.wixext/7.0.0-rc.1
 
           # Absolute paths for license and build output
-          $AbsoluteLicensePath = Resolve-Path "data\EULA.rtf" -ErrorAction Stop
+          $AbsoluteLicensePath = Resolve-Path "packaging\EULA.rtf" -ErrorAction Stop
           $AbsoluteBuildOutput = Resolve-Path "build\${{ matrix.env.BUILD_OUTPUT }}" -ErrorAction Stop
 
           # Validate executable exists
@@ -249,7 +234,7 @@ jobs:
           }
 
           # Create MSI package using WiX Toolset
-          wix build data\RimSort.wxs `
+          wix build packaging\msi\RimSort.wxs `
             -ext WixToolset.UI.wixext `
             -ext WixToolset.Util.wixext `
             -d PackageVersion="${{ steps.sem_version.outputs.major }}.${{ steps.sem_version.outputs.minor }}.${{ steps.sem_version.outputs.patch }}.${{ steps.sem_version.outputs.increment }}" `
@@ -273,7 +258,7 @@ jobs:
       - name: Build AppImage
         if: matrix.platform == 'Ubuntu-22.04'
         run: |
-          bash packaging/appimage/build-appimage.sh \
+          bash packaging/linux/build-appimage.sh \
             "build/${{ matrix.env.BUILD_OUTPUT }}" \
             "${{ steps.sem_version.outputs.major }}.${{ steps.sem_version.outputs.minor }}.${{ steps.sem_version.outputs.patch }}"
         shell: bash
@@ -318,56 +303,6 @@ jobs:
           tar -cvf "${{ steps.filename.outputs.FILENAME }}.tar" "$rootname"
           rm -rf "$rootname"
         shell: bash
-
-      # TODO(debt): RPM build steps disabled along with Fedora matrix entries.
-      # See comment in matrix.include above for details.
-      # - name: Install RPM build dependencies
-      #   if: matrix.env.BUILD_RPM == 'true'
-      #   run: |
-      #     dnf install -y rpm-build rpmdevtools git gcc gcc-c++ python3.12 python3.12-devel desktop-file-utils libappstream-glib
-      #   shell: bash
-      #
-      # - name: Setup RPM build environment
-      #   if: matrix.env.BUILD_RPM == 'true'
-      #   run: |
-      #     mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-      #   shell: bash
-      #
-      # - name: Create source tarball for RPM
-      #   if: matrix.env.BUILD_RPM == 'true'
-      #   run: |
-      #     bash packaging/rpm/make-tarball.sh "${{ steps.sem_version.outputs.version }}"
-      #   shell: bash
-      #
-      # - name: Build RPM package
-      #   if: matrix.env.BUILD_RPM == 'true'
-      #   run: |
-      #     rpmbuild -bb packaging/rpm/rimsort.spec \
-      #       --define "version ${{ steps.sem_version.outputs.version }}"
-      #   shell: bash
-      #
-      # - name: Find RPM file
-      #   if: matrix.env.BUILD_RPM == 'true'
-      #   id: find_rpm
-      #   run: |
-      #     RPM_FILE=$(find ~/rpmbuild/RPMS/x86_64/ -name "rimsort-*.rpm" | head -n 1)
-      #     echo "RPM_FILE=$RPM_FILE" >> "$GITHUB_OUTPUT"
-      #     echo "Found RPM: $RPM_FILE"
-      #   shell: bash
-      #
-      # - name: Generate RPM attestation
-      #   uses: actions/attest-build-provenance@v4.1.0
-      #   if: ${{ inputs.attest && matrix.env.BUILD_RPM == 'true' }}
-      #   with:
-      #     subject-path: ${{ steps.find_rpm.outputs.RPM_FILE }}
-      #
-      # - name: Upload RPM Package
-      #   if: matrix.env.BUILD_RPM == 'true'
-      #   uses: actions/upload-artifact@main
-      #   with:
-      #     name: ${{ matrix.platform }}_${{ matrix.arch }}_rpm
-      #     path: ${{ steps.find_rpm.outputs.RPM_FILE }}
-      #     if-no-files-found: error
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v4.1.0
