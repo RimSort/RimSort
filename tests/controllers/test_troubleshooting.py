@@ -529,11 +529,13 @@ class TestModListImportExport:
                 return_value=True,
             ),
             patch("builtins.open", create=True) as mock_open,
-            patch("json.dump") as mock_json_dump,
+            patch(
+                "app.controllers.troubleshooting_controller.atomic_json_dump"
+            ) as mock_atomic_dump,
         ):
             controller._on_mod_export_list_button_clicked()
             mock_open.assert_called()
-            mock_json_dump.assert_called()
+            mock_atomic_dump.assert_called()
 
     def test_mod_import_list_button(
         self,

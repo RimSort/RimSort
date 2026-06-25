@@ -28,6 +28,7 @@ from app.utils.constants import (
 )
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
+from app.utils.json_utils import atomic_json_dump
 from app.views.dialogue import BinaryChoiceDialog, InformationBox
 
 
@@ -426,8 +427,7 @@ class Settings(QObject):
 
         self._validate_steam_integration_config()
 
-        with open(str(self._settings_file), "w") as file:
-            json.dump(self._to_dict(), file, indent=4)
+        atomic_json_dump(self._to_dict(), str(self._settings_file), indent=4)
 
     def handle_corrupted_settings(self) -> None:
         use_old_backup = False

@@ -58,6 +58,7 @@ from app.utils.generic import (
     platform_specific_open,
     upload_data_to_0x0_st,
 )
+from app.utils.json_utils import atomic_json_dump
 from app.utils.rentry.wrapper import RentryImport
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
@@ -2763,8 +2764,7 @@ class MainContent(QObject):
             ).format(rules_source=rules_source, path=path),
         )
         if answer == QMessageBox.StandardButton.Yes:
-            with open(path, "w", encoding="utf-8") as output:
-                json.dump(db_output_c, output, indent=4)
+            atomic_json_dump(db_output_c, path, indent=4)
             # Do a full refresh of metadata and UI
             self._do_refresh()
         else:

@@ -15,6 +15,7 @@ from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
+from app.utils.json_utils import atomic_json_dump
 from app.utils.steam.db_builder_thread import SteamDatabaseBuilder
 from app.windows.runner_panel import RunnerPanel
 
@@ -515,8 +516,7 @@ class DatabaseBuilder(QObject):
             return
 
         try:
-            with open(output_path, "w", encoding="utf-8") as output_file:
-                json.dump(db_output_c, output_file, indent=4)
+            atomic_json_dump(db_output_c, output_path, indent=4)
             logger.info(f"Successfully saved merged database to {output_path}")
         except OSError as e:
             logger.error(f"Failed to save merged database: {e}")
