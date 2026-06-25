@@ -94,6 +94,7 @@ class SteamDatabaseBuilder(QThread):
                             appid=self.appid,
                             life=self.database_expiry,
                             get_appid_deps=self.get_appid_deps,
+                            output_database_path=self.output_database_path,
                         )
                         dynamic_query.dq_messaging_signal.connect(
                             self.db_builder_message_output_signal.emit
