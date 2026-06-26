@@ -91,6 +91,9 @@ typecheck:
 pyright:
     uv run python -m pyright -p pyproject.toml .
 
+# Run ruff fixes
+ruff: ruff-fix ruff-format-fix
+
 # Check and automatically fix linting issues (ruff check --fix)
 ruff-fix:
     uv run ruff check {{ruff_config}} . --fix
@@ -126,7 +129,7 @@ deferred-imports:
     uv run python check_deferred_imports.py
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
-fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix
+fix: ruff shfmt-fix markdownlint-fix
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage
