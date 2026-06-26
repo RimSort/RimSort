@@ -626,7 +626,7 @@ class RunnerPanel(QWidget):
             for failed_mod_pfid in self.steamcmd_download_tracking:
                 mod_info = self.steam_db.get(failed_mod_pfid)
                 if mod_info:
-                    mod_name = mod_info.get("steamName") or mod_info.get("name")
+                    mod_name = mod_info.steamName or mod_info.name
                     if mod_name:
                         pfids_to_name[failed_mod_pfid] = mod_name
                     else:
