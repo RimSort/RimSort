@@ -56,7 +56,7 @@ from app.utils.generic import (
     launch_process,
     open_url_browser,
     platform_specific_open,
-    upload_data_to_0x0_st,
+    upload_log_to_privatebin,
 )
 from app.utils.json_utils import atomic_json_dump
 from app.utils.rentry.wrapper import RentryImport
@@ -1602,16 +1602,18 @@ class MainContent(QObject):
 
         success, ret = self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
-            target=partial(upload_data_to_0x0_st, str(path)),
-            text=self.tr("Uploading {path.name} to 0x0.st...").format(path=path),
+            target=partial(upload_log_to_privatebin, str(path)),
+            text=self.tr("Uploading {path_name} to RimSort Logs...").format(
+                path_name=path.name
+            ),
         )
 
         if success:
             copy_to_clipboard_safely(ret)
             dialogue.show_information(
                 title=self.tr("Uploaded file"),
-                text=self.tr("Uploaded {path.name} to https://0x0.st/").format(
-                    path=path
+                text=self.tr("Uploaded {path_name} to RimSort Logs").format(
+                    path_name=path.name
                 ),
                 information=self.tr(
                     "The URL has been copied to your clipboard:<br><br>{ret}"
@@ -1621,7 +1623,7 @@ class MainContent(QObject):
         else:
             dialogue.show_warning(
                 title=self.tr("Failed to upload file."),
-                text=self.tr("Failed to upload the file to 0x0.st"),
+                text=self.tr("Failed to upload to RimSort Logs"),
                 information=ret,
             )
 
