@@ -33,6 +33,7 @@ from app.utils.generic import format_file_size, platform_specific_open, scanpath
 from app.utils.github.models import CacheBase, GitHubModEntry, GitHubReleaseCache
 from app.utils.github.provider import GitHubProvider, _releases_from_json
 from app.utils.mod_info import UNKNOWN, ModInfo
+from app.utils.mod_utils import resolve_aux_timestamps
 from app.views.description_widget import DescriptionWidget
 
 # Constants for layout proportions
@@ -745,7 +746,7 @@ class ModInfoPanel:
         external_time_updated = mod_metadata.get("external_time_updated")
         internal_time_updated = mod_metadata.get("internal_time_updated")
 
-        if external_time_created:
+        if external_time_created is not None and external_time_created > 0:
             try:
                 dt_created = datetime.fromtimestamp(int(external_time_created))
                 external_times.append(
@@ -754,7 +755,7 @@ class ModInfoPanel:
             except (ValueError, OSError, OverflowError):
                 external_times.append("Created: Invalid")
 
-        if external_time_updated:
+        if external_time_updated is not None and external_time_updated > 0:
             try:
                 dt_updated = datetime.fromtimestamp(int(external_time_updated))
                 external_times.append(
@@ -763,7 +764,7 @@ class ModInfoPanel:
             except (ValueError, OSError, OverflowError):
                 external_times.append("Updated: Invalid")
 
-        if internal_time_updated:
+        if internal_time_updated is not None and internal_time_updated > 0:
             try:
                 dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
                 external_times.append(
@@ -1057,7 +1058,7 @@ class ModInfoPanel:
                 f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
             )
 
-        # Get external timestamps from aux DB
+        # Get timestamps from aux DB
         _, aux_entry = self.metadata_controller.get_metadata_with_path(uuid)
         if aux_entry is not None:
             metadata["external_time_created"] = getattr(
@@ -1069,5 +1070,13 @@ class ModInfoPanel:
             metadata["internal_time_updated"] = getattr(
                 aux_entry, "internal_time_updated", None
             )
+            # Use the shared resolve_aux_timestamps helper so the mod-info
+            # panel shows the same download / workshop-update values as the
+            # update panel and the main mod list.
+            acf_touched, ext_updated = resolve_aux_timestamps(aux_entry)
+            if acf_touched is not None:
+                metadata["acf_time_touched"] = acf_touched
+            if ext_updated is not None:
+                metadata["external_time_updated"] = ext_updated
 
         return metadata

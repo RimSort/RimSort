@@ -32,7 +32,7 @@ from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.mod_info import ModInfo
-from app.utils.mod_utils import get_mod_path_from_pfid
+from app.utils.mod_utils import get_mod_path_from_pfid, resolve_aux_timestamps
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.mod_info_panel import ClickablePathLabel
 
@@ -1028,7 +1028,19 @@ class BaseModsPanel(QWidget):
             ModInfo object
         """
         if isinstance(metadata, ListedMod):
-            mod_info = ModInfo.from_listed_mod(metadata)
+            # Look up aux timestamps so the mod list can show accurate
+            # download / workshop-update times even when the metadata dict
+            # path wasn't built from filter_eligible_mods_for_update.
+            acf_touched: int | None = None
+            ext_updated: int | None = None
+            if key is not None:
+                _, aux_entry = self.metadata_controller.get_metadata_with_path(key)
+                acf_touched, ext_updated = resolve_aux_timestamps(aux_entry)
+            mod_info = ModInfo.from_listed_mod(
+                metadata,
+                acf_time_touched=acf_touched,
+                external_time_updated=ext_updated,
+            )
             mod_info.key = key
             return mod_info
         return ModInfo.from_metadata(key, metadata)
