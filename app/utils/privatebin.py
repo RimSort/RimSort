@@ -64,8 +64,9 @@ def _build_paste_payload(text: str) -> tuple[dict[str, Any], str]:
         0,
     ]
 
-    paste_blob = json.dumps([{"paste": text}]).encode()
-    compressed = zlib.compress(paste_blob)
+    paste_blob = json.dumps({"paste": text}, separators=(",", ":")).encode()
+    co = zlib.compressobj(wbits=-zlib.MAX_WBITS)
+    compressed = co.compress(paste_blob) + co.flush()
 
     adata_json = json.dumps(adata, separators=(",", ":")).encode()
 

@@ -91,9 +91,9 @@ class TestBuildPastePayload:
         cipher.update(adata_json)
         compressed = cipher.decrypt_and_verify(ciphertext, tag)
 
-        decompressed = zlib.decompress(compressed)
+        decompressed = zlib.decompress(compressed, -zlib.MAX_WBITS)
         paste_data = json.loads(decompressed)
-        assert paste_data == [{"paste": plaintext}]
+        assert paste_data == {"paste": plaintext}
 
 
 class TestUploadToPrivatebin:
