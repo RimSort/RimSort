@@ -1967,7 +1967,7 @@ class MainContent(QObject):
                 text=self.tr(
                     "RimSort was unable to check your Workshop mods for updates."
                 ),
-                details="<br>".join(result.errors) if result.errors else None,
+                details="\n".join(result.errors) if result.errors else None,
             )
             return
 
@@ -1980,7 +1980,7 @@ class MainContent(QObject):
                     failed=len(result.failed_pfids),
                     total=result.mods_checked,
                 ),
-                details="<br>".join(result.errors) if result.errors else None,
+                details="\n".join(result.errors) if result.errors else None,
             )
 
         # For both "success" and "partial", show the updater panel

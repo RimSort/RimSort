@@ -91,5 +91,5 @@ def find_circular_dependencies(dependency_graph: dict[str, set[str]]) -> None:
             "find_circular_dependencies",
             "RimSort found circular dependencies in your mods list. Please see the details for dependency loops.",
         ),
-        details="<br><br>".join(cycle_strings),
+        details="\n\n".join(cycle_strings),
     )
