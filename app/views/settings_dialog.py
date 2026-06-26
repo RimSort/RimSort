@@ -806,6 +806,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
         modlist_option_label = self._make_section_label("Mod list options")
         modlist_option_group_box_layout.addWidget(modlist_option_label)
 
+        # Rich text rendering checkbox
+        self.render_unity_rich_text_checkbox = QCheckBox(
+            self.tr("Render Unity Rich Text in mod descriptions")
+        )
+        self.render_unity_rich_text_checkbox.setToolTip(
+            self.tr(
+                "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(self.render_unity_rich_text_checkbox)
+
         # Download missing mods checkbox
         self.download_missing_mods_checkbox = QCheckBox(
             self.tr("Download missing mods automatically")
@@ -1496,19 +1507,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
         group_layout.addWidget(self.show_mod_updates_checkbox)
 
-        self.render_unity_rich_text_checkbox = QCheckBox(
-            self.tr("Render Unity Rich Text in mod descriptions")
-        )
         self.color_background_instead_of_text_checkbox = QCheckBox(
             self.tr("Apply mod coloring to background instead of text")
         )
         group_layout.addWidget(self.color_background_instead_of_text_checkbox)
-        self.render_unity_rich_text_checkbox.setToolTip(
-            self.tr(
-                "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
-            )
-        )
-        group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")

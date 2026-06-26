@@ -11,7 +11,7 @@ class AdvancedTabController(BaseTabController):
     """Controller for the Advanced settings tab.
 
     Manages: debug logging, watchdog, clear/DLC behavior, mod update checks,
-    rich text rendering, DB auto-update, mod name search scope, backup policy,
+    DB auto-update, mod name search scope, backup policy,
     save-comparison indicators, mod coloring mode, Auxiliary DB settings,
     and Authentication fields.
     """
@@ -74,9 +74,6 @@ class AdvancedTabController(BaseTabController):
         self.dialog.show_mod_updates_checkbox.setChecked(
             self.settings.steam_mods_update_check
         )
-        self.dialog.render_unity_rich_text_checkbox.setChecked(
-            self.settings.render_unity_rich_text
-        )
         self.dialog.update_databases_on_startup_checkbox.setChecked(
             self.settings.update_databases_on_startup
         )
@@ -122,9 +119,6 @@ class AdvancedTabController(BaseTabController):
         self.settings.clear_moves_dlc = self.dialog.clear_moves_dlc_checkbox.isChecked()
         self.settings.steam_mods_update_check = (
             self.dialog.show_mod_updates_checkbox.isChecked()
-        )
-        self.settings.render_unity_rich_text = (
-            self.dialog.render_unity_rich_text_checkbox.isChecked()
         )
         self.settings.update_databases_on_startup = (
             self.dialog.update_databases_on_startup_checkbox.isChecked()
