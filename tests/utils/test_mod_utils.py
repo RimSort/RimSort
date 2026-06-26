@@ -156,11 +156,13 @@ class TestFilterEligibleModsForUpdate:
         path: str,
         acf_time_updated: int = -1,
         external_time_updated: int = -1,
+        acf_time_touched: int = -1,
     ) -> None:
         """Configure aux DB mock to return timestamps for a given path."""
         aux_entry = MagicMock()
         aux_entry.acf_time_updated = acf_time_updated
         aux_entry.external_time_updated = external_time_updated
+        aux_entry.acf_time_touched = acf_time_touched
         self.mock_controller.get_metadata_with_path.side_effect = lambda p: (
             (MagicMock(), aux_entry) if p == path else (None, None)
         )
@@ -280,9 +282,11 @@ class TestFilterEligibleModsForUpdate:
             aux_eq = MagicMock()
             aux_eq.acf_time_updated = -1
             aux_eq.external_time_updated = 2000
+            aux_eq.acf_time_touched = -1
             aux_old = MagicMock()
             aux_old.acf_time_updated = -1
             aux_old.external_time_updated = 1000
+            aux_old.acf_time_touched = -1
 
             def multi_aux(p: str) -> tuple[MagicMock | None, MagicMock | None]:
                 if p == "/mods/eq":
@@ -346,12 +350,15 @@ class TestFilterEligibleModsForUpdate:
         aux_ws = MagicMock()
         aux_ws.acf_time_updated = -1
         aux_ws.external_time_updated = 2000
+        aux_ws.acf_time_touched = -1
         aux_utd = MagicMock()
         aux_utd.acf_time_updated = -1
         aux_utd.external_time_updated = 2000
+        aux_utd.acf_time_touched = -1
         aux_cmd = MagicMock()
         aux_cmd.acf_time_updated = 500
         aux_cmd.external_time_updated = 2000
+        aux_cmd.acf_time_touched = -1
 
         def multi_aux(p: str) -> tuple[MagicMock | None, MagicMock | None]:
             mapping: dict[str, MagicMock] = {

@@ -5,7 +5,42 @@ from typing import Any
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+
+
+def resolve_aux_timestamps(
+    aux_entry: AuxMetadataEntry | None,
+) -> tuple[int | None, int | None]:
+    """Extract download-time and workshop-update-time from an aux DB entry.
+
+    *Download time*:  ACF ``timetouched`` (``WorkshopItemsInstalled``) — the
+    actual moment Steam/SteamCMD last touched the mod on disk.  This is the
+    best available ``downloaded_time_raw`` for SteamCMD mods.
+
+    *Workshop update time*:  Prefers the Steam WebAPI ``external_time_updated``
+    value, falling back to the ACF ``timeupdated`` (``WorkshopItemDetails``)
+    when the API didn't return a result (e.g. mod removed from Workshop).
+
+    Returns ``(acf_time_touched, resolved_external_time_updated)`` where
+    *None* means the source was missing or not positive.
+    """
+    if aux_entry is None:
+        return None, None
+
+    raw_touched = getattr(aux_entry, "acf_time_touched", -1)
+    acf_touched = raw_touched if raw_touched is not None and raw_touched > 0 else None
+
+    ext_updated: int | None = None
+    raw_external = getattr(aux_entry, "external_time_updated", -1)
+    if raw_external is not None and raw_external > 0:
+        ext_updated = raw_external
+    else:
+        raw_acf = getattr(aux_entry, "acf_time_updated", -1)
+        if raw_acf is not None and raw_acf > 0:
+            ext_updated = raw_acf
+
+    return acf_touched, ext_updated
 
 
 def get_mod_path_from_pfid(pfid: str) -> str | None:
@@ -163,13 +198,8 @@ def filter_eligible_mods_for_update(
         # to acf_time_updated (from ACF WorkshopItemDetails.timeupdated)
         # when the Steam API didn't return a value (e.g. mod removed from
         # Workshop, network failure, etc.).
-        _, aux_entry = metadata_controller.get_metadata_with_path(path)
-        external_time = 0
-        if aux_entry is not None:
-            if aux_entry.external_time_updated > 0:
-                external_time = aux_entry.external_time_updated
-            elif aux_entry.acf_time_updated > 0:
-                external_time = aux_entry.acf_time_updated
+        acf_touched, external_time_raw = resolve_aux_timestamps(aux_entry)
+        external_time = external_time_raw if external_time_raw is not None else 0
 
         # ── Decision ────────────────────────────────────────────────────
         # Include the mod if it needs any form of user action:
@@ -207,6 +237,7 @@ def filter_eligible_mods_for_update(
 
         delta = external_time - internal_time
         delta_days = delta / 86400
+
         # Build a dict compatible with ModInfo.from_metadata() so the
         # WorkshopModUpdaterPanel table can display the mod row.
         compat_metadata: dict[str, Any] = {
@@ -219,6 +250,7 @@ def filter_eligible_mods_for_update(
             "steamcmd": mod.mod_type == ModType.STEAM_CMD,
             "internal_time_touched": mod.internal_time_touched,
             "external_time_updated": external_time,
+            "acf_time_touched": acf_touched,
         }
         if isinstance(mod, AboutXmlMod):
             compat_metadata["packageid"] = str(mod.package_id)
