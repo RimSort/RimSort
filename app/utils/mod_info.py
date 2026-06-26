@@ -202,7 +202,7 @@ class ModInfo:
 
     @staticmethod
     def _parse_supported_versions_static(
-        supported_versions: dict[str, Any] | list[str] | str | None,
+        supported_versions: dict[str, Any] | list[str] | set[str] | str | None,
     ) -> str:
         """
         Parse supported versions from metadata into a normalized, sorted, comma-separated string.
@@ -230,7 +230,7 @@ class ModInfo:
                     normalized = ModInfo._normalize_version(li)
                     if normalized:
                         versions = [normalized]
-        elif isinstance(supported_versions, list):
+        elif isinstance(supported_versions, (list, set)):
             versions = [ModInfo._normalize_version(v) for v in supported_versions if v]
         elif isinstance(supported_versions, str):
             normalized = ModInfo._normalize_version(supported_versions)
