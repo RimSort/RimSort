@@ -116,6 +116,7 @@ class Settings(QObject):
         # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
         self.prefer_versioned_about_tags: bool = True
         self.render_unity_rich_text: bool = True
+        self.color_background_instead_of_text_toggle: bool = True
         self.case_insensitive_about_xml_lookup: bool = sys.platform == "linux"
 
         # Whether to notify user about missing mods
@@ -193,7 +194,6 @@ class Settings(QObject):
         self.last_backup_date: str = ""
         self.auto_backup_retention_count: int = 10
         self.auto_backup_compression_count: int = 10
-        self.color_background_instead_of_text_toggle: bool = True
         self.steam_mods_update_check: bool = False
         self.update_databases_on_startup: bool = True
         self.include_mod_notes_in_mod_name_filter: bool = False
