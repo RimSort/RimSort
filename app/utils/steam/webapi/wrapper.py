@@ -170,7 +170,7 @@ class CollectionImport:
                             "This may happen if you don't have all the mods downloaded.<br><br>"
                             "Try subscribing to the collection first",
                         ),
-                        details="<br>".join(failed_mods),
+                        details="\n".join(failed_mods),
                     )
         except Exception as e:
             logger.error(

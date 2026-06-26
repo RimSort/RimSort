@@ -589,7 +589,7 @@ class RunnerPanel(QWidget):
         pfids_to_name = self._resolve_mod_names()
 
         # Compile details of failed mods for the report
-        details = "<br>".join(
+        details = "\n".join(
             f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}"
             for pfid in self.steamcmd_download_tracking
         )
