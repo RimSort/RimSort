@@ -170,6 +170,7 @@ class DBBuilderCore:
                 life=self.database_expiry,
                 get_appid_deps=self.get_appid_deps,
                 callback=self.progress_callback,
+                output_database_path=self.output_database_path,
             )
             # Compile PublishedFileIds
             dynamic_query.pfids_by_appid()

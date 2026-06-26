@@ -39,6 +39,9 @@ from typing import Any, Callable, Union
 
 from loguru import logger
 
+from app.utils.constants import RIMWORLD_DLC_METADATA
+from app.utils.json_utils import atomic_json_dump
+
 # If we're running from a Python interpreter, Ensure SteamworksPy module is in Python path, sys.path ($PYTHONPATH)
 # Ensure that this is available by running via: git submodule update --init --recursive
 # You can automatically ensure this is done by utilizing distribute.py
@@ -223,6 +226,8 @@ class SteamworksAppDependenciesQuery:
         chunk_index: int = 0,
         total_chunks: int = 0,
         progress_callback: Callable[[str], None] | None = None,
+        query_db: dict[str, Any] | None = None,
+        output_database_path: str = "",
     ) -> None:
         self._libs = _libs
         self.interval = interval
@@ -230,6 +235,38 @@ class SteamworksAppDependenciesQuery:
         self.chunk_index = chunk_index
         self.total_chunks = total_chunks
         self.progress_callback = progress_callback
+        self.query_db = query_db
+        self.output_database_path = output_database_path
+
+    def _merge_and_save(self, new_results: dict[int, list[int]]) -> None:
+        """Merge partial results into query_db and save to output file."""
+        if not self.query_db or not self.output_database_path:
+            return
+        database = self.query_db.get("database")
+        if not isinstance(database, dict):
+            return
+        for pfid_str in database:
+            try:
+                pfid = int(pfid_str)
+            except ValueError:
+                continue
+            if pfid not in new_results:
+                continue
+            for appid in new_results[pfid]:
+                appid_str = str(appid)
+                if appid_str not in RIMWORLD_DLC_METADATA:
+                    continue
+                deps = database[pfid_str].setdefault("dependencies", {})
+                if appid_str not in deps:
+                    deps[appid_str] = [
+                        RIMWORLD_DLC_METADATA[appid_str]["name"],
+                        RIMWORLD_DLC_METADATA[appid_str]["steam_url"],
+                    ]
+        try:
+            atomic_json_dump(self.query_db, self.output_database_path, indent=4)
+            logger.debug(f"Saved incremental database to {self.output_database_path}")
+        except Exception as e:
+            logger.warning(f"Failed to save incremental database: {e}")
 
     def run(self) -> None | dict[int, Any]:
         """
@@ -244,8 +281,10 @@ class SteamworksAppDependenciesQuery:
         # If the chunk passed is a single int, convert it into a list in an effort to simplify procedure
         if isinstance(self.pfid_or_pfids, int):
             self.pfid_or_pfids = [self.pfid_or_pfids]
-        # Create our Steamworks interface and initialize Steamworks API
+
         total = len(self.pfid_or_pfids)
+
+        # Create our Steamworks interface and initialize Steamworks API
         steamworks_interface = SteamworksInterface(
             callbacks=True, callbacks_total=total, _libs=self._libs
         )
@@ -283,13 +322,18 @@ class SteamworksAppDependenciesQuery:
                 logger.info(f"GetAppDependencies progress: {idx}/{total}{chunk_tag}")
                 if self.progress_callback is not None:
                     self.progress_callback(f"Progress: {idx}/{total}")
+                # Save incremental results to the output database
+                new_results = steamworks_interface.get_app_deps_query_result
+                self._merge_and_save(new_results)
         # Patience, but don't wait forever
         steamworks_interface._wait_for_callbacks(timeout=60)
         # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
         logger.info("Thread completed. Unloading Steamworks...")
         steamworks_interface.steamworks_thread.join()
-        # Grab the data and return it
-        received = len(steamworks_interface.get_app_deps_query_result.keys())
+        # Grab the data and save final results
+        new_results = steamworks_interface.get_app_deps_query_result
+        self._merge_and_save(new_results)
+        received = len(new_results.keys())
         summary = (
             f"GetAppDependencies chunk {self.chunk_index}/{self.total_chunks} complete: "
             f"{received}/{total} results received"
@@ -298,7 +342,7 @@ class SteamworksAppDependenciesQuery:
         if self.progress_callback is not None:
             self.progress_callback(f"Progress: {total}/{total}")
             self.progress_callback(summary)
-        return steamworks_interface.get_app_deps_query_result
+        return new_results
 
 
 class SteamworksGameLaunch(Process):

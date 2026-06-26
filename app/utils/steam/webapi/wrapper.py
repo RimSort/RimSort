@@ -20,6 +20,7 @@ from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
+from app.utils.json_utils import atomic_json_dump
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
 from app.views.dialogue import show_warning
@@ -263,6 +264,7 @@ class DynamicQuery(QObject):
         get_appid_deps: bool = False,
         life: int = 0,
         callback: Optional[Callable[[str], None]] = None,
+        output_database_path: str = "",
     ) -> None:
         QObject.__init__(self)
 
@@ -272,6 +274,7 @@ class DynamicQuery(QObject):
         self.appid = appid
         self.expiry = self.__expires(life)
         self.get_appid_deps = get_appid_deps
+        self.output_database_path = output_database_path
         self.next_cursor = "*"
         self.pagenum = 1
         self.pages = 1
@@ -671,6 +674,24 @@ class DynamicQuery(QObject):
         self.pagenum += 1
         return result["response"]["next_cursor"]
 
+    def _merge_app_deps(
+        self, query: dict[str, Any], pfids_appid_deps: dict[int, list[int]]
+    ) -> None:
+        """Merge app dependency results into the database in-place."""
+        for pfid in query.get("database", {}):
+            if int(pfid) not in pfids_appid_deps:
+                continue
+            for appid in pfids_appid_deps[int(pfid)]:
+                appid_str = str(appid)
+                if appid_str not in RIMWORLD_DLC_METADATA:
+                    continue
+                deps = query["database"][pfid].setdefault("dependencies", {})
+                if appid_str not in deps:
+                    deps[appid_str] = [
+                        RIMWORLD_DLC_METADATA[appid_str]["name"],
+                        RIMWORLD_DLC_METADATA[appid_str]["steam_url"],
+                    ]
+
     def ISteamUGC_GetAppDependencies(
         self, publishedfileids: list[str], query: dict[str, Any]
     ) -> None:
@@ -685,60 +706,75 @@ class DynamicQuery(QObject):
         RimPy db_data["database"] format, or the skeleton of one from local_metadata
         :return: Dict containing the updated json data from PublishedFileIds query
         """
-        total_mods = len(publishedfileids)
-        # Estimate: each mod takes ~0.2s (API call + interval sleep)
-        est_seconds = int(total_mods * 0.2)
-        if est_seconds < 60:
-            est_str = f"{est_seconds}s"
-        else:
-            est_str = f"{est_seconds // 60}m {est_seconds % 60}s"
+        # Filter pfids that already have DLC deps populated in the database
+        pfids_needing_deps = []
+        for pfid in publishedfileids:
+            deps = query.get("database", {}).get(pfid, {}).get("dependencies", {})
+            needs = any(str(a) not in deps for a in RIMWORLD_DLC_METADATA)
+            if needs:
+                pfids_needing_deps.append(pfid)
+
+        skipped = len(publishedfileids) - len(pfids_needing_deps)
+        total_to_query = len(pfids_needing_deps)
+
+        if total_to_query == 0:
+            self._emit_message(
+                "\nAll mods already have DLC dependency data. Skipping Steamworks call."
+            )
+            return
+
         self._emit_message(
             f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for "
-            f"{total_mods} mods (single process)\n"
-            f"Estimated time: ~{est_str}.\n"
-            f"Please wait..."
+            f"{total_to_query} mods (single process)"
+            + (f", {skipped} already resolved" if skipped else "")
         )
-        # Check Steam availability before spawning processes
+
+        # Save the database before Steamworks phase — even if Steam fails,
+        # the user has the WebAPI data
+        if self.output_database_path:
+            try:
+                atomic_json_dump(query, self.output_database_path, indent=4)
+            except Exception as e:
+                logger.warning(f"Failed to save database before Steamworks: {e}")
+
+        # Check Steam availability
         if not check_steam_available(str(AppInfo().libs_folder)):
             self._emit_message(
                 "\nSteam is not available. Skipping AppID dependency retrieval."
             )
             return
-        # Run all queries in a single process — the Steamworks SDK cannot
-        # be initialized from multiple processes simultaneously (cross-thread
-        # pipe stalls)
+
+        # Run the Steamworks query
+        est_seconds = int(total_to_query * 0.2)
+        if est_seconds < 60:
+            est_str = f"{est_seconds}s"
+        else:
+            est_str = f"{est_seconds // 60}m {est_seconds % 60}s"
+        self._emit_message(f"Estimated time: ~{est_str}.\nPlease wait...")
+
         deps_query = SteamworksAppDependenciesQuery(
-            pfid_or_pfids=[int(str_pfid) for str_pfid in publishedfileids],
+            pfid_or_pfids=[int(pfid) for pfid in pfids_needing_deps],
             interval=0.2,
             _libs=str(AppInfo().libs_folder),
             chunk_index=1,
             total_chunks=1,
             progress_callback=self._emit_message,
+            query_db=query,
+            output_database_path=self.output_database_path,
         )
         result = deps_query.run()
-        # Merge results into a single dictionary
+        # Merge results into the database
         pfids_appid_deps: dict[int, list[int]] = {}
         if result is not None:
             pfids_appid_deps.update(result)
+        self._merge_app_deps(query, pfids_appid_deps)
         self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
-        # Uncomment to see the total metadata returned from all Processes
-        # logger.debug(pfids_appid_deps)
-        # Add our metadata to the query...
-        logger.debug("Populating AppID dependency information into database from query")
-        for pfid in query["database"].keys():
-            if int(pfid) in pfids_appid_deps:
-                for appid in pfids_appid_deps[int(pfid)]:
-                    if str(appid) in RIMWORLD_DLC_METADATA.keys():
-                        if not query["database"][pfid].get("dependencies"):
-                            query["database"][pfid]["dependencies"] = {}
-                        query["database"][pfid]["dependencies"].update(
-                            {
-                                str(appid): [
-                                    RIMWORLD_DLC_METADATA[str(appid)]["name"],
-                                    RIMWORLD_DLC_METADATA[str(appid)]["steam_url"],
-                                ]
-                            }
-                        )
+        # Save final database
+        if self.output_database_path:
+            try:
+                atomic_json_dump(query, self.output_database_path, indent=4)
+            except Exception as e:
+                logger.warning(f"Failed to save database after Steamworks: {e}")
 
 
 def ISteamRemoteStorage_GetCollectionDetails(
