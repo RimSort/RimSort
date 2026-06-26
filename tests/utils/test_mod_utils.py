@@ -215,10 +215,11 @@ class TestFilterEligibleModsForUpdate:
         assert result[0]["name"] == "Test Mod"
 
     def test_internal_time_touched_preferred_over_acf_fallback(self) -> None:
-        """internal_time_touched takes priority over acf_time_updated fallback."""
+        """When file mtime is more recent than acf_time_updated, it is used."""
         mod = _make_update_mod(mod_path="/mods/test2")
         # internal_time_touched=3000 > external=2000 => not eligible
         # acf_time_updated=1000 < external=2000 => would be eligible if used
+        # max(3000, 1000) = 3000, so uses file mtime
         with (
             patch("os.path.exists", return_value=True),
             patch("os.path.getmtime", return_value=3000.0),
@@ -230,16 +231,38 @@ class TestFilterEligibleModsForUpdate:
             )
             result = filter_eligible_mods_for_update({"/mods/test2": mod})
         assert len(result) == 0, (
-            "Should use internal_time_touched, not acf_time_updated"
+            "Should use the more recent of internal_time_touched and acf_time_updated"
+        )
+
+    def test_acf_time_updated_preferred_when_more_recent_than_file_mtime(
+        self,
+    ) -> None:
+        """acf_time_updated is used when it is more recent than file mtime."""
+        mod = _make_update_mod(mod_path="/mods/test3")
+        # internal_time_touched=1000 < external=2000 => would be eligible
+        # acf_time_updated=3000 > external=2000 => not eligible (up-to-date)
+        # max(1000, 3000) = 3000, so uses acf_time_updated
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=1000.0),
+        ):
+            self._setup_aux_timestamps(
+                "/mods/test3",
+                acf_time_updated=3000,
+                external_time_updated=2000,
+            )
+            result = filter_eligible_mods_for_update({"/mods/test3": mod})
+        assert len(result) == 0, (
+            "Should use acf_time_updated when it is more recent than file mtime"
         )
 
     def test_no_internal_timestamps_at_all(self) -> None:
-        """Mods with no internal_time_touched and no acf_time_updated are skipped."""
+        """Mods with no internal_time_touched and no acf_time_updated are included."""
         mod = _make_update_mod(mod_path="/mods/nots")
         with patch("os.path.exists", return_value=False):
             # No aux entry => no fallback either
             result = filter_eligible_mods_for_update({"/mods/nots": mod})
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_up_to_date_mod_skipped(self) -> None:
         """Mods where external <= internal are skipped."""
@@ -278,7 +301,7 @@ class TestFilterEligibleModsForUpdate:
         assert len(result) == 0
 
     def test_no_external_time(self) -> None:
-        """Mods with no external_time_updated in aux DB are skipped."""
+        """Mods with no external_time_updated in aux DB are included."""
         mod = _make_update_mod(mod_path="/mods/noext")
         with (
             patch("os.path.exists", return_value=True),
@@ -286,10 +309,10 @@ class TestFilterEligibleModsForUpdate:
         ):
             # No aux entry => no external time
             result = filter_eligible_mods_for_update({"/mods/noext": mod})
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_zero_external_time_treated_as_missing(self) -> None:
-        """external_time_updated=0 should cause the mod to be skipped."""
+        """external_time_updated=0 causes the mod to be included (needs API fetch)."""
         mod = _make_update_mod(mod_path="/mods/zeroext")
         with (
             patch("os.path.exists", return_value=True),
@@ -297,7 +320,7 @@ class TestFilterEligibleModsForUpdate:
         ):
             self._setup_aux_timestamps("/mods/zeroext", external_time_updated=0)
             result = filter_eligible_mods_for_update({"/mods/zeroext": mod})
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_mixed_mods(self) -> None:
         """Only workshop/steamcmd mods with updates are returned from a mixed set."""
