@@ -2,9 +2,6 @@ from loguru import logger
 from PySide6.QtCore import Slot
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
-from app.models.settings import Settings
-from app.utils.event_bus import EventBus
-from app.views.settings_dialog import SettingsDialog
 
 
 class AdvancedTabController(BaseTabController):
@@ -12,17 +9,9 @@ class AdvancedTabController(BaseTabController):
 
     Manages: debug logging, watchdog, clear/DLC behavior, mod update checks,
     DB auto-update, mod name search scope, backup policy,
-    save-comparison indicators, mod coloring mode, Auxiliary DB settings,
+    save-comparison indicators, Auxiliary DB settings,
     and Authentication fields.
     """
-
-    def __init__(
-        self,
-        settings: Settings,
-        dialog: SettingsDialog,
-    ) -> None:
-        super().__init__(settings, dialog)
-        self._change_mod_coloring_mode = False
 
     def connect_signals(self) -> None:
         try:
@@ -34,15 +23,9 @@ class AdvancedTabController(BaseTabController):
                 "show_save_comparison_indicators_checkbox not available for signal wiring"
             )
 
-        self.dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
-            self._on_use_background_coloring_checkbox_changed
-        )
-
         self.dialog.include_mod_notes_in_mod_name_filter_checkbox.stateChanged.connect(
             self._on_include_mod_notes_in_mod_name_filter_changed
         )
-
-        EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
 
     def update_view_from_model(self) -> None:
         try:
@@ -66,9 +49,6 @@ class AdvancedTabController(BaseTabController):
         )
         self.dialog.auto_backup_compression_count_spinbox.setValue(
             self.settings.auto_backup_compression_count
-        )
-        self.dialog.color_background_instead_of_text_checkbox.setChecked(
-            self.settings.color_background_instead_of_text_toggle
         )
         self.dialog.clear_moves_dlc_checkbox.setChecked(self.settings.clear_moves_dlc)
         self.dialog.show_mod_updates_checkbox.setChecked(
@@ -113,9 +93,6 @@ class AdvancedTabController(BaseTabController):
         self.settings.auto_backup_compression_count = (
             self.dialog.auto_backup_compression_count_spinbox.value()
         )
-        self.settings.color_background_instead_of_text_toggle = (
-            self.dialog.color_background_instead_of_text_checkbox.isChecked()
-        )
         self.settings.clear_moves_dlc = self.dialog.clear_moves_dlc_checkbox.isChecked()
         self.settings.steam_mods_update_check = (
             self.dialog.show_mod_updates_checkbox.isChecked()
@@ -152,17 +129,7 @@ class AdvancedTabController(BaseTabController):
         self.settings.save()
 
     @Slot()
-    def _on_use_background_coloring_checkbox_changed(self) -> None:
-        self._change_mod_coloring_mode = not self._change_mod_coloring_mode
-
-    @Slot()
     def _on_include_mod_notes_in_mod_name_filter_changed(self) -> None:
         self.settings.include_mod_notes_in_mod_name_filter = (
             self.dialog.include_mod_notes_in_mod_name_filter_checkbox.isChecked()
         )
-
-    @Slot()
-    def _handle_mod_coloring_mode_changed(self) -> None:
-        if self._change_mod_coloring_mode:
-            self._change_mod_coloring_mode = False
-            EventBus().do_change_mod_coloring_mode.emit()

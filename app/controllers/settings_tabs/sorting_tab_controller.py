@@ -1,6 +1,9 @@
+from PySide6.QtCore import Slot
+
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
 from app.models.settings import Settings
 from app.utils.constants import SortMethod
+from app.utils.event_bus import EventBus
 from app.views.settings_dialog import SettingsDialog
 
 
@@ -8,7 +11,7 @@ class SortingTabController(BaseTabController):
     """Controller for the Sorting settings tab.
 
     Manages: sorting algorithm, dependency handling, XML parsing behavior,
-    mod list options, and inactive mods sorting.
+    mod list options, mod coloring mode, and inactive mods sorting.
     """
 
     def __init__(
@@ -17,9 +20,13 @@ class SortingTabController(BaseTabController):
         dialog: SettingsDialog,
     ) -> None:
         super().__init__(settings, dialog)
+        self._change_mod_coloring_mode = False
 
     def connect_signals(self) -> None:
-        pass  # Sorting tab has no action buttons — all state is read on OK
+        self.dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
+            self._on_use_background_coloring_checkbox_changed
+        )
+        EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
 
     def update_view_from_model(self) -> None:
         # Match the existing SettingsController behavior exactly:
@@ -47,6 +54,9 @@ class SortingTabController(BaseTabController):
         )
         self.dialog.render_unity_rich_text_checkbox.setChecked(
             self.settings.render_unity_rich_text
+        )
+        self.dialog.color_background_instead_of_text_checkbox.setChecked(
+            self.settings.color_background_instead_of_text_toggle
         )
         self.dialog.download_missing_mods_checkbox.setChecked(
             self.settings.try_download_missing_mods
@@ -83,6 +93,9 @@ class SortingTabController(BaseTabController):
         self.settings.render_unity_rich_text = (
             self.dialog.render_unity_rich_text_checkbox.isChecked()
         )
+        self.settings.color_background_instead_of_text_toggle = (
+            self.dialog.color_background_instead_of_text_checkbox.isChecked()
+        )
         self.settings.try_download_missing_mods = (
             self.dialog.download_missing_mods_checkbox.isChecked()
         )
@@ -95,3 +108,13 @@ class SortingTabController(BaseTabController):
         self.settings.save_inactive_mods_sort_state = (
             self.dialog.save_inactive_mods_sort_state_checkbox.isChecked()
         )
+
+    @Slot()
+    def _on_use_background_coloring_checkbox_changed(self) -> None:
+        self._change_mod_coloring_mode = not self._change_mod_coloring_mode
+
+    @Slot()
+    def _handle_mod_coloring_mode_changed(self) -> None:
+        if self._change_mod_coloring_mode:
+            self._change_mod_coloring_mode = False
+            EventBus().do_change_mod_coloring_mode.emit()
