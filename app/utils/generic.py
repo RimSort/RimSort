@@ -21,7 +21,6 @@ from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
 from app.utils import http
-from app.utils.app_info import AppInfo
 from app.utils.launch_command_parser import parse_launch_command
 from app.utils.platform.windows import scanpath_win32
 
@@ -562,39 +561,27 @@ def format_file_size(size_in_bytes: int) -> str:
         return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
-def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
+def upload_log_to_privatebin(path: str) -> tuple[bool, str]:
     """
-    Function to upload data to https://0x0.st/
+    Read a log file and upload its contents to the RimSort PrivateBin instance.
 
-    :param path: a string path to a file containing data to upload
-    :return: a string that is the URL returned from https://0x0.st/
+    :param path: Path to the log file
+    :return: (success, url_or_error)
     """
-    logger.info(f"Uploading data to https://0x0.st/: {path}")
-    try:
-        with open(path, "rb") as f:
-            headers = {"User-Agent": f"RimSort/{AppInfo().app_version}"}
-            request = http.post(
-                url="https://0x0.st/",
-                files={"file": (Path(path).name, f)},
-                headers=headers,
-            )
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection Error. Failed to upload data to https://0x0.st: {e}")
-        return False, str(e)
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request Error. Failed to upload data to https://0x0.st: {e}")
-        return False, str(e)
-
-    if request.status_code == 200:
-        url = request.text.strip()
-        logger.info(f"Uploaded! Uploaded data can be found at: {url}")
-        return True, url
-    else:
-        body_snippet = request.text.strip()
-        logger.warning(
-            f"Failed to upload data to https://0x0.st. Status code: {request.status_code}; body: {body_snippet[:200]}"
+    max_size = 20 * 1024 * 1024  # 20 MB server limit
+    file_size = os.path.getsize(path)
+    if file_size > max_size:
+        return (
+            False,
+            f"File too large ({file_size // (1024 * 1024)} MB). Maximum is 20 MB.",
         )
-        return False, f"Status code: {request.status_code}\n{body_snippet}"
+
+    with open(path, encoding="utf-8", errors="replace") as f:
+        text = f.read()
+
+    from app.utils.privatebin import upload_to_privatebin
+
+    return upload_to_privatebin(text)
 
 
 def extract_git_dir_name(url: str) -> str:
