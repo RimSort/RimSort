@@ -705,10 +705,7 @@ class MainContent(QObject):
         :param uuid: uuid of mod
         :param item: selected CustomListWidgetItem
         """
-        self.mod_info_panel.display_mod_info(
-            uuid=uuid,
-            render_unity_rt=self.settings.render_unity_rich_text,
-        )
+        self.mod_info_panel.display_mod_info(uuid=uuid)
         self.mod_info_panel.show_user_mod_notes(item)
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:

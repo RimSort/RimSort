@@ -831,10 +831,12 @@ class ModInfoPanel:
         for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
             widget.hide()
 
-    def _set_description(
-        self, mod_metadata: dict[str, Any], render_unity_rt: bool
-    ) -> None:
-        """Set the mod description with version-specific handling."""
+    def _set_description(self, mod_metadata: dict[str, Any]) -> None:
+        """
+        Set the mod description with version-specific handling.
+        render_unity_rt: Whether to render Unity rich text in descriptions
+        """
+        render_unity_rt = self.settings.render_unity_rich_text
         self.mod_info_path_value.setPath(mod_metadata.get("path"))
         # Set Steam URL value
         steam_url: str | None = None
@@ -966,13 +968,12 @@ class ModInfoPanel:
                         )
                     )
 
-    def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
+    def display_mod_info(self, uuid: str) -> None:
         """
         This slot receives the UUID (path) of the mod that was just clicked on.
         It will set the relevant information on the info panel.
 
         :param uuid: UUID (path) of the mod to display
-        :param render_unity_rt: Whether to render Unity rich text in descriptions
         """
         mod = self.metadata_controller.get_mod(uuid)
         if mod is None:
@@ -1014,7 +1015,7 @@ class ModInfoPanel:
         self._update_github_info(mod_path)
 
         # Set description
-        self._set_description(mod_metadata, render_unity_rt)
+        self._set_description(mod_metadata)
 
         # Load preview image
         self._load_preview_image(mod_metadata, is_scenario)
