@@ -73,12 +73,15 @@ class TestBuildPastePayload:
         iv = base64.b64decode(crypto_params[0])
         kdf_salt = base64.b64decode(crypto_params[1])
 
+        def _hmac_sha256(password: bytes, salt: bytes) -> bytes:
+            return HMAC.new(password, salt, SHA256).digest()
+
         key = PBKDF2(
-            paste_key,
+            paste_key,  # type: ignore[arg-type]
             kdf_salt,
             dkLen=32,
             count=100000,
-            prf=lambda p, s: HMAC.new(p, s, SHA256).digest(),
+            prf=_hmac_sha256,  # type: ignore[arg-type]
         )
 
         ct_raw = base64.b64decode(payload["ct"])
