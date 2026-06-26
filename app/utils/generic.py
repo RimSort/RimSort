@@ -571,7 +571,10 @@ def upload_log_to_privatebin(path: str) -> tuple[bool, str]:
     max_size = 20 * 1024 * 1024  # 20 MB server limit
     file_size = os.path.getsize(path)
     if file_size > max_size:
-        return False, f"File too large ({file_size // (1024 * 1024)} MB). Maximum is 20 MB."
+        return (
+            False,
+            f"File too large ({file_size // (1024 * 1024)} MB). Maximum is 20 MB.",
+        )
 
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
