@@ -811,7 +811,7 @@ def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
         tuple[str, int | None]: A tuple of (formatted_time_string, timestamp).
                                  If timestamp is None, returns ("Unknown", None).
     """
-    if timestamp is None:
+    if timestamp is None or timestamp <= 0:
         return "Unknown", None
 
     try:
