@@ -100,10 +100,21 @@ class MetadataMediator:
 
     def _load_no_version_warning(self) -> None:
         """Load No Version Warning DB (ModIdsToFix.xml)."""
-        if (
-            self.no_version_warning_path is None
-            or not self.no_version_warning_path.exists()
-        ):
+        if self.no_version_warning_path is None:
+            self._no_version_warning = None
+            return
+
+        if not self.no_version_warning_path.exists() and self.game_version != "Unknown":
+            game_major_minor = ".".join(self.game_version.split(".")[:2])
+            versioned = (
+                self.no_version_warning_path.parent
+                / game_major_minor
+                / self.no_version_warning_path.name
+            )
+            if versioned.exists():
+                self.no_version_warning_path = versioned
+
+        if not self.no_version_warning_path.exists():
             self._no_version_warning = None
             return
         try:
