@@ -608,7 +608,7 @@ class SettingsDialog(QDialog):
         none_lbl = self.tr("Steam Workshop database")
 
         (
-            group_layout,
+            _,
             self.steam_workshop_db_none_radio,
             self.steam_workshop_db_github_radio,
             self.steam_workshop_db_github_url,
@@ -621,13 +621,6 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file,
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
-        database_expiry_label = self._make_section_label(
-            "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
-        )
-        group_layout.addWidget(database_expiry_label)
-
-        self.database_expiry = self._style_line_edit(QLineEdit())
-        group_layout.addWidget(self.database_expiry)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
         section_lbl = self.tr('"No Version Warning" Database')
@@ -670,9 +663,9 @@ class SettingsDialog(QDialog):
             "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
         )
         aux_db_tooltip = self.tr("""To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
 (This applies to deletion outside of RimSort too)""")
         self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
 
@@ -994,6 +987,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.db_builder_compare_databases_button.sizeHint().width()
         )
         item_layout.addWidget(self.db_builder_build_database_button)
+
+        # Database expiry
+        _, db_expiry_group_layout = self._add_group_box(tab_layout)
+
+        database_expiry_label = self._make_section_label(
+            "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
+        )
+        db_expiry_group_layout.addWidget(database_expiry_label)
+
+        self.database_expiry = self._style_line_edit(QLineEdit())
+        db_expiry_group_layout.addWidget(self.database_expiry)
 
     def _do_internal_tools_tab(self) -> None:
         scroll_area = QScrollArea()
