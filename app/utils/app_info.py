@@ -43,18 +43,21 @@ class AppInfo:
         if hasattr(self, "_is_initialized") and self._is_initialized:
             return
 
-        main_file = sys.modules["__main__"].__file__
+        main_file = getattr(sys.modules.get("__main__"), "__file__", None)
 
         if main_file is None:
-            raise Exception("Unable to get the main file path.")
-
-        # Need to go one up if we are running from source
-        self._application_folder = (
-            Path(main_file).resolve().parent
-            if "__compiled__" in globals()
-            # __compiled__ will be present if Nuitka has frozen this
-            else Path(main_file).resolve().parent.parent
-        )
+            # Spawned child processes (e.g. multiprocessing on Windows) may not
+            # have __main__.__file__.  Default to the working directory, which
+            # is inherited from the parent process (the project root).
+            self._application_folder = Path.cwd()
+        else:
+            # Need to go one up if we are running from source
+            self._application_folder = (
+                Path(main_file).resolve().parent
+                if "__compiled__" in globals()
+                # __compiled__ will be present if Nuitka has frozen this
+                else Path(main_file).resolve().parent.parent
+            )
 
         # Application metadata
         self._app_name = "RimSort"

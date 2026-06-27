@@ -5,6 +5,7 @@ import traceback
 from collections.abc import Callable
 from logging import WARNING, getLogger
 from math import ceil
+from multiprocessing import Lock, Pool, cpu_count
 from time import sleep, time
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
@@ -22,7 +23,10 @@ from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
 from app.utils.json_utils import atomic_json_dump
 from app.utils.steam.availability import check_steam_available
-from app.utils.steam.steamworks.wrapper import SteamworksAppDependenciesQuery
+from app.utils.steam.steamworks.wrapper import (
+    SteamworksAppDependenciesQuery,
+    _pool_init_worker,
+)
 from app.views.dialogue import show_warning
 
 STEAM_THERE_WAS_A_PROBLEM_FLAG = "There was a problem accessing the item. "
@@ -699,12 +703,14 @@ class DynamicQuery(QObject):
         Given a list of PublishedFileIds and a query, return the query after looking up
         and appending DLC dependency data from the Steamworks API.
 
+        Uses multiprocessing.Pool with cpu_count() workers. SteamInit() calls
+        are serialized via a shared Lock to prevent pipe-registration storms.
+
         https://partner.steamgames.com/doc/api/ISteamUGC#GetAppDependencies
 
         :param publishedfileids: a list of PublishedFileIds to query metadata for
-        :param json_to_update: a Dict of json data, containing a query to update in
+        :param query: a Dict of json data, containing a query to update in
         RimPy db_data["database"] format, or the skeleton of one from local_metadata
-        :return: Dict containing the updated json data from PublishedFileIds query
         """
         # Filter pfids that already have DLC deps populated in the database
         pfids_needing_deps = []
@@ -725,7 +731,7 @@ class DynamicQuery(QObject):
 
         self._emit_message(
             f"\nSteamworks API: ISteamUGC/GetAppDependencies initializing for "
-            f"{total_to_query} mods (single process)"
+            f"{total_to_query} mods ({cpu_count()} workers)"
             + (f", {skipped} already resolved" if skipped else "")
         )
 
@@ -738,35 +744,78 @@ class DynamicQuery(QObject):
                 logger.warning(f"Failed to save database before Steamworks: {e}")
 
         # Check Steam availability
-        if not check_steam_available(str(AppInfo().libs_folder)):
+        if not check_steam_available(
+            str(AppInfo().libs_folder),
+            status_callback=self._emit_message,
+        ):
             self._emit_message(
                 "\nSteam is not available. Skipping AppID dependency retrieval."
             )
             return
 
-        # Run the Steamworks query
-        est_seconds = int(total_to_query * 0.2)
+        # Run the Steamworks query using multiprocessing Pool.
+        # Each worker has its own SteamworksInterface (separate IPC pipe),
+        # but SteamInit() in _pool_init_worker is serialized via init_lock
+        # so the Steam client is not overwhelmed by concurrent pipe registration.
+        # Leave 2 cores free for the system/Steam client; add a 30s cooldown
+        # every 6000 pfids to prevent the Steam client IPC pipe from
+        # overflowing (pipes.cpp:BWrite failed) under sustained load.
+        num_processes = max(1, cpu_count() - 2)
+        interval = 0.2
+        est_seconds = int(total_to_query * interval / num_processes)
         if est_seconds < 60:
             est_str = f"{est_seconds}s"
         else:
             est_str = f"{est_seconds // 60}m {est_seconds % 60}s"
         self._emit_message(f"Estimated time: ~{est_str}.\nPlease wait...")
 
-        deps_query = SteamworksAppDependenciesQuery(
-            pfid_or_pfids=[int(pfid) for pfid in pfids_needing_deps],
-            interval=0.2,
-            _libs=str(AppInfo().libs_folder),
-            chunk_index=1,
-            total_chunks=1,
-            progress_callback=self._emit_message,
-            query_db=query,
-            output_database_path=self.output_database_path,
-        )
-        result = deps_query.run()
-        # Merge results into the database
+        # Split pfids into fixed-size chunks so results trickle back via imap_unordered
+        CHUNK_SIZE = 100
+        pfid_chunks = list(chunks(pfids_needing_deps, limit=CHUNK_SIZE))
+
+        queries = [
+            SteamworksAppDependenciesQuery(
+                pfid_or_pfids=[int(pfid) for pfid in chunk],
+                interval=interval,
+                _libs=str(AppInfo().libs_folder),
+            )
+            for chunk in pfid_chunks
+        ]
+
         pfids_appid_deps: dict[int, list[int]] = {}
-        if result is not None:
-            pfids_appid_deps.update(result)
+        total_chunks = len(queries)
+        self._emit_message(f"Progress: 0/{total_chunks}")
+        libs_path = str(AppInfo().libs_folder)
+        project_root = str(AppInfo().application_folder)
+        init_lock = Lock()
+        COOLDOWN_INTERVAL = 6000  # pfids — give Steam client a 30s breather
+        pfids_processed = 0
+        with Pool(
+            processes=num_processes,
+            initializer=_pool_init_worker,
+            initargs=(project_root, libs_path, init_lock),
+        ) as pool:
+            for i, result in enumerate(
+                pool.imap_unordered(SteamworksAppDependenciesQuery.run, queries)
+            ):
+                if result is not None:
+                    pfids_appid_deps.update(result)
+                pfids_processed += CHUNK_SIZE
+                if pfids_processed % COOLDOWN_INTERVAL == 0:
+                    remaining = total_to_query - pfids_processed
+                    remaining_est = int(remaining * interval / num_processes) + 30
+                    if remaining_est < 60:
+                        est_str = f"{remaining_est}s"
+                    else:
+                        est_str = f"{remaining_est // 60}m {remaining_est % 60}s"
+                    self._emit_message(
+                        f"Cooldown: 30s pause after ~{pfids_processed} pfids "
+                        f"to let Steam client recover. "
+                        f"~{remaining} pfids remaining (est. {est_str})"
+                    )
+                    sleep(30)
+                self._emit_message(f"Progress: {i + 1}/{total_chunks}")
+
         self._merge_app_deps(query, pfids_appid_deps)
         self._emit_message(f"\nTotal: {len(pfids_appid_deps.keys())}")
         # Save final database
