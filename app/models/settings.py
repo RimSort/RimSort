@@ -88,7 +88,7 @@ class Settings(QObject):
             "https://github.com/emipa606/NoVersionWarning"
         )
         self.external_no_version_warning_url: str = (
-            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/master.zip"
+            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/main.zip"
         )
 
         self.external_use_this_instead_metadata_source: str = "Configured URL"
@@ -99,7 +99,7 @@ class Settings(QObject):
             "https://github.com/emipa606/UseThisInstead"
         )
         self.external_use_this_instead_url: str = (
-            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/master.zip"
+            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/main.zip"
         )
 
         # Sorting
