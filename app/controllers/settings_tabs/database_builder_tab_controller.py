@@ -43,6 +43,7 @@ class DatabaseBuilderTabController(BaseTabController):
             self.settings.build_steam_database_update_toggle
         )
         self.dialog.db_builder_steam_api_key.setText(self.settings.steam_apikey)
+        self.dialog.database_expiry.setText(str(self.settings.database_expiry))
 
     def update_model_from_view(self) -> None:
         if self.dialog.db_builder_include_all_radio.isChecked():
@@ -56,6 +57,7 @@ class DatabaseBuilderTabController(BaseTabController):
             self.dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
         )
         self.settings.steam_apikey = self.dialog.db_builder_steam_api_key.text()
+        self.settings.database_expiry = int(self.dialog.database_expiry.text())
 
     # --- Action button handlers ---
 

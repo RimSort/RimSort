@@ -75,8 +75,6 @@ class Settings(QObject):
         )
         self.external_community_rules_url: str = "https://github.com/RimSort/Community-Rules-Database/archive/refs/heads/main.zip"
 
-        # Disable by default previously this was 7 days "604800"
-        self.database_expiry: int = 0
         # Default (-1) means do not delete data from Aux Metadata DB
         self.aux_db_time_limit: int = -1
 
@@ -137,6 +135,8 @@ class Settings(QObject):
         self.build_steam_database_dlc_data: bool = True
         self.build_steam_database_update_toggle: bool = False
         self.steam_apikey: str = ""
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True

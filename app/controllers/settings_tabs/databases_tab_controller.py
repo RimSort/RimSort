@@ -1,6 +1,5 @@
 from typing import Callable
 
-from loguru import logger
 from PySide6.QtWidgets import QApplication
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
@@ -246,13 +245,7 @@ class DatabasesTabController(BaseTabController):
     def update_view_from_model(self) -> None:
         for group in self._groups:
             group.update_view(self.dialog, self.settings)
-        self.dialog.database_expiry.setText(str(self.settings.database_expiry))
 
     def update_model_from_view(self) -> None:
         for group in self._groups:
             group.update_model(self.dialog, self.settings)
-        try:
-            self.settings.database_expiry = int(self.dialog.database_expiry.text())
-        except Exception:
-            logger.warning("Failed setting database_expiry, falling back to 0")
-            self.settings.database_expiry = 0
