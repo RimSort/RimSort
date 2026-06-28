@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import msgspec
-import pygit2
 from loguru import logger
 
 from app.models.metadata.metadata_structure import (
@@ -26,6 +25,11 @@ from app.models.metadata.metadata_structure import (
     SteamDbSchema,
 )
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID, RIMWORLD_DLC_METADATA
+
+# Import pygit2 through the SSL-safe loader so libgit2's TLS certificate
+# locations are initialized correctly in bundled builds. See
+# app/utils/pygit2_loader.py and https://github.com/RimSort/RimSort/issues/2234.
+from app.utils.pygit2_loader import pygit2
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 
