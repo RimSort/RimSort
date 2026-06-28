@@ -76,6 +76,7 @@ class DuplicateModsPanel(BaseModsPanel):
                     mod = self.metadata_controller.get_mod(path)
                     if mod is not None:
                         mod_info = ModInfo.from_listed_mod(mod)
+                        mod_info.key = path
                         self._add_mod_row(mod_info)
                     else:
                         logger.warning(
