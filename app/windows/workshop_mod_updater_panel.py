@@ -75,6 +75,11 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                 )
             )
 
+        # Add delete button
+        button_configs.append(
+            self._create_delete_button_config(self.tr("Delete Selected Mods"))
+        )
+
         # Set up buttons based on configurations
         self._setup_buttons_from_config(button_configs)
 
