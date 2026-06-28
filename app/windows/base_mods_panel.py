@@ -1093,7 +1093,13 @@ class BaseModsPanel(QWidget):
                 self._add_group_header_row(group_key)
 
             for path_key, metadata in mod_list:
-                mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
+                try:
+                    mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
+                except (ValueError, TypeError) as e:
+                    logger.warning(
+                        f"Skipping mod {path_key}: failed to extract metadata ({e})"
+                    )
+                    continue
                 self._add_mod_row(mod_info)
 
     def _get_standard_mod_columns(self) -> list[HeaderColumn]:

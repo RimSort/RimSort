@@ -4,6 +4,7 @@ from typing import Any
 from loguru import logger
 
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.generic import format_time_display
 
 # Module-level constants for better access
@@ -140,7 +141,11 @@ class ModInfo:
         :return: A populated ModInfo instance
         """
         name = mod.name or UNKNOWN
-        packageid = str(mod.package_id) if isinstance(mod, AboutXmlMod) else ""
+        packageid = (
+            str(mod.package_id)
+            if isinstance(mod, AboutXmlMod)
+            else DEFAULT_MISSING_PACKAGEID
+        )
         published_file_id = mod.published_file_id or ""
         supported_versions = cls._parse_supported_versions_static(
             sorted(mod.supported_versions) if mod.supported_versions else None
