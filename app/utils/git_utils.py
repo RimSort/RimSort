@@ -2,7 +2,6 @@
 
 import datetime
 import gc
-import os
 import threading
 import time
 from contextlib import contextmanager
@@ -16,26 +15,18 @@ from loguru import logger
 from PySide6.QtWidgets import QMessageBox
 
 from app.utils.generic import check_internet_connection, delete_files_with_condition
+
+# Import pygit2 (and its submodules) through the SSL-safe loader so libgit2's
+# TLS certificate locations are initialized correctly in bundled builds. See
+# app/utils/pygit2_loader.py and https://github.com/RimSort/RimSort/issues/2234.
+from app.utils.pygit2_loader import (
+    CheckoutStrategy,
+    Repository,
+    ResetMode,
+    SortMode,
+    pygit2,
+)
 from app.views.dialogue import InformationBox
-
-try:
-    import pygit2
-    from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
-    from pygit2.repository import Repository
-except Exception:
-    import certifi
-
-    os.environ["SSL_CERT_FILE"] = certifi.where()
-    os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
-    logger.warning("Set SSL certificates using certifi")
-
-    try:
-        import pygit2
-        from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
-        from pygit2.repository import Repository
-    except Exception as e:
-        logger.error("Failed to import pygit2 after setting SSL certificates. ")
-        raise ImportError("Failed to import pygit2. ") from e
 
 
 class GitError(Exception):
