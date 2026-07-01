@@ -244,13 +244,13 @@ jobs:
         shell: powershell
 
       - name: Generate executable attestations
-        uses: actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@v4.1.1
         if: ${{ inputs.attest }}
         with:
           subject-path: ${{ steps.find_executable.outputs.EXECUTABLE }}
 
       - name: Generate MSI attestation
-        uses: actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@v4.1.1
         if: ${{ inputs.attest && matrix.platform == 'Windows' }}
         with:
           subject-path: ./RimSort-${{ steps.sem_version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}.msi
@@ -277,7 +277,7 @@ jobs:
         shell: bash
 
       - name: Generate AppImage attestation
-        uses: actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@v4.1.1
         if: ${{ inputs.attest && matrix.platform == 'Ubuntu-22.04' }}
         with:
           subject-path: ${{ steps.find_appimage.outputs.APPIMAGE }}
@@ -305,7 +305,7 @@ jobs:
         shell: bash
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@v4.1.1
         if: ${{ inputs.attest }}
         with:
           subject-path: ./build/${{ steps.filename.outputs.FILENAME }}.tar
