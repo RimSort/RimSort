@@ -2811,6 +2811,14 @@ Seleccione su variante de mod de Mod en la tabla a continuación. También puede
         <source>In latest save</source>
         <translation>En la última salvación</translation>
     </message>
+    <message>
+        <source>Updated {time_ago}. Click to open the Workshop changelog.</source>
+        <translation>Actualizado {time_ago}. Haz clic para abrir el registro de cambios del Workshop.</translation>
+    </message>
+    <message>
+        <source>Recently updated</source>
+        <translation>Actualizado recientemente</translation>
+    </message>
 </context>
 <context>
     <name>ModListWidget</name>
@@ -3298,6 +3306,18 @@ Alternative Dependencies:</source>
     <message>
         <source>Click to only show active mods not in latest save</source>
         <translation>Haga clic para mostrar solo modificaciones activas no en el último guardar</translation>
+    </message>
+    <message>
+        <source>0 updated</source>
+        <translation>0 actualizados</translation>
+    </message>
+    <message>
+        <source>Click to only show recently updated mods</source>
+        <translation>Haz clic para mostrar solo los mods actualizados recientemente</translation>
+    </message>
+    <message>
+        <source>{padding}{count} updated</source>
+        <translation>{padding}{count} actualizados</translation>
     </message>
     <message>
         <source>{padding}{num} warning(s)</source>
@@ -4405,6 +4425,18 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
     <message>
         <source>Show duplicate mods warning</source>
         <translation>Mostrar advertencia de módulos duplicados</translation>
+    </message>
+    <message>
+        <source>Show recently updated mods indicator</source>
+        <translation>Mostrar indicador de mods actualizados recientemente</translation>
+    </message>
+    <message>
+        <source>Shows an icon on Steam Workshop mods that were updated within the configured number of days. The update time is refreshed when RimSort refreshes its metadata.</source>
+        <translation>Muestra un icono en los mods de Steam Workshop que se actualizaron dentro del número de días configurado. La hora de actualización se actualiza cuando RimSort actualiza sus metadatos.</translation>
+    </message>
+    <message>
+        <source>Days to consider a mod recently updated:</source>
+        <translation>Días para considerar un mod como actualizado recientemente:</translation>
     </message>
     <message>
         <source>Check for mod updates on refresh</source>
