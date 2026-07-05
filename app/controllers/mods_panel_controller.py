@@ -27,6 +27,7 @@ class ModsPanelController(QObject):
         self.warnings_label_active = False
         self.errors_label_active = False
         self.news_label_active = False
+        self.updated_label_active = False
 
         self.mods_panel.warnings_text.clicked.connect(
             partial(self._change_visibility_of_mods_with_warnings_errors, "warnings")
@@ -41,6 +42,14 @@ class ModsPanelController(QObject):
         ):
             self.mods_panel.new_text.clicked.connect(
                 self._change_visibility_of_new_mods
+            )
+        # Recently-updated mods filter label (only when indicator enabled)
+        if (
+            hasattr(self.mods_panel, "updated_text")
+            and self.settings.mod_list_updated_indicator
+        ):
+            self.mods_panel.updated_text.clicked.connect(
+                self._change_visibility_of_updated_mods
             )
         EventBus().reset_warnings_signal.connect(
             self._on_menu_bar_reset_warnings_triggered
@@ -84,6 +93,12 @@ class ModsPanelController(QObject):
             and self.settings.show_save_comparison_indicators
         ):
             self.mods_panel.new_text.clicked.emit()
+        elif (
+            self.updated_label_active
+            and hasattr(self.mods_panel, "updated_text")
+            and self.settings.mod_list_updated_indicator
+        ):
+            self.mods_panel.updated_text.clicked.emit()
 
     @Slot()
     def _on_filters_changed_in_active_modlist(self) -> None:
@@ -222,6 +237,8 @@ class ModsPanelController(QObject):
         # If the other labels are active, disable them
         if self.news_label_active:
             self.mods_panel.new_text.clicked.emit()
+        if self.updated_label_active:
+            self.mods_panel.updated_text.clicked.emit()
         if type == "warnings":
             if self.errors_label_active:
                 self.mods_panel.errors_text.clicked.emit()
@@ -248,11 +265,33 @@ class ModsPanelController(QObject):
             self.mods_panel.warnings_text.clicked.emit()
         if self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
+        if self.updated_label_active:
+            self.mods_panel.updated_text.clicked.emit()
 
         self.news_label_active = not self.news_label_active
 
         self.__change_visibility_helper(self.news_label_active, "new_text")
         logger.debug("Finished hiding mods that are in save (showing only new).")
+
+    @Slot()
+    def _change_visibility_of_updated_mods(self) -> None:
+        """When on, shows only mods that were recently updated on the Workshop.
+
+        When off, shows all mods. Respects other active filters.
+        """
+
+        # If the other labels are active, disable them
+        if self.warnings_label_active:
+            self.mods_panel.warnings_text.clicked.emit()
+        if self.errors_label_active:
+            self.mods_panel.errors_text.clicked.emit()
+        if self.news_label_active:
+            self.mods_panel.new_text.clicked.emit()
+
+        self.updated_label_active = not self.updated_label_active
+
+        self.__change_visibility_helper(self.updated_label_active, "updated_text")
+        logger.debug("Finished hiding mods that were not recently updated.")
 
     def __change_visibility_helper(self, label_active: bool, type: str) -> None:
         active_mods = self.mods_panel.active_mods_list.get_all_mod_list_items()
@@ -260,6 +299,10 @@ class ModsPanelController(QObject):
             mod_data = mod.data(Qt.ItemDataRole.UserRole)
             if type == "new_text":
                 apply_filter = not bool(mod_data.__dict__.get("is_new", False))
+            elif type == "updated_text":
+                apply_filter = not bool(
+                    mod_data.__dict__.get("is_recently_updated", False)
+                )
             else:
                 apply_filter = mod_data[type] == ""
 

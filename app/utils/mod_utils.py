@@ -43,6 +43,57 @@ def resolve_aux_timestamps(
     return acf_touched, ext_updated
 
 
+def resolve_workshop_updated_timestamp(
+    aux_entry: AuxMetadataEntry | None,
+) -> int | None:
+    """Resolve the workshop update time of the *installed* mod content.
+
+    Prefers the ACF ``timeupdated`` (``acf_time_updated``), which reflects the
+    update time of the content actually downloaded to disk and is refreshed on
+    every metadata refresh.  Falls back to the Steam WebAPI
+    ``external_time_updated`` only when the ACF value is missing/non-positive.
+
+    This is intentionally the *reverse* preference order of
+    :func:`resolve_aux_timestamps`: the WebAPI value can be newer than the
+    installed content (an update is available but not yet downloaded), which
+    would be a false positive for the "recently updated" indicator.
+
+    Returns the resolved epoch timestamp, or *None* when neither source is
+    present or positive.
+    """
+    if aux_entry is None:
+        return None
+
+    raw_acf = getattr(aux_entry, "acf_time_updated", -1)
+    if raw_acf is not None and raw_acf > 0:
+        return raw_acf
+
+    raw_external = getattr(aux_entry, "external_time_updated", -1)
+    if raw_external is not None and raw_external > 0:
+        return raw_external
+
+    return None
+
+
+def is_recently_updated(
+    updated_timestamp: int | None,
+    threshold_days: int,
+    now: float | None = None,
+) -> bool:
+    """Return True if ``updated_timestamp`` falls within ``threshold_days`` of now.
+
+    A *None* or non-positive timestamp is treated as "not recently updated".
+    ``now`` may be supplied (as an epoch timestamp) for deterministic testing;
+    it defaults to the current time.
+    """
+    if updated_timestamp is None or updated_timestamp <= 0:
+        return False
+    if now is None:
+        now = datetime.now().timestamp()
+    cutoff = now - threshold_days * 86400
+    return updated_timestamp >= cutoff
+
+
 def get_mod_path_from_pfid(pfid: str) -> str | None:
     """
     Get the mod path from a published file ID.
