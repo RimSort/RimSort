@@ -4304,7 +4304,7 @@ Ver: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from the Steam Workshop.</source>
-    < translation > Obtener PublishedFileIDs de la Steam Workshop.</translation>
+        <translation>Obtener PublishedFileIDs de la Steam Workshop.</translation>
     </message>
     <message>
         <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
@@ -4854,7 +4854,7 @@ Elija una de las siguientes opciones para continuar.</translation>
     </message>
     <message>
         <source>Depot Cache Cleared</source>
-    < translation > Depot Cache borrado</translation>
+        <translation>Depot Cache borrado</translation>
     </message>
     <message>
         <source>SteamCMD depot cache was already cleared.</source>
@@ -4862,7 +4862,7 @@ Elija una de las siguientes opciones para continuar.</translation>
     </message>
     <message>
         <source>SteamCMD depot cache has been cleared.</source>
-    < translation > El SteamCMD depot cache ha sido borrado.</translation>
+        <translation>El SteamCMD depot cache ha sido borrado.</translation>
     </message>
     <message>
         <source>Re-create Symlink?</source>
@@ -5384,7 +5384,7 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
     </message>
     <message>
         <source>Reset to Vanilla</source>
-    < translation > Restablecer a Vanilla </translation>
+        <translation>Restablecer a Vanilla</translation>
     </message>
     <message>
         <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
