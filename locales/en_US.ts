@@ -2794,6 +2794,14 @@ Please select your preferred mod variant in the table below. You can also open e
         <source>In latest save</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Updated {time_ago}. Click to open the Workshop changelog.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Recently updated</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ModListWidget</name>
@@ -3279,6 +3287,18 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Click to only show active mods not in latest save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>0 updated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click to only show recently updated mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{padding}{count} updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4369,6 +4389,18 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Show duplicate mods warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show recently updated mods indicator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shows an icon on Steam Workshop mods that were updated within the configured number of days. The update time is refreshed when RimSort refreshes its metadata.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Days to consider a mod recently updated:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

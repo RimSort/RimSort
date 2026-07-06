@@ -95,6 +95,7 @@ from app.utils.generic import (
     copy_to_clipboard_safely,
     delete_files_except_extension,
     format_file_size,
+    get_relative_time,
     launch_process,
     open_url_browser,
     platform_specific_open,
@@ -258,6 +259,13 @@ class ModListItemInner(QWidget):
         )
         self.in_save_icon_label.setToolTip(self.tr("In latest save"))
         self.in_save_icon_label.setHidden(True)
+        # Recently-updated icon (clickable), hidden by default; opt-in via settings
+        self.updated_icon_label = ClickableQLabel()
+        self.updated_icon_label.clicked.connect(self.__on_updated_icon_clicked)
+        self.updated_icon_label.setPixmap(
+            ModListIcons.updated_icon().pixmap(QSize(20, 20))
+        )
+        self.updated_icon_label.setHidden(True)
         # Error icon hidden by default
         self.error_icon_label = ClickableQLabel()
         self.error_icon_label.clicked.connect(self.__on_error_icon_clicked)
@@ -330,6 +338,10 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(
                 self.new_icon_label, Qt.AlignmentFlag.AlignRight
             )
+        if self.settings.mod_list_updated_indicator:
+            self.main_item_layout.addWidget(
+                self.updated_icon_label, Qt.AlignmentFlag.AlignRight
+            )
 
         self.main_item_layout.addWidget(
             self.translation_status_label, Qt.AlignmentFlag.AlignRight
@@ -368,6 +380,14 @@ class ModListItemInner(QWidget):
             package_id,
             self.path,
         )
+
+    def __on_updated_icon_clicked(self) -> None:
+        mod = self.metadata_controller.get_mod(self.path)
+        pfid = mod.published_file_id if mod is not None else None
+        if pfid:
+            open_url_browser(
+                f"https://steamcommunity.com/sharedfiles/filedetails/changelog/{pfid}"
+            )
 
     def _resize_text_after_icon_toggle(self, icon_count: int = -1) -> None:
         event = QResizeEvent(self.size(), self.size())
@@ -653,6 +673,24 @@ class ModListItemInner(QWidget):
         else:
             self.new_icon_label.setHidden(True)
             self.in_save_icon_label.setHidden(True)
+        # Recently-updated icon visibility (both lists) depends on the setting
+        is_recently_updated = bool(
+            item_data.__dict__.get("is_recently_updated", False)
+        )
+        if self.settings.mod_list_updated_indicator and is_recently_updated:
+            updated_timestamp = getattr(item_data, "updated_timestamp", None)
+            if updated_timestamp:
+                self.updated_icon_label.setToolTip(
+                    self.tr(
+                        "Updated {time_ago}. Click to open the Workshop changelog."
+                    ).format(time_ago=get_relative_time(updated_timestamp))
+                )
+            else:
+                self.updated_icon_label.setToolTip(self.tr("Recently updated"))
+            self.updated_icon_label.setHidden(False)
+        else:
+            self.updated_icon_label.setHidden(True)
+            self.updated_icon_label.setToolTip("")
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
         if item_data["mod_color"] is not None:
@@ -874,6 +912,7 @@ class ModListIcons:
     _warning_icon_path: str = str(_data_path / "warning.png")
     _error_icon_path: str = str(_data_path / "error.png")
     _new_icon_path: str = str(_data_path / "new.png")
+    _updated_icon_path: str = str(_data_path / "updated.png")
     _clear_icon_path: str = str(_data_path / "clear.png")
 
     _ludeon_icon: QIcon | None = None
@@ -886,6 +925,7 @@ class ModListIcons:
     _warning_icon: QIcon | None = None
     _error_icon: QIcon | None = None
     _new_icon: QIcon | None = None
+    _updated_icon: QIcon | None = None
     _clear_icon: QIcon | None = None
 
     @classmethod
@@ -952,6 +992,17 @@ class ModListIcons:
                 else QIcon(str(cls._data_path / "AppIcon_b.png"))
             )
         return cls._new_icon
+
+    @classmethod
+    def updated_icon(cls) -> QIcon:
+        if cls._updated_icon is None:
+            # Reuse an existing icon if updated.png is not present
+            cls._updated_icon = (
+                QIcon(cls._updated_icon_path)
+                if Path(cls._updated_icon_path).exists()
+                else QIcon(str(cls._data_path / "AppIcon_b.png"))
+            )
+        return cls._updated_icon
 
     @classmethod
     def clear_icon(cls) -> QIcon:
@@ -3314,6 +3365,15 @@ class ModListWidget(QListWidget):
         else:
             latest_save_ids = None
 
+        # Compute the "recently updated" cutoff once for this run, only if enabled
+        updated_enabled: bool = self.settings.mod_list_updated_indicator
+        updated_cutoff: float = (
+            datetime.now().timestamp()
+            - self.settings.mod_list_updated_threshold_days * 86400
+            if updated_enabled
+            else 0.0
+        )
+
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.paths.index(uuid)
             current_item = self.item(current_mod_index)
@@ -3351,6 +3411,16 @@ class ModListWidget(QListWidget):
             else:
                 current_item_data.__dict__["is_new"] = False
                 current_item_data.__dict__["in_save"] = False
+            # Mark mods whose workshop update time falls within the threshold
+            if updated_enabled:
+                updated_timestamp = getattr(
+                    current_item_data, "updated_timestamp", None
+                )
+                current_item_data.__dict__["is_recently_updated"] = bool(
+                    updated_timestamp and updated_timestamp >= updated_cutoff
+                )
+            else:
+                current_item_data.__dict__["is_recently_updated"] = False
             mod_data = all_mods_metadata.get(uuid)
             if mod_data is None:
                 continue
@@ -4192,6 +4262,22 @@ class ModsPanel(QWidget):
         self.news_layout.addWidget(self.new_icon, 1)
         self.news_layout.addWidget(self.new_text, 99)
         self.warnings_errors_layout.addLayout(self.news_layout, 50)
+        # Recently-updated mods label (next to new mods)
+        self.updated_layout = QHBoxLayout()
+        self.updated_icon: QLabel = QLabel()
+        self.updated_icon.setPixmap(
+            ModListIcons.updated_icon().pixmap(QSize(20, 20))
+        )
+        self.updated_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
+            self.tr("0 updated")
+        )
+        self.updated_text.setObjectName("summaryValue")
+        self.updated_text.setToolTip(
+            self.tr("Click to only show recently updated mods")
+        )
+        self.updated_layout.addWidget(self.updated_icon, 1)
+        self.updated_layout.addWidget(self.updated_text, 99)
+        self.warnings_errors_layout.addLayout(self.updated_layout, 50)
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
@@ -4716,14 +4802,26 @@ class ModsPanel(QWidget):
                 except Exception:
                     pass
 
+            # Count recently-updated mods. Only if the indicator is enabled
+            updated_count = 0
+            if self.settings.mod_list_updated_indicator:
+                try:
+                    for item in self.active_mods_list.get_all_mod_list_items():
+                        if item.data(Qt.ItemDataRole.UserRole).__dict__.get(
+                            "is_recently_updated", False
+                        ):
+                            updated_count += 1
+                except Exception:
+                    pass
+
             padding = " "
             has_errors_warnings = (
                 total_error_text or total_warning_text or num_errors or num_warnings
             )
 
-            # Show summary frame only if there are errors, warnings, or new mods to display
+            # Show summary frame only if there are errors, warnings, new or updated mods
             self.errors_summary_frame.setHidden(
-                not (has_errors_warnings or new_count > 0)
+                not (has_errors_warnings or new_count > 0 or updated_count > 0)
             )
 
             # Update error and warning counts/tooltips (show 0 if none exist)
@@ -4752,6 +4850,17 @@ class ModsPanel(QWidget):
                 self.tr("{padding}{count} new").format(padding=padding, count=new_count)
                 if new_count > 0
                 else self.tr("0 new")
+            )
+
+            # Update recently-updated mods display (icon and count)
+            self.updated_icon.setHidden(updated_count == 0)
+            self.updated_text.setHidden(updated_count == 0)
+            self.updated_text.setText(
+                self.tr("{padding}{count} updated").format(
+                    padding=padding, count=updated_count
+                )
+                if updated_count > 0
+                else self.tr("0 updated")
             )
 
             # First time and refresh: the slot will evaluate false and do nothing.

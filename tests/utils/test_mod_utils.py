@@ -18,6 +18,8 @@ from app.utils.mod_utils import (
     filter_eligible_mods_for_update,
     get_mod_name_from_pfid,
     get_mod_paths,
+    is_recently_updated,
+    resolve_workshop_updated_timestamp,
 )
 
 
@@ -389,3 +391,59 @@ class TestFilterEligibleModsForUpdate:
             )
         names = {m["name"] for m in result}
         assert names == {"Eligible Workshop", "Eligible SteamCMD"}
+
+
+class TestResolveWorkshopUpdatedTimestamp:
+    """Tests for resolve_workshop_updated_timestamp (ACF preferred, external fallback)."""
+
+    def _entry(self, acf: int, external: int) -> MagicMock:
+        entry = MagicMock()
+        entry.acf_time_updated = acf
+        entry.external_time_updated = external
+        return entry
+
+    def test_none_entry_returns_none(self) -> None:
+        assert resolve_workshop_updated_timestamp(None) is None
+
+    def test_acf_preferred_over_external(self) -> None:
+        # Even when external is newer, the installed-content ACF time wins.
+        assert resolve_workshop_updated_timestamp(self._entry(1000, 2000)) == 1000
+
+    def test_falls_back_to_external_when_acf_missing(self) -> None:
+        assert resolve_workshop_updated_timestamp(self._entry(-1, 2000)) == 2000
+
+    def test_falls_back_to_external_when_acf_zero(self) -> None:
+        assert resolve_workshop_updated_timestamp(self._entry(0, 2000)) == 2000
+
+    def test_none_when_both_non_positive(self) -> None:
+        assert resolve_workshop_updated_timestamp(self._entry(-1, 0)) is None
+
+
+class TestIsRecentlyUpdated:
+    """Tests for is_recently_updated using an explicit `now` for determinism."""
+
+    NOW = 1_000_000.0  # fixed reference time
+    DAY = 86400
+
+    def test_none_timestamp_is_false(self) -> None:
+        assert is_recently_updated(None, 3, now=self.NOW) is False
+
+    def test_non_positive_timestamp_is_false(self) -> None:
+        assert is_recently_updated(0, 3, now=self.NOW) is False
+        assert is_recently_updated(-5, 3, now=self.NOW) is False
+
+    def test_inside_window(self) -> None:
+        ts = int(self.NOW - 1 * self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is True
+
+    def test_outside_window(self) -> None:
+        ts = int(self.NOW - 5 * self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is False
+
+    def test_exact_boundary_is_inside(self) -> None:
+        ts = int(self.NOW - 3 * self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is True
+
+    def test_future_timestamp_is_recent(self) -> None:
+        ts = int(self.NOW + self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is True

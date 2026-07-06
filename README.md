@@ -36,6 +36,10 @@ If you have an issue, make sure you **checked the [wiki][Wiki]** for a solution.
 
 [![Join us on Discord](https://github-production-user-asset-6210df.s3.amazonaws.com/2766946/248529301-486f4f8c-fed5-4fe1-832f-6461b7ce3a55.png)][Discord]
 
+## Credits
+
+- "Update" icon by [Icons8](https://icons8.com) ([icon link](https://icons8.com/icon/aPgBhcyogqyV/update)).
+
 [Wiki]: https://rimsort.github.io/RimSort/
 [Issues]: https://github.com/RimSort/RimSort/issues
 [Releases]: https://github.com/RimSort/RimSort/releases
