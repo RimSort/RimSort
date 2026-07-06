@@ -744,7 +744,12 @@ def restart_application() -> None:
     if getattr(sys, "frozen", False):
         cmd = [sys.executable] + sys.argv[1:]
     else:
-        cmd = [sys.executable] + sys.argv
+        # `python -m app` sets sys.argv[0] to the resolved path of
+        # app/__main__.py, not "-m app". Re-launching with that path
+        # directly runs it as a plain script, which puts app/ (not the
+        # project root) on sys.path and breaks `from app...` imports.
+        # Reconstruct the original `-m app` invocation instead.
+        cmd = [sys.executable, "-m", "app"] + sys.argv[1:]
 
     subprocess.Popen(cmd)
 

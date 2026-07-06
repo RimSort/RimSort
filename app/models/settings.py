@@ -121,6 +121,10 @@ class Settings(QObject):
         self.try_download_missing_mods: bool = True
         # Whether to notify user about duplicate mods
         self.duplicate_mods_warning: bool = True
+        # Whether to show the "recently updated" indicator on Steam Workshop mods
+        self.mod_list_updated_indicator: bool = False
+        # Number of days within which a workshop mod counts as "recently updated"
+        self.mod_list_updated_threshold_days: int = 3
         # Whether to enable Mod type filter
         self.mod_type_filter: bool = True
         # Whether to hide invalid mods

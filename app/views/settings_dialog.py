@@ -840,6 +840,35 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.show_duplicate_mods_warning_checkbox
         )
 
+        # Recently updated mods indicator checkbox
+        self.mod_list_updated_indicator_checkbox = QCheckBox(
+            self.tr("Show recently updated mods indicator")
+        )
+        self.mod_list_updated_indicator_checkbox.setToolTip(
+            self.tr(
+                "Shows an icon on Steam Workshop mods that were updated within the "
+                "configured number of days. The update time is refreshed when RimSort "
+                "refreshes its metadata."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.mod_list_updated_indicator_checkbox
+        )
+
+        # Recently updated threshold (days)
+        updated_threshold_layout = QHBoxLayout()
+        updated_threshold_label = QLabel(
+            self.tr("Days to consider a mod recently updated:")
+        )
+        updated_threshold_layout.addWidget(updated_threshold_label)
+        self.mod_list_updated_threshold_spinbox = QSpinBox()
+        self.mod_list_updated_threshold_spinbox.setRange(1, 30)
+        self.mod_list_updated_threshold_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        updated_threshold_layout.addWidget(self.mod_list_updated_threshold_spinbox)
+        modlist_option_group_box_layout.addLayout(updated_threshold_layout)
+
         # Hide invalid mod filtering checkbox
         self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
             self.tr("Hide invalid mods when filtering")

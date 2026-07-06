@@ -27,6 +27,9 @@ class SortingTabController(BaseTabController):
             self._on_use_background_coloring_checkbox_changed
         )
         EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
+        self.dialog.mod_list_updated_indicator_checkbox.toggled.connect(
+            self.dialog.mod_list_updated_threshold_spinbox.setEnabled
+        )
 
     def update_view_from_model(self) -> None:
         # Match the existing SettingsController behavior exactly:
@@ -63,6 +66,15 @@ class SortingTabController(BaseTabController):
         )
         self.dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
+        )
+        self.dialog.mod_list_updated_indicator_checkbox.setChecked(
+            self.settings.mod_list_updated_indicator
+        )
+        self.dialog.mod_list_updated_threshold_spinbox.setValue(
+            self.settings.mod_list_updated_threshold_days
+        )
+        self.dialog.mod_list_updated_threshold_spinbox.setEnabled(
+            self.settings.mod_list_updated_indicator
         )
         self.dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering
@@ -101,6 +113,12 @@ class SortingTabController(BaseTabController):
         )
         self.settings.duplicate_mods_warning = (
             self.dialog.show_duplicate_mods_warning_checkbox.isChecked()
+        )
+        self.settings.mod_list_updated_indicator = (
+            self.dialog.mod_list_updated_indicator_checkbox.isChecked()
+        )
+        self.settings.mod_list_updated_threshold_days = (
+            self.dialog.mod_list_updated_threshold_spinbox.value()
         )
         self.settings.hide_invalid_mods_when_filtering = (
             self.dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()
