@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable
 
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QPushButton
 
@@ -66,11 +67,11 @@ class ButtonFactory:
     ) -> QPushButton:
         """Create a QPushButton with a dropdown menu."""
         button = QPushButton()
-        button.setText(self.panel.tr(text))
+        button.setText(text)
         button.setObjectName(object_name)
         menu = QMenu(button)
         for label, callback in menu_items:
-            action = QAction(self.panel.tr(label), self.panel)
+            action = QAction(label, self.panel)
             action.triggered.connect(callback)
             menu.addAction(action)
         button.setMenu(menu)
@@ -84,7 +85,7 @@ class ButtonFactory:
     ) -> QPushButton:
         """Create a refresh button."""
         button = QPushButton()
-        button.setText(self.panel.tr("Refresh"))
+        button.setText(QCoreApplication.translate("BaseModsPanel", "Refresh"))
         button.setObjectName("primaryButton")
         if callback:
             button.clicked.connect(callback)
@@ -93,11 +94,13 @@ class ButtonFactory:
     def create_steamcmd_button(self, pfid_column: int) -> QPushButton:
         """Create a SteamCMD button with dropdown menu."""
         return self.create_dropdown_button(
-            "SteamCMD",
+            QCoreApplication.translate("BaseModsPanel", "SteamCMD"),
             "actionButton",
             [
                 (
-                    "Download with SteamCMD",
+                    QCoreApplication.translate(
+                        "BaseModsPanel", "Download with SteamCMD"
+                    ),
                     self.panel._create_update_callback(
                         pfid_column, OperationMode.STEAMCMD
                     ),
@@ -108,11 +111,17 @@ class ButtonFactory:
     def create_select_all_button(self) -> QPushButton:
         """Create a button with Select all/Deselect all dropdown."""
         return self.create_dropdown_button(
-            "Select",
+            QCoreApplication.translate("BaseModsPanel", "Select"),
             "actionButton",
             [
-                ("Select all", lambda: self.panel._set_all_checkbox_rows(True)),
-                ("Deselect all", lambda: self.panel._set_all_checkbox_rows(False)),
+                (
+                    QCoreApplication.translate("BaseModsPanel", "Select all"),
+                    lambda: self.panel._set_all_checkbox_rows(True),
+                ),
+                (
+                    QCoreApplication.translate("BaseModsPanel", "Deselect all"),
+                    lambda: self.panel._set_all_checkbox_rows(False),
+                ),
             ],
         )
 
@@ -123,11 +132,11 @@ class ButtonFactory:
     ) -> QPushButton:
         """Create a Steam button with subscribe/unsubscribe dropdown."""
         return self.create_dropdown_button(
-            "Steam",
+            QCoreApplication.translate("BaseModsPanel", "Steam"),
             "actionButton",
             [
                 (
-                    "Subscribe selected",
+                    QCoreApplication.translate("BaseModsPanel", "Subscribe selected"),
                     self.panel._create_update_callback(
                         pfid_column,
                         OperationMode.STEAM,
@@ -136,7 +145,7 @@ class ButtonFactory:
                     ),
                 ),
                 (
-                    "Unsubscribe selected",
+                    QCoreApplication.translate("BaseModsPanel", "Unsubscribe selected"),
                     self.panel._create_update_callback(
                         pfid_column,
                         OperationMode.STEAM,

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="es_ES">
 <context>
@@ -28,8 +28,8 @@
         <translation>Todas las columnas buscables</translation>
     </message>
     <message>
-        <source>Searches selected column or all searchable columns if set to 'All'</source>
-        <translation>Busca la columna seleccionada o todas las columnas que se pueden buscar si se establece en 'Todos'</translation>
+        <source>Searches selected column or all searchable columns if set to &apos;All&apos;</source>
+        <translation>Busca la columna seleccionada o todas las columnas que se pueden buscar si se establece en &apos;Todos&apos;</translation>
     </message>
 </context>
 <context>
@@ -55,8 +55,20 @@
         <translation>Refrescar</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>Descarga seleccionada con SteamCMD</translation>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download with SteamCMD</source>
+        <translation>Descargar con SteamCMD</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Seleccionar</translation>
+    </message>
+    <message>
+        <source>Steam</source>
+        <translation>Steam</translation>
     </message>
     <message>
         <source>Subscribe selected</source>
@@ -90,7 +102,7 @@
         <translation>Importación incompleta</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
         <translation>Los mods {len(failed_mods)} no se pudieron importar debido a que faltan identificadores de paquete. Esto puede suceder si no tienes todas las modificaciones descargadas.&lt;br&gt;&lt;br&gt;Primero intenta suscribirte a la colección.</translation>
     </message>
 </context>
@@ -133,7 +145,7 @@
         <translation>- Esto producirá una comparación precisa de los datos de dependencia entre 2 bases de datos de Steam.&lt;br&gt;Se genera un informe de discrepancias. Se le solicitarán estas rutas en orden:&lt;br&gt;&lt;br&gt; 1) Seleccione la entrada A&lt;br&gt; 2) Seleccione la entrada B</translation>
     </message>
     <message>
-        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
+        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
         <translation>- Esto efectivamente sobrescribirá de forma recursiva la clave/valor de A con la clave/valor de B en la base de datos resultante.&lt;br&gt;- Las excepciones no se actualizarán de forma recursiva. En su lugar, se sobrescribirán por completo con la clave B.&lt;br&gt;- Se harán las siguientes excepciones:&lt;br&gt;&lt;br&gt; {DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;La base de datos resultante, C, se guarda en una ruta especificada por el usuario. Se le solicitarán estas rutas en orden:&lt;br&gt;&lt;br&gt; 1) Seleccione la entrada A (base de datos a actualizar)&lt;br&gt; 2) Seleccione la entrada B (fuente de actualización)&lt;br&gt; 3) Seleccione la salida C (base de datos resultante)</translation>
     </message>
     <message>
@@ -141,8 +153,8 @@
         <translation>Informe comparativo de Steam DB: {count} encontrado</translation>
     </message>
     <message>
-        <source>Click 'Show Details' to see the full report!</source>
-        <translation>Haga clic en 'Mostrar detalles' para ver el informe completo.</translation>
+        <source>Click &apos;Show Details&apos; to see the full report!</source>
+        <translation>Haga clic en &apos;Mostrar detalles&apos; para ver el informe completo.</translation>
     </message>
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
@@ -200,8 +212,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Log de carga</translation>
     </message>
     <message>
-        <source>Upload the log file to 0x0.st</source>
-        <translation>Sube el archivo de registro a 0x0.st</translation>
+        <source>Upload log to RimSort Logs</source>
+        <translation>Subir registro a RimSort Logs</translation>
     </message>
     <message>
         <source>Hide Details</source>
@@ -259,8 +271,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>{error_msg}&lt;br&gt;&lt;br&gt;Intente ejecutar RimSort con privilegios de administrador o verifique los permisos de la carpeta.</translation>
     </message>
     <message>
-        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
-        <translation>{error_msg}&lt;br&gt;&lt;br&gt;Intenta buscar en lotes más pequeños o utiliza el método de "búsqueda en streaming" para archivos muy grandes.</translation>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
+        <translation>{error_msg}&lt;br&gt;&lt;br&gt;Intenta buscar en lotes más pequeños o utiliza el método de &quot;búsqueda en streaming&quot; para archivos muy grandes.</translation>
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
@@ -271,7 +283,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Error de acceso al archivo</translation>
     </message>
     <message>
-        <source>RimSort doesn't have permission to access some files.</source>
+        <source>RimSort doesn&apos;t have permission to access some files.</source>
         <translation>Rimsort no tiene permiso para acceder a algunos archivos.</translation>
     </message>
     <message>
@@ -356,14 +368,14 @@ The following table displays duplicate mods grouped by package ID. Select which 
     <message>
         <source>Enable to use regular expressions in search
 Examples:
-- 'def.*\(' to find function definitions
-- '&lt;[^&gt;]+&gt;' to find XML tags
-- '\d+\.\d+(\.\d+)?' to find version numbers</source>
+- &apos;def.*\(&apos; to find function definitions
+- &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
+- &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</source>
         <translation>Habilitar para usar expresiones regulares en la búsqueda
 Ejemplos:
-- 'def.*\(' para encontrar definiciones de funciones
-- '&lt;[^&gt;]+&gt;' para encontrar etiquetas XML
-- '\d+\.\d+(\.\d+)?' para encontrar números de versión</translation>
+- &apos;def.*\(&apos; para encontrar definiciones de funciones
+- &apos;&lt;[^&gt;]+&gt;&apos; para encontrar etiquetas XML
+- &apos;\d+\.\d+(\.\d+)?&apos; para encontrar números de versión</translation>
     </message>
     <message>
         <source>XML files only</source>
@@ -627,6 +639,217 @@ Manage mods installed from GitHub releases.</source>
     </message>
 </context>
 <context>
+    <name>InstanceService</name>
+    <message>
+        <source>Essential path(s)</source>
+        <translation>Ruta(s) esencial(es)</translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>¡Las rutas esenciales no son válidas o no están configuradas!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>RimSort requiere que se establezcan las siguientes rutas.&lt;br/&gt;&lt;br/&gt;1) Carpeta del juego (carpeta donde está instalado RimWorld).&lt;br/&gt;&lt;br/&gt;2) Carpeta de configuración (carpeta donde se encuentra ModsConfig.xml)&lt;br/&gt;&lt;br/&gt;3) Carpeta de mods locales (carpeta Mods dentro de la instalación de RimWorld).&lt;br/&gt;&lt;br/&gt;4) Carpeta de mods de Steam (solo configurada si usas un usuario de Steam y habilita la integración del cliente Steam)&lt;br/&gt;&lt;br/&gt;Intenta usar el funcionalidad de detección automática para establecer todas las rutas automáticamente.&lt;br/&gt;&lt;br/&gt;¿Le gustaría abrir la configuración para configurarlas ahora?</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Sí</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Provide instance name</source>
+        <translation>Proporciona un nombre para la instancia</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
+        <translation>Introduce un nombre único para la copia de seguridad de la instancia que no sea &quot;{name}&quot;</translation>
+    </message>
+    <message>
+        <source>Compressing [{instance_name}] instance folder to archive...</source>
+        <translation>Comprimiendo la carpeta de la instancia [{instance_name}] en un archivo...</translation>
+    </message>
+    <message>
+        <source>Error compressing instance</source>
+        <translation>Error al comprimir la instancia</translation>
+    </message>
+    <message>
+        <source>An error occurred while compressing instance folder: {e}</source>
+        <translation>Se produjo un error al comprimir la carpeta de la instancia: {e}</translation>
+    </message>
+    <message>
+        <source>Please check the logs for more information.</source>
+        <translation>Por favor, consulta los registros para obtener más información.</translation>
+    </message>
+    <message>
+        <source>Error restoring instance</source>
+        <translation>Error al restaurar la instancia</translation>
+    </message>
+    <message>
+        <source>Archive not found at path: {input_path}</source>
+        <translation>Archivo no encontrado en la ruta: {input_path}</translation>
+    </message>
+    <message>
+        <source>An error occurred while reading instance archive: {e}</source>
+        <translation>Se produjo un error al leer el archivo de la instancia: {e}</translation>
+    </message>
+    <message>
+        <source>Instance folder exists</source>
+        <translation>La carpeta de la instancia existe</translation>
+    </message>
+    <message>
+        <source>Instance folder already exists: {instance_folder_path}</source>
+        <translation>La carpeta de la instancia ya existe: {instance_folder_path}</translation>
+    </message>
+    <message>
+        <source>Do you want to continue and replace the existing instance folder?</source>
+        <translation>¿Quieres continuar y reemplazar la carpeta de la instancia existente?</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>Reemplazar</translation>
+    </message>
+    <message>
+        <source>Restoring instance [{name}] from archive...</source>
+        <translation>Restaurando la instancia [{name}] desde el archivo...</translation>
+    </message>
+    <message>
+        <source>Invalid instance folder paths</source>
+        <translation>Rutas de carpeta de instancia no válidas</translation>
+    </message>
+    <message>
+        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
+        <translation>Algunas rutas de carpeta de la instancia restaurada no son válidas y fueron eliminadas. Por favor, reconfigúralas en la configuración</translation>
+    </message>
+    <message>
+        <source>Invalid paths: {path}</source>
+        <translation>Rutas no válidas: {path}</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t restore steamcmd symlink/junction</source>
+        <translation>No se pudo restaurar el symlink/junction de steamcmd</translation>
+    </message>
+    <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation>El symlink/junction de steamcmd no se pudo restaurar ya que la carpeta local no está configurada o es inválida. El symlink/junction deberá ser recreado manualmente.</translation>
+    </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>Se produjo un error al restaurar la instancia [{name}].</translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
+        <translation>La carpeta de la instancia no fue encontrada después de extraer el archivo. Quizás el archivo esté dañado o el nombre de la instancia sea inválido.</translation>
+    </message>
+    <message>
+        <source>Create new instance</source>
+        <translation>Crear nueva instancia</translation>
+    </message>
+    <message>
+        <source>Input a unique name of new instance that is not already used:</source>
+        <translation>Introduce un nombre único para la nueva instancia que no esté ya en uso:</translation>
+    </message>
+    <message>
+        <source>Clone instance [{name}]</source>
+        <translation>Clonar instancia [{name}]</translation>
+    </message>
+    <message>
+        <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation>¿Qué te gustaría hacer con la carpeta de mods del taller configurada?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>Carpeta de Workshop: {folder}&lt;br&gt;&lt;br&gt;Opción 1: Convertir a SteamCMD&lt;br&gt;RimSort copiará todas las modificaciones de Workshop a la carpeta de modificaciones locales de la nueva instancia, convirtiéndolas en modificaciones de SteamCMD que puede administrar dentro de la nueva instancia. La carpeta Workshop se ignorará en esta instancia para evitar modificaciones duplicadas.&lt;br&gt;&lt;br&gt;Opción 2: Mantener la carpeta Workshop&lt;br&gt;La nueva instancia utilizará la misma carpeta Workshop que la instancia original. Puedes cambiar esto más adelante en la configuración si es necesario.&lt;br&gt;&lt;br&gt;¿Cómo deseas continuar?</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation>Convertir a steamcmd</translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation>Mantenga la carpeta del taller</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Cancelado</translation>
+    </message>
+    <message>
+        <source>Workshop mods not found</source>
+        <translation>No se encontraron mods del taller</translation>
+    </message>
+    <message>
+        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
+        <translation>Carpeta de mods del taller en [{existing_instance_workshop_folder}] no encontrada.</translation>
+    </message>
+    <message>
+        <source>Error cloning instance</source>
+        <translation>Error al clonar la instancia</translation>
+    </message>
+    <message>
+        <source>Unable to clone instance.</source>
+        <translation>No se pudo clonar la instancia.</translation>
+    </message>
+    <message>
+        <source>Please enter a valid, unique instance name. It cannot be &apos;{name}&apos; or empty.</source>
+        <translation>Introduce un nombre de instancia válido y único. No puede ser &apos;{name}&apos; ni estar vacío.</translation>
+    </message>
+    <message>
+        <source>Create new instance [{instance_name}]</source>
+        <translation>Crear nueva instancia [{instance_name}]</translation>
+    </message>
+    <message>
+        <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation>¿Te gustaría generar automáticamente los argumentos de ejecución para la nueva instancia?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>Esto intentará generar argumentos de ejecución para la nueva instancia en función de las carpetas Game/Config configuradas.&lt;br&gt;&lt;br&gt;Vista previa de los argumentos de ejecución generados:&lt;br&gt;{preview}</translation>
+    </message>
+    <message>
+        <source>Error creating instance</source>
+        <translation>Error al crear la instancia</translation>
+    </message>
+    <message>
+        <source>Unable to create new instance.</source>
+        <translation>No se pudo crear la nueva instancia.</translation>
+    </message>
+    <message>
+        <source>Problem deleting instance</source>
+        <translation>Problema al eliminar la instancia</translation>
+    </message>
+    <message>
+        <source>Unable to delete instance {current_instance}.</source>
+        <translation>No se pudo eliminar la instancia {current_instance}.</translation>
+    </message>
+    <message>
+        <source>The default instance cannot be deleted.</source>
+        <translation>La instancia predeterminada no se puede eliminar.</translation>
+    </message>
+    <message>
+        <source>Error deleting instance</source>
+        <translation>Error al eliminar la instancia</translation>
+    </message>
+    <message>
+        <source>The selected instance does not exist.</source>
+        <translation>La instancia seleccionada no existe.</translation>
+    </message>
+    <message>
+        <source>Delete instance {current_instance}</source>
+        <translation>Eliminar instancia {current_instance}</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete the selected instance and all of its data?</source>
+        <translation>¿Estás seguro de que deseas eliminar la instancia seleccionada y todos sus datos?</translation>
+    </message>
+    <message>
+        <source>This action cannot be undone.</source>
+        <translation>Esta acción no se puede deshacer.</translation>
+    </message>
+</context>
+<context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
@@ -712,8 +935,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>Informe de la lista de mods activos copiado al portapapeles...</translation>
     </message>
     <message>
-        <source>Click "Show Details" to see the full report!</source>
-        <translation>Haz clic en "Mostrar detalles" para ver el informe completo!</translation>
+        <source>Click &quot;Show Details&quot; to see the full report!</source>
+        <translation>Haz clic en &quot;Mostrar detalles&quot; para ver el informe completo!</translation>
     </message>
     <message>
         <source>Report too long</source>
@@ -784,10 +1007,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Archivo: {path}</translation>
     </message>
     <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation>Subiendo {path.name} a 0x0.st...</translation>
-    </message>
-    <message>
         <source>Uploaded file</source>
         <translation>Archivo subido</translation>
     </message>
@@ -798,10 +1017,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Failed to upload file.</source>
         <translation>Falló la subida del archivo.</translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
-        <translation>Falló la subida del archivo a 0x0.st</translation>
     </message>
     <message>
         <source>Could not save active mods</source>
@@ -936,8 +1151,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>No se encontró el ejecutable de SteamCMD.</translation>
     </message>
     <message>
-        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
-        <translation>Por favor, configura un prefijo de SteamCMD existente o configura un nuevo prefijo con "Configurar SteamCMD".</translation>
+        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
+        <translation>Por favor, configura un prefijo de SteamCMD existente o configura un nuevo prefijo con &quot;Configurar SteamCMD&quot;.</translation>
     </message>
     <message>
         <source>Processing Steam subscription action(s) via Steamworks API...</source>
@@ -1108,12 +1323,12 @@ Manage mods installed from GitHub releases.</source>
         <translation>Usa esto en su lugar</translation>
     </message>
     <message>
-        <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>Configure la base de datos "Usar esto en su lugar" en la configuración.</translation>
+        <source>Please configure &quot;Use This Instead&quot; database in settings.</source>
+        <translation>Configure la base de datos &quot;Usar esto en su lugar&quot; en la configuración.</translation>
     </message>
     <message>
-        <source>No suggestions were found in the "Use This Instead" database.</source>
-        <translation>No se encontraron sugerencias en la base de datos "Usa esto en su lugar".</translation>
+        <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
+        <translation>No se encontraron sugerencias en la base de datos &quot;Usa esto en su lugar&quot;.</translation>
     </message>
     <message>
         <source>Unsaved Changes</source>
@@ -1132,12 +1347,24 @@ Manage mods installed from GitHub releases.</source>
         <translation>Esto puede deberse a configuraciones con formato incorrecto o a una migración incorrecta entre versiones o a diferentes administradores de modificaciones.&lt;br&gt;&lt;br&gt;Intente restablecer su configuración, seleccione un algoritmo de clasificación diferente o elimine su archivo de configuración.&lt;br&gt;&lt;br&gt;Si el problema persiste, infórmelo a los desarrolladores.</translation>
     </message>
     <message>
-        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
+        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
         <translation>Deberá rehacer la importación de Rentry nuevamente después de que se completen las descargas.&lt;br&gt;&lt;br&gt;Si faltan modificaciones después de que se complete la descarga, se mostrarán dentro del panel de modificaciones que faltan.&lt;br&gt;&lt;br&gt;Si RimSort aún no puede descargar algunas modificaciones, se debe a que los datos de las modificaciones no están disponibles ni en el enlace de Rentry ni en la base de datos de Steam.</translation>
+    </message>
+    <message>
+        <source>Uploading {path_name} to RimSort Logs...</source>
+        <translation>Subiendo {path_name} a RimSort Logs...</translation>
+    </message>
+    <message>
+        <source>Uploaded {path_name} to RimSort Logs</source>
+        <translation>{path_name} subido a RimSort Logs</translation>
     </message>
     <message>
         <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
         <translation>La URL se ha copiado en su portapapeles:&lt;br&gt;&lt;br&gt;{ret}</translation>
+    </message>
+    <message>
+        <source>Failed to upload to RimSort Logs</source>
+        <translation>No se pudo subir a RimSort Logs</translation>
     </message>
     <message>
         <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
@@ -1198,10 +1425,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
         <translation>Rimworld Save (*.rws) ;; todos los archivos (*.*)</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to https://0x0.st/</source>
-        <translation>Subido  a https://0x0.st/ {path.name}</translation>
     </message>
     <message>
         <source>Reset SteamCMD ACF data file</source>
@@ -1423,6 +1646,12 @@ Manage mods installed from GitHub releases.</source>
         <translation>Los repositorios no pudieron ser empujados. {count}</translation>
     </message>
     <message>
+        <source>Successful pushes:
+</source>
+        <translation>Empujes exitosos:
+</translation>
+    </message>
+    <message>
         <source>Partial Push Completed</source>
         <translation>Empuje parcial completado</translation>
     </message>
@@ -1523,7 +1752,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>Este repositorio está alojado en GitHub. Puede instalarlo como un Mod de GitHub para realizar un seguimiento de los lanzamientos y administrar versiones, o clonarlo directamente como un mod de Git estándar.</translation>
     </message>
     <message>
-        <source>No releases found for this repository. You can install it as a GitHub Mod tracking the latest commit (you'll be notified if releases are published in the future), or clone it directly as a standard git mod.</source>
+        <source>No releases found for this repository. You can install it as a GitHub Mod tracking the latest commit (you&apos;ll be notified if releases are published in the future), or clone it directly as a standard git mod.</source>
         <translation>No se encontraron versiones para este repositorio. Puedes instalarlo como un Mod de GitHub que rastrea la última confirmación (se te notificará si se publican lanzamientos en el futuro) o clonarlo directamente como un mod de Git estándar.</translation>
     </message>
     <message>
@@ -1883,7 +2112,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>Cargar la base de datos de reglas de la comunidad</translation>
     </message>
     <message>
-        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
+        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won&apos;t appear until you refresh. Refresh now?</source>
         <translation>{count} mod(s) se actualizaron automáticamente.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;Las versiones actualizadas no aparecerán hasta que actualices. ¿Actualizar ahora?</translation>
     </message>
     <message>
@@ -1895,10 +2124,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Actualizaciones exitosas:&lt;br&gt;</translation>
     </message>
     <message>
-        <source>Successful pushes:&lt;br&gt;</source>
-        <translation>Impulsos exitosos:&lt;br&gt;</translation>
-    </message>
-    <message>
         <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
         <translation>Repositorio: {repo_url}&lt;br&gt;Destino: {dest}</translation>
     </message>
@@ -1907,8 +2132,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>¡El repositorio configurado no pudo clonarse/inicializarse!&lt;br&gt;&lt;br&gt;¿Está conectado a Internet?&lt;br&gt;&lt;br&gt;¿Es válido su repositorio configurado?</translation>
     </message>
     <message>
-        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
-        <translation>¡Vuelva a configurar un repositorio en la configuración!&lt;br&gt;Un repositorio válido es una URL del repositorio que no está vacía y tiene el prefijo "http://" o "https://"</translation>
+        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
+        <translation>¡Vuelva a configurar un repositorio en la configuración!&lt;br&gt;Un repositorio válido es una URL del repositorio que no está vacía y tiene el prefijo &quot;http://&quot; o &quot;https://&quot;</translation>
     </message>
     <message>
         <source>URL: {repo_url}&lt;br&gt;Error: {error}</source>
@@ -1994,200 +2219,12 @@ Manage mods installed from GitHub releases.</source>
                 Puedes cambiar esto en la configuración bajo la pestaña Avanzado.</translation>
     </message>
     <message>
-        <source>Create new instance</source>
-        <translation>Crear nueva instancia</translation>
-    </message>
-    <message>
-        <source>Input a unique name of new instance that is not already used:</source>
-        <translation>Introduce un nombre único para la nueva instancia que no esté ya en uso:</translation>
-    </message>
-    <message>
-        <source>Provide instance name</source>
-        <translation>Proporciona un nombre para la instancia</translation>
-    </message>
-    <message>
-        <source>Clone instance [{existing_instance_name}]</source>
-        <translation>Clonar instancia [{existing_instance_name}]</translation>
-    </message>
-    <message>
-        <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation>¿Qué te gustaría hacer con la carpeta de mods del taller configurada?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation>Carpeta de Workshop: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Opción 1: Convertir a SteamCMD&lt;br&gt;RimSort copiará todas las modificaciones de Workshop a la carpeta de modificaciones locales de la nueva instancia, convirtiéndolas en modificaciones de SteamCMD que puede administrar dentro de la nueva instancia. La carpeta Workshop se ignorará en esta instancia para evitar modificaciones duplicadas.&lt;br&gt;&lt;br&gt;Opción 2: Mantener la carpeta Workshop&lt;br&gt;La nueva instancia utilizará la misma carpeta Workshop que la instancia original. Puedes cambiar esto más adelante en la configuración si es necesario.&lt;br&gt;&lt;br&gt;¿Cómo deseas continuar?</translation>
-    </message>
-    <message>
-        <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation>Comprimiendo la carpeta de la instancia [{instance_name}] en un archivo...</translation>
-    </message>
-    <message>
-        <source>Error compressing instance</source>
-        <translation>Error al comprimir la instancia</translation>
-    </message>
-    <message>
-        <source>An error occurred while compressing instance folder: {e}</source>
-        <translation>Se produjo un error al comprimir la carpeta de la instancia: {e}</translation>
-    </message>
-    <message>
-        <source>Please check the logs for more information.</source>
-        <translation>Por favor, consulta los registros para obtener más información.</translation>
-    </message>
-    <message>
-        <source>Error restoring instance</source>
-        <translation>Error al restaurar la instancia</translation>
-    </message>
-    <message>
-        <source>Archive not found at path: {input_path}</source>
-        <translation>Archivo no encontrado en la ruta: {input_path}</translation>
-    </message>
-    <message>
-        <source>An error occurred while reading instance archive: {e}</source>
-        <translation>Se produjo un error al leer el archivo de la instancia: {e}</translation>
-    </message>
-    <message>
-        <source>Instance folder exists</source>
-        <translation>La carpeta de la instancia existe</translation>
-    </message>
-    <message>
-        <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation>La carpeta de la instancia ya existe: {instance_folder_path}</translation>
-    </message>
-    <message>
-        <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation>¿Quieres continuar y reemplazar la carpeta de la instancia existente?</translation>
-    </message>
-    <message>
-        <source>Replace</source>
-        <translation>Reemplazar</translation>
-    </message>
-    <message>
-        <source>Restoring instance [{name}] from archive...</source>
-        <translation>Restaurando la instancia [{name}] desde el archivo...</translation>
-    </message>
-    <message>
-        <source>Invalid instance folder paths</source>
-        <translation>Rutas de carpeta de instancia no válidas</translation>
-    </message>
-    <message>
-        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation>Algunas rutas de carpeta de la instancia restaurada no son válidas y fueron eliminadas. Por favor, reconfigúralas en la configuración</translation>
-    </message>
-    <message>
-        <source>Invalid paths: {path}</source>
-        <translation>Rutas no válidas: {path}</translation>
-    </message>
-    <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
-        <translation>No se pudo restaurar el symlink/junction de steamcmd</translation>
-    </message>
-    <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation>El symlink/junction de steamcmd no se pudo restaurar ya que la carpeta local no está configurada o es inválida. El symlink/junction deberá ser recreado manualmente.</translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation>La carpeta de la instancia no fue encontrada después de extraer el archivo. Quizás el archivo esté dañado o el nombre de la instancia sea inválido.</translation>
-    </message>
-    <message>
-        <source>Workshop mods not found</source>
-        <translation>No se encontraron mods del taller</translation>
-    </message>
-    <message>
-        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>Carpeta de mods del taller en [{existing_instance_workshop_folder}] no encontrada.</translation>
-    </message>
-    <message>
-        <source>Error cloning instance</source>
-        <translation>Error al clonar la instancia</translation>
-    </message>
-    <message>
-        <source>Unable to clone instance.</source>
-        <translation>No se pudo clonar la instancia.</translation>
-    </message>
-    <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>{DEFAULT_INSTANCE_NAME}</translation>
-    </message>
-    <message>
-        <source>Create new instance [{instance_name}]</source>
-        <translation>Crear nueva instancia [{instance_name}]</translation>
-    </message>
-    <message>
-        <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation>¿Te gustaría generar automáticamente los argumentos de ejecución para la nueva instancia?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
-        <translation>Esto intentará generar argumentos de ejecución para la nueva instancia en función de las carpetas Game/Config configuradas.&lt;br&gt;&lt;br&gt;Vista previa de los argumentos de ejecución generados:&lt;br&gt;{preview}</translation>
-    </message>
-    <message>
-        <source>Error creating instance</source>
-        <translation>Error al crear la instancia</translation>
-    </message>
-    <message>
-        <source>Unable to create new instance.</source>
-        <translation>No se pudo crear la nueva instancia.</translation>
-    </message>
-    <message>
-        <source>Problem deleting instance</source>
-        <translation>Problema al eliminar la instancia</translation>
-    </message>
-    <message>
-        <source>Unable to delete instance {current_instance}.</source>
-        <translation>No se pudo eliminar la instancia {current_instance}.</translation>
-    </message>
-    <message>
-        <source>The default instance cannot be deleted.</source>
-        <translation>La instancia predeterminada no se puede eliminar.</translation>
-    </message>
-    <message>
-        <source>Error deleting instance</source>
-        <translation>Error al eliminar la instancia</translation>
-    </message>
-    <message>
-        <source>The selected instance does not exist.</source>
-        <translation>La instancia seleccionada no existe.</translation>
-    </message>
-    <message>
-        <source>Delete instance {current_instance}</source>
-        <translation>Eliminar instancia {current_instance}</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation>¿Estás seguro de que deseas eliminar la instancia seleccionada y todos sus datos?</translation>
-    </message>
-    <message>
-        <source>This action cannot be undone.</source>
-        <translation>Esta acción no se puede deshacer.</translation>
-    </message>
-    <message>
-        <source>Convert to SteamCMD</source>
-        <translation>Convertir a steamcmd</translation>
-    </message>
-    <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>{name}</translation>
-    </message>
-    <message>
-        <source>Keep Workshop Folder</source>
-        <translation>Mantenga la carpeta del taller</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation>Cancelado</translation>
-    </message>
-    <message>
         <source>ACF Log Reader</source>
         <translation>Lector de registro de ACF</translation>
     </message>
     <message>
         <source>Player Log</source>
         <translation>Registro de jugadores</translation>
-    </message>
-    <message>
-        <source>An error occurred while restoring instance [{name}].</source>
-        <translation>Se produjo un error al restaurar la instancia []. {name}</translation>
     </message>
 </context>
 <context>
@@ -2341,8 +2378,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>Instancias</translation>
     </message>
     <message>
-        <source>Current: "Default"</source>
-        <translation>Actual: "Predeterminado"</translation>
+        <source>Current: &quot;Default&quot;</source>
+        <translation>Actual: &quot;Predeterminado&quot;</translation>
     </message>
     <message>
         <source>Backup Instance…</source>
@@ -2517,12 +2554,12 @@ Comuníquese con los autores de los mods para agregar estas propiedades a sus mo
         <source>
 User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
 
-Rimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. 
+Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
 
 Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
         <translation>Se consultó la base de datos SteamDB configurada por el usuario. La siguiente tabla muestra modificaciones disponibles para descargar desde Steam. 
 
-Rimworld Mods en Steam Workshop que comparten un paquete de paquetes son "variantes". Tenga esto en cuenta antes de descargar. 
+Rimworld Mods en Steam Workshop que comparten un paquete de paquetes son &quot;variantes&quot;. Tenga esto en cuenta antes de descargar. 
 
 Seleccione su variante de mod de Mod en la tabla a continuación. También puede abrir cada variante en el navegador Steam/Web para verificar.</translation>
     </message>
@@ -2650,8 +2687,8 @@ Seleccione su variante de mod de Mod en la tabla a continuación. También puede
         <translation>No se pudo eliminar  mod (s). Verifique los registros para más detalles. {result.failed_count}</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>ocurrió en  con código de error . {error_code} {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
+        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>ocurrió en  con código de error . {error_code} {e.filename or mod_path} {e.strerror or &apos;Unknown error&apos;}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3054,7 +3091,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
-Incompatible (per other mod's rules):</source>
+Incompatible (per other mod&apos;s rules):</source>
         <translation>Incompatible (según las reglas de otros mods):</translation>
     </message>
     <message>
@@ -3248,8 +3285,8 @@ Alternative Dependencies:</source>
         <translation>Haz clic para mostrar solo módulos con errores</translation>
     </message>
     <message>
-        <source>Check "Use This Instead" Database</source>
-        <translation>Comprobar base de datos "Usar en lugar de"</translation>
+        <source>Check &quot;Use This Instead&quot; Database</source>
+        <translation>Comprobar base de datos &quot;Usar en lugar de&quot;</translation>
     </message>
     <message>
         <source>Color</source>
@@ -3450,7 +3487,7 @@ Alternative Dependencies:</source>
         <translation>Cargar registro de juegos</translation>
     </message>
     <message>
-        <source>Loads the game's Player.log file.</source>
+        <source>Loads the game&apos;s Player.log file.</source>
         <translation>Carga el archivo jugador.log del juego.</translation>
     </message>
     <message>
@@ -3839,8 +3876,8 @@ Alternative Dependencies:</source>
                       Esto es útil para sus propios registros, así como para otros.</translation>
     </message>
     <message>
-        <source>Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed.</source>
-        <translation>Las reglas de los mods están sobre.xml no se pueden modificar. Solo se permiten 'reglas de la comunidad' y 'reglas del usuario'.</translation>
+        <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
+        <translation>Las reglas de los mods están sobre.xml no se pueden modificar. Solo se permiten &apos;reglas de la comunidad&apos; y &apos;reglas del usuario&apos;.</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
@@ -3938,8 +3975,8 @@ Alternative Dependencies:</source>
         <translation>Descargador de steamcmd</translation>
     </message>
     <message>
-        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click 'Show Details' to see a list of mods that failed.</source>
-        <translation>¡SteamCMD no pudo descargar mod(s)! ¿Quieres volver a intentar descargar las modificaciones que fallaron?&lt;br&gt;&lt;br&gt;Haz clic en "Mostrar detalles" para ver una lista de las modificaciones que fallaron.</translation>
+        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click &apos;Show Details&apos; to see a list of mods that failed.</source>
+        <translation>¡SteamCMD no pudo descargar mod(s)! ¿Quieres volver a intentar descargar las modificaciones que fallaron?&lt;br&gt;&lt;br&gt;Haz clic en &quot;Mostrar detalles&quot; para ver una lista de las modificaciones que fallaron.</translation>
     </message>
     <message>
         <source>Process Complete</source>
@@ -3984,8 +4021,8 @@ Alternative Dependencies:</source>
         <translation>Error de carga de configuración</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Si continúa, se guardará una copia de seguridad del archivo dañado en {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}.</source>
+        <translation>Si continúa, se guardará una copia de seguridad del archivo dañado en {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4000,8 +4037,8 @@ Alternative Dependencies:</source>
         <translation>La recuperación de la configuración falló</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort no pudo recuperar su configuración de la copia de seguridad. Es posible que puedas recuperar manualmente tu configuración restaurando "settings.json.backup" o "settings.json.backup.old" de {AppInfo().settings_backups_folder} a {self._settings_file}.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring &quot;settings.json.backup&quot; or &quot;settings.json.backup.old&quot; from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>RimSort no pudo recuperar su configuración de la copia de seguridad. Es posible que puedas recuperar manualmente tu configuración restaurando &quot;settings.json.backup&quot; o &quot;settings.json.backup.old&quot; de {AppInfo().settings_backups_folder} a {self._settings_file}.</translation>
     </message>
 </context>
 <context>
@@ -4027,8 +4064,8 @@ Alternative Dependencies:</source>
         <translation>La carpeta de configuración seleccionada no contiene ModsConfig.xml.&lt;br&gt;&lt;br&gt;Selecciona una carpeta de configuración válida.&lt;br&gt;&lt;br&gt;Si no has iniciado el juego antes,&lt;br&gt;&lt;br&gt;Inicia el juego al menos una vez para generar los archivos de configuración necesarios.</translation>
     </message>
     <message>
-        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a 'Mods' subfolder within the game folder.</source>
-        <translation>La ubicación de la carpeta de modificaciones locales seleccionada no es un directorio válido.&lt;br&gt;&lt;br&gt;Seleccione una carpeta válida para las modificaciones locales.&lt;br&gt;&lt;br&gt;La carpeta de modificaciones locales debe ser una subcarpeta 'Mods' dentro de la carpeta del juego.</translation>
+        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a &apos;Mods&apos; subfolder within the game folder.</source>
+        <translation>La ubicación de la carpeta de modificaciones locales seleccionada no es un directorio válido.&lt;br&gt;&lt;br&gt;Seleccione una carpeta válida para las modificaciones locales.&lt;br&gt;&lt;br&gt;La carpeta de modificaciones locales debe ser una subcarpeta &apos;Mods&apos; dentro de la carpeta del juego.</translation>
     </message>
     <message>
         <source>Invalid Game Location</source>
@@ -4170,24 +4207,12 @@ Alternative Dependencies:</source>
         <translation>Base de datos de la tienda de módulos de Steam</translation>
     </message>
     <message>
-        <source>"No Version Warning" Database</source>
-        <translation>"No versión de advertencia" Base de datos</translation>
+        <source>&quot;No Version Warning&quot; Database</source>
+        <translation>&quot;No versión de advertencia&quot; Base de datos</translation>
     </message>
     <message>
-        <source>"Use This Instead" Database</source>
-        <translation>"Usar en lugar de" Base de datos</translation>
-    </message>
-    <message>
-        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Para habilitar la edición de este límite de tiempo, active la casilla de verificación (Habilitar edición) a la derecha.
-Después de eliminar un mod, este es el tiempo que esperamos hasta que este elemento de mod se elimine de la base de datos de metadatos auxiliares. 
-Esta base de datos auxiliar contiene información sobre colores mod, advertencias alternadas, notas de usuario, etc. 
-Básicamente, esto conserva el color del mod, las notas del usuario, etc. durante tantos segundos después de la eliminación. 
-(Esto también se aplica a la eliminación fuera de RimSort)</translation>
+        <source>&quot;Use This Instead&quot; Database</source>
+        <translation>&quot;Usar en lugar de&quot; Base de datos</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4200,6 +4225,18 @@ Básicamente, esto conserva el color del mod, las notas del usuario, etc. durant
     <message>
         <source>Topologically</source>
         <translation>Topológicamente</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Para habilitar la edición de este límite de tiempo, active la casilla de verificación (Habilitar edición) a la derecha.
+Después de eliminar un mod, este es el tiempo que esperamos hasta que este elemento de mod se elimine de la base de datos de metadatos auxiliares.
+Esta base de datos auxiliar contiene información sobre colores mod, advertencias alternadas, notas de usuario, etc.
+Básicamente, esto conserva el color del mod, las notas del usuario, etc. durante tantos segundos después de la eliminación.
+(Esto también se aplica a la eliminación fuera de RimSort)</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4220,6 +4257,22 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
         <translation>Cuando están habilitadas, las etiquetas *ByVersion tienen prioridad sobre las etiquetas base, 
 Si existe una etiqueta de versión coincidente pero está vacía, se ignora la etiqueta base. 
 por ejemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descripcionesByVersion)</translation>
+    </message>
+    <message>
+        <source>Case-insensitive About.xml lookup</source>
+        <translation>Búsqueda de About.xml sin distinción entre mayúsculas y minúsculas</translation>
+    </message>
+    <message>
+        <source>Enable case-insensitive lookup for About/About.xml.
+Some mods use incorrect casing (e.g., about/about.xml) which breaks on
+case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
+correct path is About/About.xml.
+See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
+        <translation>Habilita la búsqueda sin distinción entre mayúsculas y minúsculas para About/About.xml.
+Algunos mods usan un formato de mayúsculas/minúsculas incorrecto (p. ej., about/about.xml), lo que provoca errores en
+sistemas de archivos que distinguen mayúsculas de minúsculas (Linux). Según la especificación de modding de RimWorld, la
+ruta correcta es About/About.xml.
+Ver: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
@@ -4246,7 +4299,7 @@ por ejemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, 
         <translation>Obtener PublishedFileIDs de módulos instalados localmente.</translation>
     </message>
     <message>
-        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods' About.xml files.</source>
+        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
         <translation>Los módulos que desea actualizar deben estar instalados, ya que la base de datos inicial se construye incluyendo datos de los archivos About.xml de los módulos.</translation>
     </message>
     <message>
@@ -4254,7 +4307,7 @@ por ejemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, 
         <translation>Obtener PublishedFileIDs de la tienda de módulos de Steam.</translation>
     </message>
     <message>
-        <source>Mods to be updated don't have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
+        <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
         <translation>Los módulos que desea actualizar no tienen que estar instalados, ya que la base de datos inicial se construye mediante el raspado de la tienda de módulos de Steam.</translation>
     </message>
     <message>
@@ -4361,22 +4414,22 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>To add your own theme / stylesheet 
 
-1) Create a new-folder in 'themes' folder in your 'RimSort' config folder 
-2) Using the default 'RimPy' theme copy it to the folder you created 
-3) Edit the copied 'style.qss' as per your imagination 
-4) Start 'RimSort' and select your theme from dropdown 
-5) Click 'ok' to save settings and apply the selected theme 
+1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
+2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
+3) Edit the copied &apos;style.qss&apos; as per your imagination 
+4) Start &apos;RimSort&apos; and select your theme from dropdown 
+5) Click &apos;ok&apos; to save settings and apply the selected theme 
 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
         <translation>Para agregar tu propio tema / hoja de estilo
 
-1) Crea una nueva carpeta en la carpeta 'themes' en tu carpeta de configuración de 'RimSort'
-2) Usando el tema predeterminado 'RimPy', cópialo en la carpeta que creaste
-3) Edita el 'style.qss' copiado según tu imaginación
-4) Inicia 'RimSort' y selecciona tu tema del menú desplegable
-5) Haz clic en 'ok' para guardar la configuración y aplicar el tema seleccionado
+1) Crea una nueva carpeta en la carpeta &apos;themes&apos; en tu carpeta de configuración de &apos;RimSort&apos;
+2) Usando el tema predeterminado &apos;RimPy&apos;, cópialo en la carpeta que creaste
+3) Edita el &apos;style.qss&apos; copiado según tu imaginación
+4) Inicia &apos;RimSort&apos; y selecciona tu tema del menú desplegable
+5) Haz clic en &apos;ok&apos; para guardar la configuración y aplicar el tema seleccionado
 
 NOTA
 El nombre de la carpeta se usará como nombre del tema y cualquier tema inválido será ignorado
@@ -4533,7 +4586,7 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
 
  NOTE: wrapper commands will be ignored on macOS
 
- NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+ NOTE: These arguments are ignored if &apos;Launch game via Steam protocol&apos; is enabled</source>
         <translation>Ingrese las opciones de inicio usando una sintaxis estilo Steam con un marcador de posición %command% opcional:
 
  Ejemplos básicos (solo argumentos del juego):
@@ -4552,7 +4605,7 @@ El nombre de la carpeta se usará como nombre del tema y cualquier tema inválid
 
  NOTA: los comandos contenedores se ignorarán en macOS
 
- NOTA: Estos argumentos se ignoran si "Iniciar juego mediante el protocolo Steam" está habilitado</translation>
+ NOTA: Estos argumentos se ignoran si &quot;Iniciar juego mediante el protocolo Steam&quot; está habilitado</translation>
     </message>
     <message>
         <source>Enable editing</source>
@@ -4647,10 +4700,10 @@ Estas verificaciones pueden demorar unos segundos dependiendo del número de arc
         <translation>Utilice alternativePackageIds como dependencias satisfactorias</translation>
     </message>
     <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
-E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
+E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
         <translation>Si está habilitado, una entrada alternativePackageIds en aproximadamente.xml puede satisfacer la dependencia de un mod cuando falta la dependencia principal. 
-Por ejemplo, 'oels.VehicleMapFramework', alternativas: 'oels.VehiclemaPframework.dev'</translation>
+Por ejemplo, &apos;oels.VehicleMapFramework&apos;, alternativas: &apos;oels.VehiclemaPframework.dev&apos;</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -4749,7 +4802,7 @@ Elija una de las siguientes opciones para continuar.</translation>
         <translation>¿Cómo le gustaría agregar la colección?</translation>
     </message>
     <message>
-        <source>You can choose to add all mods from the collection or only the ones you don't have installed.</source>
+        <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
         <translation>Puede elegir agregar todas las modificaciones de la colección o solo las que no tiene instalado.</translation>
     </message>
     <message>
@@ -4836,7 +4889,7 @@ Elija una de las siguientes opciones para continuar.</translation>
         <translation>Nuevo enlace simbólico:&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
-        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
+        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
         <translation>La ruta de destino del enlace simbólico ya existe. ¿Le gustaría eliminar el destino existente y crear un nuevo enlace simbólico en su lugar?</translation>
     </message>
     <message>
@@ -4852,7 +4905,7 @@ Elija una de las siguientes opciones para continuar.</translation>
         <translation>&amp;Sí</translation>
     </message>
     <message>
-        <source>&amp;Don't Ask Again</source>
+        <source>&amp;Don&apos;t Ask Again</source>
         <translation>No preguntes de nuevo</translation>
     </message>
 </context>
@@ -4921,8 +4974,8 @@ Elija una de las siguientes opciones para continuar.</translation>
         <translation>Error de ruta del tema</translation>
     </message>
     <message>
-        <source>Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.</source>
-        <translation>Stylesheet Path no existe para el tema '' restableciendo el tema predeterminado '{default_theme}'. {theme_name}</translation>
+        <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
+        <translation>Stylesheet Path no existe para el tema &apos;&apos; restableciendo el tema predeterminado &apos;{default_theme}&apos;. {theme_name}</translation>
     </message>
     <message>
         <source>Theme Error</source>
@@ -5019,11 +5072,11 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <translation>El archivo seleccionado no es un archivo de lista de modificaciones válido.&lt;br&gt;Detalles: {e}</translation>
     </message>
     <message>
-        <source>Successfully deleted Steam's downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
+        <source>Successfully deleted Steam&apos;s downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
         <translation>Se eliminó correctamente la carpeta de descarga de Steam.&lt;br&gt;Reinicie Steam para que los cambios surtan efecto.</translation>
     </message>
     <message>
-        <source>Could not delete Steam's downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
+        <source>Could not delete Steam&apos;s downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
         <translation>No se pudo eliminar la carpeta de descargas de Steam.&lt;br&gt;Elimínela manualmente: Steam/steamapps/downloading&lt;br&gt;Detalles: {e}</translation>
     </message>
     <message>
@@ -5099,7 +5152,7 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <translation>Se eliminaron todos los archivos en el directorio de mods de Steam.&lt;br&gt;&lt;br&gt; Intentando reiniciar Steam para activar la descarga automática de los mods suscritos.</translation>
     </message>
     <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don't download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don&apos;t download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
         <translation>Se han eliminado las modificaciones. Reinicie Steam para activar la descarga automática de mods suscritos.&lt;br&gt;&lt;br&gt;Si los mods no se descargan automáticamente, intente:&lt;br&gt;1. Reinicia Steam&lt;br&gt;2. Verificar archivos del juego en Steam&lt;br&gt;3. Visita la página del Taller de cada mod.</translation>
     </message>
     <message>
@@ -5151,7 +5204,7 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <translation>Caché claro</translation>
     </message>
     <message>
-        <source>Steam's downloading folder is already empty.</source>
+        <source>Steam&apos;s downloading folder is already empty.</source>
         <translation>La carpeta de descarga de Steam ya está vacía.</translation>
     </message>
     <message>
@@ -5210,7 +5263,7 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <translation>Recuperación de archivos de juego</translation>
     </message>
     <message>
-        <source>If you're experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
+        <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
         <translation>Si estás experimentando problemas con tu juego, puedes intentar las siguientes opciones de recuperación. Steam descargará automáticamente cualquier archivo eliminado en la próxima启动.</translation>
     </message>
     <message>
@@ -5306,7 +5359,7 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <translation>Utilidades de Steam</translation>
     </message>
     <message>
-        <source>Delete Steam's downloading folder to fix download issues</source>
+        <source>Delete Steam&apos;s downloading folder to fix download issues</source>
         <translation>Eliminar la carpeta de descargas de Steam para solucionar problemas de descarga</translation>
     </message>
     <message>
@@ -5404,8 +5457,12 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <translation>¡Hay reemplazos disponibles para los mods de Workshop!</translation>
     </message>
     <message>
-        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
-        <translation>La siguiente tabla muestra las modificaciones de Workshop con reemplazos sugeridos según la base de datos "Usar esto en su lugar", agrupados por modificación de reemplazo.</translation>
+        <source>The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database, grouped by replacement mod.</source>
+        <translation>La siguiente tabla muestra las modificaciones de Workshop con reemplazos sugeridos según la base de datos &quot;Usar esto en su lugar&quot;, agrupados por modificación de reemplazo.</translation>
+    </message>
+    <message>
+        <source>Do nothing and exit</source>
+        <translation>No hagas nada y salga</translation>
     </message>
     <message>
         <source>Select</source>
@@ -5443,14 +5500,6 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <source>Replacement [{0}]</source>
         <translation>Reemplazo [{0}]</translation>
     </message>
-    <message>
-        <source>Use This Instead</source>
-        <translation>Usar Esto en Su Lugar</translation>
-    </message>
-    <message>
-        <source>Successfully {action}d {count} mods</source>
-        <translation>{action}d {count} modificaciones con éxito</translation>
-    </message>
 </context>
 <context>
     <name>WorkshopModUpdaterPanel</name>
@@ -5469,6 +5518,10 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
     <message>
         <source>Update Mods with Steam</source>
         <translation>Actualizar mods con Steam</translation>
+    </message>
+    <message>
+        <source>Delete Selected Mods</source>
+        <translation>Eliminar modificaciones seleccionadas</translation>
     </message>
     <message>
         <source>

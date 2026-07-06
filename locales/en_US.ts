@@ -55,7 +55,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
+        <source>SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download with SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -200,7 +212,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Upload the log file to 0x0.st</source>
+        <source>Upload log to RimSort Logs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -622,6 +634,217 @@ Manage mods installed from GitHub releases.</source>
     </message>
 </context>
 <context>
+    <name>InstanceService</name>
+    <message>
+        <source>Essential path(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Provide instance name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compressing [{instance_name}] instance folder to archive...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error compressing instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occurred while compressing instance folder: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check the logs for more information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error restoring instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Archive not found at path: {input_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occurred while reading instance archive: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Instance folder exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Instance folder already exists: {instance_folder_path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to continue and replace the existing instance folder?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restoring instance [{name}] from archive...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid instance folder paths</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid paths: {path}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t restore steamcmd symlink/junction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create new instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input a unique name of new instance that is not already used:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clone instance [{name}]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop mods not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error cloning instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to clone instance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please enter a valid, unique instance name. It cannot be &apos;{name}&apos; or empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create new instance [{instance_name}]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error creating instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to create new instance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Problem deleting instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to delete instance {current_instance}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The default instance cannot be deleted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error deleting instance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The selected instance does not exist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete instance {current_instance}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete the selected instance and all of its data?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
@@ -779,19 +1002,11 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Uploaded file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to upload file.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1067,7 +1282,19 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Uploading {path_name} to RimSort Logs...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uploaded {path_name} to RimSort Logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to upload to RimSort Logs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1192,10 +1419,6 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to https://0x0.st/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1415,6 +1638,11 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>{count} repositories could not be pushed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Successful pushes:
+</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1890,10 +2118,6 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Successful pushes:&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1987,199 +2211,11 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Create new instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Input a unique name of new instance that is not already used:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Provide instance name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Clone instance [{existing_instance_name}]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error compressing instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred while compressing instance folder: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please check the logs for more information.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error restoring instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Archive not found at path: {input_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred while reading instance archive: {e}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Instance folder exists</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Replace</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restoring instance [{name}] from archive...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invalid instance folder paths</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invalid paths: {path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Couldn&apos;t restore steamcmd symlink/junction</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop mods not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error cloning instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to clone instance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please enter a valid, unique instance name. It cannot be &apos;{DEFAULT_INSTANCE_NAME}&apos; or empty.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create new instance [{instance_name}]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error creating instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to create new instance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Problem deleting instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unable to delete instance {current_instance}.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The default instance cannot be deleted.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error deleting instance</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The selected instance does not exist.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete instance {current_instance}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Convert to SteamCMD</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Keep Workshop Folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>ACF Log Reader</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Player Log</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred while restoring instance [{name}].</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4159,14 +4195,6 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Sorting</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4176,6 +4204,14 @@ This basically preserves your mod coloring, user notes etc. for this many second
     </message>
     <message>
         <source>Topologically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
+(This applies to deletion outside of RimSort too)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4194,6 +4230,18 @@ This basically preserves your mod coloring, user notes etc. for this many second
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
 If a matching version tag exists but is empty, the base tag is ignored. 
 e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Case-insensitive About.xml lookup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable case-insensitive lookup for About/About.xml.
+Some mods use incorrect casing (e.g., about/about.xml) which breaks on
+case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
+correct path is About/About.xml.
+See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5349,6 +5397,10 @@ Please reach out to us for support at: {support_url}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Do nothing and exit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Select</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5384,14 +5436,6 @@ Please reach out to us for support at: {support_url}</source>
         <source>Replacement [{0}]</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Use This Instead</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Successfully {action}d {count} mods</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>WorkshopModUpdaterPanel</name>
@@ -5409,6 +5453,10 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Update Mods with Steam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete Selected Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

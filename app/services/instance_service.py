@@ -33,8 +33,6 @@ from app.views.dialogue import (
     show_warning,
 )
 
-tr = QCoreApplication.translate
-
 
 class InstanceService:
     """Orchestrates instance lifecycle operations (clone, backup, restore, create, delete).
@@ -190,9 +188,13 @@ class InstanceService:
         else:
             logger.warning("Essential path(s) are invalid or not set!")
             answer = show_dialogue_conditional(
-                title=tr("InstanceService", "Essential path(s)"),
-                text=tr("InstanceService", "Essential path(s) are invalid or not set!"),
-                information=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Essential path(s)"
+                ),
+                text=QCoreApplication.translate(
+                    "InstanceService", "Essential path(s) are invalid or not set!"
+                ),
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "RimSort requires the below paths to be set.<br/><br/>"
                     "1) Game folder (Folder where RimWorld is installed).<br/><br/>"
@@ -203,13 +205,13 @@ class InstanceService:
                     "Would you like to open the settings to configure them now?",
                 ),
                 button_text_override=[
-                    tr("InstanceService", "Yes"),
-                    tr("InstanceService", "No"),
+                    QCoreApplication.translate("InstanceService", "Yes"),
+                    QCoreApplication.translate("InstanceService", "No"),
                 ],
             )
             if not prompt:
                 return False
-            return answer == tr("InstanceService", "Yes")
+            return answer == QCoreApplication.translate("InstanceService", "Yes")
 
     def _subscribe_to_eventbus(self) -> None:
         EventBus().do_backup_existing_instance.connect(self.backup_existing_instance)
@@ -230,8 +232,10 @@ class InstanceService:
             while True:
                 new_instance_name, ok = QInputDialog.getText(
                     None,
-                    tr("InstanceService", "Provide instance name"),
-                    tr(
+                    QCoreApplication.translate(
+                        "InstanceService", "Provide instance name"
+                    ),
+                    QCoreApplication.translate(
                         "InstanceService",
                         "Input a unique name for the backed up instance"
                         ' that is not "{name}"',
@@ -270,19 +274,21 @@ class InstanceService:
                         instance_controller.compress_to_archive,
                         output_path,
                     ),
-                    tr(
+                    QCoreApplication.translate(
                         "InstanceService",
                         "Compressing [{instance_name}] instance folder to archive...",
                     ).format(instance_name=instance_name),
                 )
             except Exception as e:
                 show_fatal_error(
-                    title=tr("InstanceService", "Error compressing instance"),
-                    text=tr(
+                    title=QCoreApplication.translate(
+                        "InstanceService", "Error compressing instance"
+                    ),
+                    text=QCoreApplication.translate(
                         "InstanceService",
                         "An error occurred while compressing instance folder: {e}",
                     ).format(e=e),
-                    information=tr(
+                    information=QCoreApplication.translate(
                         "InstanceService",
                         "Please check the logs for more information.",
                     ),
@@ -309,8 +315,10 @@ class InstanceService:
         if not os.path.exists(input_path):
             logger.error(f"Archive not found at path: {input_path}")
             show_warning(
-                title=tr("InstanceService", "Error restoring instance"),
-                text=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Error restoring instance"
+                ),
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "Archive not found at path: {input_path}",
                 ).format(input_path=input_path),
@@ -324,8 +332,10 @@ class InstanceService:
         except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
-                title=tr("InstanceService", "Error restoring instance"),
-                text=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Error restoring instance"
+                ),
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "An error occurred while reading instance archive: {e}",
                 ),
@@ -335,21 +345,23 @@ class InstanceService:
 
         if os.path.exists(instance_controller.instance_folder_path):
             answer = show_dialogue_conditional(
-                title=tr("InstanceService", "Instance folder exists"),
-                text=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Instance folder exists"
+                ),
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "Instance folder already exists: {instance_folder_path}",
                 ).format(instance_folder_path=instance_controller.instance_folder_path),
-                information=tr(
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "Do you want to continue and replace the existing instance folder?",
                 ),
                 button_text_override=[
-                    tr("InstanceService", "Replace"),
+                    QCoreApplication.translate("InstanceService", "Replace"),
                 ],
             )
 
-            if answer != tr("InstanceService", "Replace"):
+            if answer != QCoreApplication.translate("InstanceService", "Replace"):
                 logger.info("User cancelled instance extraction.")
                 return
 
@@ -359,9 +371,9 @@ class InstanceService:
                 instance_controller.extract_from_archive,
                 input_path,
             ),
-            tr("InstanceService", "Restoring instance [{name}] from archive...").format(
-                name=instance_controller.instance.name
-            ),
+            QCoreApplication.translate(
+                "InstanceService", "Restoring instance [{name}] from archive..."
+            ).format(name=instance_controller.instance.name),
         )
 
         if os.path.exists(instance_controller.instance_folder_path):
@@ -371,16 +383,20 @@ class InstanceService:
                     f"Instance folder paths not found: {', '.join(cleared_paths)}"
                 )
                 show_warning(
-                    title=tr("InstanceService", "Invalid instance folder paths"),
-                    text=tr("InstanceService", "Invalid instance folder paths"),
-                    information=tr(
+                    title=QCoreApplication.translate(
+                        "InstanceService", "Invalid instance folder paths"
+                    ),
+                    text=QCoreApplication.translate(
+                        "InstanceService", "Invalid instance folder paths"
+                    ),
+                    information=QCoreApplication.translate(
                         "InstanceService",
                         "Some folder paths from the restored instance are invalid and were cleared."
                         " Please reconfigure them in the settings",
                     ),
-                    details=tr("InstanceService", "Invalid paths: {path}").format(
-                        path=", ".join(cleared_paths)
-                    ),
+                    details=QCoreApplication.translate(
+                        "InstanceService", "Invalid paths: {path}"
+                    ).format(path=", ".join(cleared_paths)),
                 )
 
             steamcmd_link_path = str(
@@ -407,15 +423,15 @@ class InstanceService:
                 logger.info("Skipping steamcmd symlink restoration")
             else:
                 show_warning(
-                    title=tr(
+                    title=QCoreApplication.translate(
                         "InstanceService",
                         "Couldn't restore steamcmd symlink/junction",
                     ),
-                    text=tr(
+                    text=QCoreApplication.translate(
                         "InstanceService",
                         "Couldn't restore steamcmd symlink/junction",
                     ),
-                    information=tr(
+                    information=QCoreApplication.translate(
                         "InstanceService",
                         "The steamcmd symlink/junction could not be restored as the local folder"
                         " is not set or invalid. The symlink/junction will need to be manually"
@@ -435,12 +451,14 @@ class InstanceService:
             )
         else:
             show_warning(
-                title=tr("InstanceService", "Error restoring instance"),
-                text=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Error restoring instance"
+                ),
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "An error occurred while restoring instance [{name}].",
                 ).format(name=instance_controller.instance.name),
-                information=tr(
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "The instance folder was not found after extracting the archive."
                     " Perhaps the archive is corrupt or the instance name is invalid.",
@@ -476,8 +494,8 @@ class InstanceService:
 
         new_instance_name, _ok = QInputDialog.getText(
             None,
-            tr("InstanceService", "Create new instance"),
-            tr(
+            QCoreApplication.translate("InstanceService", "Create new instance"),
+            QCoreApplication.translate(
                 "InstanceService",
                 "Input a unique name of new instance that is not already used:",
             ),
@@ -558,16 +576,16 @@ class InstanceService:
                         )
                 if existing_instance_workshop_folder:
                     _answer = show_dialogue_conditional(
-                        title=tr(
+                        title=QCoreApplication.translate(
                             "InstanceService",
                             "Clone instance [{name}]",
                         ).format(name=existing_instance_name),
-                        text=tr(
+                        text=QCoreApplication.translate(
                             "InstanceService",
                             "What would you like to do with the configured"
                             " Workshop mods folder?",
                         ),
-                        information=tr(
+                        information=QCoreApplication.translate(
                             "InstanceService",
                             "Workshop folder: {folder}<br><br>"
                             "Option 1: Convert to SteamCMD<br>"
@@ -583,14 +601,18 @@ class InstanceService:
                             "How would you like to proceed?",
                         ).format(folder=existing_instance_workshop_folder),
                         button_text_override=[
-                            tr("InstanceService", "Convert to SteamCMD"),
-                            tr("InstanceService", "Keep Workshop Folder"),
+                            QCoreApplication.translate(
+                                "InstanceService", "Convert to SteamCMD"
+                            ),
+                            QCoreApplication.translate(
+                                "InstanceService", "Keep Workshop Folder"
+                            ),
                         ],
                     )
-                    answer_workshop_mods = str(_answer) or tr(
+                    answer_workshop_mods = str(_answer) or QCoreApplication.translate(
                         "InstanceService", "Cancelled"
                     )
-                    if answer_workshop_mods == tr(
+                    if answer_workshop_mods == QCoreApplication.translate(
                         "InstanceService", "Convert to SteamCMD"
                     ):
                         if os.path.exists(
@@ -612,8 +634,10 @@ class InstanceService:
                             )
                         else:
                             show_warning(
-                                title=tr("InstanceService", "Workshop mods not found"),
-                                text=tr(
+                                title=QCoreApplication.translate(
+                                    "InstanceService", "Workshop mods not found"
+                                ),
+                                text=QCoreApplication.translate(
                                     "InstanceService",
                                     "Workshop mods folder at"
                                     " [{existing_instance_workshop_folder}] not found.",
@@ -621,7 +645,7 @@ class InstanceService:
                                     existing_instance_workshop_folder=existing_instance_workshop_folder
                                 ),
                             )
-                    elif answer_workshop_mods == tr(
+                    elif answer_workshop_mods == QCoreApplication.translate(
                         "InstanceService", "Keep Workshop Folder"
                     ):
                         target_workshop_folder = str(existing_instance_workshop_folder)
@@ -720,9 +744,13 @@ class InstanceService:
                 )
         elif new_instance_name:
             show_warning(
-                title=tr("InstanceService", "Error cloning instance"),
-                text=tr("InstanceService", "Unable to clone instance."),
-                information=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Error cloning instance"
+                ),
+                text=QCoreApplication.translate(
+                    "InstanceService", "Unable to clone instance."
+                ),
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "Please enter a valid, unique instance name."
                     " It cannot be '{name}' or empty.",
@@ -742,8 +770,8 @@ class InstanceService:
         if not instance_name:
             new_instance_name, ok = QInputDialog.getText(
                 None,
-                tr("InstanceService", "Create new instance"),
-                tr(
+                QCoreApplication.translate("InstanceService", "Create new instance"),
+                QCoreApplication.translate(
                     "InstanceService",
                     "Input a unique name of new instance that is not already used:",
                 ),
@@ -780,16 +808,16 @@ class InstanceService:
                 savedata_path = str(instance_path / "InstanceData")
                 preview_text = f"-logfile {log_path} -savedatafolder={savedata_path}"
                 answer = show_dialogue_conditional(
-                    title=tr(
+                    title=QCoreApplication.translate(
                         "InstanceService",
                         "Create new instance [{instance_name}]",
                     ).format(instance_name=instance_name),
-                    text=tr(
+                    text=QCoreApplication.translate(
                         "InstanceService",
                         "Would you like to automatically generate run args"
                         " for the new instance?",
                     ),
-                    information=tr(
+                    information=QCoreApplication.translate(
                         "InstanceService",
                         "This will try to generate run args for the new instance"
                         " based on the configured Game/Config folders.<br><br>"
@@ -822,9 +850,13 @@ class InstanceService:
             EventBus().do_activate_current_instance.emit(instance_name)
         else:
             show_warning(
-                title=tr("InstanceService", "Error creating instance"),
-                text=tr("InstanceService", "Unable to create new instance."),
-                information=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Error creating instance"
+                ),
+                text=QCoreApplication.translate(
+                    "InstanceService", "Unable to create new instance."
+                ),
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "Please enter a valid, unique instance name."
                     " It cannot be '{name}' or empty.",
@@ -835,12 +867,14 @@ class InstanceService:
         """Delete the current instance and all its data."""
         if self.settings.current_instance == DEFAULT_INSTANCE_NAME:
             show_warning(
-                title=tr("InstanceService", "Problem deleting instance"),
-                text=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Problem deleting instance"
+                ),
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "Unable to delete instance {current_instance}.",
                 ).format(current_instance=self.settings.current_instance),
-                information=tr(
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "The default instance cannot be deleted.",
                 ),
@@ -848,12 +882,14 @@ class InstanceService:
             return
         elif not self.settings.instances.get(self.settings.current_instance):
             show_fatal_error(
-                title=tr("InstanceService", "Error deleting instance"),
-                text=tr(
+                title=QCoreApplication.translate(
+                    "InstanceService", "Error deleting instance"
+                ),
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "Unable to delete instance {current_instance}.",
                 ).format(current_instance=self.settings.current_instance),
-                information=tr(
+                information=QCoreApplication.translate(
                     "InstanceService",
                     "The selected instance does not exist.",
                 ),
@@ -861,16 +897,18 @@ class InstanceService:
             return
         else:
             answer = BinaryChoiceDialog(
-                title=tr(
+                title=QCoreApplication.translate(
                     "InstanceService",
                     "Delete instance {current_instance}",
                 ).format(current_instance=self.settings.current_instance),
-                text=tr(
+                text=QCoreApplication.translate(
                     "InstanceService",
                     "Are you sure you want to delete the selected instance"
                     " and all of its data?",
                 ),
-                information=tr("InstanceService", "This action cannot be undone."),
+                information=QCoreApplication.translate(
+                    "InstanceService", "This action cannot be undone."
+                ),
             )
             if answer.exec_is_positive():
                 aux_metadata_controller = (
