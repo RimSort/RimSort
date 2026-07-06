@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any, Generator, Optional
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QCheckBox, QLabel, QPushButton
 
@@ -115,11 +116,21 @@ class UseThisInsteadPanel(BaseModsPanel):
         """Create the select button with Originals/Replacements dropdown."""
         factory = self.get_button_factory()
         return factory.create_dropdown_button(
-            "Select",
+            QCoreApplication.translate("UseThisInsteadPanel", "Select"),
             "actionButton",
             [
-                ("Select all Originals", self._select_all_originals),
-                ("Select all Replacements", self._select_all_replacements),
+                (
+                    QCoreApplication.translate(
+                        "UseThisInsteadPanel", "Select all Originals"
+                    ),
+                    self._select_all_originals,
+                ),
+                (
+                    QCoreApplication.translate(
+                        "UseThisInsteadPanel", "Select all Replacements"
+                    ),
+                    self._select_all_replacements,
+                ),
             ],
         )
 
