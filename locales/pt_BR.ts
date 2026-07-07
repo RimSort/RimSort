@@ -4837,7 +4837,7 @@ Escolha uma das opções a seguir para continuar.</translation>
     <name>SteamworksInterface</name>
     <message>
         <source>Steam Not Detected</source>
-        <translation>Vapor não detectado</translation>
+        <translation>Steam não detectado</translation>
     </message>
     <message>
         <source>Steam Integration Unavailable</source>

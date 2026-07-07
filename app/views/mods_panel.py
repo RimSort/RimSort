@@ -674,9 +674,7 @@ class ModListItemInner(QWidget):
             self.new_icon_label.setHidden(True)
             self.in_save_icon_label.setHidden(True)
         # Recently-updated icon visibility (both lists) depends on the setting
-        is_recently_updated = bool(
-            item_data.__dict__.get("is_recently_updated", False)
-        )
+        is_recently_updated = bool(item_data.__dict__.get("is_recently_updated", False))
         if self.settings.mod_list_updated_indicator and is_recently_updated:
             updated_timestamp = getattr(item_data, "updated_timestamp", None)
             if updated_timestamp:
@@ -4265,9 +4263,7 @@ class ModsPanel(QWidget):
         # Recently-updated mods label (next to new mods)
         self.updated_layout = QHBoxLayout()
         self.updated_icon: QLabel = QLabel()
-        self.updated_icon.setPixmap(
-            ModListIcons.updated_icon().pixmap(QSize(20, 20))
-        )
+        self.updated_icon.setPixmap(ModListIcons.updated_icon().pixmap(QSize(20, 20)))
         self.updated_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
             self.tr("0 updated")
         )
