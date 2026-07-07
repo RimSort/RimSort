@@ -113,6 +113,10 @@ class CustomListWidgetItemMetadata:
             if settings.mod_list_updated_indicator
             else None
         )
+        # Startup impact (per-mod load time), stamped during the bulk
+        # errors/warnings recompute when the feature is enabled
+        self.startup_impact_s: float | None = None
+        self.startup_impact_tooltip: str = ""
         # Persist list type for UI logic that depends on which list the item is in (Active/Inactive)
         self.list_type = list_type
 

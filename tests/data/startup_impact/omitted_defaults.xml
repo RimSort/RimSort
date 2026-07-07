@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StartupImpactSession>
+	<sessionData>
+		<mods>
+			<li>
+				<modName>Zero Impact Mod</modName>
+				<metrics />
+			</li>
+			<li>
+				<modName />
+			</li>
+		</mods>
+	</sessionData>
+</StartupImpactSession>

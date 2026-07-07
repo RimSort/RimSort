@@ -76,6 +76,9 @@ class SortingTabController(BaseTabController):
         self.dialog.mod_list_updated_threshold_spinbox.setEnabled(
             self.settings.mod_list_updated_indicator
         )
+        self.dialog.mod_list_startup_impact_checkbox.setChecked(
+            self.settings.mod_list_startup_impact
+        )
         self.dialog.hide_invalid_mods_when_filtering_checkbox.setChecked(
             self.settings.hide_invalid_mods_when_filtering
         )
@@ -119,6 +122,9 @@ class SortingTabController(BaseTabController):
         )
         self.settings.mod_list_updated_threshold_days = (
             self.dialog.mod_list_updated_threshold_spinbox.value()
+        )
+        self.settings.mod_list_startup_impact = (
+            self.dialog.mod_list_startup_impact_checkbox.isChecked()
         )
         self.settings.hide_invalid_mods_when_filtering = (
             self.dialog.hide_invalid_mods_when_filtering_checkbox.isChecked()

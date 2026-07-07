@@ -125,6 +125,8 @@ class Settings(QObject):
         self.mod_list_updated_indicator: bool = False
         # Number of days within which a workshop mod counts as "recently updated"
         self.mod_list_updated_threshold_days: int = 3
+        # Whether to show per-mod startup load time from the Loading Progress mod
+        self.mod_list_startup_impact: bool = False
         # Whether to enable Mod type filter
         self.mod_type_filter: bool = True
         # Whether to hide invalid mods

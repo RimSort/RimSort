@@ -60,6 +60,7 @@ from app.utils.generic import (
 )
 from app.utils.json_utils import atomic_json_dump
 from app.utils.rentry.wrapper import RentryImport
+from app.utils.startup_impact import invalidate_startup_impact_cache
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -827,6 +828,8 @@ class MainContent(QObject):
         """
         EventBus().refresh_started.emit()
         EventBus().do_save_button_animation_stop.emit()
+        # Force a re-read of the startup impact report on the next recalculation
+        invalidate_startup_impact_cache()
         # If we are refreshing cache from user action
         if not is_initial:
             # Reset the data source filters to default and clear searches
