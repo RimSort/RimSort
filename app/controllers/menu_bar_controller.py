@@ -127,6 +127,9 @@ class MenuBarController(QObject):
         )
 
         # Download menu
+        self.menu_bar.download_rimworld_version_action.triggered.connect(
+            EventBus().do_download_rimworld_version.emit
+        )
         self.menu_bar.add_git_mod_action.triggered.connect(
             EventBus().do_add_git_mod.emit
         )
