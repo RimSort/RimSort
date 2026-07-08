@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StartupImpactSession>
+	<sessionData>
+		<loadingTime>5000</loadingTime>
+		<mods>
+			<li>
+				<modName>Only Mod</modName>
+				<metrics>
+					<keys>
+						<li>LoadingProgress.StartupImpact.Constructor</li>
+					</keys>
+					<values>
+						<li>1500</li>
+					</values>
+				</metrics>
+				<totalImpact>1500</totalImpact>
+			</li>
+		</mods>
+	</sessionData>
+</StartupImpactSession>

@@ -869,6 +869,20 @@ This basically preserves your mod coloring, user notes etc. for this many second
         updated_threshold_layout.addWidget(self.mod_list_updated_threshold_spinbox)
         modlist_option_group_box_layout.addLayout(updated_threshold_layout)
 
+        # Startup impact (load time) indicator checkbox
+        self.mod_list_startup_impact_checkbox = QCheckBox(
+            self.tr("Show startup load time per mod")
+        )
+        self.mod_list_startup_impact_checkbox.setToolTip(
+            self.tr(
+                "Shows each mod's game startup time, measured by the 'Loading "
+                "Progress' mod. Requires that mod with its 'Track startup loading "
+                "impact' setting enabled, and a saved startup impact report "
+                "(StartupImpactData.xml in the RimWorld save data folder)."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(self.mod_list_startup_impact_checkbox)
+
         # Hide invalid mod filtering checkbox
         self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
             self.tr("Hide invalid mods when filtering")
