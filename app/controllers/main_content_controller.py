@@ -124,6 +124,13 @@ class MainContentController(QObject):
                 lambda: self.settings.external_no_version_warning_metadata_source,
                 DATABASE_DISPLAY_NAMES["no_version_warning"],
             ),
+            EventBus().do_download_rimworld_versions_db_from_github: (
+                AppInfo().databases_folder,
+                lambda: self.settings.external_rimworld_versions_repo_path,
+                lambda: self.settings.external_rimworld_versions_url,
+                lambda: self.settings.external_rimworld_versions_metadata_source,
+                DATABASE_DISPLAY_NAMES["rimworld_versions"],
+            ),
         }
 
         self._connect_signals()
@@ -741,6 +748,12 @@ class MainContentController(QObject):
                 settings.external_use_this_instead_repo_path,
                 settings.external_use_this_instead_url,
                 DATABASE_DISPLAY_NAMES["use_this_instead"],
+            ),
+            (
+                settings.external_rimworld_versions_metadata_source,
+                settings.external_rimworld_versions_repo_path,
+                settings.external_rimworld_versions_url,
+                DATABASE_DISPLAY_NAMES["rimworld_versions"],
             ),
         ]
 
