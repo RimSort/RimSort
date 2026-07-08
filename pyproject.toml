@@ -10,7 +10,7 @@ dependencies = [
     "base58>=2.1.1",
     "beautifulsoup4==4.15.0",
     "certifi==2026.6.17",
-    "charset-normalizer==3.4.8",
+    "charset-normalizer==3.4.9",
     "click==8.4.2",
     "loguru==0.7.3",
     "lxml==6.1.1",
