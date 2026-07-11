@@ -12,6 +12,7 @@ from platformdirs import PlatformDirs
 from PySide6.QtCore import (
     QEvent,
     QItemSelection,
+    QKeyCombination,
     QModelIndex,
     QObject,
     QRectF,
@@ -861,15 +862,18 @@ class TagEditDialog(QDialog):
         self.info_label.setWordWrap(True)
         self.dialog_layout.addWidget(self.info_label)
 
-        self.new_tags_input = QLineEdit()
-        self.new_tags_input.setObjectName("TagEditDialogInput")
-        self.new_tags_input.setPlaceholderText(self.tr("new-tag, qol, framework"))
-        self.new_tags_input.textChanged.connect(self._filter_tags)
-        self.dialog_layout.addWidget(self.new_tags_input)
+        self.tags_text_input = QLineEdit()
+        self.tags_text_input.setObjectName("TagEditDialogInput")
+        self.tags_text_input.setPlaceholderText(self.tr("new-tag, qol, framework"))
+        self.tags_text_input.textChanged.connect(self.filter_tags_list)
+        self.tags_text_input.returnPressed.connect(self.upsert_typed_tag)
+        self.tags_text_input.installEventFilter(self)
+        self.dialog_layout.addWidget(self.tags_text_input)
 
-        self.tags_list = QListWidget()
+        self.tags_list = QListWidget(sortingEnabled=True)
         self.tags_list.setObjectName("TagEditDialogList")
-        self.tags_list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.tags_list.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        self.tags_list.installEventFilter(self)
         self.dialog_layout.addWidget(self.tags_list)
 
         self.buttons_layout = QHBoxLayout()
@@ -899,6 +903,91 @@ class TagEditDialog(QDialog):
 
         self.populate_tags()
 
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress:
+            key = cast(QKeyEvent, event).key()
+            if obj is self.tags_text_input and (
+                key in [Qt.Key.Key_Down, Qt.Key.Key_Tab]
+            ):
+                self.tags_list.setFocus(Qt.FocusReason.ShortcutFocusReason)
+                return True
+            if (
+                obj is self.tags_list
+                and key == Qt.Key.Key_Up
+                and self.tags_list.currentRow() == 0
+            ):
+                self.tags_text_input.setFocus(Qt.FocusReason.ShortcutFocusReason)
+                return True
+        return super().eventFilter(obj, event)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.keyCombination() in [
+            QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Enter),
+            QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
+        ]:
+            self.accept()
+            return
+
+        if self.tags_text_input.hasFocus() and event.key() in [
+            Qt.Key.Key_Return,
+            Qt.Key.Key_Enter,
+        ]:
+            self.upsert_typed_tag()
+            return
+        if self.tags_list.hasFocus() and event.key() in [
+            Qt.Key.Key_Return,
+            Qt.Key.Key_Enter,
+        ]:
+            self.toggle_tag_item_selection(self.tags_list.currentItem())
+            return
+
+        super().keyPressEvent(event)
+
+    def toggle_tag_item_selection(self, tag_item: QListWidgetItem) -> None:
+        tag_item.setSelected(not tag_item.isSelected())
+
+    def upsert_typed_tag(self) -> None:
+        for tag in self.tags_text_input.text().split(","):
+            tag = tag.strip().lower()
+            if not tag:
+                continue
+
+            matched_items = self.tags_list.findItems(tag, Qt.MatchFlag.MatchExactly)
+            if matched_items:
+                assert len(matched_items) == 1, (
+                    "Expected exactly one matched item matching exactly the typed tag"
+                )
+                self.toggle_tag_item_selection(matched_items[0])
+            else:
+                item_new = QListWidgetItem(tag)
+                self.tags_list.addItem(item_new)
+                item_new.setSelected(True)
+
+        self.tags_text_input.clear()
+
+    def filter_tags_list(self) -> None:
+        typed_text = self.tags_text_input.text().strip()
+        if typed_text.endswith(","):
+            self.upsert_typed_tag()
+            return
+
+        typed_tags = [
+            tag.strip().lower() for tag in typed_text.split(",") if tag.strip()
+        ]
+
+        if not typed_tags:
+            for index in range(self.tags_list.count()):
+                self.tags_list.item(index).setHidden(False)
+            return
+
+        for index in range(self.tags_list.count()):
+            item = self.tags_list.item(index)
+            item.setHidden(
+                not any(
+                    typed_tag in item.text().strip().lower() for typed_tag in typed_tags
+                )
+            )
+
     def populate_tags(self) -> None:
         try:
             tags = auxdb_get_all_tags(self.settings)
@@ -906,43 +995,26 @@ class TagEditDialog(QDialog):
             logger.debug(f"Unable to load existing tags: {e}")
             tags = []
 
-        for tag in tags:
-            item = QListWidgetItem(tag)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(
-                Qt.CheckState.Checked
-                if tag in self.existing_selected_tags
-                else Qt.CheckState.Unchecked
-            )
-            self.tags_list.addItem(item)
-
-    def _filter_tags(self, text: str) -> None:
+        self.tags_list.addItems(tags)
         for index in range(self.tags_list.count()):
             item = self.tags_list.item(index)
-            item.setHidden(text not in item.text() if text else False)
+            item.setSelected(item.text().strip().lower() in self.existing_selected_tags)
 
     def select_all(self) -> None:
         for index in range(self.tags_list.count()):
-            self.tags_list.item(index).setCheckState(Qt.CheckState.Checked)
+            self.tags_list.item(index).setSelected(True)
 
     def select_none(self) -> None:
         for index in range(self.tags_list.count()):
-            self.tags_list.item(index).setCheckState(Qt.CheckState.Unchecked)
+            self.tags_list.item(index).setSelected(False)
 
     def selected_tags(self) -> list[str]:
         selected = set()
 
         for index in range(self.tags_list.count()):
             item = self.tags_list.item(index)
-            if item.checkState() == Qt.CheckState.Checked:
+            if item.isSelected():
                 selected.add(item.text().strip().lower())
-
-        manual_tags = [
-            tag.strip().lower()
-            for tag in self.new_tags_input.text().split(",")
-            if tag.strip()
-        ]
-        selected.update(manual_tags)
 
         return sorted(selected)
 
