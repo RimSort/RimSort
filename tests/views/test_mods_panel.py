@@ -140,9 +140,7 @@ class TestTagEditDialog:
         :param dialog: The TagEditDialog instance to test.
         """
         dialog.select_all()
-        assert all(
-            tag.isSelected() is True for tag in self._get_tags(dialog.tags_list)
-        )
+        assert all(tag.isSelected() is True for tag in self._get_tags(dialog.tags_list))
 
         dialog.select_none()
         assert all(
