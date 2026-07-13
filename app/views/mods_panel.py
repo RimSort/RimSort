@@ -925,6 +925,7 @@ class TagEditDialog(QDialog):
             QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Enter),
             QKeyCombination(Qt.KeyboardModifier.AltModifier, Qt.Key.Key_Return),
         ]:
+            # On Alt-Enter or Alt-Return key press, accept the current changes.
             self.accept()
             return
 
@@ -932,21 +933,36 @@ class TagEditDialog(QDialog):
             Qt.Key.Key_Return,
             Qt.Key.Key_Enter,
         ]:
+            # On Enter or Return key press while focused on the tag text input field, upsert the current tag in the text
+            #  input field.
             self.upsert_typed_tag()
             return
         if self.tags_list.hasFocus() and event.key() in [
             Qt.Key.Key_Return,
             Qt.Key.Key_Enter,
         ]:
+            # On Enter or Return key press while focused on the tags list, toggle the selection of the current item.
             self.toggle_tag_item_selection(self.tags_list.currentItem())
             return
 
         super().keyPressEvent(event)
 
     def toggle_tag_item_selection(self, tag_item: QListWidgetItem) -> None:
+        """
+        Toggle the selection of the current tag item in the tags list.
+
+        :param tag_item: Tag item to toggle the selection for.
+        """
         tag_item.setSelected(not tag_item.isSelected())
 
     def upsert_typed_tag(self) -> None:
+        """
+        Upsert the current tag in the tag input (triggered by the Enter key or typing comma).
+
+        If the typed tag exactly matches an existing tag, it is selected.
+        Otherwise, a new pre-selected tag item is added to the list.
+        The input field is then cleared so the user can type the next tag.
+        """
         for tag in self.tags_text_input.text().split(","):
             tag = tag.strip().lower()
             if not tag:
@@ -966,6 +982,11 @@ class TagEditDialog(QDialog):
         self.tags_text_input.clear()
 
     def filter_tags_list(self) -> None:
+        """
+        Filter the tag list to only items containing the current typed text as a substring.
+
+        Adds a new tag when the user types a comma.
+        """
         typed_text = self.tags_text_input.text().strip()
         if typed_text.endswith(","):
             self.upsert_typed_tag()

@@ -46,8 +46,14 @@ class TestTagEditDialog:
         return [widget.item(i) for i in range(widget.count())]
 
     def test_insert_new_tag(self, dialog: TagEditDialog) -> None:
+        """
+        Test inserting a new tag.
+
+        :param dialog: The TagEditDialog instance to test.
+        """
         dialog.tags_text_input.setText("dd,")
 
+        # jscpd:ignore-start
         found_items = dialog.tags_list.findItems("dd", Qt.MatchFlag.MatchExactly)
         assert len(found_items) == 1
         item = found_items[0]
@@ -68,10 +74,17 @@ class TestTagEditDialog:
         assert item.text() == "c"
         assert item.isSelected() is False
         assert item.isHidden() is False
+        # jscpd:ignore-end
 
     def test_update_existing_tag_already_selected(self, dialog: TagEditDialog) -> None:
+        """
+        Test updating an existing tag that is already selected.
+
+        :param dialog: The TagEditDialog instance to test.
+        """
         dialog.tags_text_input.setText("a,")
 
+        # jscpd:ignore-start
         found_items = dialog.tags_list.findItems("a", Qt.MatchFlag.MatchExactly)
         assert len(found_items) == 1
         item = found_items[0]
@@ -92,12 +105,19 @@ class TestTagEditDialog:
         assert item.text() == "c"
         assert item.isSelected() is False
         assert item.isHidden() is False
+        # jscpd:ignore-end
 
     def test_update_existing_tag_not_already_selected(
         self, dialog: TagEditDialog
     ) -> None:
+        """
+        Test updating an existing tag that is not already selected.
+
+        :param dialog: The TagEditDialog instance to test.
+        """
         dialog.tags_text_input.setText("cc,")
 
+        # jscpd:ignore-start
         found_items = dialog.tags_list.findItems("cc", Qt.MatchFlag.MatchExactly)
         assert len(found_items) == 1
         item = found_items[0]
@@ -111,31 +131,14 @@ class TestTagEditDialog:
         assert item.text() == "a"
         assert item.isSelected() is True
         assert item.isHidden() is False
-
-    def test_filter_matches_some(self, dialog: TagEditDialog) -> None:
-        dialog.tags_text_input.setText("a")
-
-        for tag in self._get_tags(dialog.tags_list):
-            if "a" in tag.text():
-                assert tag.isHidden() is False
-            else:
-                assert tag.isHidden() is True
-
-    def test_filter_matches_some_substring(self, dialog: TagEditDialog) -> None:
-        dialog.tags_text_input.setText("aa")
-
-        for tag in self._get_tags(dialog.tags_list):
-            if "aa" in tag.text():
-                assert tag.isHidden() is False
-            else:
-                assert tag.isHidden() is True
-
-    def test_filter_no_match(self, dialog: TagEditDialog) -> None:
-        dialog.tags_text_input.setText("d")
-
-        assert all(tag.isHidden() for tag in self._get_tags(dialog.tags_list))
+        # jscpd:ignore-end
 
     def test_select_all_and_none(self, dialog: TagEditDialog) -> None:
+        """
+        Test selecting all tags and selecting none of the tags.
+
+        :param dialog: The TagEditDialog instance to test.
+        """
         dialog.select_all()
         assert all(
             tag.isSelected() is True for tag in self._get_tags(dialog.tags_list)
@@ -145,6 +148,30 @@ class TestTagEditDialog:
         assert all(
             tag.isSelected() is False for tag in self._get_tags(dialog.tags_list)
         )
+
+    def test_filter_tags(self, dialog: TagEditDialog) -> None:
+        """
+        Test filtering tags based on user input.
+
+        :param dialog: The TagEditDialog instance to test.
+        """
+        dialog.tags_text_input.setText("a")
+        assert all(
+            tag.isHidden() is ("a" not in tag.text())
+            for tag in self._get_tags(dialog.tags_list)
+        )
+
+        dialog.tags_text_input.setText("aa")
+        assert all(
+            tag.isHidden() is ("aa" not in tag.text())
+            for tag in self._get_tags(dialog.tags_list)
+        )
+
+        dialog.tags_text_input.clear()
+        assert all(tag.isHidden() is False for tag in self._get_tags(dialog.tags_list))
+
+        dialog.tags_text_input.setText("d")
+        assert all(tag.isHidden() is True for tag in self._get_tags(dialog.tags_list))
 
 
 class TestStartupImpactLabel:
