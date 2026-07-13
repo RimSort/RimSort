@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
-from collections.abc import MutableMapping
+from collections.abc import Callable, MutableMapping
 from pathlib import Path
 from time import sleep
 from typing import Optional
@@ -116,12 +116,16 @@ def _setup_snap_steam_env(env: MutableMapping[str, str]) -> None:
         env["STEAMRUNTIME_PATH"] = str(SNAP_STEAM_PATH / "ubuntu12_32")
 
 
-def _launch_steam(_libs: str) -> bool:
+def _launch_steam(
+    _libs: str,
+    status_callback: Callable[[str], None] | None = None,
+) -> bool:
     """
     Launch Steam if it's not running and wait for it to start.
 
     Args:
         _libs: Path to the Steamworks library directory
+        status_callback: Optional callback to emit progress messages to UI
 
     Returns:
         bool: True if Steam was launched successfully, False otherwise
@@ -134,7 +138,10 @@ def _launch_steam(_libs: str) -> bool:
                 return False
 
             # For Linux, try to launch steam in a terminal emulator
-            logger.info("Launching Steam via 'steam' command in a terminal...")
+            msg = "Launching Steam via 'steam' command in a terminal..."
+            logger.info(msg)
+            if status_callback:
+                status_callback(msg)
             env = os.environ.copy()
             env["LD_LIBRARY_PATH"] = _libs + os.pathsep + env.get("LD_LIBRARY_PATH", "")
 
@@ -169,7 +176,10 @@ def _launch_steam(_libs: str) -> bool:
             if not steam_exe.exists():
                 logger.warning("Steam executable not found")
                 return False
-            logger.info("Launching Steam...")
+            msg = "Launching Steam..."
+            logger.info(msg)
+            if status_callback:
+                status_callback(msg)
             env = os.environ.copy()
             if sys.platform.startswith("linux"):
                 _setup_snap_steam_env(env)
@@ -186,6 +196,10 @@ def _launch_steam(_libs: str) -> bool:
 
         # Wait for Steam to start checks every SLEEP_TIME (15 seconds), MAX_ATTEMPTS (10 attempts).
         for attempt in range(MAX_ATTEMPTS):
+            msg = f"Waiting for Steam to initialize ({attempt + 1}/{MAX_ATTEMPTS})..."
+            logger.info(msg)
+            if status_callback:
+                status_callback(msg)
             sleep(SLEEP_TIME)
             # Check both process detection and API initialization
             if _is_steam_running():
@@ -200,7 +214,10 @@ def _launch_steam(_libs: str) -> bool:
                 test_steamworks = STEAMWORKS()
                 test_steamworks.initialize()
                 test_steamworks.unload()
-                logger.info("Steam launched and API initialized successfully")
+                msg = "Steam launched and API initialized successfully"
+                logger.info(msg)
+                if status_callback:
+                    status_callback(msg)
                 # Give Steam a bit more time to fully initialize
                 sleep(SLEEP_TIME)
                 return True
@@ -221,7 +238,10 @@ def _launch_steam(_libs: str) -> bool:
                         )
                 continue
 
-        logger.warning("Steam failed to start within timeout")
+        msg = "Steam failed to start within timeout"
+        logger.warning(msg)
+        if status_callback:
+            status_callback(msg)
         return False
 
     except Exception as e:
@@ -229,7 +249,10 @@ def _launch_steam(_libs: str) -> bool:
         return False
 
 
-def check_steam_available(_libs: str) -> bool:
+def check_steam_available(
+    _libs: str,
+    status_callback: Callable[[str], None] | None = None,
+) -> bool:
     """
     Check if Steam is available and running.
 
@@ -238,6 +261,7 @@ def check_steam_available(_libs: str) -> bool:
 
     Args:
         _libs: Path to the Steamworks library directory
+        status_callback: Optional callback to emit progress messages to UI
 
     Returns:
         bool: True if Steam is available, False otherwise
@@ -256,8 +280,11 @@ def check_steam_available(_libs: str) -> bool:
 
     # Check if Steam is running
     if not _is_steam_running():
-        logger.info("Steam is not running, attempting to launch...")
-        if not _launch_steam(_libs):
+        msg = "Steam is not running, attempting to launch..."
+        logger.info(msg)
+        if status_callback:
+            status_callback(msg)
+        if not _launch_steam(_libs, status_callback=status_callback):
             logger.error("Failed to launch Steam")
             # Show no steam warning
             show_no_steam_warning()

@@ -549,7 +549,7 @@ class BinaryChoiceDialog(_BaseMessageBox):
 class FatalErrorDialog(_BaseDialogue):
     """Custom dialog to display fatal errors.
 
-    Has button to show more details, open the log directory, and upload the log file to 0x0.
+    Has button to show more details, open the log directory, and upload the log file to RimSort Logs.
     """
 
     def __init__(
@@ -572,7 +572,7 @@ class FatalErrorDialog(_BaseDialogue):
         self.close_btn = QPushButton(self.tr("Close"))
         self.open_log_btn = QPushButton(self.tr("Open Log Directory"))
         self.upload_log_btn = QPushButton(self.tr("Upload Log"))
-        self.upload_log_btn.setToolTip(self.tr("Upload the log file to 0x0.st"))
+        self.upload_log_btn.setToolTip(self.tr("Upload log to RimSort Logs"))
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.open_log_btn)
@@ -635,7 +635,7 @@ class FatalErrorDialog(_BaseDialogue):
         )
 
         def _upload_log(parent: FatalErrorDialog) -> None:
-            """Helper function to upload the log file to 0x0. Displays a loading dialog while doing so. When finished, copy the URL to the clipboard and display the link."""
+            """Helper function to upload the log file to RimSort Logs. Displays a loading dialog while doing so. When finished, copy the URL to the clipboard and display the link."""
             progress_diag = _UploadLogDialog(parent)
             progress_diag.show()
 
@@ -697,7 +697,7 @@ class UploadLogTask(QRunnable):
     @Slot()
     def run(self) -> None:
         # Perform the upload task
-        result, url = generic.upload_data_to_0x0_st(
+        result, url = generic.upload_log_to_privatebin(
             str(AppInfo().user_log_folder / "RimSort.log")
         )
 

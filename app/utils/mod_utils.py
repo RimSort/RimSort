@@ -5,7 +5,93 @@ from typing import Any
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
+from app.models.metadata.metadata_db import AuxMetadataEntry
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+
+
+def resolve_aux_timestamps(
+    aux_entry: AuxMetadataEntry | None,
+) -> tuple[int | None, int | None]:
+    """Extract download-time and workshop-update-time from an aux DB entry.
+
+    *Download time*:  ACF ``timetouched`` (``WorkshopItemsInstalled``) — the
+    actual moment Steam/SteamCMD last touched the mod on disk.  This is the
+    best available ``downloaded_time_raw`` for SteamCMD mods.
+
+    *Workshop update time*:  Prefers the Steam WebAPI ``external_time_updated``
+    value, falling back to the ACF ``timeupdated`` (``WorkshopItemDetails``)
+    when the API didn't return a result (e.g. mod removed from Workshop).
+
+    Returns ``(acf_time_touched, resolved_external_time_updated)`` where
+    *None* means the source was missing or not positive.
+    """
+    if aux_entry is None:
+        return None, None
+
+    raw_touched = getattr(aux_entry, "acf_time_touched", -1)
+    acf_touched = raw_touched if raw_touched is not None and raw_touched > 0 else None
+
+    ext_updated: int | None = None
+    raw_external = getattr(aux_entry, "external_time_updated", -1)
+    if raw_external is not None and raw_external > 0:
+        ext_updated = raw_external
+    else:
+        raw_acf = getattr(aux_entry, "acf_time_updated", -1)
+        if raw_acf is not None and raw_acf > 0:
+            ext_updated = raw_acf
+
+    return acf_touched, ext_updated
+
+
+def resolve_workshop_updated_timestamp(
+    aux_entry: AuxMetadataEntry | None,
+) -> int | None:
+    """Resolve the workshop update time of the *installed* mod content.
+
+    Prefers the ACF ``timeupdated`` (``acf_time_updated``), which reflects the
+    update time of the content actually downloaded to disk and is refreshed on
+    every metadata refresh.  Falls back to the Steam WebAPI
+    ``external_time_updated`` only when the ACF value is missing/non-positive.
+
+    This is intentionally the *reverse* preference order of
+    :func:`resolve_aux_timestamps`: the WebAPI value can be newer than the
+    installed content (an update is available but not yet downloaded), which
+    would be a false positive for the "recently updated" indicator.
+
+    Returns the resolved epoch timestamp, or *None* when neither source is
+    present or positive.
+    """
+    if aux_entry is None:
+        return None
+
+    raw_acf = getattr(aux_entry, "acf_time_updated", -1)
+    if raw_acf is not None and raw_acf > 0:
+        return raw_acf
+
+    raw_external = getattr(aux_entry, "external_time_updated", -1)
+    if raw_external is not None and raw_external > 0:
+        return raw_external
+
+    return None
+
+
+def is_recently_updated(
+    updated_timestamp: int | None,
+    threshold_days: int,
+    now: float | None = None,
+) -> bool:
+    """Return True if ``updated_timestamp`` falls within ``threshold_days`` of now.
+
+    A *None* or non-positive timestamp is treated as "not recently updated".
+    ``now`` may be supplied (as an epoch timestamp) for deterministic testing;
+    it defaults to the current time.
+    """
+    if updated_timestamp is None or updated_timestamp <= 0:
+        return False
+    if now is None:
+        now = datetime.now().timestamp()
+    cutoff = now - threshold_days * 86400
+    return updated_timestamp >= cutoff
 
 
 def get_mod_path_from_pfid(pfid: str) -> str | None:
@@ -91,14 +177,16 @@ def filter_eligible_mods_for_update(
     mods_metadata: dict[str, ListedMod],
 ) -> list[dict[str, Any]]:
     """
-    Filter mods that are eligible for update.
+    Filter mods that need user action (update or initial download/population).
 
-    A mod is eligible when it originates from Steam Workshop (or SteamCMD),
-    has a valid internal timestamp, has a valid external timestamp, and the
-    external timestamp is strictly newer than the internal one.
+    A mod needs action when it originates from Steam Workshop (or SteamCMD)
+    and one of:
+    - external timestamp is strictly newer than internal (update available)
+    - no internal timestamp (needs initial download to generate one)
+    - no external timestamp (needs Steam API fetch to populate)
 
     :param mods_metadata: Dictionary of mods metadata keyed by path.
-    :return: List of metadata dictionaries for mods eligible for update.
+    :return: List of metadata dictionaries for mods needing action.
     """
     eligible: list[dict[str, Any]] = []
 
@@ -126,7 +214,17 @@ def filter_eligible_mods_for_update(
             )
             continue
 
-        # Resolve internal timestamp with fallback
+        # ── Resolve internal timestamp ──────────────────────────────────
+        # ``internal_time`` = when we last had the mod on disk.
+        # We try two sources and take the more recent one:
+        #   1. File mtime  (mod.internal_time_touched) – the mod folder's
+        #      last-modified time on the filesystem.
+        #   2. ACF time_updated  (aux DB) – the timestamp written by
+        #      Steam/SteamCMD when it last downloaded the mod.
+        #
+        # Steam/SteeamCMD often preserve original workshop upload timestamps
+        # as file mtimes, making source #1 unreliable.  We therefore prefer
+        # source #2 when it is available *and* more recent.
         internal_time: int | None = None
         timestamp_source: str = "none"
 
@@ -135,72 +233,44 @@ def filter_eligible_mods_for_update(
             internal_time = raw_touched
             timestamp_source = "internal_time_touched"
 
-        # Fallback to ACF timestamps from aux DB
-        if internal_time is None:
-            _, aux_entry = metadata_controller.get_metadata_with_path(path)
-            if aux_entry is not None and aux_entry.acf_time_updated > 0:
-                internal_time = aux_entry.acf_time_updated
-                timestamp_source = "acf_time_updated (fallback)"
-
-        if internal_time is None:
-            skipped_no_internal_time += 1
-            logger.debug(
-                "[mod_update] SKIP (no internal time) mod={mod_name!r} pfid={pfid}",
-                mod_name=mod_name,
-                pfid=pfid,
-            )
-            continue
-
-        # External timestamp from aux DB
         _, aux_entry = metadata_controller.get_metadata_with_path(path)
-        external_time = (
-            aux_entry.external_time_updated
-            if aux_entry is not None and aux_entry.external_time_updated > 0
-            else 0
-        )
-        if external_time <= 0:
-            skipped_no_external_time += 1
-            logger.debug(
-                "[mod_update] SKIP (no external time) mod={mod_name!r} pfid={pfid}",
-                mod_name=mod_name,
-                pfid=pfid,
-            )
-            continue
+        if aux_entry is not None and aux_entry.acf_time_updated > 0:
+            if internal_time is None or aux_entry.acf_time_updated > internal_time:
+                internal_time = aux_entry.acf_time_updated
+                timestamp_source = "acf_time_updated"
 
-        delta = external_time - internal_time
-        delta_days = delta / 86400
+        # 0 signals "no valid internal timestamp" in the decision logic below
+        if internal_time is None:
+            internal_time = 0
 
+        # ── External timestamp (from Steam API via aux DB) ──────────────
+        # ``external_time`` = when Steam Workshop says the mod was last
+        # updated.  Populated by query_workshop_update_data().  Falls back
+        # to acf_time_updated (from ACF WorkshopItemDetails.timeupdated)
+        # when the Steam API didn't return a value (e.g. mod removed from
+        # Workshop, network failure, etc.).
+        acf_touched, external_time_raw = resolve_aux_timestamps(aux_entry)
+        external_time = external_time_raw if external_time_raw is not None else 0
+
+        # ── Decision ────────────────────────────────────────────────────
+        # Include the mod if it needs any form of user action:
         if external_time > internal_time:
-            # Build a compat dict for ModInfo.from_metadata consumption
-            compat_metadata: dict[str, Any] = {
-                "name": mod.name,
-                "publishedfileid": mod.published_file_id or "",
-                "path": str(mod.mod_path) if mod.mod_path else "",
-                "data_source": (
-                    "workshop" if mod.mod_type == ModType.STEAM_WORKSHOP else "steamcmd"
-                ),
-                "steamcmd": mod.mod_type == ModType.STEAM_CMD,
-                "internal_time_touched": mod.internal_time_touched,
-                "external_time_updated": external_time,
-            }
-            if isinstance(mod, AboutXmlMod):
-                compat_metadata["packageid"] = str(mod.package_id)
-                compat_metadata["authors"] = mod.authors
-                compat_metadata["supportedversions"] = sorted(mod.supported_versions)
-            eligible.append(compat_metadata)
-            logger.debug(
-                "[mod_update] ELIGIBLE mod={mod_name!r} pfid={pfid} "
-                "internal={internal_fmt} external={external_fmt} "
-                "delta={delta}s ({delta_days:.1f} days) source={source}",
-                mod_name=mod_name,
-                pfid=pfid,
-                internal_fmt=_format_timestamp(internal_time),
-                external_fmt=_format_timestamp(external_time),
-                delta=delta,
-                delta_days=delta_days,
-                source=timestamp_source,
-            )
+            # Steam reports a newer version than what we have on disk.
+            reason = "update_available"
+        elif internal_time == 0:
+            # We have no record of ever downloading this mod (missing file
+            # mtime *and* no ACF timestamp).  Include so the user can
+            # trigger an initial download that will populate the data.
+            skipped_no_internal_time += 1
+            reason = "no_internal_time"
+        elif external_time == 0:
+            # Steam API has not returned a time_updated yet (first run,
+            # API failure, etc.).  Include so the user can re-download
+            # and trigger a fresh API fetch on the next refresh.
+            skipped_no_external_time += 1
+            reason = "no_external_time"
         else:
+            # Both timestamps exist and internal >= external → up-to-date.
             skipped_up_to_date += 1
             logger.debug(
                 "[mod_update] SKIP (up to date) mod={mod_name!r} pfid={pfid} "
@@ -210,10 +280,48 @@ def filter_eligible_mods_for_update(
                 pfid=pfid,
                 internal_fmt=_format_timestamp(internal_time),
                 external_fmt=_format_timestamp(external_time),
-                delta=delta,
-                delta_days=delta_days,
+                delta=external_time - internal_time,
+                delta_days=(external_time - internal_time) / 86400,
                 source=timestamp_source,
             )
+            continue
+
+        delta = external_time - internal_time
+        delta_days = delta / 86400
+
+        # Build a dict compatible with ModInfo.from_metadata() so the
+        # WorkshopModUpdaterPanel table can display the mod row.
+        compat_metadata: dict[str, Any] = {
+            "name": mod.name,
+            "publishedfileid": mod.published_file_id or "",
+            "path": str(mod.mod_path) if mod.mod_path else "",
+            "data_source": (
+                "workshop" if mod.mod_type == ModType.STEAM_WORKSHOP else "steamcmd"
+            ),
+            "steamcmd": mod.mod_type == ModType.STEAM_CMD,
+            "internal_time_touched": mod.internal_time_touched,
+            "external_time_updated": external_time,
+            "acf_time_touched": acf_touched,
+        }
+        if isinstance(mod, AboutXmlMod):
+            compat_metadata["packageid"] = str(mod.package_id)
+            compat_metadata["authors"] = mod.authors
+            compat_metadata["supportedversions"] = sorted(mod.supported_versions)
+        eligible.append(compat_metadata)
+        logger.debug(
+            "[mod_update]{} mod={mod_name!r} pfid={pfid} "
+            "internal={internal_fmt} external={external_fmt} "
+            "delta={delta}s ({delta_days:.1f} days) reason={reason} source={source}",
+            " ELIGIBLE" if reason == "update_available" else " INCLUDED",
+            mod_name=mod_name,
+            pfid=pfid,
+            internal_fmt=_format_timestamp(internal_time),
+            external_fmt=_format_timestamp(external_time),
+            delta=delta,
+            delta_days=delta_days,
+            reason=reason,
+            source=timestamp_source,
+        )
 
     logger.info(
         "[mod_update] Eligibility summary: {eligible}/{total} eligible, "

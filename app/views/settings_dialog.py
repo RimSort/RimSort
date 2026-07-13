@@ -608,7 +608,7 @@ class SettingsDialog(QDialog):
         none_lbl = self.tr("Steam Workshop database")
 
         (
-            group_layout,
+            _,
             self.steam_workshop_db_none_radio,
             self.steam_workshop_db_github_radio,
             self.steam_workshop_db_github_url,
@@ -621,13 +621,6 @@ class SettingsDialog(QDialog):
             self.steam_workshop_db_local_file,
             self.steam_workshop_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
-        database_expiry_label = self._make_section_label(
-            "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
-        )
-        group_layout.addWidget(database_expiry_label)
-
-        self.database_expiry = self._style_line_edit(QLineEdit())
-        group_layout.addWidget(self.database_expiry)
 
     def _do_no_version_warning_db_group(self, tab_layout: QBoxLayout) -> None:
         section_lbl = self.tr('"No Version Warning" Database')
@@ -670,9 +663,9 @@ class SettingsDialog(QDialog):
             "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
         )
         aux_db_tooltip = self.tr("""To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
 (This applies to deletion outside of RimSort too)""")
         self.aux_db_time_limit_label.setToolTip(aux_db_tooltip)
 
@@ -786,11 +779,44 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.prefer_versioned_about_tags_checkbox
         )
 
+        self.case_insensitive_about_xml_checkbox = QCheckBox(
+            self.tr("Case-insensitive About.xml lookup")
+        )
+        self.case_insensitive_about_xml_checkbox.setToolTip(
+            self.tr(
+                "Enable case-insensitive lookup for About/About.xml.\n"
+                "Some mods use incorrect casing (e.g., about/about.xml) which breaks on\n"
+                "case-sensitive filesystems (Linux). Per the RimWorld modding spec, the\n"
+                "correct path is About/About.xml.\n"
+                "See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml"
+            )
+        )
+        xml_parsing_group_box_layout.addWidget(self.case_insensitive_about_xml_checkbox)
+
         # Mod list options group
         _, modlist_option_group_box_layout = self._add_group_box(tab_layout)
 
         modlist_option_label = self._make_section_label("Mod list options")
         modlist_option_group_box_layout.addWidget(modlist_option_label)
+
+        # Rich text rendering checkbox
+        self.render_unity_rich_text_checkbox = QCheckBox(
+            self.tr("Render Unity Rich Text in mod descriptions")
+        )
+        self.render_unity_rich_text_checkbox.setToolTip(
+            self.tr(
+                "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(self.render_unity_rich_text_checkbox)
+
+        # Mod coloring checkbox
+        self.color_background_instead_of_text_checkbox = QCheckBox(
+            self.tr("Apply mod coloring to background instead of text")
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.color_background_instead_of_text_checkbox
+        )
 
         # Download missing mods checkbox
         self.download_missing_mods_checkbox = QCheckBox(
@@ -813,6 +839,49 @@ This basically preserves your mod coloring, user notes etc. for this many second
         modlist_option_group_box_layout.addWidget(
             self.show_duplicate_mods_warning_checkbox
         )
+
+        # Recently updated mods indicator checkbox
+        self.mod_list_updated_indicator_checkbox = QCheckBox(
+            self.tr("Show recently updated mods indicator")
+        )
+        self.mod_list_updated_indicator_checkbox.setToolTip(
+            self.tr(
+                "Shows an icon on Steam Workshop mods that were updated within the "
+                "configured number of days. The update time is refreshed when RimSort "
+                "refreshes its metadata."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.mod_list_updated_indicator_checkbox
+        )
+
+        # Recently updated threshold (days)
+        updated_threshold_layout = QHBoxLayout()
+        updated_threshold_label = QLabel(
+            self.tr("Days to consider a mod recently updated:")
+        )
+        updated_threshold_layout.addWidget(updated_threshold_label)
+        self.mod_list_updated_threshold_spinbox = QSpinBox()
+        self.mod_list_updated_threshold_spinbox.setRange(1, 30)
+        self.mod_list_updated_threshold_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        updated_threshold_layout.addWidget(self.mod_list_updated_threshold_spinbox)
+        modlist_option_group_box_layout.addLayout(updated_threshold_layout)
+
+        # Startup impact (load time) indicator checkbox
+        self.mod_list_startup_impact_checkbox = QCheckBox(
+            self.tr("Show startup load time per mod")
+        )
+        self.mod_list_startup_impact_checkbox.setToolTip(
+            self.tr(
+                "Shows each mod's game startup time, measured by the 'Loading "
+                "Progress' mod. Requires that mod with its 'Track startup loading "
+                "impact' setting enabled, and a saved startup impact report "
+                "(StartupImpactData.xml in the RimWorld save data folder)."
+            )
+        )
+        modlist_option_group_box_layout.addWidget(self.mod_list_startup_impact_checkbox)
 
         # Hide invalid mod filtering checkbox
         self.hide_invalid_mods_when_filtering_checkbox = QCheckBox(
@@ -961,6 +1030,17 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.db_builder_compare_databases_button.sizeHint().width()
         )
         item_layout.addWidget(self.db_builder_build_database_button)
+
+        # Database expiry
+        _, db_expiry_group_layout = self._add_group_box(tab_layout)
+
+        database_expiry_label = self._make_section_label(
+            "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
+        )
+        db_expiry_group_layout.addWidget(database_expiry_label)
+
+        self.database_expiry = self._style_line_edit(QLineEdit())
+        db_expiry_group_layout.addWidget(self.database_expiry)
 
     def _do_internal_tools_tab(self) -> None:
         scroll_area = QScrollArea()
@@ -1481,20 +1561,6 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Check for mod updates on refresh")
         )
         group_layout.addWidget(self.show_mod_updates_checkbox)
-
-        self.render_unity_rich_text_checkbox = QCheckBox(
-            self.tr("Render Unity Rich Text in mod descriptions")
-        )
-        self.color_background_instead_of_text_checkbox = QCheckBox(
-            self.tr("Apply mod coloring to background instead of text")
-        )
-        group_layout.addWidget(self.color_background_instead_of_text_checkbox)
-        self.render_unity_rich_text_checkbox.setToolTip(
-            self.tr(
-                "Enable this option to render Unity Rich Text in mod descriptions. Images will not be displayed."
-            )
-        )
-        group_layout.addWidget(self.render_unity_rich_text_checkbox)
 
         self.update_databases_on_startup_checkbox = QCheckBox(
             self.tr("Update databases on startup")

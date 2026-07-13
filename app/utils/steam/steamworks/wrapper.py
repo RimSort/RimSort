@@ -27,8 +27,11 @@ Reference:
     https://github.com/philippj/SteamworksPy/pull/76
 """
 
+from __future__ import annotations
+
 import sys
 from multiprocessing import Process
+from multiprocessing.synchronize import Lock as MpLock
 from os import getcwd
 from pathlib import Path
 from threading import Thread
@@ -206,65 +209,143 @@ class SteamworksInterface:
                 )
                 self.end_callbacks = True
                 return False
+            if self.callbacks_total and self.callbacks_count >= self.callbacks_total:
+                return True
             sleep(OPERATION_INTERVAL)
         return True
 
 
+# Per-process shared SteamworksInterface (set by _pool_init_worker, reused across chunks)
+WORKER_INTERFACE: list["SteamworksInterface | None"] = [None]
+
+
+def _pool_init_worker(project_root: str, libs_path: str, init_lock: MpLock) -> None:
+    """Initialize worker process: set env, chdir, create shared SteamworksInterface.
+
+    Acquires *init_lock* before calling SteamInit() so that only one worker
+    process initializes at a time. This prevents the Steam client from being
+    overwhelmed by N concurrent pipe registrations (``pipes.cpp`` stall).
+    """
+    import os
+
+    os.environ["SWPY_PATH"] = libs_path
+    os.chdir(project_root)
+    with init_lock:
+        si = SteamworksInterface(callbacks=True, callbacks_total=0, _libs=libs_path)
+        if not si.steam_not_running:
+            WORKER_INTERFACE[0] = si
+        else:
+            si.steamworks.unload()
+
+
 class SteamworksAppDependenciesQuery:
+    """Query PublishedFileIDs for AppID dependency data using Steamworks API."""
+
     def __init__(
         self,
         pfid_or_pfids: Union[int, list[int]],
-        interval: int = 1,
+        interval: float = 1,
         _libs: str | None = None,
     ) -> None:
         self._libs = _libs
         self.interval = interval
-        self.pfid_or_pfids = pfid_or_pfids
+        self.pfid_or_pfids = (
+            pfid_or_pfids if isinstance(pfid_or_pfids, list) else [pfid_or_pfids]
+        )
 
     def run(self) -> None | dict[int, Any]:
         """
-        Query PublishedFileIDs for AppID dependency data
-        :param pfid_or_pfids: is an int that corresponds with a subscribed Steam mod's PublishedFileId
-                            OR is a list of int that corresponds with multiple Steam mod PublishedFileIds
-        :param interval: time in seconds to sleep between multiple subsequent API calls
-        """
-        logger.info(
-            f"Creating SteamworksInterface and passing PublishedFileID(s) {self.pfid_or_pfids}"
-        )
-        # If the chunk passed is a single int, convert it into a list in an effort to simplify procedure
-        if isinstance(self.pfid_or_pfids, int):
-            self.pfid_or_pfids = [self.pfid_or_pfids]
-        # Create our Steamworks interface and initialize Steamworks API
-        steamworks_interface = SteamworksInterface(
-            callbacks=True, callbacks_total=len(self.pfid_or_pfids), _libs=self._libs
-        )
-        if not steamworks_interface.steam_not_running:  # Skip if True
-            while not steamworks_interface.steamworks.loaded():  # Ensure that Steamworks API is initialized before attempting any instruction
-                break
-            else:
-                for pfid in self.pfid_or_pfids:
-                    logger.debug(f"ISteamUGC/GetAppDependencies Query: {pfid}")
-                    steamworks_interface.steamworks.Workshop.SetGetAppDependenciesResultCallback(
-                        steamworks_interface._cb_app_dependencies_result_callback
-                    )
-                    steamworks_interface.steamworks.Workshop.GetAppDependencies(pfid)
-                    # Sleep for the interval if we have more than one pfid to action on
-                    if len(self.pfid_or_pfids) > 1:
-                        sleep(self.interval)
-                # Patience, but don't wait forever
-                steamworks_interface._wait_for_callbacks(timeout=60)
-                # This means that the callbacks thread has ended. We are done with Steamworks API now, so we dispose of everything.
-                logger.info("Thread completed. Unloading Steamworks...")
-                steamworks_interface.steamworks_thread.join()
-                # Grab the data and return it
-                logger.warning(
-                    f"Returning {len(steamworks_interface.get_app_deps_query_result.keys())} results..."
-                )
-                return steamworks_interface.get_app_deps_query_result
-        else:
-            steamworks_interface.steamworks.unload()
+        Execute the AppDependencies query against Steamworks.
 
-        return None
+        Uses the per-worker shared SteamworksInterface (set by _pool_init_worker),
+        firing GetAppDependencies() sequentially and pumping callbacks between
+        each query to work around CCallResult's single-pending-call limitation.
+        """
+        total = len(self.pfid_or_pfids)
+        logger.info(
+            f"GetAppDependencies handling {total} pfid(s): {self.pfid_or_pfids}"
+        )
+
+        # Prefer the per-worker shared interface (set once by _pool_init_worker)
+        # Fall back to a fresh one if the shared interface is stuck/dead
+        si = WORKER_INTERFACE[0]
+        fresh_interface = False
+        if si is not None and not si.steam_not_running and si.end_callbacks:
+            # Shared interface had a prior timeout — try to recover
+            si.steamworks_thread.join(timeout=1)
+            if si.steamworks_thread.is_alive():
+                # Thread stuck — create fresh interface for this chunk
+                si = SteamworksInterface(
+                    callbacks=True, callbacks_total=total, _libs=self._libs
+                )
+                if si.steam_not_running:
+                    si.steamworks.unload()
+                    return None
+                fresh_interface = True
+            else:
+                # Thread exited cleanly — restart for this batch
+                si.end_callbacks = False
+                si.multiple_queries = True
+                si.callbacks_count = 0
+                si.callbacks_total = total
+                si.get_app_deps_query_result = {}
+                si.steamworks_thread = si._daemon()
+                si.steamworks_thread.start()
+        elif si is None or si.steam_not_running:
+            si = SteamworksInterface(
+                callbacks=True, callbacks_total=total, _libs=self._libs
+            )
+            if si.steam_not_running:
+                si.steamworks.unload()
+                return None
+            fresh_interface = True
+        else:
+            # Reuse shared interface — reset callback counters
+            si.callbacks_count = 0
+            si.multiple_queries = True
+            si.callbacks_total = total
+            si.get_app_deps_query_result = {}
+            si.end_callbacks = False
+
+        si.steamworks.Workshop.SetGetAppDependenciesResultCallback(
+            si._cb_app_dependencies_result_callback
+        )
+
+        # Drain any residual callbacks from a previous chunk before starting
+        si.steamworks.run_callbacks()
+
+        # Fire queries sequentially, waiting for each pfid's callback before
+        # issuing the next query.  CCallResult can only track ONE pending call
+        # at a time — each new GetAppDependencies() unregisters the previous
+        # CCallResult, silently dropping its callback.  By pumping callbacks
+        # between queries until the expected callback count is reached, we
+        # ensure every CCallResult completes before being replaced.
+        PROGRESS_LOG_INTERVAL = 100
+        WAIT_TIMEOUT = 100  # 100 * self.interval = 100 * 0.1 = 10s per pfid
+        for idx, pfid in enumerate(self.pfid_or_pfids):
+            si.steamworks.Workshop.GetAppDependencies(pfid)
+            # Wait for THIS pfid's callback to be dispatched
+            target = si.callbacks_count + 1
+            for _ in range(WAIT_TIMEOUT):
+                si.steamworks.run_callbacks()
+                if si.callbacks_count >= target:
+                    break
+                sleep(self.interval)
+            if (idx + 1) % PROGRESS_LOG_INTERVAL == 0:
+                logger.info(f"GetAppDependencies progress: {idx + 1}/{total}")
+
+        # Wait for callbacks to complete
+        si._wait_for_callbacks(timeout=60)
+        if si.steamworks_thread.is_alive() and si.end_callbacks:
+            si.steamworks_thread.join(timeout=5)
+
+        new_results = si.get_app_deps_query_result
+        received = len(new_results.keys())
+        logger.info(f"GetAppDependencies complete: {received}/{total} results received")
+
+        if fresh_interface:
+            si.steamworks.unload()
+        return new_results
 
 
 class SteamworksGameLaunch(Process):

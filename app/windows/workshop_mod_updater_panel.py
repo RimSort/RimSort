@@ -3,6 +3,7 @@ from typing import Any
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
+from app.models.operation_mode import OperationMode
 from app.utils.mod_info import ModInfo
 from app.utils.mod_utils import filter_eligible_mods_for_update
 from app.windows.base_mods_panel import (
@@ -10,7 +11,6 @@ from app.windows.base_mods_panel import (
     ButtonConfig,
     ButtonType,
     ColumnIndex,
-    OperationMode,
 )
 
 
@@ -74,6 +74,11 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
                     ),
                 )
             )
+
+        # Add delete button
+        button_configs.append(
+            self._create_delete_button_config(self.tr("Delete Selected Mods"))
+        )
 
         # Set up buttons based on configurations
         self._setup_buttons_from_config(button_configs)

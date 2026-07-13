@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from pathlib import Path
@@ -8,6 +7,7 @@ from lxml import etree, objectify
 from platformdirs import PlatformDirs
 
 from app.utils.constants import DEFAULT_USER_RULES
+from app.utils.json_utils import atomic_json_dump
 
 
 class AppInfo:
@@ -43,18 +43,21 @@ class AppInfo:
         if hasattr(self, "_is_initialized") and self._is_initialized:
             return
 
-        main_file = sys.modules["__main__"].__file__
+        main_file = getattr(sys.modules.get("__main__"), "__file__", None)
 
         if main_file is None:
-            raise Exception("Unable to get the main file path.")
-
-        # Need to go one up if we are running from source
-        self._application_folder = (
-            Path(main_file).resolve().parent
-            if "__compiled__" in globals()
-            # __compiled__ will be present if Nuitka has frozen this
-            else Path(main_file).resolve().parent.parent
-        )
+            # Spawned child processes (e.g. multiprocessing on Windows) may not
+            # have __main__.__file__.  Default to the working directory, which
+            # is inherited from the parent process (the project root).
+            self._application_folder = Path.cwd()
+        else:
+            # Need to go one up if we are running from source
+            self._application_folder = (
+                Path(main_file).resolve().parent
+                if "__compiled__" in globals()
+                # __compiled__ will be present if Nuitka has frozen this
+                else Path(main_file).resolve().parent.parent
+            )
 
         # Application metadata
         self._app_name = "RimSort"
@@ -118,8 +121,7 @@ class AppInfo:
         # Initialize user rules file if it does not exist
         if not self._user_rules_file.exists():
             self._user_rules_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._user_rules_file, "w", encoding="utf-8") as output:
-                json.dump(DEFAULT_USER_RULES, output, indent=4)
+            atomic_json_dump(DEFAULT_USER_RULES, str(self._user_rules_file), indent=4)
 
         # AppImage: clean up .bak from a previous successful update
         self._cleanup_appimage_backup()

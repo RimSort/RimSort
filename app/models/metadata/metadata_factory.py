@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import msgspec
-import pygit2
 from loguru import logger
 
 from app.models.metadata.metadata_structure import (
@@ -26,6 +25,11 @@ from app.models.metadata.metadata_structure import (
     SteamDbSchema,
 )
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID, RIMWORLD_DLC_METADATA
+
+# Import pygit2 through the SSL-safe loader so libgit2's TLS certificate
+# locations are initialized correctly in bundled builds. See
+# app/utils/pygit2_loader.py and https://github.com/RimSort/RimSort/issues/2234.
+from app.utils.pygit2_loader import pygit2
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 
@@ -720,6 +724,22 @@ def create_rules_from_external_rules(external_rule: ExternalRule) -> Rules:
     return rules
 
 
+def _find_about_xml(mod_path: Path) -> Path | None:
+    """Case-insensitive lookup for About/About.xml inside a mod directory."""
+    for entry in mod_path.iterdir():
+        if entry.name.lower() == "about" and entry.is_dir():
+            for child in entry.iterdir():
+                if child.name.lower() == "about.xml" and child.is_file():
+                    if entry.name != "About" or child.name != "About.xml":
+                        logger.warning(
+                            f"Mod at {mod_path} uses non-standard About.xml path: "
+                            f"{child.relative_to(mod_path)} (expected About/About.xml)"
+                        )
+                    return child
+            break
+    return None
+
+
 def create_listed_mod_from_path(
     path: Path,
     target_version: str,
@@ -727,6 +747,7 @@ def create_listed_mod_from_path(
     rimworld_path: Path,
     workshop_path: Path | None,
     prefer_versioned: bool = True,
+    case_insensitive_about_xml: bool = True,
 ) -> tuple[bool, ListedMod]:
     """
     Create a ListedMod object from the given path.
@@ -738,14 +759,20 @@ def create_listed_mod_from_path(
     :param workshop_path: The path to the workshop folder.
     :param prefer_versioned: When True, ByVersion keys override base values
         (non-additive). When False, ByVersion keys are ignored.
+    :param case_insensitive_about_xml: When True, use case-insensitive About.xml
+        lookup. When False, require exact "About/About.xml" path.
     :return: A tuple containing a boolean indicating if the mod is valid and the mod object.
     """
 
     # Check if path is a directory
     if path.is_dir():
-        # Check if About.xml exists
-        about_xml_path = path / Path("About/About.xml")
-        if about_xml_path.exists():
+        about_xml_path: Path | None
+        if case_insensitive_about_xml:
+            about_xml_path = _find_about_xml(path)
+        else:
+            candidate = path / "About" / "About.xml"
+            about_xml_path = candidate if candidate.exists() else None
+        if about_xml_path is not None:
             success, about_mod = _create_about_mod_from_xml(
                 path, about_xml_path, target_version, prefer_versioned
             )

@@ -6,14 +6,16 @@ from sqlalchemy.orm.session import Session
 
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.models.metadata.metadata_structure import AboutXmlMod
+from app.models.metadata.metadata_structure import AboutXmlMod, ModType
 from app.models.settings import Settings
 from app.utils.aux_db_utils import (
+    auxdb_get_aux_db_entry,
     auxdb_get_mod_color,
     auxdb_get_mod_tags,
     auxdb_get_mod_user_notes,
     auxdb_get_mod_warning_toggled,
 )
+from app.utils.mod_utils import resolve_workshop_updated_timestamp
 
 
 class CustomListWidgetItemMetadata:
@@ -102,6 +104,19 @@ class CustomListWidgetItemMetadata:
             if mod_tags is None
             else mod_tags
         )
+        # Workshop update timestamp, only resolved when the indicator is enabled
+        # (avoids an extra aux DB lookup per item when the feature is off).
+        self.updated_timestamp: int | None = (
+            self.get_updated_timestamp_by_path(
+                path, settings, aux_metadata_controller, aux_metadata_session
+            )
+            if settings.mod_list_updated_indicator
+            else None
+        )
+        # Startup impact (per-mod load time), stamped during the bulk
+        # errors/warnings recompute when the feature is enabled
+        self.startup_impact_s: float | None = None
+        self.startup_impact_tooltip: str = ""
         # Persist list type for UI logic that depends on which list the item is in (Active/Inactive)
         self.list_type = list_type
 
@@ -145,6 +160,39 @@ class CustomListWidgetItemMetadata:
         except KeyError:
             logger.error(f"Path {path} not found in metadata")
             return False
+
+    def get_updated_timestamp_by_path(
+        self,
+        path: str,
+        settings: Settings,
+        aux_metadata_controller: AuxMetadataController | None,
+        aux_metadata_session: Session | None,
+    ) -> int | None:
+        """
+        Get the workshop update timestamp for the mod by its path.
+
+        Only Steam Workshop / SteamCMD mods have a meaningful workshop update
+        time; every other source (local, git, Ludeon) returns None so the
+        "recently updated" indicator never shows for them.
+
+        :param path: str, the path of the mod
+        :return: int | None, the epoch update timestamp, or None if unavailable
+        """
+        metadata_controller = MetadataController.instance()
+        try:
+            mod = metadata_controller.get_mod(path)
+        except KeyError:
+            logger.error(f"Path {path} not found in metadata")
+            return None
+        if mod is None or mod.mod_type not in (
+            ModType.STEAM_WORKSHOP,
+            ModType.STEAM_CMD,
+        ):
+            return None
+        entry = auxdb_get_aux_db_entry(
+            settings, path, aux_metadata_controller, aux_metadata_session
+        )
+        return resolve_workshop_updated_timestamp(entry)
 
     def get_alternative_by_path(self, path: str) -> str | None:
         """

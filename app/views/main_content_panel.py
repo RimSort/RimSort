@@ -56,9 +56,11 @@ from app.utils.generic import (
     launch_process,
     open_url_browser,
     platform_specific_open,
-    upload_data_to_0x0_st,
+    upload_log_to_privatebin,
 )
+from app.utils.json_utils import atomic_json_dump
 from app.utils.rentry.wrapper import RentryImport
+from app.utils.startup_impact import invalidate_startup_impact_cache
 from app.utils.steam.availability import check_steam_available
 from app.utils.steam.steambrowser.browser import SteamBrowser
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -704,10 +706,7 @@ class MainContent(QObject):
         :param uuid: uuid of mod
         :param item: selected CustomListWidgetItem
         """
-        self.mod_info_panel.display_mod_info(
-            uuid=uuid,
-            render_unity_rt=self.settings.render_unity_rich_text,
-        )
+        self.mod_info_panel.display_mod_info(uuid=uuid)
         self.mod_info_panel.show_user_mod_notes(item)
 
     def __repopulate_lists(self, is_initial: bool = False) -> None:
@@ -829,6 +828,8 @@ class MainContent(QObject):
         """
         EventBus().refresh_started.emit()
         EventBus().do_save_button_animation_stop.emit()
+        # Force a re-read of the startup impact report on the next recalculation
+        invalidate_startup_impact_cache()
         # If we are refreshing cache from user action
         if not is_initial:
             # Reset the data source filters to default and clear searches
@@ -1601,16 +1602,18 @@ class MainContent(QObject):
 
         success, ret = self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
-            target=partial(upload_data_to_0x0_st, str(path)),
-            text=self.tr("Uploading {path.name} to 0x0.st...").format(path=path),
+            target=partial(upload_log_to_privatebin, str(path)),
+            text=self.tr("Uploading {path_name} to RimSort Logs...").format(
+                path_name=path.name
+            ),
         )
 
         if success:
             copy_to_clipboard_safely(ret)
             dialogue.show_information(
                 title=self.tr("Uploaded file"),
-                text=self.tr("Uploaded {path.name} to https://0x0.st/").format(
-                    path=path
+                text=self.tr("Uploaded {path_name} to RimSort Logs").format(
+                    path_name=path.name
                 ),
                 information=self.tr(
                     "The URL has been copied to your clipboard:<br><br>{ret}"
@@ -1620,7 +1623,7 @@ class MainContent(QObject):
         else:
             dialogue.show_warning(
                 title=self.tr("Failed to upload file."),
-                text=self.tr("Failed to upload the file to 0x0.st"),
+                text=self.tr("Failed to upload to RimSort Logs"),
                 information=ret,
             )
 
@@ -1966,7 +1969,7 @@ class MainContent(QObject):
                 text=self.tr(
                     "RimSort was unable to check your Workshop mods for updates."
                 ),
-                details="<br>".join(result.errors) if result.errors else None,
+                details="\n".join(result.errors) if result.errors else None,
             )
             return
 
@@ -1979,7 +1982,7 @@ class MainContent(QObject):
                     failed=len(result.failed_pfids),
                     total=result.mods_checked,
                 ),
-                details="<br>".join(result.errors) if result.errors else None,
+                details="\n".join(result.errors) if result.errors else None,
             )
 
         # For both "success" and "partial", show the updater panel
@@ -2763,8 +2766,7 @@ class MainContent(QObject):
             ).format(rules_source=rules_source, path=path),
         )
         if answer == QMessageBox.StandardButton.Yes:
-            with open(path, "w", encoding="utf-8") as output:
-                json.dump(db_output_c, output, indent=4)
+            atomic_json_dump(db_output_c, path, indent=4)
             # Do a full refresh of metadata and UI
             self._do_refresh()
         else:

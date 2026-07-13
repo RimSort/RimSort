@@ -487,7 +487,7 @@ class RunnerPanel(QWidget):
             self.progress_bar.setRange(0, int(end))
             self.progress_bar.setValue(int(start))
             return True
-        return False
+        return self._handle_todds_output(line)
 
     def _overwrite_last_line(self, text: str) -> None:
         """Replace the last line in the text display with the given text."""
@@ -589,7 +589,7 @@ class RunnerPanel(QWidget):
         pfids_to_name = self._resolve_mod_names()
 
         # Compile details of failed mods for the report
-        details = "<br>".join(
+        details = "\n".join(
             f"{pfids_to_name.get(pfid, f'Mod name not found (ID: {pfid})')}"
             for pfid in self.steamcmd_download_tracking
         )
@@ -626,7 +626,7 @@ class RunnerPanel(QWidget):
             for failed_mod_pfid in self.steamcmd_download_tracking:
                 mod_info = self.steam_db.get(failed_mod_pfid)
                 if mod_info:
-                    mod_name = mod_info.get("steamName") or mod_info.get("name")
+                    mod_name = mod_info.steamName or mod_info.name
                     if mod_name:
                         pfids_to_name[failed_mod_pfid] = mod_name
                     else:

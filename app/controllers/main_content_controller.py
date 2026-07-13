@@ -570,7 +570,7 @@ class MainContentController(QObject):
             information=self.tr(
                 "This will push local commits to the remote repositories."
             ),
-            details="<br>".join([str(p) for p in repos_paths]),
+            details="\n".join([str(p) for p in repos_paths]),
             positive_text=self.tr("Push"),
             negative_text=self.tr("Cancel"),
         )
@@ -628,12 +628,12 @@ class MainContentController(QObject):
                 information=self.tr("{count} repositories were pushed.").format(
                     count=len(successful)
                 ),
-                details="<br>".join([Path(p).name for p in successful]),
+                details="\n".join([Path(p).name for p in successful]),
             ).exec()
         elif not successful:
             details_msg = ""
             for repo_path, err in failed:
-                details_msg += f"{Path(repo_path).name}: {err}<br>"
+                details_msg += f"{Path(repo_path).name}: {err}\n"
 
             InformationBox(
                 title=self.tr("Push Failed"),
@@ -644,12 +644,12 @@ class MainContentController(QObject):
                 details=details_msg,
             ).exec()
         else:
-            details_msg = self.tr("Successful pushes:<br>")
+            details_msg = self.tr("Successful pushes:\n")
             for p in successful:
-                details_msg += f"  ✓ {Path(p).name}<br>"
-            details_msg += f"<br>{self.tr('Failed pushes:')}<br>"
+                details_msg += f"  \u2713 {Path(p).name}\n"
+            details_msg += f"\n{self.tr('Failed pushes:')}\n"
             for repo_path, err in failed:
-                details_msg += f"  ✗ {Path(repo_path).name}: {err}<br>"
+                details_msg += f"  \u2717 {Path(repo_path).name}: {err}\n"
 
             InformationBox(
                 title=self.tr("Partial Push Completed"),

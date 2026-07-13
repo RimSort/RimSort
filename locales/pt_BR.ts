@@ -55,8 +55,20 @@
         <translation>Atualizar</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>Download selecionado com SteamCMD</translation>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download with SteamCMD</source>
+        <translation>Baixe com SteamCMD</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Selecione</translation>
+    </message>
+    <message>
+        <source>Steam</source>
+        <translation>Vapor</translation>
     </message>
     <message>
         <source>Subscribe selected</source>
@@ -200,8 +212,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Enviar Log</translation>
     </message>
     <message>
-        <source>Upload the log file to 0x0.st</source>
-        <translation>Carregue o arquivo de log para 0x0.st</translation>
+        <source>Upload log to RimSort Logs</source>
+        <translation>Carregar log para registros RimSort</translation>
     </message>
     <message>
         <source>Hide Details</source>
@@ -627,6 +639,217 @@ Manage mods installed from GitHub releases.</source>
     </message>
 </context>
 <context>
+    <name>InstanceService</name>
+    <message>
+        <source>Essential path(s)</source>
+        <translation>Caminho(s) essencial(is)</translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>Os caminhos essenciais são inválidos ou não foram definidos!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>RimSort requer que os caminhos abaixo sejam definidos.&lt;br/&gt;&lt;br/&gt;1) Pasta do jogo (pasta onde o RimWorld está instalado).&lt;br/&gt;&lt;br/&gt;2) Pasta Config (pasta onde ModsConfig.xml está localizado)&lt;br/&gt;&lt;br/&gt;3) Pasta de mods locais (pasta Mods dentro da instalação do RimWorld).&lt;br/&gt;&lt;br/&gt;4) Pasta de mods Steam (definida apenas se você usar o usuário Steam e também ativar o Cliente Steam). Integração)&lt;br/&gt;&lt;br/&gt;Tente usar a funcionalidade de detecção automática para definir todos os caminhos automaticamente.&lt;br/&gt;&lt;br/&gt;Deseja abrir as configurações para configurá-los agora?</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Sim</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Não</translation>
+    </message>
+    <message>
+        <source>Provide instance name</source>
+        <translation>Forneça o nome da instância</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>Insira um nome exclusivo para a instância de backup que não seja "{name}"</translation>
+    </message>
+    <message>
+        <source>Compressing [{instance_name}] instance folder to archive...</source>
+        <translation>Compactando a pasta da instância [{instance_name}] para arquivar...</translation>
+    </message>
+    <message>
+        <source>Error compressing instance</source>
+        <translation>Erro ao compactar instância</translation>
+    </message>
+    <message>
+        <source>An error occurred while compressing instance folder: {e}</source>
+        <translation>Ocorreu um erro ao compactar a pasta da instância: {e}</translation>
+    </message>
+    <message>
+        <source>Please check the logs for more information.</source>
+        <translation>Por favor, verifique os registros para obter mais informações.</translation>
+    </message>
+    <message>
+        <source>Error restoring instance</source>
+        <translation>Erro ao restaurar a instância</translation>
+    </message>
+    <message>
+        <source>Archive not found at path: {input_path}</source>
+        <translation>Arquivo não encontrado no caminho: {input_path}</translation>
+    </message>
+    <message>
+        <source>An error occurred while reading instance archive: {e}</source>
+        <translation>Ocorreu um erro ao ler o arquivo da instância: {e}</translation>
+    </message>
+    <message>
+        <source>Instance folder exists</source>
+        <translation>A pasta da instância existe</translation>
+    </message>
+    <message>
+        <source>Instance folder already exists: {instance_folder_path}</source>
+        <translation>A pasta da instância já existe: {instance_folder_path}</translation>
+    </message>
+    <message>
+        <source>Do you want to continue and replace the existing instance folder?</source>
+        <translation>Deseja continuar e substituir a pasta de instância existente?</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>Substituir</translation>
+    </message>
+    <message>
+        <source>Restoring instance [{name}] from archive...</source>
+        <translation>Restaurando instância [{name}] do arquivo...</translation>
+    </message>
+    <message>
+        <source>Invalid instance folder paths</source>
+        <translation>Caminhos de pasta de instância inválidos</translation>
+    </message>
+    <message>
+        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
+        <translation>Alguns caminhos de pasta da instância restaurada são inválidos e foram apagados. Por favor, reconfigure-os nas configurações</translation>
+    </message>
+    <message>
+        <source>Invalid paths: {path}</source>
+        <translation>Caminhos inválidos:  {path}</translation>
+    </message>
+    <message>
+        <source>Couldn't restore steamcmd symlink/junction</source>
+        <translation>Não foi possível restaurar o link simbólico/junção do steamcmd</translation>
+    </message>
+    <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation>O link simbólico/junção do steamcmd não pôde ser restaurado porque a pasta local não está definida ou é inválida. O link simbólico/junção precisará ser recriado manualmente.</translation>
+    </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>Ocorreu um erro ao restaurar a instância [{name}].</translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
+        <translation>A pasta da instância não foi encontrada após a extração do arquivo. Talvez o arquivo esteja corrompido ou o nome da instância seja inválido.</translation>
+    </message>
+    <message>
+        <source>Create new instance</source>
+        <translation>Criar nova instância</translation>
+    </message>
+    <message>
+        <source>Input a unique name of new instance that is not already used:</source>
+        <translation>Insira um nome exclusivo da nova instância que ainda não esteja em uso:</translation>
+    </message>
+    <message>
+        <source>Clone instance [{name}]</source>
+        <translation>Clonar instância [] {name}</translation>
+    </message>
+    <message>
+        <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation>O que você gostaria de fazer com a pasta de mods configurada do Workshop?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>Pasta Workshop: &lt;br&gt;&lt;br&gt;Opção 1: Converter para SteamCMD&lt;br&gt;RimSort copiará todos os mods do Workshop para a pasta de mods local da nova instância, convertendo-os em mods SteamCMD que você pode gerenciar dentro da nova instância. A pasta Workshop será ignorada nesta instância para evitar mods duplicados.&lt;br&gt;&lt;br&gt;Opção 2: manter a pasta Workshop&lt;br&gt;A nova instância usará a mesma pasta Workshop da instância original. Você pode alterar isso posteriormente nas configurações, se necessário.&lt;br&gt;&lt;br&gt;Como você gostaria de proceder? {folder}</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation>Converter para SteamCMD</translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation>Manter pasta do workshop</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Cancelado</translation>
+    </message>
+    <message>
+        <source>Workshop mods not found</source>
+        <translation>Mods de oficina não encontrados</translation>
+    </message>
+    <message>
+        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
+        <translation>Pasta de mods do Workshop em [] não encontrada. {existing_instance_workshop_folder}</translation>
+    </message>
+    <message>
+        <source>Error cloning instance</source>
+        <translation>Erro ao clonar instância</translation>
+    </message>
+    <message>
+        <source>Unable to clone instance.</source>
+        <translation>Não foi possível clonar a instância.</translation>
+    </message>
+    <message>
+        <source>Please enter a valid, unique instance name. It cannot be '{name}' or empty.</source>
+        <translation>Insira um nome de instância válido e exclusivo. Não pode ser '{name}' ou vazio.</translation>
+    </message>
+    <message>
+        <source>Create new instance [{instance_name}]</source>
+        <translation>Criar nova instância [{instance_name}]</translation>
+    </message>
+    <message>
+        <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation>Gostaria de gerar argumentos de execução automaticamente para a nova instância?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>Isso tentará gerar argumentos de execução para a nova instância com base nas pastas Game/Config configuradas.&lt;br&gt;&lt;br&gt;Visualização dos argumentos de execução gerados:&lt;br&gt;{preview}</translation>
+    </message>
+    <message>
+        <source>Error creating instance</source>
+        <translation>Erro ao criar instância</translation>
+    </message>
+    <message>
+        <source>Unable to create new instance.</source>
+        <translation>Não foi possível criar uma nova instância.</translation>
+    </message>
+    <message>
+        <source>Problem deleting instance</source>
+        <translation>Problema ao excluir instância</translation>
+    </message>
+    <message>
+        <source>Unable to delete instance {current_instance}.</source>
+        <translation>Não foi possível excluir a instância {current_instance}.</translation>
+    </message>
+    <message>
+        <source>The default instance cannot be deleted.</source>
+        <translation>A instância padrão não pode ser excluída.</translation>
+    </message>
+    <message>
+        <source>Error deleting instance</source>
+        <translation>Erro ao excluir instância</translation>
+    </message>
+    <message>
+        <source>The selected instance does not exist.</source>
+        <translation>A instância selecionada não existe.</translation>
+    </message>
+    <message>
+        <source>Delete instance {current_instance}</source>
+        <translation>Excluir instância {current_instance}</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete the selected instance and all of its data?</source>
+        <translation>Tem certeza de que deseja excluir a instância selecionada e todos os seus dados?</translation>
+    </message>
+    <message>
+        <source>This action cannot be undone.</source>
+        <translation>Esta ação não pode ser desfeita.</translation>
+    </message>
+</context>
+<context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
@@ -784,20 +1007,12 @@ Manage mods installed from GitHub releases.</source>
         <translation>Arquivo: {path}</translation>
     </message>
     <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation>Carregando {path.name} para 0x0.st...</translation>
-    </message>
-    <message>
         <source>Uploaded file</source>
         <translation>Arquivo enviado</translation>
     </message>
     <message>
         <source>Failed to upload file.</source>
         <translation>Não foi possível enviar o arquivo.</translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
-        <translation>Não foi possível enviar o arquivo para 0x0.st</translation>
     </message>
     <message>
         <source>Could not save active mods</source>
@@ -1072,8 +1287,20 @@ Manage mods installed from GitHub releases.</source>
         <translation>Você precisará refazer a importação do Rentry novamente após a conclusão do download.&lt;br&gt;&lt;br&gt;Se houver mods ausentes após a conclusão do download, eles serão mostrados dentro do painel de mods ausentes.&lt;br&gt;&lt;br&gt;Se o RimSort ainda não conseguir baixar alguns mods, é porque os dados do mod não estão disponíveis no link Rentry e no banco de dados Steam.</translation>
     </message>
     <message>
+        <source>Uploading {path_name} to RimSort Logs...</source>
+        <translation>Fazendo upload de {path_name} para registros do RimSort...</translation>
+    </message>
+    <message>
+        <source>Uploaded {path_name} to RimSort Logs</source>
+        <translation>Carregado {path_name} para registros RimSort</translation>
+    </message>
+    <message>
         <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
         <translation>O URL foi copiado para sua área de transferência:&lt;br&gt;&lt;br&gt;{ret}</translation>
+    </message>
+    <message>
+        <source>Failed to upload to RimSort Logs</source>
+        <translation>Falha ao fazer upload para registros RimSort</translation>
     </message>
     <message>
         <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
@@ -1198,10 +1425,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
         <translation>RimWorld save (*.rws);;Todos os arquivos (*.*)</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to https://0x0.st/</source>
-        <translation>{path.name} enviado para https://0x0.st/</translation>
     </message>
     <message>
         <source>Reset SteamCMD ACF data file</source>
@@ -1421,6 +1644,11 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>{count} repositories could not be pushed.</source>
         <translation>{count} repositórios não puderam ser enviados.</translation>
+    </message>
+    <message>
+        <source>Successful pushes:
+</source>
+        <translation>Empurrões bem-sucedidos:</translation>
     </message>
     <message>
         <source>Partial Push Completed</source>
@@ -1895,10 +2123,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Atualizações bem-sucedidas:&lt;br&gt;</translation>
     </message>
     <message>
-        <source>Successful pushes:&lt;br&gt;</source>
-        <translation>Empurrões bem-sucedidos:&lt;br&gt;</translation>
-    </message>
-    <message>
         <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
         <translation>Repositório: {repo_url}&lt;br&gt;Destino: {dest}</translation>
     </message>
@@ -1994,200 +2218,12 @@ Manage mods installed from GitHub releases.</source>
                    Você pode alterar isso nas configurações na guia Avançado.</translation>
     </message>
     <message>
-        <source>Create new instance</source>
-        <translation>Criar nova instância</translation>
-    </message>
-    <message>
-        <source>Input a unique name of new instance that is not already used:</source>
-        <translation>Insira um nome exclusivo para a nova instância que ainda não tenha sido utilizado:</translation>
-    </message>
-    <message>
-        <source>Provide instance name</source>
-        <translation>Forneça o nome da instância</translation>
-    </message>
-    <message>
-        <source>Clone instance [{existing_instance_name}]</source>
-        <translation>Clonar instância [{existing_instance_name}]</translation>
-    </message>
-    <message>
-        <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation>O que você gostaria de fazer com a pasta de mods do Workshop configurada?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation>Pasta Workshop: &lt;br&gt;&lt;br&gt;Opção 1: Converter para SteamCMD&lt;br&gt;O RimSort copiará todos os mods do Workshop para a pasta de mods local da nova instância, convertendo-os em mods SteamCMD que você pode gerenciar dentro da nova instância. A pasta Workshop será ignorada nesta instância para evitar mods duplicados.&lt;br&gt;&lt;br&gt;Opção 2: manter a pasta Workshop&lt;br&gt;A nova instância usará a mesma pasta Workshop da instância original. Você pode alterar isso posteriormente nas configurações, se necessário.&lt;br&gt;&lt;br&gt;Como você gostaria de proceder? {existing_instance_workshop_folder}</translation>
-    </message>
-    <message>
-        <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation>Comprimindo a pasta da instância [{instance_name}] para arquivar...</translation>
-    </message>
-    <message>
-        <source>Error compressing instance</source>
-        <translation>Erro ao comprimir a instância</translation>
-    </message>
-    <message>
-        <source>An error occurred while compressing instance folder: {e}</source>
-        <translation>Ocorreu um erro ao compactar a pasta da instância: {e}</translation>
-    </message>
-    <message>
-        <source>Please check the logs for more information.</source>
-        <translation>Verifique os registros para obter mais informações.</translation>
-    </message>
-    <message>
-        <source>Error restoring instance</source>
-        <translation>Erro ao restaurar a instância</translation>
-    </message>
-    <message>
-        <source>Archive not found at path: {input_path}</source>
-        <translation>Arquivo não encontrado no caminho: {input_path}</translation>
-    </message>
-    <message>
-        <source>An error occurred while reading instance archive: {e}</source>
-        <translation>Ocorreu um erro ao ler o arquivo da instância: {e}</translation>
-    </message>
-    <message>
-        <source>Instance folder exists</source>
-        <translation>A pasta de instância existe</translation>
-    </message>
-    <message>
-        <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation>A pasta da instância já existe: {instance_folder_path}</translation>
-    </message>
-    <message>
-        <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation>Deseja continuar e substituir a pasta de instância existente?</translation>
-    </message>
-    <message>
-        <source>Replace</source>
-        <translation>Substituir</translation>
-    </message>
-    <message>
-        <source>Restoring instance [{name}] from archive...</source>
-        <translation>Restaurando instância [{name}] do arquivo...</translation>
-    </message>
-    <message>
-        <source>Invalid instance folder paths</source>
-        <translation>Caminhos de pasta de instância inválidos</translation>
-    </message>
-    <message>
-        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation>Alguns caminhos de pastas da instância restaurada são inválidos e foram apagados. Reconfigure-os nas configurações</translation>
-    </message>
-    <message>
-        <source>Invalid paths: {path}</source>
-        <translation>Caminhos inválidos: {path}</translation>
-    </message>
-    <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
-        <translation>Não foi possível restaurar o link simbólico/junção do steamcmd</translation>
-    </message>
-    <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation>O link simbólico/junção steamcmd não pôde ser restaurado porque a pasta local não está definida ou é inválida. O link simbólico/junção precisará ser recriado manualmente.</translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation>A pasta da instância não foi encontrada após extrair o arquivo. Talvez o arquivo esteja corrompido ou o nome da instância seja inválido.</translation>
-    </message>
-    <message>
-        <source>Workshop mods not found</source>
-        <translation>Mods da oficina não encontrados</translation>
-    </message>
-    <message>
-        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>Pasta de mods do workshop em [{existing_instance_workshop_folder}] não encontrada.</translation>
-    </message>
-    <message>
-        <source>Error cloning instance</source>
-        <translation>Erro ao clonar instância</translation>
-    </message>
-    <message>
-        <source>Unable to clone instance.</source>
-        <translation>Não foi possível clonar a instância.</translation>
-    </message>
-    <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>{DEFAULT_INSTANCE_NAME}</translation>
-    </message>
-    <message>
-        <source>Create new instance [{instance_name}]</source>
-        <translation>Criar nova instância [{instance_name}]</translation>
-    </message>
-    <message>
-        <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation>Deseja gerar automaticamente argumentos de execução para a nova instância?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
-        <translation>Isso tentará gerar argumentos de execução para a nova instância com base nas pastas Game/Config configuradas.&lt;br&gt;&lt;br&gt;Visualização dos argumentos de execução gerados:&lt;br&gt;{preview}</translation>
-    </message>
-    <message>
-        <source>Error creating instance</source>
-        <translation>Erro ao criar instância</translation>
-    </message>
-    <message>
-        <source>Unable to create new instance.</source>
-        <translation>Não foi possível criar uma nova instância.</translation>
-    </message>
-    <message>
-        <source>Problem deleting instance</source>
-        <translation>Problema ao excluir instância</translation>
-    </message>
-    <message>
-        <source>Unable to delete instance {current_instance}.</source>
-        <translation>Não é possível excluir a instância {current_instance}.</translation>
-    </message>
-    <message>
-        <source>The default instance cannot be deleted.</source>
-        <translation>A instância padrão não pode ser excluída.</translation>
-    </message>
-    <message>
-        <source>Error deleting instance</source>
-        <translation>Erro ao excluir instância</translation>
-    </message>
-    <message>
-        <source>The selected instance does not exist.</source>
-        <translation>A instância selecionada não existe.</translation>
-    </message>
-    <message>
-        <source>Delete instance {current_instance}</source>
-        <translation>Excluir instância {current_instance}</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation>Tem certeza de que deseja excluir a instância selecionada e todos os seus dados?</translation>
-    </message>
-    <message>
-        <source>This action cannot be undone.</source>
-        <translation>Esta ação não pode ser desfeita.</translation>
-    </message>
-    <message>
-        <source>Convert to SteamCMD</source>
-        <translation>Converter para SteamCMD</translation>
-    </message>
-    <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>{name}</translation>
-    </message>
-    <message>
-        <source>Keep Workshop Folder</source>
-        <translation>Manter pasta da oficina</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation>Cancelado</translation>
-    </message>
-    <message>
         <source>ACF Log Reader</source>
         <translation>Leitor de log ACF</translation>
     </message>
     <message>
         <source>Player Log</source>
         <translation>Log do jogador</translation>
-    </message>
-    <message>
-        <source>An error occurred while restoring instance [{name}].</source>
-        <translation>Ocorreu um erro ao restaurar a instância []. {name}</translation>
     </message>
 </context>
 <context>
@@ -2805,6 +2841,14 @@ Selecione a variante do mod que prefere na tabela abaixo. Também pode abrir cad
         <translation>Nenhuma tradução encontrada - Este mod não tem uma tradução instalada</translation>
     </message>
     <message>
+        <source>Updated {time_ago}. Click to open the Workshop changelog.</source>
+        <translation>Atualizado há {time_ago}. Clique para abrir o changelog do Workshop.</translation>
+    </message>
+    <message>
+        <source>Recently updated</source>
+        <translation>Atualizado recentemente</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>Não está no salvamento mais recente</translation>
     </message>
@@ -2982,6 +3026,22 @@ Selecione a variante do mod que prefere na tabela abaixo. Também pode abrir cad
     <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>Você selecionou {len} mod(s) para cancelar inscrição.</translation>
+    </message>
+    <message>
+        <source>Startup impact: {time}</source>
+        <translation>Impacto na inicialização: {time}</translation>
+    </message>
+    <message>
+        <source>Off-thread (loading screen): {time}</source>
+        <translation>Fora do thread (tela de carregamento): {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime} — total game startup: {time}</source>
+        <translation>Medido em {datetime} — inicialização total do jogo: {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime}</source>
+        <translation>Medido em  {datetime}</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -3164,8 +3224,20 @@ Um mod alternativo atualizado é recomendado:
         <translation>Etiquetas</translation>
     </message>
     <message>
+        <source>0 updated</source>
+        <translation>0 atualizado</translation>
+    </message>
+    <message>
+        <source>Click to only show recently updated mods</source>
+        <translation>Clique para mostrar apenas mods atualizados recentemente</translation>
+    </message>
+    <message>
         <source>Workshop Updated</source>
         <translation>Oficina atualizada</translation>
+    </message>
+    <message>
+        <source>{padding}{count} updated</source>
+        <translation>{padding}{count} atualizado</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4166,18 +4238,6 @@ Um mod alternativo atualizado é recomendado:
         <translation>Banco de dados "Use Isto em Vez"</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Para habilitar a edição deste limite de tempo, marque a caixa de seleção (Habilitar edição) à direita.
-Depois que um mod é excluído, este é o tempo que esperamos até que esse item de mod seja excluído do banco de dados de metadados auxiliares. 
-Este banco de dados auxiliar contém informações sobre cores de mod, avisos alternados, notas do usuário, etc. 
-Isso basicamente preserva a coloração do seu mod, notas do usuário, etc. por muitos segundos após a exclusão. 
-(Isso também se aplica à exclusão fora do RimSort)</translation>
-    </message>
-    <message>
         <source>Sorting</source>
         <translation>Ordenando</translation>
     </message>
@@ -4188,6 +4248,18 @@ Isso basicamente preserva a coloração do seu mod, notas do usuário, etc. por 
     <message>
         <source>Topologically</source>
         <translation>Tipologia</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Para habilitar a edição deste limite de tempo, marque a caixa de seleção (Habilitar edição) à direita.
+Depois que um mod é excluído, este é o tempo que esperamos até que esse item de mod seja excluído do banco de dados de metadados auxiliares.
+Este banco de dados auxiliar contém informações sobre cores de mod, avisos alternados, notas do usuário, etc.
+Isso basicamente preserva a coloração do seu mod, notas do usuário, etc. por muitos segundos após a exclusão.
+(Isso também se aplica à exclusão fora do RimSort)</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4210,12 +4282,48 @@ Se existir uma tag de versão correspondente, mas estiver vazia, a tag base ser�
 por exemplo (modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatívelWithByVersion, descriptionsByVersion)</translation>
     </message>
     <message>
+        <source>Case-insensitive About.xml lookup</source>
+        <translation>Pesquisa About.xml sem distinção entre maiúsculas e minúsculas</translation>
+    </message>
+    <message>
+        <source>Enable case-insensitive lookup for About/About.xml.
+Some mods use incorrect casing (e.g., about/about.xml) which breaks on
+case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
+correct path is About/About.xml.
+See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
+        <translation>Ative a pesquisa que não diferencia maiúsculas de minúsculas para About/About.xml.
+Alguns mods usam maiúsculas e minúsculas incorretas (por exemplo, about/about.xml) que quebram em
+sistemas de arquivos com distinção entre maiúsculas e minúsculas (Linux). De acordo com as especificações de modding da RimWorld, o
+o caminho correto é About/About.xml.
+Veja: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Notifica para baixar mods que podem estar faltando na modlist ativa</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>Notifica e exibe os mods que possuem o mesmo packageid</translation>
+    </message>
+    <message>
+        <source>Show recently updated mods indicator</source>
+        <translation>Mostrar indicador de mods atualizados recentemente</translation>
+    </message>
+    <message>
+        <source>Shows an icon on Steam Workshop mods that were updated within the configured number of days. The update time is refreshed when RimSort refreshes its metadata.</source>
+        <translation>Mostra um ícone nos mods do Steam Workshop que foram atualizados dentro do número de dias configurado. O horário de atualização é atualizado quando o RimSort atualiza seus metadados.</translation>
+    </message>
+    <message>
+        <source>Days to consider a mod recently updated:</source>
+        <translation>Dias para considerar um mod atualizado recentemente:</translation>
+    </message>
+    <message>
+        <source>Show startup load time per mod</source>
+        <translation>Mostrar tempo de carregamento de inicialização por mod</translation>
+    </message>
+    <message>
+        <source>Shows each mod's game startup time, measured by the 'Loading Progress' mod. Requires that mod with its 'Track startup loading impact' setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
+        <translation>Mostra o tempo de inicialização do jogo de cada mod, medido pelo mod 'Loading Progress'. Requer esse mod com a configuração 'Rastrear impacto de carregamento de inicialização' ativada e um relatório de impacto de inicialização salvo (StartupImpactData.xml na pasta de dados salvos do RimWorld).</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
@@ -4837,7 +4945,7 @@ Escolha uma das opções a seguir para continuar.</translation>
     <name>SteamworksInterface</name>
     <message>
         <source>Steam Not Detected</source>
-        <translation>Vapor não detectado</translation>
+        <translation>Steam não detectado</translation>
     </message>
     <message>
         <source>Steam Integration Unavailable</source>
@@ -5385,6 +5493,10 @@ Entre em contato conosco para obter suporte em: {support_url} {development_guide
         <translation>A tabela a seguir exibe mods do Workshop com substituições sugeridas de acordo com o banco de dados "Use This Rather", agrupados por mod de substituição.</translation>
     </message>
     <message>
+        <source>Do nothing and exit</source>
+        <translation>Não faça nada e saia</translation>
+    </message>
+    <message>
         <source>Select</source>
         <translation>Selecione</translation>
     </message>
@@ -5420,14 +5532,6 @@ Entre em contato conosco para obter suporte em: {support_url} {development_guide
         <source>Replacement [{0}]</source>
         <translation>Substituição [{0}]</translation>
     </message>
-    <message>
-        <source>Use This Instead</source>
-        <translation>Usar Isto em Vez</translation>
-    </message>
-    <message>
-        <source>Successfully {action}d {count} mods</source>
-        <translation>{action}d {count} mods com sucesso</translation>
-    </message>
 </context>
 <context>
     <name>WorkshopModUpdaterPanel</name>
@@ -5446,6 +5550,10 @@ Entre em contato conosco para obter suporte em: {support_url} {development_guide
     <message>
         <source>Update Mods with Steam</source>
         <translation>Atualizar mods com Steam</translation>
+    </message>
+    <message>
+        <source>Delete Selected Mods</source>
+        <translation>Excluir mods selecionados</translation>
     </message>
     <message>
         <source>

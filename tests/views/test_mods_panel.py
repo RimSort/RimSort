@@ -6,7 +6,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
 from app.models.settings import Settings
-from app.views.mods_panel import TagEditDialog
+from app.utils.custom_list_widget_item import CustomListWidgetItem
+from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
+from app.views.mods_panel import ModListItemInner, TagEditDialog
 
 
 class TestTagEditDialog:
@@ -91,3 +93,95 @@ class TestTagEditDialog:
             tag.checkState() == Qt.CheckState.Unchecked
             for tag in self._get_tags(dialog.tags_list)
         )
+
+
+class TestStartupImpactLabel:
+    """The startup impact label on mod list items, driven via repolish."""
+
+    @pytest.fixture
+    def widget(self, qtbot: Any) -> ModListItemInner:
+        settings = MagicMock(spec=Settings)
+        settings.mod_type_filter = False
+        settings.show_save_comparison_indicators = False
+        settings.mod_list_updated_indicator = False
+        settings.mod_list_startup_impact = True
+        metadata_controller = MagicMock()
+        metadata_controller.get_mod.return_value = None
+        with patch("app.views.mods_panel.auxdb_get_mod_tags", return_value=[]):
+            widget = ModListItemInner(
+                errors_warnings="",
+                errors="",
+                warnings="",
+                filtered=False,
+                invalid=False,
+                mismatch=False,
+                alternative=False,
+                settings=settings,
+                path="/mods/test",
+                mod_color=None,  # type: ignore[arg-type]
+                metadata_controller=metadata_controller,
+            )
+        qtbot.addWidget(widget)
+        return widget
+
+    @staticmethod
+    def _item(
+        startup_impact_s: float | None, tooltip: str = ""
+    ) -> CustomListWidgetItem:
+        """Build an item whose metadata carries only what repolish reads."""
+        data = object.__new__(CustomListWidgetItemMetadata)
+        data.errors = ""
+        data.warnings = ""
+        data.mod_tags = []
+        data.mod_color = None
+        data.filtered = False
+        data.list_type = "Active"
+        data.startup_impact_s = startup_impact_s
+        data.startup_impact_tooltip = tooltip
+        item = CustomListWidgetItem()
+        item.setData(Qt.ItemDataRole.UserRole, data)
+        return item
+
+    def test_label_shown_with_impact(self, widget: ModListItemInner) -> None:
+        widget.repolish(self._item(0.42, "Startup impact: 420ms"))
+
+        assert not widget.startup_impact_label.isHidden()
+        assert widget.startup_impact_label.text() == "420ms"
+        assert widget.startup_impact_label.toolTip() == "Startup impact: 420ms"
+        # below the warn threshold: green
+        assert "#5cb85c" in widget.startup_impact_label.styleSheet()
+
+    def test_label_placed_after_warning_and_error_icons(
+        self, widget: ModListItemInner
+    ) -> None:
+        layout = widget.main_item_layout
+        indices = {
+            item.widget(): i
+            for i in range(layout.count())
+            if (item := layout.itemAt(i)) is not None and item.widget() is not None
+        }
+        # the updated icon (when enabled) is added before these two, so being
+        # after warning/error also puts the label after the updated icon
+        impact_index = indices[widget.startup_impact_label]
+        assert impact_index > indices[widget.warning_icon_label]
+        assert impact_index > indices[widget.error_icon_label]
+
+    def test_label_color_thresholds(self, widget: ModListItemInner) -> None:
+        widget.repolish(self._item(1.5))
+        assert "#f0ad4e" in widget.startup_impact_label.styleSheet()
+
+        widget.repolish(self._item(7.2))
+        assert "#d9534f" in widget.startup_impact_label.styleSheet()
+
+    def test_label_hidden_without_impact(self, widget: ModListItemInner) -> None:
+        widget.repolish(self._item(2.34))
+        widget.repolish(self._item(None))
+
+        assert widget.startup_impact_label.isHidden()
+        assert widget.startup_impact_label.text() == ""
+
+    def test_label_hidden_when_setting_disabled(self, widget: ModListItemInner) -> None:
+        widget.settings.mod_list_startup_impact = False
+        widget.repolish(self._item(2.34))
+
+        assert widget.startup_impact_label.isHidden()

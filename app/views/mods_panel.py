@@ -95,10 +95,19 @@ from app.utils.generic import (
     copy_to_clipboard_safely,
     delete_files_except_extension,
     format_file_size,
+    get_relative_time,
     launch_process,
     open_url_browser,
     platform_specific_open,
     sanitize_filename,
+)
+from app.utils.startup_impact import (
+    IMPACT_HIGH_THRESHOLD_S,
+    IMPACT_WARN_THRESHOLD_S,
+    StartupImpactMod,
+    StartupImpactReport,
+    format_impact,
+    load_startup_impact_report,
 )
 from app.utils.xml import extract_xml_package_ids, fast_rimworld_xml_save_validation
 from app.views.deletion_menu import ModDeletionMenu
@@ -258,6 +267,17 @@ class ModListItemInner(QWidget):
         )
         self.in_save_icon_label.setToolTip(self.tr("In latest save"))
         self.in_save_icon_label.setHidden(True)
+        # Recently-updated icon (clickable), hidden by default; opt-in via settings
+        self.updated_icon_label = ClickableQLabel()
+        self.updated_icon_label.clicked.connect(self.__on_updated_icon_clicked)
+        self.updated_icon_label.setPixmap(
+            ModListIcons.updated_icon().pixmap(QSize(20, 20))
+        )
+        self.updated_icon_label.setHidden(True)
+        # Startup impact (load time) text label, hidden by default; opt-in via settings
+        self.startup_impact_label = QLabel()
+        self.startup_impact_label.setObjectName("startupImpactLabel")
+        self.startup_impact_label.setHidden(True)
         # Error icon hidden by default
         self.error_icon_label = ClickableQLabel()
         self.error_icon_label.clicked.connect(self.__on_error_icon_clicked)
@@ -330,7 +350,10 @@ class ModListItemInner(QWidget):
             self.main_item_layout.addWidget(
                 self.new_icon_label, Qt.AlignmentFlag.AlignRight
             )
-
+        if self.settings.mod_list_updated_indicator:
+            self.main_item_layout.addWidget(
+                self.updated_icon_label, Qt.AlignmentFlag.AlignRight
+            )
         self.main_item_layout.addWidget(
             self.translation_status_label, Qt.AlignmentFlag.AlignRight
         )
@@ -340,6 +363,10 @@ class ModListItemInner(QWidget):
         self.main_item_layout.addWidget(
             self.error_icon_label, Qt.AlignmentFlag.AlignRight
         )
+        if self.settings.mod_list_startup_impact:
+            self.main_item_layout.addWidget(
+                self.startup_impact_label, Qt.AlignmentFlag.AlignRight
+            )
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
 
@@ -368,6 +395,14 @@ class ModListItemInner(QWidget):
             package_id,
             self.path,
         )
+
+    def __on_updated_icon_clicked(self) -> None:
+        mod = self.metadata_controller.get_mod(self.path)
+        pfid = mod.published_file_id if mod is not None else None
+        if pfid:
+            open_url_browser(
+                f"https://steamcommunity.com/sharedfiles/filedetails/changelog/{pfid}"
+            )
 
     def _resize_text_after_icon_toggle(self, icon_count: int = -1) -> None:
         event = QResizeEvent(self.size(), self.size())
@@ -553,6 +588,13 @@ class ModListItemInner(QWidget):
             icon_count = self.count_icons(self)
 
         icon_width = icon_count * 20
+        if not self.startup_impact_label.isHidden():
+            icon_width += (
+                self.startup_impact_label.fontMetrics()
+                .boundingRect(self.startup_impact_label.text())
+                .width()
+                + 6
+            )
         if not self.translation_status_label.isHidden():
             icon_width += (
                 self.translation_status_label.fontMetrics()
@@ -653,6 +695,49 @@ class ModListItemInner(QWidget):
         else:
             self.new_icon_label.setHidden(True)
             self.in_save_icon_label.setHidden(True)
+        # Recently-updated icon visibility (both lists) depends on the setting
+        is_recently_updated = bool(item_data.__dict__.get("is_recently_updated", False))
+        if self.settings.mod_list_updated_indicator and is_recently_updated:
+            updated_timestamp = getattr(item_data, "updated_timestamp", None)
+            if updated_timestamp:
+                self.updated_icon_label.setToolTip(
+                    self.tr(
+                        "Updated {time_ago}. Click to open the Workshop changelog."
+                    ).format(time_ago=get_relative_time(updated_timestamp))
+                )
+            else:
+                self.updated_icon_label.setToolTip(self.tr("Recently updated"))
+            self.updated_icon_label.setHidden(False)
+        else:
+            self.updated_icon_label.setHidden(True)
+            self.updated_icon_label.setToolTip("")
+        # Startup impact label (both lists) depends on the setting
+        startup_impact_was_hidden = self.startup_impact_label.isHidden()
+        startup_impact_old_text = self.startup_impact_label.text()
+        startup_impact_s = item_data.__dict__.get("startup_impact_s")
+        if self.settings.mod_list_startup_impact and startup_impact_s is not None:
+            self.startup_impact_label.setText(format_impact(startup_impact_s))
+            if startup_impact_s >= IMPACT_HIGH_THRESHOLD_S:
+                self.startup_impact_label.setStyleSheet("color: #d9534f;")
+            elif startup_impact_s >= IMPACT_WARN_THRESHOLD_S:
+                self.startup_impact_label.setStyleSheet("color: #f0ad4e;")
+            else:
+                self.startup_impact_label.setStyleSheet("color: #5cb85c;")
+            self.startup_impact_label.setToolTip(
+                item_data.__dict__.get("startup_impact_tooltip", "")
+            )
+            self.startup_impact_label.setHidden(False)
+        else:
+            self.startup_impact_label.setHidden(True)
+            self.startup_impact_label.setText("")
+            self.startup_impact_label.setToolTip("")
+        # Text labels are not part of count_icons, so a change here must
+        # trigger the name eliding recalculation explicitly
+        if (
+            self.startup_impact_label.isHidden() != startup_impact_was_hidden
+            or self.startup_impact_label.text() != startup_impact_old_text
+        ):
+            self._resize_text_after_icon_toggle()
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
         if item_data["mod_color"] is not None:
@@ -874,6 +959,7 @@ class ModListIcons:
     _warning_icon_path: str = str(_data_path / "warning.png")
     _error_icon_path: str = str(_data_path / "error.png")
     _new_icon_path: str = str(_data_path / "new.png")
+    _updated_icon_path: str = str(_data_path / "updated.png")
     _clear_icon_path: str = str(_data_path / "clear.png")
 
     _ludeon_icon: QIcon | None = None
@@ -886,6 +972,7 @@ class ModListIcons:
     _warning_icon: QIcon | None = None
     _error_icon: QIcon | None = None
     _new_icon: QIcon | None = None
+    _updated_icon: QIcon | None = None
     _clear_icon: QIcon | None = None
 
     @classmethod
@@ -952,6 +1039,17 @@ class ModListIcons:
                 else QIcon(str(cls._data_path / "AppIcon_b.png"))
             )
         return cls._new_icon
+
+    @classmethod
+    def updated_icon(cls) -> QIcon:
+        if cls._updated_icon is None:
+            # Reuse an existing icon if updated.png is not present
+            cls._updated_icon = (
+                QIcon(cls._updated_icon_path)
+                if Path(cls._updated_icon_path).exists()
+                else QIcon(str(cls._data_path / "AppIcon_b.png"))
+            )
+        return cls._updated_icon
 
     @classmethod
     def clear_icon(cls) -> QIcon:
@@ -3314,6 +3412,26 @@ class ModListWidget(QListWidget):
         else:
             latest_save_ids = None
 
+        # Compute the "recently updated" cutoff once for this run, only if enabled
+        updated_enabled: bool = self.settings.mod_list_updated_indicator
+        updated_cutoff: float = (
+            datetime.now().timestamp()
+            - self.settings.mod_list_updated_threshold_days * 86400
+            if updated_enabled
+            else 0.0
+        )
+
+        # Load the startup impact report once for this run, only if enabled
+        startup_impact_report: StartupImpactReport | None = None
+        if self.settings.mod_list_startup_impact:
+            try:
+                cfg_path = self.settings.instances[
+                    self.settings.current_instance
+                ].config_folder
+                startup_impact_report = load_startup_impact_report(cfg_path)
+            except (KeyError, AttributeError):
+                startup_impact_report = None
+
         for uuid, mod_errors in package_id_to_errors.items():
             current_mod_index = self.paths.index(uuid)
             current_item = self.item(current_mod_index)
@@ -3351,12 +3469,40 @@ class ModListWidget(QListWidget):
             else:
                 current_item_data.__dict__["is_new"] = False
                 current_item_data.__dict__["in_save"] = False
+            # Mark mods whose workshop update time falls within the threshold
+            if updated_enabled:
+                updated_timestamp = getattr(
+                    current_item_data, "updated_timestamp", None
+                )
+                current_item_data.__dict__["is_recently_updated"] = bool(
+                    updated_timestamp and updated_timestamp >= updated_cutoff
+                )
+            else:
+                current_item_data.__dict__["is_recently_updated"] = False
             mod_data = all_mods_metadata.get(uuid)
             if mod_data is None:
                 continue
             pkg_id_str = (
                 str(mod_data.package_id) if isinstance(mod_data, AboutXmlMod) else ""
             )
+            # Stamp the mod's startup impact from the Loading Progress report
+            impact_entry = (
+                startup_impact_report.find(pkg_id_str or None, mod_data.name)
+                if startup_impact_report is not None
+                else None
+            )
+            if impact_entry is not None and startup_impact_report is not None:
+                current_item_data.__dict__["startup_impact_s"] = (
+                    impact_entry.total_impact_s
+                )
+                current_item_data.__dict__["startup_impact_tooltip"] = (
+                    self._build_startup_impact_tooltip(
+                        impact_entry, startup_impact_report
+                    )
+                )
+            else:
+                current_item_data.__dict__["startup_impact_s"] = None
+                current_item_data.__dict__["startup_impact_tooltip"] = ""
             # Check mod supportedversions against currently loaded version of game
             mod_errors["version_mismatch"] = self._check_version_mismatch(uuid)
             # Set an item's validity dynamically based on the version mismatch value
@@ -3526,6 +3672,40 @@ class ModListWidget(QListWidget):
             current_item.setData(Qt.ItemDataRole.UserRole, current_item_data)
         logger.info(f"Finished recalculating {self.list_type} list errors and warnings")
         return total_error_text, total_warning_text, num_errors, num_warnings
+
+    def _build_startup_impact_tooltip(
+        self, entry: StartupImpactMod, report: StartupImpactReport
+    ) -> str:
+        """Build the tooltip for a mod's startup impact label."""
+        lines = [
+            self.tr("Startup impact: {time}").format(
+                time=format_impact(entry.total_impact_s)
+            )
+        ]
+        if entry.off_thread_total_impact_s > 0:
+            lines.append(
+                self.tr("Off-thread (loading screen): {time}").format(
+                    time=format_impact(entry.off_thread_total_impact_s)
+                )
+            )
+        top_metrics = sorted(
+            entry.metrics.items(), key=lambda metric: metric[1], reverse=True
+        )[:3]
+        for category, seconds in top_metrics:
+            if seconds <= 0:
+                continue
+            # Category keys look like "LoadingProgress.StartupImpact.LoadModXml"
+            lines.append(f"    {category.rsplit('.', 1)[-1]}: {format_impact(seconds)}")
+        measured = datetime.fromtimestamp(report.file_mtime).strftime("%Y-%m-%d %H:%M")
+        if report.loading_time_s > 0:
+            lines.append(
+                self.tr("Measured {datetime} — total game startup: {time}").format(
+                    datetime=measured, time=format_impact(report.loading_time_s)
+                )
+            )
+        else:
+            lines.append(self.tr("Measured {datetime}").format(datetime=measured))
+        return "\n".join(lines)
 
     def _get_latest_save_package_ids(self) -> set[str] | None:
         """Attempt to find the latest RimWorld save file in the configured instance and extract modIds.
@@ -4192,6 +4372,20 @@ class ModsPanel(QWidget):
         self.news_layout.addWidget(self.new_icon, 1)
         self.news_layout.addWidget(self.new_text, 99)
         self.warnings_errors_layout.addLayout(self.news_layout, 50)
+        # Recently-updated mods label (next to new mods)
+        self.updated_layout = QHBoxLayout()
+        self.updated_icon: QLabel = QLabel()
+        self.updated_icon.setPixmap(ModListIcons.updated_icon().pixmap(QSize(20, 20)))
+        self.updated_text: AdvancedClickableQLabel = AdvancedClickableQLabel(
+            self.tr("0 updated")
+        )
+        self.updated_text.setObjectName("summaryValue")
+        self.updated_text.setToolTip(
+            self.tr("Click to only show recently updated mods")
+        )
+        self.updated_layout.addWidget(self.updated_icon, 1)
+        self.updated_layout.addWidget(self.updated_text, 99)
+        self.warnings_errors_layout.addLayout(self.updated_layout, 50)
 
     def initialize_inactive_mods_search_widgets(self) -> None:
         """Initialize widgets for inactive mods search layout."""
@@ -4716,14 +4910,26 @@ class ModsPanel(QWidget):
                 except Exception:
                     pass
 
+            # Count recently-updated mods. Only if the indicator is enabled
+            updated_count = 0
+            if self.settings.mod_list_updated_indicator:
+                try:
+                    for item in self.active_mods_list.get_all_mod_list_items():
+                        if item.data(Qt.ItemDataRole.UserRole).__dict__.get(
+                            "is_recently_updated", False
+                        ):
+                            updated_count += 1
+                except Exception:
+                    pass
+
             padding = " "
             has_errors_warnings = (
                 total_error_text or total_warning_text or num_errors or num_warnings
             )
 
-            # Show summary frame only if there are errors, warnings, or new mods to display
+            # Show summary frame only if there are errors, warnings, new or updated mods
             self.errors_summary_frame.setHidden(
-                not (has_errors_warnings or new_count > 0)
+                not (has_errors_warnings or new_count > 0 or updated_count > 0)
             )
 
             # Update error and warning counts/tooltips (show 0 if none exist)
@@ -4752,6 +4958,17 @@ class ModsPanel(QWidget):
                 self.tr("{padding}{count} new").format(padding=padding, count=new_count)
                 if new_count > 0
                 else self.tr("0 new")
+            )
+
+            # Update recently-updated mods display (icon and count)
+            self.updated_icon.setHidden(updated_count == 0)
+            self.updated_text.setHidden(updated_count == 0)
+            self.updated_text.setText(
+                self.tr("{padding}{count} updated").format(
+                    padding=padding, count=updated_count
+                )
+                if updated_count > 0
+                else self.tr("0 updated")
             )
 
             # First time and refresh: the slot will evaluate false and do nothing.

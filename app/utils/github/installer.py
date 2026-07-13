@@ -186,7 +186,7 @@ class GitHubInstaller:
             git_utils.git_cleanup(repo)
 
         if result.is_successful():
-            import pygit2
+            from app.utils.pygit2_loader import pygit2
 
             commit_info = git_utils.git_get_commit_info(pygit2.Repository(target_dir))
             sha = commit_info["short_id"] if commit_info else None

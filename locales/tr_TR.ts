@@ -55,8 +55,20 @@
         <translation>Yenile</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>SteamCMD ile seçilen indirme</translation>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download with SteamCMD</source>
+        <translation>SteamCMD ile indirin</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Seçme</translation>
+    </message>
+    <message>
+        <source>Steam</source>
+        <translation>Buhar</translation>
     </message>
     <message>
         <source>Subscribe selected</source>
@@ -134,7 +146,7 @@
     </message>
     <message>
         <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
-        <translation>- Bu, elde edilen veritabanına etkili bir şekilde A'nın anahtarının/değerinin üzerine B'nin anahtarı/değerinin üzerine yazılacaktır.&lt;br&gt;- İstisnalar yinelemeli olarak güncellenmeyecektir. Bunun yerine, B'nin anahtarı tamamen bunların üzerine yazılacaktır.&lt;br&gt;- Aşağıdaki istisnalar uygulanacaktır:&lt;br&gt;&lt;br&gt; {DB_BUILDER_RECURSE_EXCEPTIONS&lt;br&gt;&lt;br&gt;Sonuçta ortaya çıkan C veritabanı, kullanıcı tarafından belirlenen bir yola kaydedilir. Sizden sırayla şu yollar istenecektir:&lt;br&gt;&lt;br&gt; 1) A girişini seçin (güncellenecek veri tabanı)&lt;br&gt; 2) B girişini seçin (güncelleme kaynağı)&lt;br&gt; 3) C çıkışını seçin (sonuç veri tabanı) {DB_BUILDER_RECURSE_EXCEPTIONS}</translation>
+        <translation>- Bu, elde edilen veritabanına etkili bir şekilde A'nın anahtarının/değerinin üzerine B'nin anahtarı/değerinin üzerine yazılacaktır.&lt;br&gt;- İstisnalar yinelemeli olarak güncellenmeyecektir. Bunun yerine, B'nin anahtarı tamamen bunların üzerine yazılacaktır.&lt;br&gt;- Aşağıdaki istisnalar uygulanacaktır:&lt;br&gt;&lt;br&gt;  {DB_BUILDER_RECURSE_EXCEPTIONS} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Steam DB comparison report: {count} found</source>
@@ -200,8 +212,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Log yükle</translation>
     </message>
     <message>
-        <source>Upload the log file to 0x0.st</source>
-        <translation>Log dosyasını 0x0.st 'ye yükle</translation>
+        <source>Upload log to RimSort Logs</source>
+        <translation>Günlüğü RimSort Günlüklerine yükle</translation>
     </message>
     <message>
         <source>Hide Details</source>
@@ -252,7 +264,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Try simplifying your pattern or check for syntax errors.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Deseninizi basitleştirmeyi deneyin veya sözdizimi hatalarını kontrol edin. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>File Access Error</source>
@@ -264,7 +276,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;RimSort'u yönetici ayrıcalıklarıyla çalıştırmayı deneyin veya klasör izinlerini kontrol edin. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Memory Error</source>
@@ -276,7 +288,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Daha küçük gruplar halinde arama yapmayı deneyin veya çok büyük dosyalar için 'akışlı arama' yöntemini kullanın. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Search Error</source>
@@ -288,7 +300,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Lütfen ayarlarınızı kontrol edip tekrar deneyin. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Search failed: {error_msg[:100]}...</source>
@@ -627,6 +639,217 @@ Manage mods installed from GitHub releases.</source>
     </message>
 </context>
 <context>
+    <name>InstanceService</name>
+    <message>
+        <source>Essential path(s)</source>
+        <translation>Temel yol(lar)</translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>Temel yollar geçersiz veya ayarlanmamış!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>RimSort aşağıdaki yolların ayarlanmasını gerektirir.&lt;br/&gt;&lt;br/&gt;1) Oyun klasörü (RimWorld'ün kurulu olduğu klasör).&lt;br/&gt;&lt;br/&gt;2) Config klasörü (ModsConfig.xml'nin bulunduğu klasör)&lt;br/&gt;&lt;br/&gt;3) Yerel modlar klasörü (RimWorld kurulumunun içindeki Modlar klasörü).&lt;br/&gt;&lt;br/&gt;4) Steam modları klasörü (Yalnızca Steam kullanıcısı Steam İstemcisini de etkinleştiriyorsa ayarlayın. Entegrasyon)&lt;br/&gt;&lt;br/&gt;Tüm yolları otomatik olarak ayarlamak için otomatik algılama işlevini kullanmayı deneyin.&lt;br/&gt;&lt;br/&gt;Ayarları şimdi yapılandırmak için açmak ister misiniz?</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Evet</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>HAYIR</translation>
+    </message>
+    <message>
+        <source>Provide instance name</source>
+        <translation>Örnek adını sağlayın</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>Yedeklenen örnek için "{name}" olmayan benzersiz bir ad girin</translation>
+    </message>
+    <message>
+        <source>Compressing [{instance_name}] instance folder to archive...</source>
+        <translation>[{instance_name}] örnek klasörü arşivlenecek şekilde sıkıştırılıyor...</translation>
+    </message>
+    <message>
+        <source>Error compressing instance</source>
+        <translation>Örnek sıkıştırılırken hata oluştu</translation>
+    </message>
+    <message>
+        <source>An error occurred while compressing instance folder: {e}</source>
+        <translation>Örnek klasörü sıkıştırılırken bir hata oluştu: {e}</translation>
+    </message>
+    <message>
+        <source>Please check the logs for more information.</source>
+        <translation>Daha fazla bilgi için lütfen günlükleri kontrol edin.</translation>
+    </message>
+    <message>
+        <source>Error restoring instance</source>
+        <translation>Örnek geri yüklenirken hata oluştu</translation>
+    </message>
+    <message>
+        <source>Archive not found at path: {input_path}</source>
+        <translation>Arşiv şu yolda bulunamadı: {input_path}</translation>
+    </message>
+    <message>
+        <source>An error occurred while reading instance archive: {e}</source>
+        <translation>Örnek arşivi okunurken bir hata oluştu: {e}</translation>
+    </message>
+    <message>
+        <source>Instance folder exists</source>
+        <translation>Örnek klasörü mevcut</translation>
+    </message>
+    <message>
+        <source>Instance folder already exists: {instance_folder_path}</source>
+        <translation>Örnek klasörü zaten mevcut: {instance_folder_path}</translation>
+    </message>
+    <message>
+        <source>Do you want to continue and replace the existing instance folder?</source>
+        <translation>Devam etmek ve mevcut örnek klasörünü değiştirmek istiyor musunuz?</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>Yer değiştirmek</translation>
+    </message>
+    <message>
+        <source>Restoring instance [{name}] from archive...</source>
+        <translation>[{name}] örneği arşivden geri yükleniyor...</translation>
+    </message>
+    <message>
+        <source>Invalid instance folder paths</source>
+        <translation>Geçersiz örnek klasör yolları</translation>
+    </message>
+    <message>
+        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
+        <translation>Geri yüklenen örnekteki bazı klasör yolları geçersiz ve temizlendi. Lütfen bunları ayarlardan yeniden yapılandırın</translation>
+    </message>
+    <message>
+        <source>Invalid paths: {path}</source>
+        <translation>Geçersiz yollar: {path}</translation>
+    </message>
+    <message>
+        <source>Couldn't restore steamcmd symlink/junction</source>
+        <translation>Steamcmd sembolik bağlantısı/bağlantısı geri yüklenemedi</translation>
+    </message>
+    <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation>Yerel klasör ayarlanmadığından veya geçersiz olduğundan steamcmd sembolik bağlantısı/bağlantısı geri yüklenemedi. Sembolik bağlantının/kavşağın manuel olarak yeniden oluşturulması gerekecektir.</translation>
+    </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>[{name}] örneği geri yüklenirken bir hata oluştu.</translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
+        <translation>Arşiv çıkarıldıktan sonra örnek klasörü bulunamadı. Belki arşiv bozuktur veya örnek adı geçersizdir.</translation>
+    </message>
+    <message>
+        <source>Create new instance</source>
+        <translation>Yeni örnek oluştur</translation>
+    </message>
+    <message>
+        <source>Input a unique name of new instance that is not already used:</source>
+        <translation>Henüz kullanılmayan yeni örneğin benzersiz bir adını girin:</translation>
+    </message>
+    <message>
+        <source>Clone instance [{name}]</source>
+        <translation>Klon örneği [{name}]</translation>
+    </message>
+    <message>
+        <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation>Yapılandırılmış Atölye modları klasörüyle ne yapmak istiyorsunuz?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>Atölye klasörü:  {folder} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation>SteamCMD'ye Dönüştür</translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation>Atölye Klasörünü Sakla</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>İptal edildi</translation>
+    </message>
+    <message>
+        <source>Workshop mods not found</source>
+        <translation>Atölye modları bulunamadı</translation>
+    </message>
+    <message>
+        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
+        <translation>[{existing_instance_workshop_folder}] adresindeki atölye modları klasörü bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Error cloning instance</source>
+        <translation>Örnek klonlanırken hata oluştu</translation>
+    </message>
+    <message>
+        <source>Unable to clone instance.</source>
+        <translation>Örnek klonlanamıyor.</translation>
+    </message>
+    <message>
+        <source>Please enter a valid, unique instance name. It cannot be '{name}' or empty.</source>
+        <translation>Lütfen geçerli, benzersiz bir örnek adı girin. '{name}' olamaz veya boş olamaz.</translation>
+    </message>
+    <message>
+        <source>Create new instance [{instance_name}]</source>
+        <translation>Yeni örnek oluştur [{instance_name}]</translation>
+    </message>
+    <message>
+        <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation>Yeni örnek için otomatik olarak çalıştırma bağımsız değişkenleri oluşturmak ister misiniz?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>Bu, yapılandırılmış Oyun/Yapılandırma klasörlerine dayalı olarak yeni örnek için çalıştırma değişkenleri oluşturmaya çalışacaktır.&lt;br&gt;&lt;br&gt;Oluşturulan çalıştırma bağımsız değişkenleri önizlemesi:&lt;br&gt;{preview}</translation>
+    </message>
+    <message>
+        <source>Error creating instance</source>
+        <translation>Örnek oluşturulurken hata oluştu</translation>
+    </message>
+    <message>
+        <source>Unable to create new instance.</source>
+        <translation>Yeni örnek oluşturulamıyor.</translation>
+    </message>
+    <message>
+        <source>Problem deleting instance</source>
+        <translation>Örnek silinirken sorun oluştu</translation>
+    </message>
+    <message>
+        <source>Unable to delete instance {current_instance}.</source>
+        <translation>{current_instance} örneği silinemiyor.</translation>
+    </message>
+    <message>
+        <source>The default instance cannot be deleted.</source>
+        <translation>Varsayılan örnek silinemez.</translation>
+    </message>
+    <message>
+        <source>Error deleting instance</source>
+        <translation>Örnek silinirken hata oluştu</translation>
+    </message>
+    <message>
+        <source>The selected instance does not exist.</source>
+        <translation>Seçilen örnek mevcut değil.</translation>
+    </message>
+    <message>
+        <source>Delete instance {current_instance}</source>
+        <translation>{current_instance} örneğini sil</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete the selected instance and all of its data?</source>
+        <translation>Seçilen örneği ve tüm verilerini silmek istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>This action cannot be undone.</source>
+        <translation>Bu eylem geri alınamaz.</translation>
+    </message>
+</context>
+<context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
@@ -798,10 +1021,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Dosya: {path}</translation>
     </message>
     <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation>{path.name} Dosyası 0x0.st... bölgesine yükleniyor</translation>
-    </message>
-    <message>
         <source>Uploaded file</source>
         <translation>Dosya yüklendi</translation>
     </message>
@@ -812,10 +1031,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Failed to upload file.</source>
         <translation>Dosya yükleme başarısız.</translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
-        <translation>Dosya 0x0.st' yüklenemedi</translation>
     </message>
     <message>
         <source>Could not save active mods</source>
@@ -1027,7 +1242,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>{conflicts_list}&lt;br&gt;&lt;br&gt;How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Skip Existing — Extract only new files and leave existing ones untouched.&lt;br&gt;3) Cancel — Abort the extraction.</source>
-        <translation>{conflicts_list&gt;&lt;br&gt;&lt;br&gt;Nasıl devam etmek istersiniz?&lt;br&gt;&lt;br&gt;1) Tümünün Üzerine Yaz — Mevcut tüm dosya ve dizinleri değiştirin.&lt;br&gt;2) Mevcut Olanı Atla — Yalnızca yeni dosyaları çıkarın ve mevcut dosyalara dokunmadan bırakın.&lt;br&gt;3) İptal — Çıkarma işlemini iptal edin. {conflicts_list}</translation>
+        <translation>{conflicts_list} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Extraction completed</source>
@@ -1084,6 +1299,18 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Uploaded active mod list report to Rentry.co! The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{url}</source>
         <translation>Aktif mod listesi raporu Rentry.co'ya yüklendi! URL panonuza kopyalandı:&lt;br&gt;&lt;br&gt;{url}</translation>
+    </message>
+    <message>
+        <source>Uploading {path_name} to RimSort Logs...</source>
+        <translation>{path_name}, RimSort Günlüklerine yükleniyor...</translation>
+    </message>
+    <message>
+        <source>Uploaded {path_name} to RimSort Logs</source>
+        <translation>{path_name}, RimSort Günlüklerine yüklendi</translation>
+    </message>
+    <message>
+        <source>Failed to upload to RimSort Logs</source>
+        <translation>RimSort Günlüklerine yüklenemedi</translation>
     </message>
     <message>
         <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
@@ -1192,10 +1419,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
         <translation>Rimworld Save (*.rws) ;; tüm dosyalar (*.*)</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to https://0x0.st/</source>
-        <translation>adresine https://0x0.st/ {path.name}</translation>
     </message>
     <message>
         <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
@@ -1407,10 +1630,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>{count} repositories could not be pushed.</source>
         <translation>{count} depolar itilemedi.</translation>
-    </message>
-    <message>
-        <source>Successful pushes:&lt;br&gt;</source>
-        <translation>Başarılı hamleler:&lt;br&gt;</translation>
     </message>
     <message>
         <source>Partial Push Completed</source>
@@ -1718,7 +1937,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Fork: {fork_name}&lt;br&gt;Please wait a moment for GitHub to set up the fork.</source>
-        <translation>Çatal: {fork_name&gt;&lt;br&gt;GitHub'ın çatalı ayarlaması için lütfen biraz bekleyin. {fork_name}</translation>
+        <translation>Çatal:  {fork_name} &lt;br&gt;</translation>
     </message>
     <message>
         <source>Fork creation failed</source>
@@ -1898,7 +2117,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
-        <translation>{count} mod otomatik olarak güncellendi.&lt;br&gt;&lt;br&gt;{summary&lt;br&gt;&lt;br&gt;Güncellenen sürümler siz yenileyene kadar görünmeyecektir. Şimdi yenilensin mi? {summary}</translation>
+        <translation>{count} mod otomatik olarak güncellendi.&lt;br&gt;&lt;br&gt; {summary} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Are you sure you want to upload the Community Rules database to GitHub?</source>
@@ -1931,6 +2150,11 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>GitHub Auto-Update Complete</source>
         <translation>GitHub Otomatik Güncelleme Tamamlandı</translation>
+    </message>
+    <message>
+        <source>Successful pushes:
+</source>
+        <translation>Başarılı hamleler:</translation>
     </message>
     <message>
         <source>{repo_folder}&lt;br/&gt;How would you like to handle? Choose option:&lt;br/&gt;&lt;br/&gt;1) Clone new repository (deletes existing and replaces)&lt;br/&gt;2) Update existing repository (in-place force-update)</source>
@@ -1988,174 +2212,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>&lt;h3&gt; Bu örnek için buhar istemci entegrasyonunu etkinleştirmek ister misiniz? &lt;/h3&gt;</translation>
     </message>
     <message>
-        <source>Create new instance</source>
-        <translation>Yeni örnek oluştur</translation>
-    </message>
-    <message>
-        <source>Input a unique name of new instance that is not already used:</source>
-        <translation>Halihazırda kullanılmayan yeni bir örneğin benzersiz bir adını girin:</translation>
-    </message>
-    <message>
-        <source>Provide instance name</source>
-        <translation>Örnek Adı Sağlayın</translation>
-    </message>
-    <message>
-        <source>Clone instance [{existing_instance_name}]</source>
-        <translation>Klon örneği [] {existing_instance_name}</translation>
-    </message>
-    <message>
-        <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation>Yapılandırılmış Atölye Mods klasörü ile ne yapmak istersiniz?</translation>
-    </message>
-    <message>
-        <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation>Arşiv için [{instance_name}] örnek klasörünü sıkıştırma ...</translation>
-    </message>
-    <message>
-        <source>Error compressing instance</source>
-        <translation>Hata Sıkıştırma Örneği</translation>
-    </message>
-    <message>
-        <source>An error occurred while compressing instance folder: {e}</source>
-        <translation>Örnek klasörünü sıkıştırırken bir hata oluştu: {e}</translation>
-    </message>
-    <message>
-        <source>Please check the logs for more information.</source>
-        <translation>Daha fazla bilgi için lütfen günlükleri kontrol edin.</translation>
-    </message>
-    <message>
-        <source>Error restoring instance</source>
-        <translation>Örneği geri yükleme hatası</translation>
-    </message>
-    <message>
-        <source>Archive not found at path: {input_path}</source>
-        <translation>Arşiv yolda bulunamadı: {input_path}</translation>
-    </message>
-    <message>
-        <source>An error occurred while reading instance archive: {e}</source>
-        <translation>Örnek arşivini okurken bir hata oluştu: {e}</translation>
-    </message>
-    <message>
-        <source>Instance folder exists</source>
-        <translation>Örnek klasörü var</translation>
-    </message>
-    <message>
-        <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation>Örnek klasörü zaten var: {instance_folder_path}</translation>
-    </message>
-    <message>
-        <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation>Mevcut örnek klasörüne devam etmek ve değiştirmek istiyor musunuz?</translation>
-    </message>
-    <message>
-        <source>Replace</source>
-        <translation>Yer değiştirmek</translation>
-    </message>
-    <message>
-        <source>Restoring instance [{name}] from archive...</source>
-        <translation>Arşivden [{name}] örneğini geri yükleme ...</translation>
-    </message>
-    <message>
-        <source>Invalid instance folder paths</source>
-        <translation>Geçersiz Örnek Klasör Yolları</translation>
-    </message>
-    <message>
-        <source>Invalid paths: {path}</source>
-        <translation>Geçersiz yollar:  {path}</translation>
-    </message>
-    <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
-        <translation>Steamcmd SymLink/Junction'ı geri yükleyemedi</translation>
-    </message>
-    <message>
-        <source>Workshop mods not found</source>
-        <translation>Atölye modları bulunamadı</translation>
-    </message>
-    <message>
-        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>[] adresindeki atölye modları klasörü bulunamadı. {existing_instance_workshop_folder}</translation>
-    </message>
-    <message>
-        <source>Error cloning instance</source>
-        <translation>Hata klonlama örneği</translation>
-    </message>
-    <message>
-        <source>Unable to clone instance.</source>
-        <translation>Örnek klonlanamıyor.</translation>
-    </message>
-    <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>{DEFAULT_INSTANCE_NAME}</translation>
-    </message>
-    <message>
-        <source>Create new instance [{instance_name}]</source>
-        <translation>Yeni örnek oluştur [{instance_name}]</translation>
-    </message>
-    <message>
-        <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation>Yeni örnek için otomatik olarak Run Args oluşturmak ister misiniz?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
-        <translation>Bu, yapılandırılmış Oyun/Yapılandırma klasörlerine dayalı olarak yeni örnek için çalıştırma değişkenleri oluşturmaya çalışacaktır.&lt;br&gt;&lt;br&gt;Oluşturulan çalıştırma bağımsız değişkenleri önizlemesi:&lt;br&gt;{preview}</translation>
-    </message>
-    <message>
-        <source>Error creating instance</source>
-        <translation>Örnek oluşturma hatası</translation>
-    </message>
-    <message>
-        <source>Unable to create new instance.</source>
-        <translation>Yeni örnek oluşturulamıyor.</translation>
-    </message>
-    <message>
-        <source>Problem deleting instance</source>
-        <translation>Problemi Silme Örneği</translation>
-    </message>
-    <message>
-        <source>Unable to delete instance {current_instance}.</source>
-        <translation>örneğini silemiyor. {current_instance}</translation>
-    </message>
-    <message>
-        <source>The default instance cannot be deleted.</source>
-        <translation>Varsayılan örnek silinemez.</translation>
-    </message>
-    <message>
-        <source>Error deleting instance</source>
-        <translation>Örneği silme hata</translation>
-    </message>
-    <message>
-        <source>The selected instance does not exist.</source>
-        <translation>Seçilen örnek mevcut değil.</translation>
-    </message>
-    <message>
-        <source>Delete instance {current_instance}</source>
-        <translation>örneği sil {current_instance}</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation>Seçilen örneği ve tüm verilerini silmek istediğinizden emin misiniz?</translation>
-    </message>
-    <message>
-        <source>This action cannot be undone.</source>
-        <translation>Bu eylem geri alınamaz.</translation>
-    </message>
-    <message>
-        <source>Convert to SteamCMD</source>
-        <translation>Steamcmd'ye dönüştürün</translation>
-    </message>
-    <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>{name}</translation>
-    </message>
-    <message>
-        <source>Keep Workshop Folder</source>
-        <translation>Atölye Klasörünü Tutun</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation>İptal edilmiş</translation>
-    </message>
-    <message>
         <source>ACF Log Reader</source>
         <translation>ACF Günlük Okuyucu</translation>
     </message>
@@ -2168,28 +2224,8 @@ Manage mods installed from GitHub releases.</source>
                 Bunu Gelişmiş sekmesinin altındaki ayarlarda değiştirebilirsiniz.</translation>
     </message>
     <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation>Atölye klasörü: {existing_instance_workshop_folder&lt;br&gt;&lt;br&gt;Seçenek 1: SteamCMD'ye Dönüştür&lt;br&gt;RimSort, tüm Atölye modlarını yeni örneğin yerel modlar klasörüne kopyalayarak bunları yeni örnekte yönetebileceğiniz SteamCMD modlarına dönüştürecektir. Modların kopyalanmasını önlemek için bu örnekte Atölye klasörü yok sayılacaktır.&lt;br&gt;&lt;br&gt;2. Seçenek: Atölye Klasörünü Sakla&lt;br&gt;Yeni örnek, orijinal örnekle aynı Atölye klasörünü kullanacaktır. Gerekirse bunu daha sonra ayarlardan değiştirebilirsiniz.&lt;br&gt;&lt;br&gt;Nasıl devam etmek istersiniz? {existing_instance_workshop_folder}</translation>
-    </message>
-    <message>
-        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation>Geri yüklenen örnekten bazı klasör yolları geçersizdir ve temizlenmiştir. Lütfen bunları ayarlarda yeniden yapılandırın</translation>
-    </message>
-    <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation>Yerel klasör ayarlanmadığı veya geçersiz olmadığı için Steamcmd SymLink/Kavşağı geri yüklenemedi. SymLink/kavşağının manuel olarak yeniden oluşturulması gerekecektir.</translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation>Örnek klasörü, arşivi çıkardıktan sonra bulunamadı. Belki arşiv yozlaşmış veya örnek adı geçersiz.</translation>
-    </message>
-    <message>
         <source>Player Log</source>
         <translation>Oyuncu günlüğü</translation>
-    </message>
-    <message>
-        <source>An error occurred while restoring instance [{name}].</source>
-        <translation>[] örneği geri yüklenirken bir hata oluştu. {name}</translation>
     </message>
 </context>
 <context>
@@ -2806,6 +2842,14 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <translation>Çeviri bulunamadı - Bu modun yüklü bir çevirisi yok</translation>
     </message>
     <message>
+        <source>Updated {time_ago}. Click to open the Workshop changelog.</source>
+        <translation>{time_ago} güncellendi. Atölye değişiklik günlüğünü açmak için tıklayın.</translation>
+    </message>
+    <message>
+        <source>Recently updated</source>
+        <translation>Yakın zamanda güncellendi</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>En son kaydetmede değil</translation>
     </message>
@@ -3009,6 +3053,22 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <translation>Yorum yapılmadı veya giriş iptal edildi. Bu eylem için yorumlar gereklidir!</translation>
     </message>
     <message>
+        <source>Startup impact: {time}</source>
+        <translation>Başlangıç ​​etkisi: {time}</translation>
+    </message>
+    <message>
+        <source>Off-thread (loading screen): {time}</source>
+        <translation>Konu dışı (yükleme ekranı): {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime} — total game startup: {time}</source>
+        <translation>Ölçülen {datetime} — toplam oyun başlangıcı: {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime}</source>
+        <translation>Ölçülen {datetime}</translation>
+    </message>
+    <message>
         <source>Change mod color</source>
         <translation>Mod rengini değiştir</translation>
     </message>
@@ -3158,8 +3218,20 @@ An alternative updated mod is recommended:
         <translation>Etiketler</translation>
     </message>
     <message>
+        <source>0 updated</source>
+        <translation>0 güncellendi</translation>
+    </message>
+    <message>
+        <source>Click to only show recently updated mods</source>
+        <translation>Yalnızca yakın zamanda güncellenen modları göstermek için tıklayın</translation>
+    </message>
+    <message>
         <source>Workshop Updated</source>
         <translation>Atölye Güncellendi</translation>
+    </message>
+    <message>
+        <source>{padding}{count} updated</source>
+        <translation>{padding}{count} güncellendi</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4160,18 +4232,6 @@ An alternative updated mod is recommended:
         <translation>"Use This Instead" Veritabanı</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Bu süre sınırının düzenlenmesini etkinleştirmek için sağdaki onay kutusunu (Düzenlemeyi etkinleştir) etkinleştirin.
-Bir mod silindikten sonra, bu mod öğesi Yardımcı Meta Veri Veritabanından silinene kadar beklediğimiz süredir. 
-Bu Yardımcı Veritabanı mod renkleri, değiştirilen uyarılar, kullanıcı notları vb. hakkında bilgi içerir. 
-Bu, temel olarak mod renklendirmenizi, kullanıcı notlarınızı vb. silme işleminden sonraki birkaç saniye boyunca korur. 
-(Bu, RimSort dışındaki silme işlemleri için de geçerlidir)</translation>
-    </message>
-    <message>
         <source>Sorting</source>
         <translation>Sıralıyor</translation>
     </message>
@@ -4182,6 +4242,18 @@ Bu, temel olarak mod renklendirmenizi, kullanıcı notlarınızı vb. silme işl
     <message>
         <source>Topologically</source>
         <translation>Topolojik olarak</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Bu süre sınırının düzenlenmesini etkinleştirmek için sağdaki onay kutusunu (Düzenlemeyi etkinleştir) etkinleştirin.
+Bir mod silindikten sonra, bu mod öğesi Yardımcı Meta Veri Veritabanından silinene kadar beklediğimiz süredir.
+Bu Yardımcı Veritabanı mod renkleri, değiştirilen uyarılar, kullanıcı notları vb. hakkında bilgi içerir.
+Bu, temel olarak mod renklendirmenizi, kullanıcı notlarınızı vb. silme işleminden sonraki birkaç saniye boyunca korur.
+(Bu, RimSort dışındaki silme işlemleri için de geçerlidir)</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4200,12 +4272,48 @@ Eşleşen bir sürüm etiketi mevcut ancak boşsa temel etiket dikkate alınmaz.
 ör.(modDependegencyByVersion, loadAfterByVersion, loadBeforeByVersion, in uyumsuzWithByVersion, açıklamalarByVersion)</translation>
     </message>
     <message>
+        <source>Case-insensitive About.xml lookup</source>
+        <translation>Büyük/küçük harfe duyarlı About.xml araması</translation>
+    </message>
+    <message>
+        <source>Enable case-insensitive lookup for About/About.xml.
+Some mods use incorrect casing (e.g., about/about.xml) which breaks on
+case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
+correct path is About/About.xml.
+See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
+        <translation>About/About.xml için büyük/küçük harfe duyarlı olmayan aramayı etkinleştirin.
+Bazı modlar yanlış büyük/küçük harf kullanır (örneğin, about/about.xml).
+büyük/küçük harfe duyarlı dosya sistemleri (Linux). RimWorld modlama spesifikasyonuna göre,
+doğru yol About/About.xml'dir.
+Bakınız: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Etkin mod listesinde eksik olabilecek modların indirilmesi konusunda bildirimde bulunur</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>Aynı paket kimliğine sahip modları bildirir ve görüntüler</translation>
+    </message>
+    <message>
+        <source>Show recently updated mods indicator</source>
+        <translation>Yakın zamanda güncellenen mod göstergesini göster</translation>
+    </message>
+    <message>
+        <source>Shows an icon on Steam Workshop mods that were updated within the configured number of days. The update time is refreshed when RimSort refreshes its metadata.</source>
+        <translation>Yapılandırılan gün sayısı içinde güncellenen Steam Atölyesi modlarında bir simge gösterir. RimSort meta verilerini yenilediğinde güncelleme süresi de yenilenir.</translation>
+    </message>
+    <message>
+        <source>Days to consider a mod recently updated:</source>
+        <translation>Yakın zamanda güncellenen bir modun dikkate alınması gereken günler:</translation>
+    </message>
+    <message>
+        <source>Show startup load time per mod</source>
+        <translation>Mod başına başlangıç ​​yükleme süresini göster</translation>
+    </message>
+    <message>
+        <source>Shows each mod's game startup time, measured by the 'Loading Progress' mod. Requires that mod with its 'Track startup loading impact' setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
+        <translation>'Yükleme İlerlemesi' modu tarafından ölçülen, her modun oyun başlatma süresini gösterir. Bu modun 'Başlangıç ​​yükleme etkisini izle' ayarının etkin olmasını ve kaydedilmiş bir başlangıç ​​etki raporunu (RimWorld kaydetme verileri klasöründe StartupImpactData.xml) gerektirir.</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
@@ -5353,7 +5461,7 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
     </message>
     <message>
         <source>You are running RimSort {current_version}&lt;br&gt;Do you want to update now?</source>
-        <translation>RimSort'u çalıştırıyorsunuz {current_version&gt;&lt;br&gt;Şimdi güncellemek istiyor musunuz? {current_version}</translation>
+        <translation>RimSort'u çalıştırıyorsunuz  {current_version} &lt;br&gt;</translation>
     </message>
     <message>
         <source>Do you want to proceed with the update?</source>
@@ -5377,6 +5485,10 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
     <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>Aşağıdaki tabloda, değiştirme moduna göre gruplandırılmış "Bunun Yerine Bunu Kullan" veritabanına göre önerilen değiştirmelerle birlikte Atölye modları gösterilmektedir.</translation>
+    </message>
+    <message>
+        <source>Do nothing and exit</source>
+        <translation>Hiçbir şey yapmayın ve çıkın</translation>
     </message>
     <message>
         <source>Select</source>
@@ -5414,14 +5526,6 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
         <source>Replacement [{0}]</source>
         <translation>Değiştirme [{0}]</translation>
     </message>
-    <message>
-        <source>Use This Instead</source>
-        <translation>Bunun yerine bunu kullan</translation>
-    </message>
-    <message>
-        <source>Successfully {action}d {count} mods</source>
-        <translation>{action}d {count} mod başarıyla tamamlandı</translation>
-    </message>
 </context>
 <context>
     <name>WorkshopModUpdaterPanel</name>
@@ -5440,6 +5544,10 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
     <message>
         <source>Update Mods with Steam</source>
         <translation>Modları Steam ile Güncelleyin</translation>
+    </message>
+    <message>
+        <source>Delete Selected Mods</source>
+        <translation>Seçilen Modları Sil</translation>
     </message>
     <message>
         <source>

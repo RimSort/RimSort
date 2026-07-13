@@ -4,6 +4,7 @@ from typing import Any
 from loguru import logger
 
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.generic import format_time_display
 
 # Module-level constants for better access
@@ -66,7 +67,15 @@ class ModInfo:
             else:
                 source = DATABASE
             path = metadata.get("path", "")
-            downloaded_time_raw = metadata.get("internal_time_touched")
+            # Prefer acf_time_touched (ACF WorkshopItemsInstalled.timetouched)
+            # as the actual download time for SteamCMD mods.  Falls back to
+            # internal_time_touched (file mtime) for other mod types.
+            acf_time_touched = metadata.get("acf_time_touched")
+            downloaded_time_raw = (
+                acf_time_touched
+                if acf_time_touched is not None
+                else metadata.get("internal_time_touched")
+            )
             updated_time_raw = metadata.get("external_time_updated")
             workshop_url = cls._generate_workshop_url(published_file_id)
             type = metadata.get("type", "")
@@ -116,16 +125,27 @@ class ModInfo:
         *,
         type: str = "",
         installed_status: str = "",
+        acf_time_touched: int | None = None,
+        external_time_updated: int | None = None,
     ) -> "ModInfo":
         """Create ModInfo from a typed ListedMod object.
 
         :param mod: The ListedMod (or AboutXmlMod) to convert
         :param type: Override type label (e.g. "Original", "Replacement")
         :param installed_status: Override installed status label
+        :param acf_time_touched: ACF timetouched (actual download time for
+            SteamCMD mods).  When provided, used as downloaded_time_raw in
+            preference to internal_time_touched.
+        :param external_time_updated: Workshop update time from Steam API
+            or ACF fallback.  When provided, used as updated_time_raw.
         :return: A populated ModInfo instance
         """
         name = mod.name or UNKNOWN
-        packageid = str(mod.package_id) if isinstance(mod, AboutXmlMod) else ""
+        packageid = (
+            str(mod.package_id)
+            if isinstance(mod, AboutXmlMod)
+            else DEFAULT_MISSING_PACKAGEID
+        )
         published_file_id = mod.published_file_id or ""
         supported_versions = cls._parse_supported_versions_static(
             sorted(mod.supported_versions) if mod.supported_versions else None
@@ -148,9 +168,22 @@ class ModInfo:
             authors = UNKNOWN
 
         path = str(mod.mod_path) if mod.mod_path else ""
-        downloaded_time_raw: float | None = (
-            float(mod.internal_time_touched) if mod.internal_time_touched >= 0 else None
-        )
+
+        # Prefer ACF timetouched as the actual download time when available
+        downloaded_time_raw: float | None
+        if acf_time_touched is not None and acf_time_touched > 0:
+            downloaded_time_raw = float(acf_time_touched)
+        elif mod.internal_time_touched >= 0:
+            downloaded_time_raw = float(mod.internal_time_touched)
+        else:
+            downloaded_time_raw = None
+
+        updated_time_raw: float | None
+        if external_time_updated is not None and external_time_updated > 0:
+            updated_time_raw = float(external_time_updated)
+        else:
+            updated_time_raw = None
+
         workshop_url = cls._generate_workshop_url(published_file_id)
 
         return cls(
@@ -163,7 +196,7 @@ class ModInfo:
             source=source,
             path=path,
             downloaded_time_raw=downloaded_time_raw,
-            updated_time_raw=None,
+            updated_time_raw=updated_time_raw,
             workshop_url=workshop_url,
             type=type,
             installed_status=installed_status,
@@ -202,7 +235,7 @@ class ModInfo:
 
     @staticmethod
     def _parse_supported_versions_static(
-        supported_versions: dict[str, Any] | list[str] | str | None,
+        supported_versions: dict[str, Any] | list[str] | set[str] | str | None,
     ) -> str:
         """
         Parse supported versions from metadata into a normalized, sorted, comma-separated string.
@@ -230,7 +263,7 @@ class ModInfo:
                     normalized = ModInfo._normalize_version(li)
                     if normalized:
                         versions = [normalized]
-        elif isinstance(supported_versions, list):
+        elif isinstance(supported_versions, (list, set)):
             versions = [ModInfo._normalize_version(v) for v in supported_versions if v]
         elif isinstance(supported_versions, str):
             normalized = ModInfo._normalize_version(supported_versions)

@@ -91,6 +91,9 @@ typecheck:
 pyright:
     uv run python -m pyright -p pyproject.toml .
 
+# Run ruff fixes
+ruff: ruff-fix ruff-format-fix
+
 # Check and automatically fix linting issues (ruff check --fix)
 ruff-fix:
     uv run ruff check {{ruff_config}} . --fix
@@ -126,7 +129,7 @@ deferred-imports:
     uv run python check_deferred_imports.py
 
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
-fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix
+fix: ruff shfmt-fix markdownlint-fix
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage
@@ -203,16 +206,18 @@ i18n-compile:
     Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm; Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
 
 # Extract translatable strings from source code into .ts files (for translators)
+# -extensions py is required: lupdate's directory scan does not include .py
+# in its default extension list, so without it every entry is marked obsolete
 [unix]
 i18n-update:
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
-    uv run pyside6-lupdate app/ -ts locales/*.ts
+    uv run pyside6-lupdate -extensions py app/ -ts locales/*.ts
 
 [windows]
 i18n-update:
-    uv run pyside6-lupdate app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
+    uv run pyside6-lupdate -extensions py app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Utilities

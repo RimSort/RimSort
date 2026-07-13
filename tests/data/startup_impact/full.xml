@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StartupImpactSession>
+	<sessionData>
+		<loadingTime>42500</loadingTime>
+		<metrics>
+			<keys>
+				<li>LoadingProgress.StartupImpact.LoadModXml</li>
+				<li>LoadingProgress.StartupImpact.ResolveReferences</li>
+			</keys>
+			<values>
+				<li>10500</li>
+				<li>3250</li>
+			</values>
+		</metrics>
+		<mods>
+			<li>
+				<modName>Harmony</modName>
+				<modPackageId>brrainz.harmony</modPackageId>
+				<metrics>
+					<keys>
+						<li>LoadingProgress.StartupImpact.Constructor</li>
+						<li>LoadingProgress.StartupImpact.LoadModXml</li>
+					</keys>
+					<values>
+						<li>750</li>
+						<li>250</li>
+					</values>
+				</metrics>
+				<totalImpact>1000</totalImpact>
+				<offThreadMetrics>
+					<keys>
+						<li>LoadingProgress.StartupImpact.Textures</li>
+					</keys>
+					<values>
+						<li>512.5</li>
+					</values>
+				</offThreadMetrics>
+				<offThreadTotalImpact>512.5</offThreadTotalImpact>
+			</li>
+			<li>
+				<modName>Big Content Mod</modName>
+				<modPackageId>Author.BigContentMod</modPackageId>
+				<metrics>
+					<keys>
+						<li>LoadingProgress.StartupImpact.LoadModXml</li>
+					</keys>
+					<values>
+						<li>7500</li>
+					</values>
+				</metrics>
+				<totalImpact>7500</totalImpact>
+			</li>
+			<li>
+				<modName>Legacy Named Mod</modName>
+				<metrics>
+					<keys>
+						<li>LoadingProgress.StartupImpact.Constructor</li>
+					</keys>
+					<values>
+						<li>2500</li>
+					</values>
+				</metrics>
+				<totalImpact>2500</totalImpact>
+			</li>
+		</mods>
+	</sessionData>
+</StartupImpactSession>

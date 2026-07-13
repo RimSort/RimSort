@@ -113,7 +113,11 @@ class MetadataController(QObject):
         """Refresh the metadata."""
         self.reset_paths()
         prefer_versioned = self.settings.prefer_versioned_about_tags
-        self.metadata_mediator.refresh_metadata(prefer_versioned=prefer_versioned)
+        case_insensitive = self.settings.case_insensitive_about_xml_lookup
+        self.metadata_mediator.refresh_metadata(
+            prefer_versioned=prefer_versioned,
+            case_insensitive_about_xml=case_insensitive,
+        )
 
         with self.metadata_db_controller.Session() as session:
             for path, mod_data in self.metadata_mediator.mods_metadata.items():
@@ -184,8 +188,11 @@ class MetadataController(QObject):
         self.metadata_mediator.workshop_mods_path = workshop_mods_path
         self.metadata_mediator.local_mods_path = local_mods_path
         self.metadata_mediator.game_path = game_path
-        self.metadata_mediator.no_version_warning_path = _get_path(
-            active_settings.external_no_version_warning_file_path
+        self.metadata_mediator.no_version_warning_path = self._resolve_db_path(
+            active_settings.external_no_version_warning_metadata_source,
+            active_settings.external_no_version_warning_file_path,
+            active_settings.external_no_version_warning_repo_path,
+            "ModIdsToFix.xml",
         )
         self.metadata_mediator.use_this_instead_path = self._resolve_db_path(
             active_settings.external_use_this_instead_metadata_source,
@@ -446,6 +453,10 @@ class MetadataController(QObject):
         mod = self.mods_metadata.get(path)
         if not isinstance(mod, AboutXmlMod):
             return False
+        if self.metadata_mediator.no_version_warning:
+            pid = str(mod.package_id).lower()
+            if pid in self.metadata_mediator.no_version_warning:
+                return False
         if not mod.supported_versions:
             return False
         game_major_minor = ".".join(self.game_version.split(".")[:2])

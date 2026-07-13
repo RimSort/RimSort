@@ -55,8 +55,20 @@
         <translation>Обновить</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>Загрузка выбрана с помощью SteamCMD</translation>
+        <source>SteamCMD</source>
+        <translation>SteamCMD</translation>
+    </message>
+    <message>
+        <source>Download with SteamCMD</source>
+        <translation>Скачать с помощью SteamCMD</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Выбирать</translation>
+    </message>
+    <message>
+        <source>Steam</source>
+        <translation>Пар</translation>
     </message>
     <message>
         <source>Subscribe selected</source>
@@ -200,8 +212,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>Загрузить журнал</translation>
     </message>
     <message>
-        <source>Upload the log file to 0x0.st</source>
-        <translation>Загрузить файл журнала на 0x0.st</translation>
+        <source>Upload log to RimSort Logs</source>
+        <translation>Загрузить журнал в RimSort Logs</translation>
     </message>
     <message>
         <source>Hide Details</source>
@@ -252,19 +264,19 @@ The following table displays duplicate mods grouped by package ID. Select which 
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Try simplifying your pattern or check for syntax errors.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Попробуйте упростить шаблон или проверьте наличие синтаксических ошибок. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Try running RimSort with administrator privileges or check folder permissions.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Попробуйте запустить RimSort с правами администратора или проверьте права доступа к папке. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Попробуйте выполнить поиск меньшими партиями или используйте метод «потокового поиска» для очень больших файлов. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
-        <translation>{error_msg&gt;&lt;br&gt;&lt;br&gt;Проверьте настройки и повторите попытку. {error_msg}</translation>
+        <translation>{error_msg} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>File Access Error</source>
@@ -627,6 +639,217 @@ Manage mods installed from GitHub releases.</source>
     </message>
 </context>
 <context>
+    <name>InstanceService</name>
+    <message>
+        <source>Essential path(s)</source>
+        <translation>Основные пути</translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>Основные пути недействительны или не заданы!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>Для RimSort необходимо указать следующие пути.&lt;br/&gt;&lt;br/&gt;1) Папка игры (папка, в которой установлен RimWorld).&lt;br/&gt;&lt;br/&gt;2) Папка конфигурации (папка, в которой находится ModsConfig.xml)&lt;br/&gt;&lt;br/&gt;3) Локальная папка модов (папка Mods внутри установки RimWorld).&lt;br/&gt;&lt;br/&gt;4) Папка модов Steam (устанавливается только в том случае, если вы используете Steam, пользователь также включает клиент Steam). Интеграция)&lt;br/&gt;&lt;br/&gt;Попробуйте использовать функцию автоопределения, чтобы автоматически установить все пути.&lt;br/&gt;&lt;br/&gt;Хотите ли вы открыть настройки, чтобы настроить их сейчас?</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Нет</translation>
+    </message>
+    <message>
+        <source>Provide instance name</source>
+        <translation>Укажите имя экземпляра</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>Введите уникальное имя для резервного экземпляра, отличное от «{name}».</translation>
+    </message>
+    <message>
+        <source>Compressing [{instance_name}] instance folder to archive...</source>
+        <translation>Сжатие папки экземпляра [{instance_name}] для архивирования...</translation>
+    </message>
+    <message>
+        <source>Error compressing instance</source>
+        <translation>Ошибка сжатия экземпляра</translation>
+    </message>
+    <message>
+        <source>An error occurred while compressing instance folder: {e}</source>
+        <translation>Произошла ошибка при сжатии папки экземпляра: {e}.</translation>
+    </message>
+    <message>
+        <source>Please check the logs for more information.</source>
+        <translation>Пожалуйста, проверьте журналы для получения дополнительной информации.</translation>
+    </message>
+    <message>
+        <source>Error restoring instance</source>
+        <translation>Ошибка восстановления экземпляра.</translation>
+    </message>
+    <message>
+        <source>Archive not found at path: {input_path}</source>
+        <translation>Архив не найден по пути: {input_path}</translation>
+    </message>
+    <message>
+        <source>An error occurred while reading instance archive: {e}</source>
+        <translation>Произошла ошибка при чтении архива экземпляра: {e}</translation>
+    </message>
+    <message>
+        <source>Instance folder exists</source>
+        <translation>Папка экземпляра существует</translation>
+    </message>
+    <message>
+        <source>Instance folder already exists: {instance_folder_path}</source>
+        <translation>Папка экземпляра уже существует: {instance_folder_path}</translation>
+    </message>
+    <message>
+        <source>Do you want to continue and replace the existing instance folder?</source>
+        <translation>Хотите продолжить и заменить существующую папку экземпляра?</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>Заменять</translation>
+    </message>
+    <message>
+        <source>Restoring instance [{name}] from archive...</source>
+        <translation>Восстановление экземпляра [{name}] из архива...</translation>
+    </message>
+    <message>
+        <source>Invalid instance folder paths</source>
+        <translation>Неверные пути к папкам экземпляров</translation>
+    </message>
+    <message>
+        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
+        <translation>Некоторые пути к папкам восстановленного экземпляра недействительны и удалены. Пожалуйста, перенастройте их в настройках</translation>
+    </message>
+    <message>
+        <source>Invalid paths: {path}</source>
+        <translation>Неверные пути: {path}</translation>
+    </message>
+    <message>
+        <source>Couldn't restore steamcmd symlink/junction</source>
+        <translation>Не удалось восстановить символическую ссылку/переход SteamCMD.</translation>
+    </message>
+    <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation>Символическую ссылку/соединение SteamCMD не удалось восстановить, так как локальная папка не задана или недействительна. Символическую ссылку/соединение необходимо будет воссоздать вручную.</translation>
+    </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>Произошла ошибка при восстановлении экземпляра [{name}].</translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
+        <translation>Папка экземпляра не найдена после распаковки архива. Возможно, архив поврежден или имя экземпляра неверно.</translation>
+    </message>
+    <message>
+        <source>Create new instance</source>
+        <translation>Создать новый экземпляр</translation>
+    </message>
+    <message>
+        <source>Input a unique name of new instance that is not already used:</source>
+        <translation>Введите уникальное имя нового экземпляра, которое еще не использовалось:</translation>
+    </message>
+    <message>
+        <source>Clone instance [{name}]</source>
+        <translation>Клонировать экземпляр [{name}]</translation>
+    </message>
+    <message>
+        <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation>Что бы вы хотели сделать с настроенной папкой модов Мастерской?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>Папка Мастерской:  {folder} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation>Конвертировать в SteamCMD</translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation>Сохранить папку мастерской</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Отменено</translation>
+    </message>
+    <message>
+        <source>Workshop mods not found</source>
+        <translation>Моды мастерской не найдены</translation>
+    </message>
+    <message>
+        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
+        <translation>Папка модов Мастерской в ​​[{existing_instance_workshop_folder}] не найдена.</translation>
+    </message>
+    <message>
+        <source>Error cloning instance</source>
+        <translation>Ошибка клонирования экземпляра</translation>
+    </message>
+    <message>
+        <source>Unable to clone instance.</source>
+        <translation>Невозможно клонировать экземпляр.</translation>
+    </message>
+    <message>
+        <source>Please enter a valid, unique instance name. It cannot be '{name}' or empty.</source>
+        <translation>Введите действительное уникальное имя экземпляра. Оно не может быть «{name}» или пустым.</translation>
+    </message>
+    <message>
+        <source>Create new instance [{instance_name}]</source>
+        <translation>Создать новый экземпляр [] {instance_name}</translation>
+    </message>
+    <message>
+        <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation>Хотите ли вы автоматически генерировать аргументы запуска для нового экземпляра?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>Будет предпринята попытка сгенерировать аргументы запуска для нового экземпляра на основе настроенных папок Game/Config.&lt;br&gt;&lt;br&gt;Предварительный просмотр сгенерированных аргументов запуска:&lt;br&gt;{preview}</translation>
+    </message>
+    <message>
+        <source>Error creating instance</source>
+        <translation>Ошибка создания экземпляра</translation>
+    </message>
+    <message>
+        <source>Unable to create new instance.</source>
+        <translation>Невозможно создать новый экземпляр.</translation>
+    </message>
+    <message>
+        <source>Problem deleting instance</source>
+        <translation>Проблема с удалением экземпляра</translation>
+    </message>
+    <message>
+        <source>Unable to delete instance {current_instance}.</source>
+        <translation>Невозможно удалить экземпляр {current_instance}.</translation>
+    </message>
+    <message>
+        <source>The default instance cannot be deleted.</source>
+        <translation>Экземпляр по умолчанию не может быть удален.</translation>
+    </message>
+    <message>
+        <source>Error deleting instance</source>
+        <translation>Ошибка удаления экземпляра.</translation>
+    </message>
+    <message>
+        <source>The selected instance does not exist.</source>
+        <translation>Выбранный экземпляр не существует.</translation>
+    </message>
+    <message>
+        <source>Delete instance {current_instance}</source>
+        <translation>Удалить экземпляр {current_instance}</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete the selected instance and all of its data?</source>
+        <translation>Вы уверены, что хотите удалить выбранный экземпляр и все его данные?</translation>
+    </message>
+    <message>
+        <source>This action cannot be undone.</source>
+        <translation>Это действие невозможно отменить.</translation>
+    </message>
+</context>
+<context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
@@ -784,10 +1007,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>Файл: {path}</translation>
     </message>
     <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation>Загрузка {path.name} на 0x0.st...</translation>
-    </message>
-    <message>
         <source>Uploaded file</source>
         <translation>Файл загружен</translation>
     </message>
@@ -798,10 +1017,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Failed to upload file.</source>
         <translation>Не удалось загрузить файл.</translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
-        <translation>Не удалось загрузить файл на 0x0.st</translation>
     </message>
     <message>
         <source>Could not save active mods</source>
@@ -1128,8 +1343,20 @@ Manage mods installed from GitHub releases.</source>
         <translation>Вам нужно будет повторить импорт Rentry снова после завершения загрузки.&lt;br&gt;&lt;br&gt;Если после завершения загрузки отсутствуют моды, они будут показаны на панели отсутствующих модов.&lt;br&gt;&lt;br&gt;Если RimSort по-прежнему не может загрузить некоторые моды, это связано с тем, что данные модов недоступны ни в Rentry link, ни в базе данных Steam.</translation>
     </message>
     <message>
+        <source>Uploading {path_name} to RimSort Logs...</source>
+        <translation>Загрузка {path_name} в журналы RimSort...</translation>
+    </message>
+    <message>
+        <source>Uploaded {path_name} to RimSort Logs</source>
+        <translation>Загружено {path_name} в журналы RimSort.</translation>
+    </message>
+    <message>
         <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
         <translation>URL-адрес скопирован в буфер обмена:&lt;br&gt;&lt;br&gt;{ret}</translation>
+    </message>
+    <message>
+        <source>Failed to upload to RimSort Logs</source>
+        <translation>Не удалось загрузить в журналы RimSort.</translation>
     </message>
     <message>
         <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
@@ -1161,7 +1388,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>{conflicts_list}&lt;br&gt;&lt;br&gt;How would you like to proceed?&lt;br&gt;&lt;br&gt;1) Overwrite All — Replace all existing files and directories.&lt;br&gt;2) Skip Existing — Extract only new files and leave existing ones untouched.&lt;br&gt;3) Cancel — Abort the extraction.</source>
-        <translation>{conflicts_list&gt;&lt;br&gt;&lt;br&gt;Как вы хотите действовать?&lt;br&gt;&lt;br&gt;1) Перезаписать все — заменить все существующие файлы и каталоги.&lt;br&gt;2) Пропустить существующие — извлечь только новые файлы и оставить существующие нетронутыми.&lt;br&gt;3) Отмена — прервать извлечение. {conflicts_list}</translation>
+        <translation>{conflicts_list} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Git integration will not work without Git installed! Do you want to open download page for Git?&lt;br&gt;&lt;br&gt;If you just installed Git, please restart RimSort for the PATH changes to take effect.</source>
@@ -1198,10 +1425,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
         <translation>Rimworld Save (*.rws) ;; Все файлы (*.*)</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to https://0x0.st/</source>
-        <translation>Загружено {path.name} на https://0x0.st/</translation>
     </message>
     <message>
         <source>Reset SteamCMD ACF data file</source>
@@ -1421,6 +1644,11 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>{count} repositories could not be pushed.</source>
         <translation>{count} репозиториев не удалось отправить.</translation>
+    </message>
+    <message>
+        <source>Successful pushes:
+</source>
+        <translation>Успешные нажатия:</translation>
     </message>
     <message>
         <source>Partial Push Completed</source>
@@ -1884,7 +2112,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
-        <translation>Модов: {count} было автоматически обновлено.&lt;br&gt;&lt;br&gt;{summary&gt;&lt;br&gt;&lt;br&gt;Обновленные версии не появятся, пока вы не обновите их. Обновить сейчас? {summary}</translation>
+        <translation>Модов: {count} было автоматически обновлено.&lt;br&gt;&lt;br&gt; {summary} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Errors occurred while checking for updates:&lt;br&gt;{errors}</source>
@@ -1893,10 +2121,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Successful updates:&lt;br&gt;</source>
         <translation>Успешные обновления:&lt;br&gt;</translation>
-    </message>
-    <message>
-        <source>Successful pushes:&lt;br&gt;</source>
-        <translation>Успешные отправки:&lt;br&gt;</translation>
     </message>
     <message>
         <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
@@ -1994,200 +2218,12 @@ Manage mods installed from GitHub releases.</source>
                 Вы можете изменить это в настройках на вкладке Дополнительно.</translation>
     </message>
     <message>
-        <source>Create new instance</source>
-        <translation>Создать новый инстанс</translation>
-    </message>
-    <message>
-        <source>Input a unique name of new instance that is not already used:</source>
-        <translation>Введите уникальное имя нового инстанса, которое еще не используется:</translation>
-    </message>
-    <message>
-        <source>Provide instance name</source>
-        <translation>Укажите имя инстанса</translation>
-    </message>
-    <message>
-        <source>Clone instance [{existing_instance_name}]</source>
-        <translation>Клонировать инстанс [{existing_instance_name}]</translation>
-    </message>
-    <message>
-        <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation>Что вы хотите сделать с настроенной папкой модов Workshop?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation>Папка Мастерской: {existing_instance_workshop_folder&gt;&lt;br&gt;&lt;br&gt;Вариант 1: Преобразование в SteamCMD&lt;br&gt;RimSort скопирует все моды Мастерской в ​​локальную папку модов нового экземпляра, преобразуя их в моды SteamCMD, которыми вы сможете управлять внутри нового экземпляра. Папка Workshop будет игнорироваться для этого экземпляра, чтобы предотвратить дублирование модов.&lt;br&gt;&lt;br&gt;Вариант 2: Сохранить папку Workshop&lt;br&gt;Новый экземпляр будет использовать ту же папку Workshop, что и исходный экземпляр. При необходимости вы можете изменить это позже в настройках.&lt;br&gt;&lt;br&gt;Как вы хотите продолжить? {existing_instance_workshop_folder}</translation>
-    </message>
-    <message>
-        <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation>Сжатие папки инстанса [{instance_name}] в архив...</translation>
-    </message>
-    <message>
-        <source>Error compressing instance</source>
-        <translation>Ошибка сжатия инстанса</translation>
-    </message>
-    <message>
-        <source>An error occurred while compressing instance folder: {e}</source>
-        <translation>Произошла ошибка при сжатии папки инстанса: {e}</translation>
-    </message>
-    <message>
-        <source>Please check the logs for more information.</source>
-        <translation>Пожалуйста, проверьте журналы для получения дополнительной информации.</translation>
-    </message>
-    <message>
-        <source>Error restoring instance</source>
-        <translation>Ошибка восстановления инстанса</translation>
-    </message>
-    <message>
-        <source>Archive not found at path: {input_path}</source>
-        <translation>Архив не найден по пути: {input_path}</translation>
-    </message>
-    <message>
-        <source>An error occurred while reading instance archive: {e}</source>
-        <translation>Произошла ошибка при чтении архива инстанса: {e}</translation>
-    </message>
-    <message>
-        <source>Instance folder exists</source>
-        <translation>Папка инстанса существует</translation>
-    </message>
-    <message>
-        <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation>Папка инстанса уже существует: {instance_folder_path}</translation>
-    </message>
-    <message>
-        <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation>Вы хотите продолжить и заменить существующую папку инстанса?</translation>
-    </message>
-    <message>
-        <source>Replace</source>
-        <translation>Заменить</translation>
-    </message>
-    <message>
-        <source>Restoring instance [{name}] from archive...</source>
-        <translation>Восстановление инстанса [{name}] из архива...</translation>
-    </message>
-    <message>
-        <source>Invalid instance folder paths</source>
-        <translation>Недопустимые пути папок инстанса</translation>
-    </message>
-    <message>
-        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation>Некоторые пути папок восстановленного инстанса недопустимы и были очищены. Пожалуйста, перенастройте их в настройках</translation>
-    </message>
-    <message>
-        <source>Invalid paths: {path}</source>
-        <translation>Недопустимые пути: {path}</translation>
-    </message>
-    <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
-        <translation>Не удалось восстановить символическую ссылку/связь steamcmd</translation>
-    </message>
-    <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation>Символическая ссылка/связь steamcmd не может быть восстановлена, так как локальная папка не установлена или недействительна. Символическая ссылка/связь должна быть воссоздана вручную.</translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation>Папка инстанса не была найдена после извлечения архива. Возможно, архив поврежден или имя инстанса недействительно.</translation>
-    </message>
-    <message>
-        <source>Workshop mods not found</source>
-        <translation>Моды Workshop не найдены</translation>
-    </message>
-    <message>
-        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>Папка модов Workshop по адресу [{existing_instance_workshop_folder}] не найдена.</translation>
-    </message>
-    <message>
-        <source>Error cloning instance</source>
-        <translation>Ошибка клонирования инстанса</translation>
-    </message>
-    <message>
-        <source>Unable to clone instance.</source>
-        <translation>Не удалось клонировать инстанс.</translation>
-    </message>
-    <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>{DEFAULT_INSTANCE_NAME}</translation>
-    </message>
-    <message>
-        <source>Create new instance [{instance_name}]</source>
-        <translation>Создать новый инстанс [{instance_name}]</translation>
-    </message>
-    <message>
-        <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation>Хотите ли вы автоматически сгенерировать аргументы запуска для нового инстанса?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
-        <translation>Будет предпринята попытка сгенерировать аргументы запуска для нового экземпляра на основе настроенных папок Game/Config.&lt;br&gt;&lt;br&gt;Предварительный просмотр сгенерированных аргументов запуска:&lt;br&gt;{preview}</translation>
-    </message>
-    <message>
-        <source>Error creating instance</source>
-        <translation>Ошибка создания инстанса</translation>
-    </message>
-    <message>
-        <source>Unable to create new instance.</source>
-        <translation>Не удалось создать новый инстанс.</translation>
-    </message>
-    <message>
-        <source>Problem deleting instance</source>
-        <translation>Проблема при удалении инстанса</translation>
-    </message>
-    <message>
-        <source>Unable to delete instance {current_instance}.</source>
-        <translation>Не удалось удалить инстанс {current_instance}.</translation>
-    </message>
-    <message>
-        <source>The default instance cannot be deleted.</source>
-        <translation>Инстанс по умолчанию не может быть удален.</translation>
-    </message>
-    <message>
-        <source>Error deleting instance</source>
-        <translation>Ошибка удаления инстанса</translation>
-    </message>
-    <message>
-        <source>The selected instance does not exist.</source>
-        <translation>Выбранный инстанс не существует.</translation>
-    </message>
-    <message>
-        <source>Delete instance {current_instance}</source>
-        <translation>Удалить инстанс {current_instance}</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation>Вы уверены, что хотите удалить выбранный инстанс и все его данные?</translation>
-    </message>
-    <message>
-        <source>This action cannot be undone.</source>
-        <translation>Это действие нельзя отменить.</translation>
-    </message>
-    <message>
-        <source>Convert to SteamCMD</source>
-        <translation>Преобразовать в SteamCmd</translation>
-    </message>
-    <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>{name}</translation>
-    </message>
-    <message>
-        <source>Keep Workshop Folder</source>
-        <translation>Держите папку мастерской</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation>Отменен</translation>
-    </message>
-    <message>
         <source>ACF Log Reader</source>
         <translation>Acf log reader</translation>
     </message>
     <message>
         <source>Player Log</source>
         <translation>Журнал журнал</translation>
-    </message>
-    <message>
-        <source>An error occurred while restoring instance [{name}].</source>
-        <translation>Произошла ошибка при восстановлении экземпляра [{name}].</translation>
     </message>
 </context>
 <context>
@@ -2804,6 +2840,14 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>Перевод не найден — в этом моде не установлен перевод.</translation>
     </message>
     <message>
+        <source>Updated {time_ago}. Click to open the Workshop changelog.</source>
+        <translation>Обновлено . Нажмите, чтобы открыть журнал изменений Мастерской. {time_ago}</translation>
+    </message>
+    <message>
+        <source>Recently updated</source>
+        <translation>Недавно обновлено</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>Не в последнем сохранении</translation>
     </message>
@@ -3064,6 +3108,22 @@ Should be Loaded Before:</source>
 Должен загружаться перед:</translation>
     </message>
     <message>
+        <source>Startup impact: {time}</source>
+        <translation>Влияние на запуск: {time}</translation>
+    </message>
+    <message>
+        <source>Off-thread (loading screen): {time}</source>
+        <translation>Вне темы (экран загрузки): {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime} — total game startup: {time}</source>
+        <translation>Измерено {datetime} — общее количество запусков игры: {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime}</source>
+        <translation>Измерено {datetime}</translation>
+    </message>
+    <message>
         <source>Change mod color</source>
         <translation>Изменить цвет мода</translation>
     </message>
@@ -3168,8 +3228,20 @@ Alternative Dependencies:</source>
         <translation>Теги</translation>
     </message>
     <message>
+        <source>0 updated</source>
+        <translation>0 обновлено</translation>
+    </message>
+    <message>
+        <source>Click to only show recently updated mods</source>
+        <translation>Нажмите, чтобы показать только недавно обновленные моды</translation>
+    </message>
+    <message>
         <source>Workshop Updated</source>
         <translation>Мастерская обновлена</translation>
+    </message>
+    <message>
+        <source>{padding}{count} updated</source>
+        <translation>{padding}{count} обновлено</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4162,18 +4234,6 @@ Alternative Dependencies:</source>
         <translation>База данных "Используйте это вместо"</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>Чтобы разрешить редактирование этого лимита времени, установите флажок (Разрешить редактирование) справа.
-После удаления мода мы ждем, пока этот элемент мода не будет удален из базы данных вспомогательных метаданных. 
-Эта вспомогательная база данных содержит информацию о цветах модов, включенных предупреждениях, примечаниях пользователя и т. д. 
-По сути, это сохраняет цвет вашего мода, пользовательские заметки и т. д. в течение этого количества секунд после удаления. 
-(Это относится и к удалению за пределами RimSort)</translation>
-    </message>
-    <message>
         <source>Sorting</source>
         <translation>Сортировка</translation>
     </message>
@@ -4184,6 +4244,18 @@ This basically preserves your mod coloring, user notes etc. for this many second
     <message>
         <source>Topologically</source>
         <translation>По топологии</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
+(This applies to deletion outside of RimSort too)</source>
+        <translation>Чтобы разрешить редактирование этого лимита времени, установите флажок (Разрешить редактирование) справа.
+После удаления мода мы ждем, пока этот элемент мода не будет удален из базы данных вспомогательных метаданных.
+Эта вспомогательная база данных содержит информацию о цветах модов, включенных предупреждениях, примечаниях пользователя и т. д.
+По сути, это сохраняет цвет вашего мода, пользовательские заметки и т. д. в течение этого количества секунд после удаления.
+(Это относится и к удалению за пределами RimSort)</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4206,12 +4278,48 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
 например (modDependencyByVersion, loadAfterByVersion, loadBeforeByVersion, inсовместимыйWithByVersion,descriptionsByVersion)</translation>
     </message>
     <message>
+        <source>Case-insensitive About.xml lookup</source>
+        <translation>Поиск в About.xml без учета регистра</translation>
+    </message>
+    <message>
+        <source>Enable case-insensitive lookup for About/About.xml.
+Some mods use incorrect casing (e.g., about/about.xml) which breaks on
+case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
+correct path is About/About.xml.
+See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
+        <translation>Включите поиск без учета регистра для About/About.xml.
+Некоторые моды используют неверный регистр (например, about/about.xml), который не работает.
+файловые системы с учетом регистра (Linux). Согласно спецификации моддинга RimWorld,
+правильный путь — About/About.xml.
+См.: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml.</translation>
+    </message>
+    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>Уведомляет о необходимости загрузки модов, которые могут отсутствовать в активном списке модов.</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>Уведомляет и отображает моды с одинаковым идентификатором пакета.</translation>
+    </message>
+    <message>
+        <source>Show recently updated mods indicator</source>
+        <translation>Показывать индикатор недавно обновленных модов</translation>
+    </message>
+    <message>
+        <source>Shows an icon on Steam Workshop mods that were updated within the configured number of days. The update time is refreshed when RimSort refreshes its metadata.</source>
+        <translation>Показывает значок на модах Мастерской Steam, которые были обновлены в течение заданного количества дней. Время обновления обновляется, когда RimSort обновляет свои метаданные.</translation>
+    </message>
+    <message>
+        <source>Days to consider a mod recently updated:</source>
+        <translation>Дни, в течение которых стоит рассмотреть недавно обновленный мод:</translation>
+    </message>
+    <message>
+        <source>Show startup load time per mod</source>
+        <translation>Показать время загрузки при запуске каждого мода</translation>
+    </message>
+    <message>
+        <source>Shows each mod's game startup time, measured by the 'Loading Progress' mod. Requires that mod with its 'Track startup loading impact' setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
+        <translation>Показывает время запуска игры каждого мода, измеренное модом «Прогресс загрузки». Требуется этот мод с включенной настройкой «Отслеживать влияние загрузки при запуске» и сохраненный отчет о влиянии при запуске (StartupImpactData.xml в папке сохранения данных RimWorld).</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
@@ -5355,7 +5463,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>You are running RimSort {current_version}&lt;br&gt;Do you want to update now?</source>
-        <translation>Вы используете RimSort {current_version&gt;&lt;br&gt;Хотите обновить сейчас? {current_version}</translation>
+        <translation>Вы используете RimSort  {current_version} &lt;br&gt;</translation>
     </message>
     <message>
         <source>Do you want to proceed with the update?</source>
@@ -5379,6 +5487,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
         <translation>В следующей таблице показаны моды Мастерской с предлагаемыми заменами в соответствии с базой данных «Используйте это вместо», сгруппированные по заменяющим модам.</translation>
+    </message>
+    <message>
+        <source>Do nothing and exit</source>
+        <translation>Ничего не делать и выйти</translation>
     </message>
     <message>
         <source>Select</source>
@@ -5416,14 +5528,6 @@ Please reach out to us for support at: {support_url}</source>
         <source>Replacement [{0}]</source>
         <translation>Замена [{0}]</translation>
     </message>
-    <message>
-        <source>Use This Instead</source>
-        <translation>Используйте это вместо</translation>
-    </message>
-    <message>
-        <source>Successfully {action}d {count} mods</source>
-        <translation>Успешно добавлено {action} модификаций: {count}.</translation>
-    </message>
 </context>
 <context>
     <name>WorkshopModUpdaterPanel</name>
@@ -5442,6 +5546,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Update Mods with Steam</source>
         <translation>Обновите моды через Steam</translation>
+    </message>
+    <message>
+        <source>Delete Selected Mods</source>
+        <translation>Удалить выбранные моды</translation>
     </message>
     <message>
         <source>

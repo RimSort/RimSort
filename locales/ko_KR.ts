@@ -55,8 +55,20 @@
         <translation>새로고침</translation>
     </message>
     <message>
-        <source>Download selected with SteamCMD</source>
-        <translation>SteamCMD로 선택 항목 다운로드</translation>
+        <source>SteamCMD</source>
+        <translation>스팀CMD</translation>
+    </message>
+    <message>
+        <source>Download with SteamCMD</source>
+        <translation>SteamCMD로 다운로드</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>선택하다</translation>
+    </message>
+    <message>
+        <source>Steam</source>
+        <translation>증기</translation>
     </message>
     <message>
         <source>Subscribe selected</source>
@@ -200,8 +212,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>로그 업로드</translation>
     </message>
     <message>
-        <source>Upload the log file to 0x0.st</source>
-        <translation>로그 파일을 0x0.st에 업로드</translation>
+        <source>Upload log to RimSort Logs</source>
+        <translation>RimSort 로그에 로그 업로드</translation>
     </message>
     <message>
         <source>Hide Details</source>
@@ -626,6 +638,217 @@ Manage mods installed from GitHub releases.</source>
     </message>
 </context>
 <context>
+    <name>InstanceService</name>
+    <message>
+        <source>Essential path(s)</source>
+        <translation>필수 경로</translation>
+    </message>
+    <message>
+        <source>Essential path(s) are invalid or not set!</source>
+        <translation>필수 경로가 잘못되었거나 설정되지 않았습니다!</translation>
+    </message>
+    <message>
+        <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
+        <translation>RimSort를 사용하려면 아래 경로를 설정해야 합니다.&lt;br/&gt;&lt;br/&gt;1) 게임 폴더(RimWorld가 설치된 폴더)&lt;br/&gt;&lt;br/&gt;2) Config 폴더(ModsConfig.xml이 있는 폴더)&lt;br/&gt;&lt;br/&gt;3) 로컬 mods 폴더(RimWorld 설치 내의 Mods 폴더)&lt;br/&gt;&lt;br/&gt;4) Steam mods 폴더(Steam 사용자가 Steam을 활성화하는 경우에만 설정됨) 클라이언트 통합)&lt;br/&gt;&lt;br/&gt;자동 감지 기능을 사용하여 모든 경로를 자동으로 설정해 보세요.&lt;br/&gt;&lt;br/&gt;지금 설정을 열고 구성하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>예</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>아니요</translation>
+    </message>
+    <message>
+        <source>Provide instance name</source>
+        <translation>인스턴스 이름 제공</translation>
+    </message>
+    <message>
+        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <translation>"{name}"이 아닌 백업된 인스턴스의 고유 이름을 입력하세요.</translation>
+    </message>
+    <message>
+        <source>Compressing [{instance_name}] instance folder to archive...</source>
+        <translation>[{instance_name}] 인스턴스 폴더를 압축하여 보관하는 중...</translation>
+    </message>
+    <message>
+        <source>Error compressing instance</source>
+        <translation>인스턴스를 압축하는 중 오류가 발생했습니다.</translation>
+    </message>
+    <message>
+        <source>An error occurred while compressing instance folder: {e}</source>
+        <translation>인스턴스 폴더를 압축하는 동안 오류가 발생했습니다: {e}</translation>
+    </message>
+    <message>
+        <source>Please check the logs for more information.</source>
+        <translation>자세한 내용은 로그를 확인하세요.</translation>
+    </message>
+    <message>
+        <source>Error restoring instance</source>
+        <translation>인스턴스를 복원하는 중에 오류가 발생했습니다.</translation>
+    </message>
+    <message>
+        <source>Archive not found at path: {input_path}</source>
+        <translation>경로에서 아카이브를 찾을 수 없습니다: {input_path}</translation>
+    </message>
+    <message>
+        <source>An error occurred while reading instance archive: {e}</source>
+        <translation>인스턴스 아카이브를 읽는 동안 오류가 발생했습니다: {e}</translation>
+    </message>
+    <message>
+        <source>Instance folder exists</source>
+        <translation>인스턴스 폴더가 존재합니다</translation>
+    </message>
+    <message>
+        <source>Instance folder already exists: {instance_folder_path}</source>
+        <translation>인스턴스 폴더가 이미 존재합니다: {instance_folder_path}</translation>
+    </message>
+    <message>
+        <source>Do you want to continue and replace the existing instance folder?</source>
+        <translation>계속해서 기존 인스턴스 폴더를 바꾸시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>바꾸다</translation>
+    </message>
+    <message>
+        <source>Restoring instance [{name}] from archive...</source>
+        <translation>아카이브에서 [{name}] 인스턴스를 복원하는 중...</translation>
+    </message>
+    <message>
+        <source>Invalid instance folder paths</source>
+        <translation>잘못된 인스턴스 폴더 경로</translation>
+    </message>
+    <message>
+        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
+        <translation>복원된 인스턴스의 일부 폴더 경로가 잘못되어 지워졌습니다. 설정에서 다시 구성하세요.</translation>
+    </message>
+    <message>
+        <source>Invalid paths: {path}</source>
+        <translation>잘못된 경로: {path}</translation>
+    </message>
+    <message>
+        <source>Couldn't restore steamcmd symlink/junction</source>
+        <translation>steamcmd 심볼릭 링크/접합을 복원할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
+        <translation>로컬 폴더가 설정되지 않았거나 유효하지 않기 때문에 steamcmd 심볼릭 링크/접합을 복원할 수 없습니다. 심볼릭 링크/접합을 수동으로 다시 생성해야 합니다.</translation>
+    </message>
+    <message>
+        <source>An error occurred while restoring instance [{name}].</source>
+        <translation>[{name}] 인스턴스를 복원하는 동안 오류가 발생했습니다.</translation>
+    </message>
+    <message>
+        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
+        <translation>아카이브를 추출한 후 인스턴스 폴더를 찾을 수 없습니다. 아카이브가 손상되었거나 인스턴스 이름이 잘못되었을 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Create new instance</source>
+        <translation>새 인스턴스 만들기</translation>
+    </message>
+    <message>
+        <source>Input a unique name of new instance that is not already used:</source>
+        <translation>아직 사용되지 않은 새 인스턴스의 고유한 이름을 입력하세요.</translation>
+    </message>
+    <message>
+        <source>Clone instance [{name}]</source>
+        <translation>인스턴스 [{name}] 복제</translation>
+    </message>
+    <message>
+        <source>What would you like to do with the configured Workshop mods folder?</source>
+        <translation>구성된 Workshop mods 폴더로 무엇을 하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <translation>창작마당 폴더: {folder}&lt;br&gt;&lt;br&gt;옵션 1: SteamCMD로 변환&lt;br&gt;RimSort는 모든 창작마당 모드를 새 인스턴스의 로컬 mods 폴더에 복사하여 새 인스턴스 내에서 관리할 수 있는 SteamCMD 모드로 변환합니다. 모드 중복을 방지하기 위해 이 인스턴스에서는 Workshop 폴더가 무시됩니다.&lt;br&gt;&lt;br&gt;옵션 2: Workshop 폴더 유지&lt;br&gt;새 인스턴스는 원본 인스턴스와 동일한 Workshop 폴더를 사용합니다. 필요한 경우 나중에 설정에서 변경할 수 있습니다.&lt;br&gt;&lt;br&gt;어떻게 진행하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Convert to SteamCMD</source>
+        <translation>SteamCMD로 변환</translation>
+    </message>
+    <message>
+        <source>Keep Workshop Folder</source>
+        <translation>워크샵 폴더 유지</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Workshop mods not found</source>
+        <translation>워크샵 모드를 찾을 수 없습니다</translation>
+    </message>
+    <message>
+        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
+        <translation>[{existing_instance_workshop_folder}]의 워크샵 모드 폴더를 찾을 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Error cloning instance</source>
+        <translation>인스턴스를 복제하는 중에 오류가 발생했습니다.</translation>
+    </message>
+    <message>
+        <source>Unable to clone instance.</source>
+        <translation>인스턴스를 복제할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Please enter a valid, unique instance name. It cannot be '{name}' or empty.</source>
+        <translation>유효하고 고유한 인스턴스 이름을 입력하세요. '{name}'이거나 비어 있을 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Create new instance [{instance_name}]</source>
+        <translation>새 인스턴스 [{instance_name}] 만들기</translation>
+    </message>
+    <message>
+        <source>Would you like to automatically generate run args for the new instance?</source>
+        <translation>새 인스턴스에 대한 실행 인수를 자동으로 생성하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
+        <translation>구성된 Game/Config 폴더를 기반으로 새 인스턴스에 대한 실행 인수 생성을 시도합니다.&lt;br&gt;&lt;br&gt;생성된 실행 인수 미리보기:&lt;br&gt;{preview}</translation>
+    </message>
+    <message>
+        <source>Error creating instance</source>
+        <translation>인스턴스를 생성하는 중에 오류가 발생했습니다.</translation>
+    </message>
+    <message>
+        <source>Unable to create new instance.</source>
+        <translation>새 인스턴스를 만들 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Problem deleting instance</source>
+        <translation>인스턴스 삭제 문제</translation>
+    </message>
+    <message>
+        <source>Unable to delete instance {current_instance}.</source>
+        <translation>{current_instance} 인스턴스를 삭제할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The default instance cannot be deleted.</source>
+        <translation>기본 인스턴스는 삭제할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Error deleting instance</source>
+        <translation>인스턴스 삭제 오류</translation>
+    </message>
+    <message>
+        <source>The selected instance does not exist.</source>
+        <translation>선택한 인스턴스가 존재하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Delete instance {current_instance}</source>
+        <translation>인스턴스 {current_instance} 삭제</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete the selected instance and all of its data?</source>
+        <translation>선택한 인스턴스와 모든 데이터를 삭제하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>This action cannot be undone.</source>
+        <translation>이 작업은 취소할 수 없습니다.</translation>
+    </message>
+</context>
+<context>
     <name>LanguageController</name>
     <message>
         <source>Language Changed</source>
@@ -783,10 +1006,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>파일: {path}</translation>
     </message>
     <message>
-        <source>Uploading {path.name} to 0x0.st...</source>
-        <translation>{path.name}을(를) 0x0.st에 업로드 중...</translation>
-    </message>
-    <message>
         <source>Uploaded file</source>
         <translation>파일을 업로드했습니다</translation>
     </message>
@@ -797,10 +1016,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Failed to upload file.</source>
         <translation>파일 업로드에 실패했습니다.</translation>
-    </message>
-    <message>
-        <source>Failed to upload the file to 0x0.st</source>
-        <translation>파일을 0x0.st에 업로드할 수 없었습니다.</translation>
     </message>
     <message>
         <source>Could not save active mods</source>
@@ -1127,8 +1342,20 @@ Manage mods installed from GitHub releases.</source>
         <translation>다운로드가 완료된 후 Rentry 가져오기를 다시 실행해야 합니다.&lt;br&gt;&lt;br&gt;다운로드가 완료된 후 누락된 모드가 있는 경우 누락된 모드 패널 내에 표시됩니다.&lt;br&gt;&lt;br&gt;RimSort가 여전히 일부 모드를 다운로드할 수 없는 경우 이는 Rentry 링크와 Steam 데이터베이스 모두에서 모드 데이터를 사용할 수 없기 때문입니다.</translation>
     </message>
     <message>
+        <source>Uploading {path_name} to RimSort Logs...</source>
+        <translation>RimSort 로그에 {path_name} 업로드 중...</translation>
+    </message>
+    <message>
+        <source>Uploaded {path_name} to RimSort Logs</source>
+        <translation>RimSort 로그에 {path_name}을(를) 업로드했습니다.</translation>
+    </message>
+    <message>
         <source>The URL has been copied to your clipboard:&lt;br&gt;&lt;br&gt;{ret}</source>
         <translation>URL이 클립보드에 복사되었습니다:&lt;br&gt;&lt;br&gt;{ret}</translation>
+    </message>
+    <message>
+        <source>Failed to upload to RimSort Logs</source>
+        <translation>RimSort 로그에 업로드하지 못했습니다.</translation>
     </message>
     <message>
         <source>None of the configured mod folder paths exist on disk.&lt;br&gt;&lt;br&gt;Please verify your Local Mods and Workshop folders are correctly set in Settings, then try again.</source>
@@ -1197,10 +1424,6 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
         <translation>RimWorld 저장 파일 (*.rws);;모든 파일 (*.*)</translation>
-    </message>
-    <message>
-        <source>Uploaded {path.name} to https://0x0.st/</source>
-        <translation>{path.name}을(를) https://0x0.st/에 업로드했습니다</translation>
     </message>
     <message>
         <source>Reset SteamCMD ACF data file</source>
@@ -1420,6 +1643,11 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>{count} repositories could not be pushed.</source>
         <translation>{count}개의 저장소를 푸시할 수 없었습니다.</translation>
+    </message>
+    <message>
+        <source>Successful pushes:
+</source>
+        <translation>성공적인 푸시:</translation>
     </message>
     <message>
         <source>Partial Push Completed</source>
@@ -1894,10 +2122,6 @@ Manage mods installed from GitHub releases.</source>
         <translation>성공적인 업데이트:&lt;br&gt;</translation>
     </message>
     <message>
-        <source>Successful pushes:&lt;br&gt;</source>
-        <translation>성공적인 푸시:&lt;br&gt;</translation>
-    </message>
-    <message>
         <source>Repository: {repo_url}&lt;br&gt;Destination: {dest}</source>
         <translation>저장소: {repo_url}&lt;br&gt;대상: {dest}</translation>
     </message>
@@ -1993,200 +2217,12 @@ Manage mods installed from GitHub releases.</source>
                 이 설정은 설정의 고급 탭에서 변경할 수 있습니다. &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
-        <source>Create new instance</source>
-        <translation>새 인스턴스 만들기</translation>
-    </message>
-    <message>
-        <source>Input a unique name of new instance that is not already used:</source>
-        <translation>사용되지 않은 고유한 이름을 입력해 주세요:</translation>
-    </message>
-    <message>
-        <source>Provide instance name</source>
-        <translation>인스턴스 이름 제공</translation>
-    </message>
-    <message>
-        <source>Clone instance [{existing_instance_name}]</source>
-        <translation>인스턴스 복제 [{existing_instance_name}]</translation>
-    </message>
-    <message>
-        <source>What would you like to do with the configured Workshop mods folder?</source>
-        <translation>설정된 창작마당 모드 폴더를 어떻게 하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Workshop folder: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation>창작마당 폴더: {existing_instance_workshop_folder}&lt;br&gt;&lt;br&gt;옵션 1: SteamCMD로 변환&lt;br&gt;RimSort는 모든 창작마당 모드를 새 인스턴스의 로컬 mods 폴더에 복사하여 새 인스턴스 내에서 관리할 수 있는 SteamCMD 모드로 변환합니다. 모드 중복을 방지하기 위해 이 인스턴스에서는 Workshop 폴더가 무시됩니다.&lt;br&gt;&lt;br&gt;옵션 2: Workshop 폴더 유지&lt;br&gt;새 인스턴스는 원본 인스턴스와 동일한 Workshop 폴더를 사용합니다. 필요한 경우 나중에 설정에서 변경할 수 있습니다.&lt;br&gt;&lt;br&gt;어떻게 진행하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Compressing [{instance_name}] instance folder to archive...</source>
-        <translation>인스턴스 폴더 [{instance_name}]을(를) 보관 파일로 압축 중...</translation>
-    </message>
-    <message>
-        <source>Error compressing instance</source>
-        <translation>인스턴스 압축 중 오류가 발생했습니다.</translation>
-    </message>
-    <message>
-        <source>An error occurred while compressing instance folder: {e}</source>
-        <translation>인스턴스 폴더를 압축하는 중 오류가 발생했습니다: {e}</translation>
-    </message>
-    <message>
-        <source>Please check the logs for more information.</source>
-        <translation>자세한 내용은 로그를 확인해 주세요.</translation>
-    </message>
-    <message>
-        <source>Error restoring instance</source>
-        <translation>인스턴스를 복원하는 중 오류가 발생했습니다</translation>
-    </message>
-    <message>
-        <source>Archive not found at path: {input_path}</source>
-        <translation>경로에서 아카이브를 찾을 수 없습니다: {input_path}</translation>
-    </message>
-    <message>
-        <source>An error occurred while reading instance archive: {e}</source>
-        <translation>인스턴스 아카이브를 읽는 중 오류가 발생했습니다: {e}</translation>
-    </message>
-    <message>
-        <source>Instance folder exists</source>
-        <translation>인스턴스 폴더가 존재합니다</translation>
-    </message>
-    <message>
-        <source>Instance folder already exists: {instance_folder_path}</source>
-        <translation>인스턴스 폴더가 이미 존재합니다: {instance_folder_path}</translation>
-    </message>
-    <message>
-        <source>Do you want to continue and replace the existing instance folder?</source>
-        <translation>기존 인스턴스 폴더를 교체하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Replace</source>
-        <translation>교체</translation>
-    </message>
-    <message>
-        <source>Restoring instance [{name}] from archive...</source>
-        <translation>아카이브에서 인스턴스 [{name}]을(를) 복원하는 중...</translation>
-    </message>
-    <message>
-        <source>Invalid instance folder paths</source>
-        <translation>유효하지 않은 인스턴스 폴더 경로</translation>
-    </message>
-    <message>
-        <source>Some folder paths from the restored instance are invalid and were cleared. Please reconfigure them in the settings</source>
-        <translation>복원된 인스턴스의 일부 폴더 경로가 유효하지 않아 삭제되었습니다. 설정에서 다시 구성해 주세요.</translation>
-    </message>
-    <message>
-        <source>Invalid paths: {path}</source>
-        <translation>유효하지 않은 경로: {path}</translation>
-    </message>
-    <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
-        <translation>steamcmd의 심볼릭 링크/정션을 복원할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>The steamcmd symlink/junction could not be restored as the local folder is not set or invalid. The symlink/junction will need to be manually recreated.</source>
-        <translation>로컬 폴더가 설정되지 않았거나 유효하지 않아 steamcmd의 심볼릭 링크/정션을 복원할 수 없습니다. 심볼릭 링크/정션은 수동으로 다시 생성해야 합니다.</translation>
-    </message>
-    <message>
-        <source>The instance folder was not found after extracting the archive. Perhaps the archive is corrupt or the instance name is invalid.</source>
-        <translation>압축을 푼 후 인스턴스 폴더를 찾을 수 없습니다. 아카이브가 손상되었거나 인스턴스 이름이 유효하지 않을 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Workshop mods not found</source>
-        <translation>창작마당 모드를 찾을 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Workshop mods folder at [{existing_instance_workshop_folder}] not found.</source>
-        <translation>창작마당 모드 폴더를 찾을 수 없습니다: [{existing_instance_workshop_folder}]</translation>
-    </message>
-    <message>
-        <source>Error cloning instance</source>
-        <translation>인스턴스 복제 중 오류가 발생했습니다.</translation>
-    </message>
-    <message>
-        <source>Unable to clone instance.</source>
-        <translation>인스턴스를 복제할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{DEFAULT_INSTANCE_NAME}' or empty.</source>
-        <translation>{DEFAULT_INSTANCE_NAME}</translation>
-    </message>
-    <message>
-        <source>Create new instance [{instance_name}]</source>
-        <translation>새 인스턴스 [{instance_name}] 생성</translation>
-    </message>
-    <message>
-        <source>Would you like to automatically generate run args for the new instance?</source>
-        <translation>새 인스턴스의 실행 인수를 자동으로 생성하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>This will try to generate run args for the new instance based on the configured Game/Config folders.&lt;br&gt;&lt;br&gt;Generated run arguments preview:&lt;br&gt;{preview}</source>
-        <translation>구성된 Game/Config 폴더를 기반으로 새 인스턴스에 대한 실행 인수를 생성하려고 시도합니다.&lt;br&gt;&lt;br&gt;생성된 실행 인수 미리보기:&lt;br&gt;{preview}</translation>
-    </message>
-    <message>
-        <source>Error creating instance</source>
-        <translation>인스턴스를 생성하는 중 오류가 발생했습니다</translation>
-    </message>
-    <message>
-        <source>Unable to create new instance.</source>
-        <translation>새 인스턴스를 생성할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Problem deleting instance</source>
-        <translation>인스턴스를 삭제하는 중 문제가 발생했습니다</translation>
-    </message>
-    <message>
-        <source>Unable to delete instance {current_instance}.</source>
-        <translation>인스턴스 {current_instance}을(를) 삭제할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>The default instance cannot be deleted.</source>
-        <translation>기본 인스턴스는 삭제할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Error deleting instance</source>
-        <translation>인스턴스를 삭제하는 중 오류가 발생했습니다</translation>
-    </message>
-    <message>
-        <source>The selected instance does not exist.</source>
-        <translation>선택한 인스턴스가 존재하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Delete instance {current_instance}</source>
-        <translation>인스턴스 {current_instance} 삭제</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to delete the selected instance and all of its data?</source>
-        <translation>선택한 인스턴스와 모든 데이터를 삭제하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>This action cannot be undone.</source>
-        <translation>이 작업은 되돌릴 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Convert to SteamCMD</source>
-        <translation>Steamcmd로 변환합니다</translation>
-    </message>
-    <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>{name}</translation>
-    </message>
-    <message>
-        <source>Keep Workshop Folder</source>
-        <translation>워크숍 폴더를 유지합니다</translation>
-    </message>
-    <message>
-        <source>Cancelled</source>
-        <translation>취소</translation>
-    </message>
-    <message>
         <source>ACF Log Reader</source>
         <translation>ACF 로그 리더</translation>
     </message>
     <message>
         <source>Player Log</source>
         <translation>플레이어 로그</translation>
-    </message>
-    <message>
-        <source>An error occurred while restoring instance [{name}].</source>
-        <translation>인스턴스 [{name}]을(를) 복원하는 중 오류가 발생했습니다.</translation>
     </message>
 </context>
 <context>
@@ -2804,6 +2840,14 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>번역을 찾을 수 없음 - 이 모드에는 번역이 설치되어 있지 않습니다</translation>
     </message>
     <message>
+        <source>Updated {time_ago}. Click to open the Workshop changelog.</source>
+        <translation>{time_ago}에 업데이트되었습니다. 창작마당 변경 로그를 열려면 클릭하세요.</translation>
+    </message>
+    <message>
+        <source>Recently updated</source>
+        <translation>최근 업데이트됨</translation>
+    </message>
+    <message>
         <source>Not in latest save</source>
         <translation>최신 세이브가 아닙니다</translation>
     </message>
@@ -2983,6 +3027,22 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>{len}개의 구독 해제할 모드를 선택했습니다.</translation>
     </message>
     <message>
+        <source>Startup impact: {time}</source>
+        <translation>시작 영향: {time}</translation>
+    </message>
+    <message>
+        <source>Off-thread (loading screen): {time}</source>
+        <translation>오프 스레드(로딩 화면): {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime} — total game startup: {time}</source>
+        <translation>측정된 {datetime} — 총 게임 시작: {time}</translation>
+    </message>
+    <message>
+        <source>Measured {datetime}</source>
+        <translation>{datetime}에 측정됨</translation>
+    </message>
+    <message>
         <source>Database not available</source>
         <translation>데이터베이스를 사용할 수 없습니다</translation>
     </message>
@@ -3160,8 +3220,20 @@ Alternative Dependencies:</source>
         <translation>태그</translation>
     </message>
     <message>
+        <source>0 updated</source>
+        <translation>0 업데이트됨</translation>
+    </message>
+    <message>
+        <source>Click to only show recently updated mods</source>
+        <translation>최근 업데이트된 모드만 표시하려면 클릭하세요.</translation>
+    </message>
+    <message>
         <source>Workshop Updated</source>
         <translation>워크샵이 업데이트되었습니다.</translation>
+    </message>
+    <message>
+        <source>{padding}{count} updated</source>
+        <translation>{padding}{count}개 업데이트됨</translation>
     </message>
     <message>
         <source>Database not available</source>
@@ -4161,18 +4233,6 @@ Alternative Dependencies:</source>
         <translation>"이것을 사용하세요" 데이터베이스</translation>
     </message>
     <message>
-        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
-After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB. 
-This Auxiliary DB contains info for mod colors, toggled warning, user notes etc. 
-This basically preserves your mod coloring, user notes etc. for this many seconds after deletion. 
-(This applies to deletion outside of RimSort too)</source>
-        <translation>이 제한 시간 편집을 활성화하려면 오른쪽의 체크박스(편집 활성화)를 선택하십시오.
-모드가 삭제된 후, 이 모드 항목이 보조 메타데이터 DB에서 삭제될 때까지 대기하는 시간입니다. 
-이 보조 DB에는 모드 색상, 전환된 경고, 사용자 메모 등의 정보가 포함되어 있습니다. 
-이것은 기본적으로 모드 색상 지정이나 사용자 메모 등을 삭제 후 이 시간(초) 동안 유지합니다. 
-(이는 RimSort 이외의 삭제에도 적용됩니다)</translation>
-    </message>
-    <message>
         <source>Sorting</source>
         <translation>정렬</translation>
     </message>
@@ -4183,6 +4243,18 @@ This basically preserves your mod coloring, user notes etc. for this many second
     <message>
         <source>Topologically</source>
         <translation>우선순위</translation>
+    </message>
+    <message>
+        <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
+After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
+This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
+This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
+(This applies to deletion outside of RimSort too)</source>
+        <translation>이 시간 제한을 편집하려면 오른쪽에 있는 확인란(편집 활성화)을 활성화하십시오.
+모드가 삭제된 후 해당 모드 항목이 보조 메타데이터 DB에서 삭제될 때까지 기다리는 시간입니다.
+이 보조 DB에는 모드 색상, 전환된 경고, 사용자 메모 등에 대한 정보가 포함되어 있습니다.
+이는 기본적으로 삭제 후 몇 초 동안 모드 색상, 사용자 메모 등을 보존합니다.
+(이는 RimSort 외부 삭제에도 적용됩니다.)</translation>
     </message>
     <message>
         <source>Use dependency rules for sorting.</source>
@@ -4205,12 +4277,48 @@ e.g.(modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompat
 예: (modDependencyByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibilityWithByVersion, descriptionsByVersion)</translation>
     </message>
     <message>
+        <source>Case-insensitive About.xml lookup</source>
+        <translation>대소문자를 구분하지 않는 About.xml 조회</translation>
+    </message>
+    <message>
+        <source>Enable case-insensitive lookup for About/About.xml.
+Some mods use incorrect casing (e.g., about/about.xml) which breaks on
+case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
+correct path is About/About.xml.
+See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
+        <translation>About/About.xml에 대해 대소문자를 구분하지 않는 조회를 활성화합니다.
+일부 모드는 잘못된 대소문자(예: about/about.xml)를 사용하여 오류가 발생합니다.
+대소문자 구분 파일 시스템(Linux) RimWorld 모딩 사양에 따르면
+올바른 경로는 About/About.xml입니다.
+참조: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
         <translation>활성 모드 리스트에 없을 수 있는 모드를 다운로드하도록 알림을 표시합니다.</translation>
     </message>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>동일한 패키지 ID를 가진 모드를 알리고 표시합니다.</translation>
+    </message>
+    <message>
+        <source>Show recently updated mods indicator</source>
+        <translation>최근 업데이트된 모드 표시 표시</translation>
+    </message>
+    <message>
+        <source>Shows an icon on Steam Workshop mods that were updated within the configured number of days. The update time is refreshed when RimSort refreshes its metadata.</source>
+        <translation>구성된 일수 내에 업데이트된 Steam 창작마당 모드에 아이콘을 표시합니다. RimSort가 메타데이터를 새로 고치면 업데이트 시간이 새로 고쳐집니다.</translation>
+    </message>
+    <message>
+        <source>Days to consider a mod recently updated:</source>
+        <translation>최근 업데이트된 모드를 고려할 날짜:</translation>
+    </message>
+    <message>
+        <source>Show startup load time per mod</source>
+        <translation>모드당 시작 로드 시간 표시</translation>
+    </message>
+    <message>
+        <source>Shows each mod's game startup time, measured by the 'Loading Progress' mod. Requires that mod with its 'Track startup loading impact' setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
+        <translation>'로드 진행률' 모드로 측정된 각 모드의 게임 시작 시간을 표시합니다. '시작 로딩 영향 추적' 설정이 활성화된 모드와 저장된 시작 영향 보고서(RimWorld 저장 데이터 폴더의 StartupImpactData.xml)가 필요합니다.</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
@@ -5379,6 +5487,10 @@ Please reach out to us for support at: {support_url}</source>
         <translation>다음 표는 "대신 이것을 사용하세요" 데이터베이스를 기반으로 권장 대체 항목이 포함된 창작마당 모드를 대체 모드별로 그룹화하여 표시합니다.</translation>
     </message>
     <message>
+        <source>Do nothing and exit</source>
+        <translation>아무것도 하지 않고 종료</translation>
+    </message>
+    <message>
         <source>Select</source>
         <translation>선택</translation>
     </message>
@@ -5414,14 +5526,6 @@ Please reach out to us for support at: {support_url}</source>
         <source>Replacement [{0}]</source>
         <translation>교체 [{0}]</translation>
     </message>
-    <message>
-        <source>Use This Instead</source>
-        <translation>대신 이것을 사용</translation>
-    </message>
-    <message>
-        <source>Successfully {action}d {count} mods</source>
-        <translation>{count}개의 모드를 {action}하는 데 성공했습니다</translation>
-    </message>
 </context>
 <context>
     <name>WorkshopModUpdaterPanel</name>
@@ -5440,6 +5544,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Update Mods with Steam</source>
         <translation>Steam에서 모드 업데이트</translation>
+    </message>
+    <message>
+        <source>Delete Selected Mods</source>
+        <translation>선택한 모드 삭제</translation>
     </message>
     <message>
         <source>

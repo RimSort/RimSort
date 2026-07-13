@@ -9,7 +9,7 @@ from typing import Any, Callable, Sequence, TypeVar
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QAction, QKeyEvent, QStandardItem, QStandardItemModel
+from PySide6.QtGui import QKeyEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -18,22 +18,21 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLayout,
-    QMenu,
     QPushButton,
     QTableView,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModType
+from app.models.operation_mode import OperationMode
 from app.models.settings import Settings
-from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType, MenuItem
+from app.utils.button_factory import ButtonConfig, ButtonFactory, ButtonType
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
 from app.utils.mod_info import ModInfo
-from app.utils.mod_utils import get_mod_path_from_pfid
+from app.utils.mod_utils import get_mod_path_from_pfid, resolve_aux_timestamps
 from app.views.deletion_menu import ModDeletionMenu
 from app.views.mod_info_panel import ClickablePathLabel
 
@@ -48,7 +47,6 @@ class UIElements:
 
     title: QLabel
     details_label: QLabel
-    editor_deselect_all_button: QPushButton
     editor_select_all_button: QPushButton
     editor_cancel_button: QPushButton
 
@@ -81,13 +79,6 @@ class ColumnIndex(Enum):
     SOURCE = 8
     PATH = 9
     WORKSHOP_PAGE = 10
-
-
-class OperationMode(Enum):
-    """Enumeration for mod update operation modes."""
-
-    STEAMCMD = "SteamCMD"
-    STEAM = "Steam"
 
 
 class BaseModsPanel(QWidget):
@@ -230,16 +221,6 @@ class BaseModsPanel(QWidget):
             self.layouts.editor_exit_actions_layout
         )
 
-        self.ui_elements.editor_deselect_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, False)
-        )
-        self.layouts.editor_checkbox_actions_layout.addWidget(
-            self.ui_elements.editor_deselect_all_button
-        )
-
-        self.ui_elements.editor_select_all_button.clicked.connect(
-            partial(self._set_all_checkbox_rows, True)
-        )
         self.layouts.editor_checkbox_actions_layout.addWidget(
             self.ui_elements.editor_select_all_button
         )
@@ -295,15 +276,13 @@ class BaseModsPanel(QWidget):
 
     def _initialize_ui_elements(self) -> None:
         """Initialize UI elements dataclasses."""
+        factory = self.get_button_factory()
         self.ui_elements = UIElements(
             title=QLabel(),
             details_label=QLabel(),
-            editor_deselect_all_button=QPushButton(self.tr("Deselect all")),
-            editor_select_all_button=QPushButton(self.tr("Select all")),
+            editor_select_all_button=factory.create_select_all_button(),
             editor_cancel_button=QPushButton(self.tr("Do nothing and exit")),
         )
-        self.ui_elements.editor_deselect_all_button.setObjectName("primaryButton")
-        self.ui_elements.editor_select_all_button.setObjectName("primaryButton")
         self.ui_elements.editor_cancel_button.setObjectName("dangerButton")
 
     def _initialize_layouts(self) -> None:
@@ -654,108 +633,6 @@ class BaseModsPanel(QWidget):
         label.setObjectName(object_name)
         return label
 
-    def _create_button(
-        self,
-        text: str,
-        callback: Callable[[], None] | None = None,
-        object_name: str = "",
-    ) -> QPushButton:
-        """
-        Create a standardized button.
-
-        Args:
-            text: Button text.
-            callback: Optional callback function.
-            object_name: Optional object name for the button.
-
-        Returns:
-            QPushButton: Configured button.
-        """
-        button = QPushButton()
-        button.setText(text)
-        if object_name:
-            button.setObjectName(object_name)
-        if callback is not None:
-            button.clicked.connect(callback)
-        return button
-
-    def _create_standardized_button(
-        self,
-        button_type: ButtonType,
-        pfid_column: int | None = None,
-        completion_callback: Callable[[], None] | None = None,
-        custom_callback: Callable[[], None] | None = None,
-        text: str = "",
-    ) -> QPushButton:
-        """
-        Create a standardized button based on type.
-
-        Args:
-            button_type: Type of button to create.
-            pfid_column: Column index for published file ID (for Steam-related buttons).
-            completion_callback: Callback after operation completes.
-            custom_callback: Custom callback for custom buttons.
-            text: Custom text for the button.
-
-        Returns:
-            Configured QPushButton.
-        """
-        if button_type == ButtonType.REFRESH:
-            return self._create_button(
-                self.tr("Refresh"), custom_callback, "primaryButton"
-            )
-        elif button_type == ButtonType.CUSTOM:
-            return self._create_button(text, custom_callback, "primaryButton")
-
-        # Fallback
-        return self._create_button(text or "Button", custom_callback, "primaryButton")
-
-    def _create_refresh_button(
-        self, callback: Callable[[], None] | None
-    ) -> QPushButton:
-        """Create a standardized refresh button."""
-        return self._create_standardized_button(
-            ButtonType.REFRESH, custom_callback=callback
-        )
-
-    def _create_steam_button(
-        self, pfid_column: int, completion_callback: Callable[[], None] | None = None
-    ) -> QPushButton:
-        """Create a Steam button with dropdown for subscribe/unsubscribe."""
-        button = QPushButton()
-        button.setText(self.tr("Steam"))
-        button.setObjectName("actionButton")
-
-        menu = QMenu(button)
-
-        subscribe_action = QAction(self.tr("Subscribe selected"), self)
-        subscribe_action.triggered.connect(
-            self._create_update_callback(
-                pfid_column,
-                OperationMode.STEAM,
-                "subscribe",
-                completion_callback,
-            )
-        )
-        menu.addAction(subscribe_action)
-
-        unsubscribe_action = QAction(self.tr("Unsubscribe selected"), self)
-        unsubscribe_action.triggered.connect(
-            self._create_update_callback(
-                pfid_column,
-                OperationMode.STEAM,
-                "unsubscribe",
-                completion_callback,
-            )
-        )
-        menu.addAction(unsubscribe_action)
-
-        button.setMenu(menu)
-        button.clicked.connect(
-            lambda: menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
-        )
-        return button
-
     def _create_deletion_button(
         self,
         settings: Settings,
@@ -860,8 +737,7 @@ class BaseModsPanel(QWidget):
             return self._create_delete_button_from_config(config, factory)
         elif config.button_type == ButtonType.CUSTOM:
             return self._create_custom_button_from_config(config, factory)
-        elif config.button_type == ButtonType.SELECT:
-            return self._create_select_button_from_config(config, factory)
+
         return None
 
     def _create_refresh_button_from_config(
@@ -912,14 +788,6 @@ class BaseModsPanel(QWidget):
             return factory.create_custom_button(config.text, config.custom_callback)
         return None
 
-    def _create_select_button_from_config(
-        self, config: ButtonConfig, factory: ButtonFactory
-    ) -> QWidget | None:
-        """Create a select button from config."""
-        if config.menu_items:
-            return factory.create_select_button(config.text, config.menu_items)
-        return None
-
     def _create_custom_button(
         self, text: str, callback: Callable[[], None]
     ) -> QPushButton:
@@ -936,31 +804,6 @@ class BaseModsPanel(QWidget):
         button = QPushButton(text)
         button.setObjectName("primaryButton")
         button.clicked.connect(callback)
-        return button
-
-    def _create_select_button(
-        self, text: str, menu_items: list[MenuItem]
-    ) -> QToolButton:
-        """
-        Create a select button with dropdown menu.
-
-        Args:
-            text: Button text
-            menu_items: List of menu items for the dropdown
-
-        Returns:
-            Configured select button with menu
-        """
-        button = QToolButton()
-        button.setText(text)
-        button.setObjectName("selectToolButton")
-        menu = QMenu(button)
-        for menu_item in menu_items:
-            action = QAction(menu_item.text, self)
-            action.triggered.connect(menu_item.callback)
-            menu.addAction(action)
-        button.setMenu(menu)
-        button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         return button
 
     # ===== CENTRALIZED METADATA HANDLING =====
@@ -1185,7 +1028,19 @@ class BaseModsPanel(QWidget):
             ModInfo object
         """
         if isinstance(metadata, ListedMod):
-            mod_info = ModInfo.from_listed_mod(metadata)
+            # Look up aux timestamps so the mod list can show accurate
+            # download / workshop-update times even when the metadata dict
+            # path wasn't built from filter_eligible_mods_for_update.
+            acf_touched: int | None = None
+            ext_updated: int | None = None
+            if key is not None:
+                _, aux_entry = self.metadata_controller.get_metadata_with_path(key)
+                acf_touched, ext_updated = resolve_aux_timestamps(aux_entry)
+            mod_info = ModInfo.from_listed_mod(
+                metadata,
+                acf_time_touched=acf_touched,
+                external_time_updated=ext_updated,
+            )
             mod_info.key = key
             return mod_info
         return ModInfo.from_metadata(key, metadata)
@@ -1238,7 +1093,13 @@ class BaseModsPanel(QWidget):
                 self._add_group_header_row(group_key)
 
             for path_key, metadata in mod_list:
-                mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
+                try:
+                    mod_info = self._extract_mod_info_from_metadata(path_key, metadata)
+                except (ValueError, TypeError) as e:
+                    logger.warning(
+                        f"Skipping mod {path_key}: failed to extract metadata ({e})"
+                    )
+                    continue
                 self._add_mod_row(mod_info)
 
     def _get_standard_mod_columns(self) -> list[HeaderColumn]:

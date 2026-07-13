@@ -18,6 +18,8 @@ from app.utils.mod_utils import (
     filter_eligible_mods_for_update,
     get_mod_name_from_pfid,
     get_mod_paths,
+    is_recently_updated,
+    resolve_workshop_updated_timestamp,
 )
 
 
@@ -156,11 +158,13 @@ class TestFilterEligibleModsForUpdate:
         path: str,
         acf_time_updated: int = -1,
         external_time_updated: int = -1,
+        acf_time_touched: int = -1,
     ) -> None:
         """Configure aux DB mock to return timestamps for a given path."""
         aux_entry = MagicMock()
         aux_entry.acf_time_updated = acf_time_updated
         aux_entry.external_time_updated = external_time_updated
+        aux_entry.acf_time_touched = acf_time_touched
         self.mock_controller.get_metadata_with_path.side_effect = lambda p: (
             (MagicMock(), aux_entry) if p == path else (None, None)
         )
@@ -215,10 +219,11 @@ class TestFilterEligibleModsForUpdate:
         assert result[0]["name"] == "Test Mod"
 
     def test_internal_time_touched_preferred_over_acf_fallback(self) -> None:
-        """internal_time_touched takes priority over acf_time_updated fallback."""
+        """When file mtime is more recent than acf_time_updated, it is used."""
         mod = _make_update_mod(mod_path="/mods/test2")
         # internal_time_touched=3000 > external=2000 => not eligible
         # acf_time_updated=1000 < external=2000 => would be eligible if used
+        # max(3000, 1000) = 3000, so uses file mtime
         with (
             patch("os.path.exists", return_value=True),
             patch("os.path.getmtime", return_value=3000.0),
@@ -230,16 +235,38 @@ class TestFilterEligibleModsForUpdate:
             )
             result = filter_eligible_mods_for_update({"/mods/test2": mod})
         assert len(result) == 0, (
-            "Should use internal_time_touched, not acf_time_updated"
+            "Should use the more recent of internal_time_touched and acf_time_updated"
+        )
+
+    def test_acf_time_updated_preferred_when_more_recent_than_file_mtime(
+        self,
+    ) -> None:
+        """acf_time_updated is used when it is more recent than file mtime."""
+        mod = _make_update_mod(mod_path="/mods/test3")
+        # internal_time_touched=1000 < external=2000 => would be eligible
+        # acf_time_updated=3000 > external=2000 => not eligible (up-to-date)
+        # max(1000, 3000) = 3000, so uses acf_time_updated
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.path.getmtime", return_value=1000.0),
+        ):
+            self._setup_aux_timestamps(
+                "/mods/test3",
+                acf_time_updated=3000,
+                external_time_updated=2000,
+            )
+            result = filter_eligible_mods_for_update({"/mods/test3": mod})
+        assert len(result) == 0, (
+            "Should use acf_time_updated when it is more recent than file mtime"
         )
 
     def test_no_internal_timestamps_at_all(self) -> None:
-        """Mods with no internal_time_touched and no acf_time_updated are skipped."""
+        """Mods with no internal_time_touched and no acf_time_updated are included."""
         mod = _make_update_mod(mod_path="/mods/nots")
         with patch("os.path.exists", return_value=False):
             # No aux entry => no fallback either
             result = filter_eligible_mods_for_update({"/mods/nots": mod})
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_up_to_date_mod_skipped(self) -> None:
         """Mods where external <= internal are skipped."""
@@ -257,9 +284,11 @@ class TestFilterEligibleModsForUpdate:
             aux_eq = MagicMock()
             aux_eq.acf_time_updated = -1
             aux_eq.external_time_updated = 2000
+            aux_eq.acf_time_touched = -1
             aux_old = MagicMock()
             aux_old.acf_time_updated = -1
             aux_old.external_time_updated = 1000
+            aux_old.acf_time_touched = -1
 
             def multi_aux(p: str) -> tuple[MagicMock | None, MagicMock | None]:
                 if p == "/mods/eq":
@@ -278,7 +307,7 @@ class TestFilterEligibleModsForUpdate:
         assert len(result) == 0
 
     def test_no_external_time(self) -> None:
-        """Mods with no external_time_updated in aux DB are skipped."""
+        """Mods with no external_time_updated in aux DB are included."""
         mod = _make_update_mod(mod_path="/mods/noext")
         with (
             patch("os.path.exists", return_value=True),
@@ -286,10 +315,10 @@ class TestFilterEligibleModsForUpdate:
         ):
             # No aux entry => no external time
             result = filter_eligible_mods_for_update({"/mods/noext": mod})
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_zero_external_time_treated_as_missing(self) -> None:
-        """external_time_updated=0 should cause the mod to be skipped."""
+        """external_time_updated=0 causes the mod to be included (needs API fetch)."""
         mod = _make_update_mod(mod_path="/mods/zeroext")
         with (
             patch("os.path.exists", return_value=True),
@@ -297,7 +326,7 @@ class TestFilterEligibleModsForUpdate:
         ):
             self._setup_aux_timestamps("/mods/zeroext", external_time_updated=0)
             result = filter_eligible_mods_for_update({"/mods/zeroext": mod})
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_mixed_mods(self) -> None:
         """Only workshop/steamcmd mods with updates are returned from a mixed set."""
@@ -323,12 +352,15 @@ class TestFilterEligibleModsForUpdate:
         aux_ws = MagicMock()
         aux_ws.acf_time_updated = -1
         aux_ws.external_time_updated = 2000
+        aux_ws.acf_time_touched = -1
         aux_utd = MagicMock()
         aux_utd.acf_time_updated = -1
         aux_utd.external_time_updated = 2000
+        aux_utd.acf_time_touched = -1
         aux_cmd = MagicMock()
         aux_cmd.acf_time_updated = 500
         aux_cmd.external_time_updated = 2000
+        aux_cmd.acf_time_touched = -1
 
         def multi_aux(p: str) -> tuple[MagicMock | None, MagicMock | None]:
             mapping: dict[str, MagicMock] = {
@@ -359,3 +391,59 @@ class TestFilterEligibleModsForUpdate:
             )
         names = {m["name"] for m in result}
         assert names == {"Eligible Workshop", "Eligible SteamCMD"}
+
+
+class TestResolveWorkshopUpdatedTimestamp:
+    """Tests for resolve_workshop_updated_timestamp (ACF preferred, external fallback)."""
+
+    def _entry(self, acf: int, external: int) -> MagicMock:
+        entry = MagicMock()
+        entry.acf_time_updated = acf
+        entry.external_time_updated = external
+        return entry
+
+    def test_none_entry_returns_none(self) -> None:
+        assert resolve_workshop_updated_timestamp(None) is None
+
+    def test_acf_preferred_over_external(self) -> None:
+        # Even when external is newer, the installed-content ACF time wins.
+        assert resolve_workshop_updated_timestamp(self._entry(1000, 2000)) == 1000
+
+    def test_falls_back_to_external_when_acf_missing(self) -> None:
+        assert resolve_workshop_updated_timestamp(self._entry(-1, 2000)) == 2000
+
+    def test_falls_back_to_external_when_acf_zero(self) -> None:
+        assert resolve_workshop_updated_timestamp(self._entry(0, 2000)) == 2000
+
+    def test_none_when_both_non_positive(self) -> None:
+        assert resolve_workshop_updated_timestamp(self._entry(-1, 0)) is None
+
+
+class TestIsRecentlyUpdated:
+    """Tests for is_recently_updated using an explicit `now` for determinism."""
+
+    NOW = 1_000_000.0  # fixed reference time
+    DAY = 86400
+
+    def test_none_timestamp_is_false(self) -> None:
+        assert is_recently_updated(None, 3, now=self.NOW) is False
+
+    def test_non_positive_timestamp_is_false(self) -> None:
+        assert is_recently_updated(0, 3, now=self.NOW) is False
+        assert is_recently_updated(-5, 3, now=self.NOW) is False
+
+    def test_inside_window(self) -> None:
+        ts = int(self.NOW - 1 * self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is True
+
+    def test_outside_window(self) -> None:
+        ts = int(self.NOW - 5 * self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is False
+
+    def test_exact_boundary_is_inside(self) -> None:
+        ts = int(self.NOW - 3 * self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is True
+
+    def test_future_timestamp_is_recent(self) -> None:
+        ts = int(self.NOW + self.DAY)
+        assert is_recently_updated(ts, 3, now=self.NOW) is True

@@ -28,6 +28,7 @@ from app.utils.constants import (
 )
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
+from app.utils.json_utils import atomic_json_dump
 from app.views.dialogue import BinaryChoiceDialog, InformationBox
 
 
@@ -74,8 +75,6 @@ class Settings(QObject):
         )
         self.external_community_rules_url: str = "https://github.com/RimSort/Community-Rules-Database/archive/refs/heads/main.zip"
 
-        # Disable by default previously this was 7 days "604800"
-        self.database_expiry: int = 0
         # Default (-1) means do not delete data from Aux Metadata DB
         self.aux_db_time_limit: int = -1
 
@@ -87,7 +86,7 @@ class Settings(QObject):
             "https://github.com/emipa606/NoVersionWarning"
         )
         self.external_no_version_warning_url: str = (
-            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/master.zip"
+            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/main.zip"
         )
 
         self.external_use_this_instead_metadata_source: str = "Configured URL"
@@ -98,7 +97,7 @@ class Settings(QObject):
             "https://github.com/emipa606/UseThisInstead"
         )
         self.external_use_this_instead_url: str = (
-            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/master.zip"
+            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/main.zip"
         )
 
         # Sorting
@@ -114,11 +113,20 @@ class Settings(QObject):
         # If enabled, About.xml *ByVersion tags take precedence over base tags
         # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
         self.prefer_versioned_about_tags: bool = True
+        self.render_unity_rich_text: bool = True
+        self.color_background_instead_of_text_toggle: bool = True
+        self.case_insensitive_about_xml_lookup: bool = sys.platform == "linux"
 
         # Whether to notify user about missing mods
         self.try_download_missing_mods: bool = True
         # Whether to notify user about duplicate mods
         self.duplicate_mods_warning: bool = True
+        # Whether to show the "recently updated" indicator on Steam Workshop mods
+        self.mod_list_updated_indicator: bool = False
+        # Number of days within which a workshop mod counts as "recently updated"
+        self.mod_list_updated_threshold_days: int = 3
+        # Whether to show per-mod startup load time from the Loading Progress mod
+        self.mod_list_startup_impact: bool = False
         # Whether to enable Mod type filter
         self.mod_type_filter: bool = True
         # Whether to hide invalid mods
@@ -133,6 +141,8 @@ class Settings(QObject):
         self.build_steam_database_dlc_data: bool = True
         self.build_steam_database_update_toggle: bool = False
         self.steam_apikey: str = ""
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
@@ -190,9 +200,7 @@ class Settings(QObject):
         self.last_backup_date: str = ""
         self.auto_backup_retention_count: int = 10
         self.auto_backup_compression_count: int = 10
-        self.color_background_instead_of_text_toggle: bool = True
         self.steam_mods_update_check: bool = False
-        self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
         self.include_mod_notes_in_mod_name_filter: bool = False
         # UI: Save-comparison labels and icons
@@ -425,8 +433,7 @@ class Settings(QObject):
 
         self._validate_steam_integration_config()
 
-        with open(str(self._settings_file), "w") as file:
-            json.dump(self._to_dict(), file, indent=4)
+        atomic_json_dump(self._to_dict(), str(self._settings_file), indent=4)
 
     def handle_corrupted_settings(self) -> None:
         use_old_backup = False
