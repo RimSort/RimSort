@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QTextEdit
 from app.models.settings import Settings
 from app.utils.event_bus import EventBus
 from app.utils.generic import open_url_browser
+from app.utils.gui_info import show_dialogue_conditional
 from app.views.menu_bar import MenuBar
 
 
@@ -149,7 +150,7 @@ class MenuBarController(QObject):
             EventBus().do_check_for_git_updates
         )
         self.menu_bar.steam_verify_game_files_action.triggered.connect(
-            EventBus().do_steam_verify_game_files
+            self._on_steam_verify_game_files_triggered
         )
 
         # View menu
@@ -232,6 +233,21 @@ class MenuBarController(QObject):
         )
         if initialize:
             EventBus().do_activate_current_instance.emit(current_instance)
+
+    @Slot()
+    def _on_steam_verify_game_files_triggered(self) -> None:
+        """Confirm before verifying RimWorld game files through Steam."""
+        if not show_dialogue_conditional(
+            title=self.tr("Verify Game Files"),
+            text=self.tr(
+                "Are you sure you want to verify RimWorld's game files through Steam?"
+                "<br><br>This process cannot be canceled once it has started."
+            ),
+            icon="warning",
+        ):
+            return
+
+        EventBus().do_steam_verify_game_files.emit()
 
     def _on_menu_bar_reset_warnings_triggered(self) -> None:
         EventBus().reset_warnings_signal.emit()
