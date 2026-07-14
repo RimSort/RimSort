@@ -6,7 +6,6 @@ from typing import Any
 from loguru import logger
 
 from app.models.settings import Settings
-from app.utils.app_info import AppInfo
 
 
 @dataclass
@@ -26,7 +25,7 @@ class VersionDataService:
 
         self._versions_data: dict[str, Any] = {}
         self._depots_data: dict[str, Any] = {}
-        
+
         self._load_data()
 
     def _load_data(self) -> None:
@@ -37,7 +36,9 @@ class VersionDataService:
                     self._depots_data = data.get("depots", {})
                     self._versions_data = data.get("versions", {})
             except Exception as e:
-                logger.error(f"Failed to load versions data from {self.versions_path}: {e}")
+                logger.error(
+                    f"Failed to load versions data from {self.versions_path}: {e}"
+                )
         else:
             logger.warning(
                 f"RimWorld versions DB not found at {self.versions_path}. "
@@ -48,17 +49,17 @@ class VersionDataService:
         """Get all available versions for a specific platform (e.g., 'win64', 'mac', 'linux')."""
         versions = []
         platform_data: list[dict[str, Any]] = self._versions_data.get(platform, [])
-        
+
         for details in platform_data:
             versions.append(
                 RimWorldVersion(
                     manifest_id=details.get("manifest_id", ""),
                     version_string=details.get("version", "Unknown"),
                     status=details.get("status", "Unknown"),
-                    dlcs=details.get("dlcs", {})
+                    dlcs=details.get("dlcs", {}),
                 )
             )
-            
+
         # Sort by version string in reverse order (newest first)
         versions.sort(key=lambda x: x.version_string, reverse=True)
         return versions
@@ -72,6 +73,7 @@ class VersionDataService:
     def get_platform_key(self) -> str:
         """Helper to get the current platform key used in the JSON files."""
         import platform
+
         sys_name = platform.system().lower()
         if sys_name == "windows":
             # For modern systems, default to win64, but could check bitness

@@ -417,7 +417,9 @@ class SteamcmdInterface:
             "steamcmd": self.steamcmd,
             "username": username,
             "install_dir": install_dir,
-            "manifests": [[depot_id, manifest_id] for depot_id, manifest_id in manifests],
+            "manifests": [
+                [depot_id, manifest_id] for depot_id, manifest_id in manifests
+            ],
         }
         config_b64 = base64.b64encode(json.dumps(config).encode()).decode()
 

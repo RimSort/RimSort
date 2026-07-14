@@ -301,7 +301,9 @@ class MainContentController(QObject):
     def _connect_signals(self) -> None:
         # Bind install mod signal
         EventBus().do_add_git_mod.connect(self._do_git_install_mod)
-        EventBus().do_download_rimworld_version.connect(self._do_download_rimworld_version)
+        EventBus().do_download_rimworld_version.connect(
+            self._do_download_rimworld_version
+        )
         EventBus().do_open_github_mods_panel.connect(self._on_open_github_mods_panel)
 
         # Bind update check signals
@@ -2100,6 +2102,6 @@ class MainContentController(QObject):
     @Slot()
     def _do_download_rimworld_version(self) -> None:
         from app.views.download_rimworld_dialog import DownloadRimWorldDialog
-        
+
         dialog = DownloadRimWorldDialog()
         dialog.exec()

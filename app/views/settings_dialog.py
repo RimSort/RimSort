@@ -660,8 +660,8 @@ class SettingsDialog(QDialog):
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_rimworld_versions_db_group(self, tab_layout: QBoxLayout) -> None:
-        section_lbl = self.tr('RimWorld Versions Database')
-        none_lbl = self.tr('RimWorld Versions Database')
+        section_lbl = self.tr("RimWorld Versions Database")
+        none_lbl = self.tr("RimWorld Versions Database")
         (
             _,
             self.rimworld_versions_db_none_radio,

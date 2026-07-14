@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -7,10 +5,12 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
     QVBoxLayout,
+    QWidget,
 )
 
 from app.services.version_data_service import VersionDataService
@@ -21,7 +21,7 @@ from app.views.dialogue import show_warning
 class DownloadRimWorldDialog(QDialog):
     """Dialog to download a specific RimWorld version via SteamCMD."""
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(self.tr("Download RimWorld Version"))
         self.setMinimumWidth(400)
@@ -37,7 +37,9 @@ class DownloadRimWorldDialog(QDialog):
         self.version_combo = QComboBox()
         self.version_combo.setEditable(True)
         self.version_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.version_combo.completer().setCompletionMode(self.version_combo.completer().CompletionMode.PopupCompletion)
+        self.version_combo.completer().setCompletionMode(
+            self.version_combo.completer().CompletionMode.PopupCompletion
+        )
         self.version_combo.completer().setFilterMode(Qt.MatchFlag.MatchContains)
         form_layout.addRow(self.tr("Version:"), self.version_combo)
 
@@ -60,19 +62,22 @@ class DownloadRimWorldDialog(QDialog):
         # Download Button
         self.download_button = QPushButton(self.tr("Download"))
         self.download_button.clicked.connect(self._on_download)
-        
+
         # Add a note explaining the console will appear
-        from PySide6.QtWidgets import QLabel
-        note_label = QLabel(self.tr("Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required."))
+        note_label = QLabel(
+            self.tr(
+                "Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required."
+            )
+        )
         note_label.setWordWrap(True)
         layout.addWidget(note_label)
-        
+
         layout.addWidget(self.download_button)
 
     def _load_versions(self) -> None:
         platform = self.version_service.get_platform_key()
         self.versions = self.version_service.get_available_versions(platform)
-        
+
         for version in self.versions:
             display_text = f"{version.version_string} ({version.status})"
             self.version_combo.addItem(display_text, userData=version)
@@ -93,21 +98,23 @@ class DownloadRimWorldDialog(QDialog):
             show_warning(self.tr("Error"), self.tr("Please select a version."))
             return
         if not install_dir:
-            show_warning(self.tr("Error"), self.tr("Please select a destination folder."))
+            show_warning(
+                self.tr("Error"), self.tr("Please select a destination folder.")
+            )
             return
         if not username:
             show_warning(self.tr("Error"), self.tr("Please enter your Steam username."))
             return
-            
+
         # Collect manifests to download
         platform = self.version_service.get_platform_key()
         manifests_to_download = []
-        
+
         # Base game
         base_depot_id = self.version_service.get_depot_id("base_game", platform)
         if base_depot_id and version_data.manifest_id:
             manifests_to_download.append((base_depot_id, version_data.manifest_id))
-            
+
         # DLCs
         for dlc_name, manifest_id in version_data.dlcs.items():
             dlc_depot_id = self.version_service.get_depot_id(dlc_name, platform)
@@ -115,7 +122,10 @@ class DownloadRimWorldDialog(QDialog):
                 manifests_to_download.append((dlc_depot_id, manifest_id))
 
         if not manifests_to_download:
-            show_warning(self.tr("Error"), self.tr("Could not determine depot IDs for this platform."))
+            show_warning(
+                self.tr("Error"),
+                self.tr("Could not determine depot IDs for this platform."),
+            )
             return
 
         try:
@@ -123,20 +133,24 @@ class DownloadRimWorldDialog(QDialog):
             if not steamcmd_interface.setup:
                 show_warning(
                     self.tr("Error"),
-                    self.tr("SteamCMD is not set up. Please set it up in the settings first.")
+                    self.tr(
+                        "SteamCMD is not set up. Please set it up in the settings first."
+                    ),
                 )
                 return
-                
+
             steamcmd_interface.download_game_version(
                 username=username,
                 install_dir=install_dir,
-                manifests=manifests_to_download
+                manifests=manifests_to_download,
             )
-            
+
             QMessageBox.information(
                 self,
                 self.tr("Download Started"),
-                self.tr("SteamCMD has been launched in a new terminal window.\nPlease follow the prompts to complete the download.")
+                self.tr(
+                    "SteamCMD has been launched in a new terminal window.\nPlease follow the prompts to complete the download."
+                ),
             )
         except Exception as e:
             show_warning(self.tr("Error"), self.tr(f"Failed to start download: {e}"))
