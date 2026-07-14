@@ -37,10 +37,10 @@ class DownloadRimWorldDialog(QDialog):
         self.version_combo = QComboBox()
         self.version_combo.setEditable(True)
         self.version_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.version_combo.completer().setCompletionMode(
-            self.version_combo.completer().CompletionMode.PopupCompletion
-        )
-        self.version_combo.completer().setFilterMode(Qt.MatchFlag.MatchContains)
+        completer = self.version_combo.completer()
+        if completer is not None:
+            completer.setCompletionMode(completer.CompletionMode.PopupCompletion)
+            completer.setFilterMode(Qt.MatchFlag.MatchContains)
         form_layout.addRow(self.tr("Version:"), self.version_combo)
 
         # Destination Path
