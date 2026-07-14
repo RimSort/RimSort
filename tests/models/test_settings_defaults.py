@@ -1,5 +1,6 @@
 """Test Settings model default values for HTTP database syncing."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 
@@ -96,3 +97,56 @@ class TestRecentlyUpdatedIndicatorDefaults:
 
         assert settings.mod_list_updated_indicator is False
         assert settings.mod_list_updated_threshold_days == 3
+
+
+class TestRimWorldVersionsDefaults:
+    """Test defaults for the new RimWorld Versions DB feature."""
+
+    @patch("app.models.settings.QApplication")
+    @patch("app.models.settings.AppInfo")
+    def test_rimworld_versions_source_defaults_to_configured_url(
+        self, mock_app_info: MagicMock, mock_qapp: MagicMock
+    ) -> None:
+        mock_qapp.font.return_value.family.return_value = "monospace"
+        mock_app_info.return_value.app_storage_folder = MagicMock()
+        mock_app_info.return_value.app_settings_file = MagicMock()
+
+        from app.models.settings import Settings
+
+        settings = Settings()
+
+        assert settings.external_rimworld_versions_metadata_source == "Configured URL"
+
+    @patch("app.models.settings.QApplication")
+    @patch("app.models.settings.AppInfo")
+    def test_rimworld_versions_url_defaults(
+        self, mock_app_info: MagicMock, mock_qapp: MagicMock
+    ) -> None:
+        mock_qapp.font.return_value.family.return_value = "monospace"
+        mock_app_info.return_value.app_storage_folder = MagicMock()
+        mock_app_info.return_value.app_settings_file = MagicMock()
+
+        from app.models.settings import Settings
+
+        settings = Settings()
+
+        assert "github.com" in settings.external_rimworld_versions_url
+        assert "archive" in settings.external_rimworld_versions_url
+
+    @patch("app.models.settings.QApplication")
+    @patch("app.models.settings.AppInfo")
+    def test_rimworld_versions_file_path_ends_in_json(
+        self, mock_app_info: MagicMock, mock_qapp: MagicMock
+    ) -> None:
+        mock_qapp.font.return_value.family.return_value = "monospace"
+        databases = Path("/mock/databases")
+        mock_app_info.return_value.databases_folder = databases
+        mock_app_info.return_value.app_settings_file = MagicMock()
+
+        from app.models.settings import Settings
+
+        settings = Settings()
+
+        assert settings.external_rimworld_versions_file_path.endswith(
+            "rimworld_versions.json"
+        )
