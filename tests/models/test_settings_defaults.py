@@ -130,7 +130,7 @@ class TestRimWorldVersionsDefaults:
 
         settings = Settings()
 
-        assert "github.com" in settings.external_rimworld_versions_url
+        assert "https://github.com" in settings.external_rimworld_versions_url
         assert "archive" in settings.external_rimworld_versions_url
 
     @patch("app.models.settings.QApplication")
