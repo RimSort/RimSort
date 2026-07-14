@@ -537,7 +537,7 @@ class SteamcmdInterface:
             if current_system == "Windows":
                 subprocess.Popen(
                     cmd_args,
-                    creationflags=subprocess.CREATE_NEW_CONSOLE,
+                    creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
                 )
             else:
                 raise NotImplementedError(
