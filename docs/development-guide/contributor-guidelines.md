@@ -39,6 +39,8 @@ Please follow the following guidelines when contributing to RimSort.
 
 6. In 99% of situations, you should not submit pull requests that are only dependency bumps. Basic dependency bumps are handled automatically using dependabot.
 
+7. RimSort supports a `--dev` flag that redirects all data to the `dev/` subdirectory of the repo, keeping your production configuration untouched. See [Development Setup](development-setup.md#dev-mode-data-isolation) for details.
+
 ## Versioning and Releases
 
 We utilize automated semantic versioning based on a [GitHub action](https://github.com/PaulHatch/semantic-version/tree/v5.4.0/). This action will auto-increment the version based on keywords in commit messages, tags, and commits in general. The process is utilized by both the release and auto-build pipelines.
