@@ -6,7 +6,6 @@ import pytest
 
 from app.services.version_data_service import RimWorldVersion, VersionDataService
 
-
 SAMPLE_VERSIONS_DATA = {
     "win64": [
         {
@@ -54,7 +53,9 @@ def make_service(versions_path: Path) -> VersionDataService:
     """Helper to create a VersionDataService with a mock settings pointing to a given path."""
     mock_settings = MagicMock()
     mock_settings.external_rimworld_versions_file_path = str(versions_path)
-    with patch("app.services.version_data_service.Settings", return_value=mock_settings):
+    with patch(
+        "app.services.version_data_service.Settings", return_value=mock_settings
+    ):
         return VersionDataService()
 
 
@@ -153,15 +154,11 @@ class TestGetDepotId:
         service = make_service(versions_json_file)
         assert service.get_depot_id("base_game", "win64") == 294100
 
-    def test_returns_none_for_missing_item(
-        self, versions_json_file: Path
-    ) -> None:
+    def test_returns_none_for_missing_item(self, versions_json_file: Path) -> None:
         service = make_service(versions_json_file)
         assert service.get_depot_id("nonexistent", "win64") is None
 
-    def test_returns_none_for_missing_platform(
-        self, versions_json_file: Path
-    ) -> None:
+    def test_returns_none_for_missing_platform(self, versions_json_file: Path) -> None:
         service = make_service(versions_json_file)
         assert service.get_depot_id("base_game", "mac") is None
 
@@ -175,9 +172,7 @@ class TestGetDepotId:
 class TestGetPlatformKey:
     @patch("platform.architecture")
     @patch("platform.system")
-    def test_win64(
-        self, mock_system: MagicMock, mock_arch: MagicMock
-    ) -> None:
+    def test_win64(self, mock_system: MagicMock, mock_arch: MagicMock) -> None:
         mock_system.return_value = "Windows"
         mock_arch.return_value = ("64bit", "WindowsPE")
         service = make_service(Path("/fake/path.json"))
@@ -185,9 +180,7 @@ class TestGetPlatformKey:
 
     @patch("platform.architecture")
     @patch("platform.system")
-    def test_win32(
-        self, mock_system: MagicMock, mock_arch: MagicMock
-    ) -> None:
+    def test_win32(self, mock_system: MagicMock, mock_arch: MagicMock) -> None:
         mock_system.return_value = "Windows"
         mock_arch.return_value = ("32bit", "WindowsPE")
         service = make_service(Path("/fake/path.json"))
@@ -206,9 +199,7 @@ class TestGetPlatformKey:
         assert service.get_platform_key() == "linux"
 
     @patch("platform.system")
-    def test_unknown_os_defaults_to_win64(
-        self, mock_system: MagicMock
-    ) -> None:
+    def test_unknown_os_defaults_to_win64(self, mock_system: MagicMock) -> None:
         mock_system.return_value = "Java"
         service = make_service(Path("/fake/path.json"))
         assert service.get_platform_key() == "win64"
