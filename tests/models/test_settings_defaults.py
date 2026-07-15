@@ -103,7 +103,10 @@ class TestRimWorldVersionsDefaults:
         assert settings.external_rimworld_versions_metadata_source == "Configured URL"
 
     def test_rimworld_versions_url_defaults(self, settings: "Settings") -> None:
-        assert settings.external_rimworld_versions_url == "https://github.com/bukforks/rimworld-versions/archive/refs/heads/main.zip"
+        assert (
+            settings.external_rimworld_versions_url
+            == "https://github.com/bukforks/rimworld-versions/archive/refs/heads/main.zip"
+        )
         assert "archive" in settings.external_rimworld_versions_url
 
     def test_rimworld_versions_file_path_ends_in_json(
