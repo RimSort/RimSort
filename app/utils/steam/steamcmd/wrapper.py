@@ -478,7 +478,12 @@ class SteamcmdInterface:
                     ]
                     print(f"Command: {' '.join(args)}\\n")
 
-                    result = subprocess.run(args)
+                    result = subprocess.run(
+                        args,
+                        stdin=sys.stdin,
+                        stdout=sys.stdout,
+                        stderr=sys.stderr,
+                    )
                     print(f"\\nSteamCMD exited with code {result.returncode}")
 
                     # Check if the depot was actually downloaded
@@ -529,8 +534,25 @@ class SteamcmdInterface:
         logger.info(f"Wrote SteamCMD helper script to {script_path}")
 
         # ── 3. Launch the helper in a new terminal window ────────────────
-        python_exe = sys.executable
-        cmd_args = [python_exe, str(script_path), config_b64]
+        if "__compiled__" in globals():
+            # In compiled mode, RimSort.exe is a GUI app without its own console.
+            # We use cmd.exe as a CUI host to provide a real console window.
+            # - /C terminates cmd.exe after the command finishes.
+            # - start /WAIT /B launches RimSort.exe synchronously in the SAME console.
+            cmd_args = [
+                "cmd.exe",
+                "/C",
+                "start",
+                "/WAIT",
+                "/B",
+                "",
+                sys.executable,
+                "--steamcmd-helper",
+                str(script_path),
+                config_b64,
+            ]
+        else:
+            cmd_args = [sys.executable, str(script_path), config_b64]
 
         try:
             current_system = platform.system()
