@@ -1,14 +1,14 @@
 import errno
 from pathlib import Path
 from shutil import rmtree
-from typing import Callable
+from typing import Any, Callable
 
 from loguru import logger
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QMessageBox
 
-from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
+from app.controllers.metadata_controller import MetadataController
+from app.models.settings import Settings
 from app.utils.acf_utils import steamcmd_purge_mods
 from app.utils.event_bus import EventBus
 from app.utils.generic import (
@@ -16,12 +16,14 @@ from app.utils.generic import (
     delete_files_except_extension,
     delete_files_only_extension,
 )
-from app.utils.metadata import MetadataManager, ModMetadata
 from app.views.dialogue import (
     show_dialogue_conditional,
     show_information,
     show_warning,
 )
+
+# Type alias for backward compatibility with consumers of this module
+ModMetadata = dict[str, Any]
 
 
 class DeletionResult:
@@ -50,8 +52,9 @@ class ModDeletionMenu(QMenu):
 
     def __init__(
         self,
-        settings_controller: SettingsController,
+        settings: Settings,
         get_selected_mod_metadata: Callable[[], list[ModMetadata]],
+        metadata_controller: MetadataController,
         remove_from_uuids: list[str] | None = None,
         menu_title: str = "Deletion options",
         enable_delete_mod: bool = True,
@@ -64,8 +67,8 @@ class ModDeletionMenu(QMenu):
         super().__init__(title=self.tr("Deletion options"))
         self.remove_from_uuids = remove_from_uuids
         self.get_selected_mod_metadata = get_selected_mod_metadata
-        self.metadata_manager = MetadataManager.instance()
-        self.settings_controller = settings_controller
+        self.metadata_controller = metadata_controller
+        self.settings = settings
         self.completion_callback = completion_callback
         self._actions_initialized = False
 
@@ -101,9 +104,8 @@ class ModDeletionMenu(QMenu):
             if not uuid:
                 mod_path = mod.get("path")
                 if mod_path:
-                    uuid = self.metadata_manager.mod_metadata_dir_mapper.get(
-                        str(mod_path)
-                    )
+                    # In MetadataController, path IS the key (uuid)
+                    uuid = str(mod_path)
             if uuid:
                 uuids.append(uuid)
         # Remove duplicates and update the list
@@ -271,10 +273,10 @@ class ModDeletionMenu(QMenu):
         # Purge SteamCMD metadata for deleted mods (only if auto-clear depot cache is enabled)
         if result.steamcmd_purge_ids:
             steamcmd_purge_mods(
-                metadata_manager=self.metadata_manager,
+                metadata_controller=self.metadata_controller,
                 publishedfileids=result.steamcmd_purge_ids,
-                auto_clear_enabled=self.settings_controller.settings.instances[
-                    self.settings_controller.settings.current_instance
+                auto_clear_enabled=self.settings.instances[
+                    self.settings.current_instance
                 ].steamcmd_auto_clear_depot_cache,
             )
 
@@ -376,17 +378,12 @@ class ModDeletionMenu(QMenu):
                 return False
 
             # Retrieve UUID before deletion if not present
-            if "uuid" not in mod_metadata:
-                uuid = self.metadata_manager.mod_metadata_dir_mapper.get(mod_path)
-                if uuid:
-                    mod_metadata["uuid"] = uuid
-                    logger.debug(
-                        f"Retrieved UUID {uuid} for mod {mod_name} before deletion"
-                    )
-                else:
-                    logger.warning(
-                        f"Could not retrieve UUID for mod {mod_name} with path {mod_path} before deletion"
-                    )
+            # In MetadataController, path IS the identity key (uuid)
+            if "uuid" not in mod_metadata and mod_path:
+                mod_metadata["uuid"] = str(mod_path)
+                logger.debug(
+                    f"Set UUID to path {mod_path} for mod {mod_name} before deletion"
+                )
 
             # Perform the deletion operation
             return self._execute_deletion_operation(
@@ -470,23 +467,16 @@ class ModDeletionMenu(QMenu):
             logger.debug("remove_from_uuids is None, skipping UUID removal")
             return
         if "uuid" not in mod_metadata:
-            # Try to retrieve UUID from MetadataManager's mapper using the mod's path
+            # In MetadataController, path IS the identity key (uuid)
             mod_path = mod_metadata.get("path")
             if mod_path:
-                uuid = self.metadata_manager.mod_metadata_dir_mapper.get(str(mod_path))
-                if uuid:
-                    mod_metadata["uuid"] = uuid
-                    logger.debug(
-                        f"Retrieved UUID {uuid} for mod {mod_metadata.get('name', 'Unknown')} from path"
-                    )
-                else:
-                    logger.debug(
-                        f"Could not retrieve UUID for mod {mod_metadata.get('name', 'Unknown')} with path {mod_path}"
-                    )
-                    return
+                mod_metadata["uuid"] = str(mod_path)
+                logger.debug(
+                    f"Set UUID to path {mod_path} for mod {mod_metadata.get('name', 'Unknown')}"
+                )
             else:
                 logger.debug(
-                    f"Mod {mod_metadata.get('name', 'Unknown')} has no path, cannot retrieve UUID"
+                    f"Mod {mod_metadata.get('name', 'Unknown')} has no path, cannot determine UUID"
                 )
                 return
         if mod_metadata["uuid"] not in self.remove_from_uuids:
@@ -496,8 +486,10 @@ class ModDeletionMenu(QMenu):
             return
 
         try:
-            logger.debug(f"Emitting mod_deleted_signal for {mod_metadata['uuid']}")
-            self.metadata_manager.mod_deleted_signal.emit(mod_metadata["uuid"])
+            mod_path = mod_metadata.get("path") or mod_metadata.get("uuid")
+            if mod_path:
+                logger.debug(f"Notifying MetadataController of deleted mod: {mod_path}")
+                self.metadata_controller.notify_files_deleted(mod_path)
             logger.debug(f"Removing UUID {mod_metadata['uuid']} from tracking list")
             self.remove_from_uuids.remove(mod_metadata["uuid"])
         except (ValueError, AttributeError) as uuid_error:
@@ -588,7 +580,7 @@ class ModDeletionMenu(QMenu):
                 f"You have selected {selected_count} mod(s) for complete deletion."
             ),
             confirmation_info=self.tr(
-                "\nThis operation will permanently delete the selected mod directories from the filesystem.\n\nDo you want to proceed?"
+                "<br>This operation will permanently delete the selected mod directories from the filesystem.<br><br>Do you want to proceed?"
             ),
             deletion_fn=self._delete_mod_directory,
         )
@@ -602,7 +594,7 @@ class ModDeletionMenu(QMenu):
                 f"You have selected {selected_count} mod(s) for DDS texture deletion."
             ),
             confirmation_info=self.tr(
-                "\nThis operation will only delete optimized textures (.dds files) from the selected mods.\n\nDo you want to proceed?"
+                "<br>This operation will only delete optimized textures (.dds files) from the selected mods.<br><br>Do you want to proceed?"
             ),
             deletion_fn=self._delete_dds_from_mod,
             update_db=False,
@@ -627,7 +619,7 @@ class ModDeletionMenu(QMenu):
                 f"You have selected {selected_count} mod(s) for selective deletion."
             ),
             confirmation_info=self.tr(
-                "\nThis operation will delete all mod files except for .dds texture files.\nThe .dds files will be preserved.\n\nDo you want to proceed?"
+                "<br>This operation will delete all mod files except for .dds texture files.<br>The .dds files will be preserved.<br><br>Do you want to proceed?"
             ),
             deletion_fn=self._delete_except_dds,
         )
@@ -701,7 +693,7 @@ class ModDeletionMenu(QMenu):
                     action=self.tr(action).capitalize()
                 ),
                 text=self.tr(
-                    "Successfully initiated {action} from {len} Steam Workshop mod(s).\n"
+                    "Successfully initiated {action} from {len} Steam Workshop mod(s).<br>"
                     "The process may take a few moments to complete."
                 ).format(
                     action=self.tr(action).capitalize(),
@@ -763,10 +755,10 @@ class ModDeletionMenu(QMenu):
         if self._confirm_deletion(
             self.tr(f"Confirm Deletion and {action_capitalized}"),
             self.tr(
-                f"You have selected {selected_count} mod(s) for deletion.\n{steam_count} of these are Steam Workshop mods that will also be {action_past}."
+                f"You have selected {selected_count} mod(s) for deletion.<br>{steam_count} of these are Steam Workshop mods that will also be {action_past}."
             ),
             self.tr(
-                f"\nThis operation will:\n• Delete the selected mod directories from your filesystem\n• {action_capitalized} Steam Workshop mods from your Steam account\n\nDo you want to proceed?"
+                f"<br>This operation will:<br>• Delete the selected mod directories from your filesystem<br>• {action_capitalized} Steam Workshop mods from your Steam account<br><br>Do you want to proceed?"
             ),
         ):
             # Synchronize remove_from_uuids with current selected mods before deletion
@@ -789,16 +781,14 @@ class ModDeletionMenu(QMenu):
 
         This only deletes the mod for the relevant instance.
         """
-        time_limit = self.settings_controller.settings.aux_db_time_limit
+        time_limit = self.settings.aux_db_time_limit
         if time_limit < 0:
             logger.debug(
                 "Not deleting or setting item as outdated in Aux Metadata DB as time limit is negative."
             )
             return
 
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
-        )
+        aux_metadata_controller = self.metadata_controller.metadata_db_controller
         mod_path = Path(path)
         with aux_metadata_controller.Session() as session:
             if time_limit > 0:

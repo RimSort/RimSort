@@ -1,0 +1,62 @@
+name: Pyright Type Checking
+on:
+  workflow_call: null
+  workflow_dispatch: null
+  merge_group:
+
+permissions: {}
+
+jobs:
+  run-pyright:
+    permissions:
+      contents: read
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@main
+      - name: Setup Python
+        uses: actions/setup-python@main
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install Dependencies
+        shell: bash
+        run: uv sync --locked --dev
+
+      - name: Run Pyright type checking
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            export QT_QPA_PLATFORM=offscreen
+          fi
+          uv run pyright -p pyproject.toml .
+        shell: bash
+        env:
+          PYTHONIOENCODING: "utf-8"
+
+      - name: Upload Pyright output
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pyright-results-${{ matrix.os }}
+          path: .pyrightcache/
+
+  pyright:
+    needs: [run-pyright]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "$RESULT" != "success" ]; then
+            echo "Pyright type checking failed on one or more platforms"
+            exit 1
+          fi
+        env:
+          RESULT: ${{ needs.run-pyright.result }}

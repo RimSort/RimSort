@@ -37,13 +37,62 @@ test-coverage: dev-setup
 # Code Quality
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Check code for linting issues (ruff check)
-ruff:
-    uv run ruff check {{ruff_config}} .
+# Container image for super-linter (matches CI version)
+superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
 
-# Check code for formatting issues (ruff format)
-ruff-format:
-    uv run ruff format {{ruff_config}} . --check
+# Run super-linter locally via container (ruff, ruff-format, jscpd, bash,
+# json, yaml, checkov, gitleaks). Mypy/Pyright run natively because they
+# need the local venv to resolve imports.
+[unix]
+super-lint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Detect container runtime
+    if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+        RUNTIME=docker
+    elif command -v podman &>/dev/null && podman info &>/dev/null 2>&1; then
+        RUNTIME=podman
+    else
+        echo "Error: docker or podman required but neither is running" >&2
+        exit 1
+    fi
+    PLATFORM_FLAG=""
+    if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
+        PLATFORM_FLAG="--platform linux/amd64"
+    fi
+    # Mount the git common dir for worktree support
+    GIT_COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
+    $RUNTIME run --rm $PLATFORM_FLAG \
+        -e RUN_LOCAL=true \
+        -e DEFAULT_BRANCH=main \
+        -e LOG_LEVEL=NOTICE \
+        -e LINTER_RULES_PATH=. \
+        -e VALIDATE_PYTHON_RUFF=true \
+        -e VALIDATE_PYTHON_RUFF_FORMAT=true \
+        -e VALIDATE_BASH=true \
+        -e VALIDATE_JSCPD=true \
+        -e VALIDATE_JSON=true \
+        -e VALIDATE_YAML=true \
+        -e VALIDATE_CHECKOV=true \
+        -e VALIDATE_GITLEAKS=true \
+        -e PYTHON_RUFF_CONFIG_FILE=pyproject.toml \
+        -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
+        -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/" \
+        -e IGNORE_GITIGNORED_FILES=true \
+        -v "$(pwd)":/tmp/lint \
+        -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
+        {{superlinter_image}}
+
+# Run static type checking (mypy)
+typecheck:
+    uv run mypy --config-file pyproject.toml .
+
+# Run Pyright type checker on app and tests
+pyright:
+    uv run python -m pyright -p pyproject.toml .
+
+# Run ruff fixes
+ruff: ruff-fix ruff-format-fix
 
 # Check and automatically fix linting issues (ruff check --fix)
 ruff-fix:
@@ -53,42 +102,34 @@ ruff-fix:
 ruff-format-fix:
     uv run ruff format {{ruff_config}} .
 
-# Check Markdown documentation for linting issues (markdownlint-cli2)
-markdownlint:
-    npx markdownlint-cli2@latest
-
 # Fix Markdown documentation issues (markdownlint-cli2 --fix)
 markdownlint-fix:
     npx markdownlint-cli2@latest --fix
 
-# Run static type checking (mypy)
-typecheck:
-    uv run mypy --config-file pyproject.toml .
-
-# Run Pyright type checker on app and tests
-pyright:
-    uv run pyright -p pyproject.toml .
-
-# Detect copy-paste code duplication (jscpd) — exits with error if any
-# clones are found (--threshold 0 means zero tolerance for duplicates).
-# Matches the CI's jscpd check configuration.
-jscpd:
-    npx jscpd@latest app/ tests/ --threshold 0
-
-# Check shell script (.sh) formatting (shfmt) — diff-only, no changes made
-shfmt:
-    shfmt -d .
-
 # Automatically fix shell script formatting issues (shfmt)
 shfmt-fix:
-    shfmt -w .
+    fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
 
-# Run all code quality checks: ruff + ruff-format + typecheck + pyright + jscpd + shfmt + markdown lint
-check: ruff ruff-format typecheck pyright jscpd shfmt markdownlint
+# Run copy/paste detection (jscpd) using the project's .jscpd.json config
+jscpd:
+    npx jscpd@4 . --config .jscpd.json
+
+# Run all code quality checks: super-linter + typecheck + pyright
+[unix]
+check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
+# Run all code quality checks available on Windows: typecheck + pyright + jscpd + deferred-import guard
+[windows]
+check: typecheck pyright jscpd deferred-imports
+    @echo "Use 'just fix' to automatically fix linting and formatting issues!"
+
+# Check for new function-local from app/ imports (circular-import regression guard)
+deferred-imports:
+    uv run python check_deferred_imports.py
+
 # Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
-fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix
+fix: ruff shfmt-fix markdownlint-fix
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage
@@ -119,13 +160,11 @@ clean:
     rm -rf .pytest_cache .mypy_cache .ruff_cache
     rm -rf htmlcov .coverage coverage.xml
     rm -rf junit/
-    rm -f locales/*.qm
     find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 [windows]
 clean:
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue build, dist, *.egg-info, .pytest_cache, .mypy_cache, .ruff_cache, htmlcov, .coverage, coverage.xml, junit
-    Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm
     Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -141,77 +180,10 @@ build *ARGS='': submodules-init check i18n-compile
 build-version VERSION: submodules-init check i18n-compile
     uv run python distribute.py --product-version="{{VERSION}}"
 
-# Create source tarball including submodules for RPM building
-[linux]
-rpm-tarball VERSION='1.0.0':
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Nuitka requires a 4-part version (e.g. "1.0.0.1"), so auto-append ".1"
-    # when only 3 parts are provided.
-    PART_COUNT=$(echo "{{VERSION}}" | tr '.' '\n' | wc -l)
-    if [ "$PART_COUNT" -eq 3 ]; then
-        FULL_VERSION="{{VERSION}}.1"
-    else
-        FULL_VERSION="{{VERSION}}"
-    fi
-
-    TARBALL="$HOME/rpmbuild/SOURCES/rimsort-${FULL_VERSION}.tar.gz"
-
-    echo "Creating source tarball with submodules for version ${FULL_VERSION}..."
-
-    TMPDIR=$(mktemp -d)
-    trap 'rm -rf "$TMPDIR"' EXIT
-
-    # Archive main repository
-    git archive --prefix="RimSort-${FULL_VERSION}/" HEAD | tar -x -C "$TMPDIR"
-
-    # Archive each git submodule into the correct path under the prefix
-    git submodule foreach --quiet \
-        "git archive --prefix=\"RimSort-${FULL_VERSION}/\$displaypath/\" HEAD \
-         | tar -x -C \"$TMPDIR\""
-
-    # Package everything into a single tarball
-    tar -czf "$TARBALL" -C "$TMPDIR" "RimSort-${FULL_VERSION}"
-
-    echo "Tarball created: ${TARBALL}"
-    ls -lh "$TARBALL"
-
-# Build RPM package for Fedora/RHEL (e.g. "just build-rpm 1.0.63" or "just build-rpm 1.0.63.1")
-# Note: version normalization logic is duplicated from rpm-tarball because
-# bash shebang recipes cannot invoke other just recipes.
-[linux]
-build-rpm VERSION='1.0.0': check (rpm-tarball VERSION)
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Auto-append ".1" if version has only 3 parts (Nuitka compatibility)
-    PART_COUNT=$(echo "{{VERSION}}" | tr '.' '\n' | wc -l)
-    if [ "$PART_COUNT" -eq 3 ]; then
-        FULL_VERSION="{{VERSION}}.1"
-    else
-        FULL_VERSION="{{VERSION}}"
-    fi
-
-    echo "Setting up RPM build environment..."
-    mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-
-    echo "Building RPM package for version ${FULL_VERSION}..."
-    rpmbuild -bb packaging/rpm/rimsort.spec --define "version ${FULL_VERSION}"
-
-    echo "RPM build complete!"
-    RPM_FILE=$(find ~/rpmbuild/RPMS/x86_64/ -name "rimsort-${FULL_VERSION}-*.rpm" | head -n 1)
-    if [ -n "$RPM_FILE" ]; then
-        echo "Built RPM: ${RPM_FILE}"
-        ls -lh "$RPM_FILE"
-    else
-        echo "Warning: Could not find built RPM"
-    fi
-
 # Build AppImage from existing Nuitka output (Linux only)
 [linux]
 build-appimage VERSION='1.0.0':
-    bash packaging/appimage/build-appimage.sh build/app.dist "{{VERSION}}"
+    bash packaging/linux/build-appimage.sh build/app.dist "{{VERSION}}"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Internationalization
@@ -234,16 +206,18 @@ i18n-compile:
     Remove-Item -Force -ErrorAction SilentlyContinue locales/*.qm; Get-ChildItem locales/*.ts | ForEach-Object { uv run pyside6-lrelease $_.FullName -qm ($_.FullName -replace '\.ts$', '.qm') }
 
 # Extract translatable strings from source code into .ts files (for translators)
+# -extensions py is required: lupdate's directory scan does not include .py
+# in its default extension list, so without it every entry is marked obsolete
 [unix]
 i18n-update:
     #!/usr/bin/env bash
     set -euo pipefail
     shopt -s nullglob
-    uv run pyside6-lupdate app/ -ts locales/*.ts
+    uv run pyside6-lupdate -extensions py app/ -ts locales/*.ts
 
 [windows]
 i18n-update:
-    uv run pyside6-lupdate app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
+    uv run pyside6-lupdate -extensions py app/ -ts (Get-ChildItem locales/*.ts | ForEach-Object { $_.FullName })
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Utilities

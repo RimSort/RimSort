@@ -242,7 +242,7 @@ class TroubleshootingDialog(QDialog):
         button_layout.addWidget(self.integrity_apply_button)
 
         self.integrity_cancel_button = QPushButton(self.tr("Cancel"))
-        self.integrity_cancel_button.setObjectName("secondaryButton")
+        self.integrity_cancel_button.setObjectName("primaryButton")
         self.integrity_cancel_button.setShortcut("Ctrl+C")
         button_layout.addWidget(self.integrity_cancel_button)
 

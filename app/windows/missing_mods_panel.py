@@ -6,12 +6,13 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
+from app.controllers.metadata_controller import MetadataController
+from app.models.operation_mode import OperationMode
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.windows.base_mods_panel import (
     BaseModsPanel,
     ButtonConfig,
     ButtonType,
-    OperationMode,
 )
 
 
@@ -27,6 +28,7 @@ class MissingModsPrompt(BaseModsPanel):
     def __init__(
         self,
         packageids: list[str],
+        metadata_controller: MetadataController,
     ) -> None:
         """
         Initialize the MissingModsPrompt.
@@ -53,6 +55,7 @@ class MissingModsPrompt(BaseModsPanel):
                 self.tr(self.COL_PUBLISHED_FILE_ID),
                 self.tr(self.COL_WORKSHOP_PAGE),
             ],
+            metadata_controller=metadata_controller,
         )
 
         self.data_by_variants: dict[str, dict[str, Any]] = {}
@@ -154,6 +157,18 @@ class MissingModsPrompt(BaseModsPanel):
         """
         return self.packageids
 
+    def _get_steam_database(self) -> dict[str, Any] | None:
+        """
+        Get the Steam database dictionary, with null safety.
+
+        Returns:
+            The Steam database dict, or None if unavailable.
+        """
+        steam_db = self.metadata_controller.steam_db
+        if steam_db is None:
+            return None
+        return steam_db.database
+
     def _build_variant_data_from_steam_metadata(self) -> dict[str, dict[str, Any]]:
         """
         Build variant data from Steam metadata, grouping by package ID.
@@ -162,7 +177,7 @@ class MissingModsPrompt(BaseModsPanel):
             Dictionary mapping package IDs to their variant data.
         """
         if not hasattr(self, "_cached_steam_metadata"):
-            self._cached_steam_metadata = self.metadata_manager.external_steam_metadata
+            self._cached_steam_metadata = self._get_steam_database()
 
         steam_metadata = self._cached_steam_metadata
         if steam_metadata and len(steam_metadata) > 500:
@@ -172,19 +187,17 @@ class MissingModsPrompt(BaseModsPanel):
 
         variants_by_packageid: dict[str, dict[str, Any]] = {}
         if steam_metadata:
-            for published_file_id, metadata in steam_metadata.items():
-                name = metadata.get(
-                    "steamName", metadata.get("name", "Not found in steam database")
-                )
-                packageid = metadata.get("packageId", "").lower()
-                game_versions = metadata.get(
-                    "gameVersions", ["Not found in steam database"]
-                )
+            for published_file_id, entry in steam_metadata.items():
+                name = entry.steamName or entry.name or "Not found in steam database"
+                packageid = (entry.packageId or "").lower()
+                game_versions: list[str] | str | None = entry.gameVersions
+                if not game_versions:
+                    game_versions = ["Not found in steam database"]
 
                 # Remove AppId dependencies from this dict. They cannot be subscribed like mods.
                 dependencies = {
                     key: value
-                    for key, value in metadata.get("dependencies", {}).items()
+                    for key, value in entry.dependencies.items()
                     if key not in RIMWORLD_DLC_METADATA.keys()
                 }
 
@@ -321,14 +334,9 @@ class MissingModsPrompt(BaseModsPanel):
             items: List of QStandardItem for the row.
             published_file_id: Initial published file ID for the combo box.
         """
-        combo_box = QComboBox()
-        combo_box.setEditable(True)
+        combo_box = self._add_combo_box_to_row(items, 4, [published_file_id])
         combo_box.setObjectName("missing_mods_variant_cb")
-        combo_box.addItem(published_file_id)
-        # Connect the currentTextChanged signal
         combo_box.currentTextChanged.connect(self._update_mod_info)
-        # Set the combo_box as the index widget
-        self.editor_table_view.setIndexWidget(items[4].index(), combo_box)
 
     def _populate_from_metadata(self) -> None:
         """
@@ -336,7 +344,7 @@ class MissingModsPrompt(BaseModsPanel):
         """
         try:
             # Cache Steam metadata to avoid repeated access
-            self._cached_steam_metadata = self.metadata_manager.external_steam_metadata
+            self._cached_steam_metadata = self._get_steam_database()
             if (
                 self._cached_steam_metadata
                 and len(self._cached_steam_metadata.keys()) > 0
@@ -355,6 +363,45 @@ class MissingModsPrompt(BaseModsPanel):
         except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")
 
+    def _find_row_for_combo_box(self, combo_box: QComboBox) -> int | None:
+        """
+        Find the table row containing the given combo box widget.
+
+        Args:
+            combo_box: The combo box widget to search for.
+
+        Returns:
+            Row index if found, None otherwise.
+        """
+        for row in range(self.editor_model.rowCount()):
+            item = self.editor_model.item(row, 5)
+            if item is None:
+                continue
+            widget = self.editor_table_view.indexWidget(item.index())
+            if widget is combo_box:
+                return row
+        return None
+
+    def _update_workshop_button(self, row: int, published_file_id: str) -> None:
+        """
+        Update the workshop button for a row to point to a new published file ID.
+
+        Args:
+            row: Row index to update.
+            published_file_id: The new published file ID.
+        """
+        item = self.editor_model.item(row, 6)
+        if item is None:
+            return
+        existing = self.editor_table_view.indexWidget(item.index())
+        if existing is not None:
+            existing.deleteLater()
+        workshop_button = self._create_workshop_button(
+            f"https://steamcommunity.com/sharedfiles/filedetails/?id={published_file_id}",
+            "workshopButton",
+        )
+        self.editor_table_view.setIndexWidget(item.index(), workshop_button)
+
     def _update_mod_info(self, published_file_id: str) -> None:
         """
         Update mod information when variant selection changes.
@@ -365,16 +412,20 @@ class MissingModsPrompt(BaseModsPanel):
         combo_box = self.sender()
         if not isinstance(combo_box, QComboBox):
             raise ValueError(f"Sender is not a QComboBox!: {combo_box}")
-        index = self.editor_table_view.indexAt(combo_box.pos())
-        if index.isValid():
-            row = index.row()
-            packageid = self.editor_model.item(row, 1).text()
-            variant_data = self.data_by_variants.get(packageid, {}).get(
-                published_file_id, {}
-            )
-            self.editor_model.item(row, 0).setText(
-                variant_data.get("name", self.DEFAULT_NOT_FOUND)
-            )
-            self.editor_model.item(row, 2).setText(
-                str(variant_data.get("gameVersions", self.DEFAULT_NOT_FOUND))
-            )
+        row = self._find_row_for_combo_box(combo_box)
+        if row is None:
+            return
+        packageid = self.editor_model.item(row, 2).text()
+        variant_data = self.data_by_variants.get(packageid, {}).get(
+            published_file_id, {}
+        )
+        if not variant_data:
+            return
+        self.editor_model.item(row, 1).setText(
+            variant_data.get("name", self.DEFAULT_NOT_FOUND)
+        )
+        self.editor_model.item(row, 3).setText(
+            str(variant_data.get("gameVersions", self.DEFAULT_NOT_FOUND))
+        )
+        if published_file_id:
+            self._update_workshop_button(row, published_file_id)

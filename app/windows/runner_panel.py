@@ -487,7 +487,7 @@ class RunnerPanel(QWidget):
             self.progress_bar.setRange(0, int(end))
             self.progress_bar.setValue(int(start))
             return True
-        return False
+        return self._handle_todds_output(line)
 
     def _overwrite_last_line(self, text: str) -> None:
         """Replace the last line in the text display with the given text."""
@@ -597,7 +597,7 @@ class RunnerPanel(QWidget):
         answer = show_dialogue_conditional(
             title=self.tr("SteamCMD downloader"),
             text=self.tr(
-                "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?\n\n"
+                "SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?<br><br>"
                 "Click 'Show Details' to see a list of mods that failed."
             ),
             details=details,
@@ -626,7 +626,7 @@ class RunnerPanel(QWidget):
             for failed_mod_pfid in self.steamcmd_download_tracking:
                 mod_info = self.steam_db.get(failed_mod_pfid)
                 if mod_info:
-                    mod_name = mod_info.get("steamName") or mod_info.get("name")
+                    mod_name = mod_info.steamName or mod_info.name
                     if mod_name:
                         pfids_to_name[failed_mod_pfid] = mod_name
                     else:
@@ -637,7 +637,7 @@ class RunnerPanel(QWidget):
         # For mods not found in local DB, try Steam API
         if failed_mods_no_names:
             try:
-                mod_details_lookup = ISteamRemoteStorage_GetPublishedFileDetails(
+                mod_details_lookup, _, _ = ISteamRemoteStorage_GetPublishedFileDetails(
                     failed_mods_no_names
                 )
                 if mod_details_lookup:

@@ -5,7 +5,7 @@ from os import path, rename
 from pathlib import Path
 from shutil import copy2, copytree, rmtree
 from time import time
-from typing import Any, Dict
+from typing import Any
 
 import msgspec
 from loguru import logger
@@ -14,7 +14,10 @@ from PySide6.QtWidgets import QApplication
 
 from app.controllers.instance_controller import InstanceController
 from app.models.instance import Instance
-from app.utils.acf_utils import validate_acf_file_exists
+from app.utils.acf_utils import (
+    is_rimworld_workshop_folder,
+    validate_acf_file_exists,
+)
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DEFAULT_INSTANCE_NAME,
@@ -25,6 +28,7 @@ from app.utils.constants import (
 )
 from app.utils.event_bus import EventBus
 from app.utils.generic import handle_remove_read_only
+from app.utils.json_utils import atomic_json_dump
 from app.views.dialogue import BinaryChoiceDialog, InformationBox
 
 
@@ -71,8 +75,6 @@ class Settings(QObject):
         )
         self.external_community_rules_url: str = "https://github.com/RimSort/Community-Rules-Database/archive/refs/heads/main.zip"
 
-        # Disable by default previously this was 7 days "604800"
-        self.database_expiry: int = 0
         # Default (-1) means do not delete data from Aux Metadata DB
         self.aux_db_time_limit: int = -1
 
@@ -84,18 +86,29 @@ class Settings(QObject):
             "https://github.com/emipa606/NoVersionWarning"
         )
         self.external_no_version_warning_url: str = (
-            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/master.zip"
+            "https://github.com/emipa606/NoVersionWarning/archive/refs/heads/main.zip"
         )
 
         self.external_use_this_instead_metadata_source: str = "Configured URL"
         self.external_use_this_instead_file_path: str = str(
-            AppInfo().app_storage_folder / "UseThisInstead" / "replacements.json.gz"
+            AppInfo().databases_folder / "UseThisInstead" / "replacements.json.gz"
         )
         self.external_use_this_instead_repo_path: str = (
             "https://github.com/emipa606/UseThisInstead"
         )
         self.external_use_this_instead_url: str = (
-            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/master.zip"
+            "https://github.com/emipa606/UseThisInstead/archive/refs/heads/main.zip"
+        )
+
+        self.external_rimworld_versions_metadata_source: str = "Configured URL"
+        self.external_rimworld_versions_file_path: str = str(
+            AppInfo().databases_folder / "rimworld-versions" / "rimworld_versions.json"
+        )
+        self.external_rimworld_versions_repo_path: str = (
+            "https://github.com/bukforks/rimworld-versions"
+        )
+        self.external_rimworld_versions_url: str = (
+            "https://github.com/bukforks/rimworld-versions/archive/refs/heads/main.zip"
         )
 
         # Sorting
@@ -111,17 +124,24 @@ class Settings(QObject):
         # If enabled, About.xml *ByVersion tags take precedence over base tags
         # e.g., modDependenciesByVersion, loadAfterByVersion, loadBeforeByVersion, incompatibleWithByVersion, descriptionsByVersion
         self.prefer_versioned_about_tags: bool = True
+        self.render_unity_rich_text: bool = True
+        self.color_background_instead_of_text_toggle: bool = True
+        self.case_insensitive_about_xml_lookup: bool = sys.platform == "linux"
 
         # Whether to notify user about missing mods
         self.try_download_missing_mods: bool = True
         # Whether to notify user about duplicate mods
         self.duplicate_mods_warning: bool = True
+        # Whether to show the "recently updated" indicator on Steam Workshop mods
+        self.mod_list_updated_indicator: bool = False
+        # Number of days within which a workshop mod counts as "recently updated"
+        self.mod_list_updated_threshold_days: int = 3
+        # Whether to show per-mod startup load time from the Loading Progress mod
+        self.mod_list_startup_impact: bool = False
         # Whether to enable Mod type filter
         self.mod_type_filter: bool = True
         # Whether to hide invalid mods
         self.hide_invalid_mods_when_filtering: bool = False
-        # Whether to enable inactive mods sorting options
-        self.inactive_mods_sorting: bool = True
         # Inactive mods sort state saving
         self.save_inactive_mods_sort_state: bool = False
         self.inactive_mods_sort_key: str = "FILESYSTEM_MODIFIED_TIME"
@@ -132,6 +152,8 @@ class Settings(QObject):
         self.build_steam_database_dlc_data: bool = True
         self.build_steam_database_update_toggle: bool = False
         self.steam_apikey: str = ""
+        # Disable by default previously this was 7 days "604800"
+        self.database_expiry: int = 0
 
         # SteamCMD
         self.steamcmd_validate_downloads: bool = True
@@ -177,7 +199,6 @@ class Settings(QObject):
         self.browser_window_custom_height: int = 600
 
         # Settings Window
-        self.settings_window_launch_state: str = "custom"
         self.settings_window_custom_width: int = 900
         self.settings_window_custom_height: int = 600
 
@@ -190,9 +211,7 @@ class Settings(QObject):
         self.last_backup_date: str = ""
         self.auto_backup_retention_count: int = 10
         self.auto_backup_compression_count: int = 10
-        self.color_background_instead_of_text_toggle: bool = True
         self.steam_mods_update_check: bool = False
-        self.render_unity_rich_text: bool = True
         self.update_databases_on_startup: bool = True
         self.include_mod_notes_in_mod_name_filter: bool = False
         # UI: Save-comparison labels and icons
@@ -208,6 +227,10 @@ class Settings(QObject):
         self.rentry_auth_code: str = ""
         self.github_username: str = ""
         self.github_token: str = ""
+
+        # GitHub Mod Updates
+        self.github_update_check_enabled: bool = True
+        self.github_update_check_interval_hours: int = 24
 
         # Auxiliary Metadata DB
         self.enable_aux_db_behavior_editing: bool = False
@@ -229,6 +252,10 @@ class Settings(QObject):
 
         # Active mod list dividers: list of {uuid, name, collapsed, index}
         self.active_mods_dividers: list[dict[str, Any]] = []
+
+        # Accumulates human-readable warnings from the last model-level
+        # steam integration validation so the UI can show them on dialog open.
+        self._steam_integration_warnings: list[str] = []
 
     @property
     def aux_db_path(self) -> Path:
@@ -415,8 +442,9 @@ class Settings(QObject):
         else:
             self._debug_file.unlink(missing_ok=True)
 
-        with open(str(self._settings_file), "w") as file:
-            json.dump(self._to_dict(), file, indent=4)
+        self._validate_steam_integration_config()
+
+        atomic_json_dump(self._to_dict(), str(self._settings_file), indent=4)
 
     def handle_corrupted_settings(self) -> None:
         use_old_backup = False
@@ -530,7 +558,7 @@ class Settings(QObject):
             return arg
         return " ".join(value)
 
-    def _from_dict(self, data: Dict[str, Any]) -> None:
+    def _from_dict(self, data: dict[str, Any]) -> None:
         special_attributes = ["instances"]
 
         for key, value in data.items():
@@ -558,7 +586,7 @@ class Settings(QObject):
                     )
             self.instances = instances
 
-    def _to_dict(self, skip_private: bool = True) -> Dict[str, Any]:
+    def _to_dict(self, skip_private: bool = True) -> dict[str, Any]:
         special_attributes = ["instances"]
         skip_attributes = ["destroyed", "objectNameChanged"]
 
@@ -584,55 +612,73 @@ class Settings(QObject):
 
     def _validate_steam_integration_config(self) -> bool:
         """
-        Validate and fix Steam client integration configuration.
+        Validate and fix Steam client integration configuration on load.
 
-        Ensures that Steam client integration settings are valid:
-        - If steam_client_integration is enabled but workshop_folder is not set, disable it.
-        - If workshop_folder is set but the appworkshop_294100.acf file is missing,
-          disable steam_client_integration and clear workshop_folder.
-        - If launch_via_steam_protocol is enabled but steam_client_integration is disabled, disable it.
+        Ensures that Steam client integration settings are consistent:
+        - If ``steam_client_integration`` is enabled but ``workshop_folder`` is
+          empty or does not pass validation (path must end with ``294100`` and
+          ``appworkshop_294100.acf`` must exist), disable integration and
+          clear the workshop folder.
+        - If ``launch_via_steam_protocol`` is enabled without
+          ``steam_client_integration``, disable it.
 
         Invalid configurations are silently fixed without user interaction.
+        Validation does **not** depend on ``launch_via_steam_protocol``.
 
         :return: True if configuration was fixed, False if no changes were made.
         """
-        active_instance = self.instances[self.current_instance]
-        steam_client_integration = active_instance.steam_client_integration
-        workshop_folder = active_instance.workshop_folder
-        launch_via_steam_protocol = active_instance.launch_via_steam_protocol
+        instance = self.instances[self.current_instance]
+        fixed = False
 
-        # If neither is enabled, no validation needed
-        if (
-            not steam_client_integration
-            and not workshop_folder
-            and not launch_via_steam_protocol
-        ):
-            return False
-
-        # If launch_via_steam_protocol is enabled but steam_client_integration is not, disable it
-        if launch_via_steam_protocol and not steam_client_integration:
+        # Fix: steam protocol requires steam client integration
+        if instance.launch_via_steam_protocol and not instance.steam_client_integration:
             logger.warning(
                 "Steam protocol launch is enabled but Steam client integration is disabled. Disabling..."
             )
-            active_instance.launch_via_steam_protocol = False
-            return True
+            instance.launch_via_steam_protocol = False
+            fixed = True
 
-        # If steam_client_integration is enabled but workshop_folder is not set, disable it
-        if steam_client_integration and not workshop_folder:
+        # Validate steam_client_integration prerequisites
+        if instance.steam_client_integration:
+            if not instance.workshop_folder:
+                logger.warning(
+                    "Steam client integration is enabled but workshop folder is not configured. Disabling..."
+                )
+                instance.steam_client_integration = False
+                instance.launch_via_steam_protocol = False
+                fixed = True
+                self._steam_integration_warnings.append(
+                    "Steam client integration requires a Steam mods location to be configured.<br><br>"
+                    "Steam client integration, Steam mods location, and Steam protocol launch have been disabled."
+                )
+            elif not (
+                is_rimworld_workshop_folder(instance.workshop_folder)
+                and validate_acf_file_exists(instance.workshop_folder)
+            ):
+                logger.warning(
+                    f"Workshop folder validation failed for: {instance.workshop_folder}. "
+                    "Disabling Steam client integration and clearing workshop folder..."
+                )
+                instance.steam_client_integration = False
+                instance.launch_via_steam_protocol = False
+                instance.workshop_folder = ""
+                fixed = True
+                self._steam_integration_warnings.append(
+                    "Steam client integration has been disabled because the configured Steam mods "
+                    "location is not a valid RimWorld Steam Workshop folder.<br><br>"
+                    "Steam mods location and Steam protocol launch have been cleared."
+                )
+
+        # Clear orphaned workshop folder when integration is disabled
+        if not instance.steam_client_integration and instance.workshop_folder:
             logger.warning(
-                "Steam client integration is enabled but workshop folder is not configured. Disabling..."
+                "Steam client integration is disabled. Clearing workshop folder..."
             )
-            active_instance.steam_client_integration = False
-            return True
-
-        # If workshop_folder is set, validate that the ACF file exists
-        if workshop_folder and not validate_acf_file_exists(workshop_folder):
-            logger.warning(
-                f"ACF file not found for workshop folder: {workshop_folder}. "
-                "Disabling Steam client integration and clearing workshop folder..."
+            instance.workshop_folder = ""
+            fixed = True
+            self._steam_integration_warnings.append(
+                "Steam client integration is disabled.<br><br>"
+                "The Steam mods location has been cleared."
             )
-            active_instance.steam_client_integration = False
-            active_instance.workshop_folder = ""
-            return True
 
-        return False
+        return fixed

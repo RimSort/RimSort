@@ -42,7 +42,7 @@ def main_content(
     monkeypatch: pytest.MonkeyPatch,
     qapp: QApplication,
     mock_settings_controller: MagicMock,
-    mock_metadata_manager: MagicMock,
+    mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
 ) -> Generator[Tuple[MainContent, List[bool]], None, None]:
     # Ensure active_mods_dividers is set on the settings object
@@ -51,8 +51,10 @@ def main_content(
     instance = mock_settings_controller.settings.instances["Default"]
     instance.game_folder = "/fake/path"
     instance.run_args = "--test"
-    # Initialize MainContent with the shared mock settings controller
-    mc = MainContent(mock_settings_controller)
+    # Initialize MainContent with settings from the mock settings controller
+    mc = MainContent(
+        mock_settings_controller.settings, metadata_controller=mock_metadata_controller
+    )
     # Patch _do_save to capture calls
     save_calls: List[bool] = []
     monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
@@ -60,6 +62,7 @@ def main_content(
     monkeypatch.setattr(
         mc, "check_if_essential_paths_are_set", lambda prompt=True: True
     )
+    mc.todds_controller = MagicMock()
 
     yield mc, save_calls
 
@@ -76,7 +79,7 @@ def unsaved_main_content(
 ) -> Tuple[MainContent, List[bool]]:
     mc, save_calls = main_content
     # Set unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
+    mc.mods_panel.active_mods_list.paths = ["a", "b"]
     mc.active_mods_uuids_last_save = ["a"]
     return mc, save_calls
 
@@ -115,7 +118,7 @@ def test_run_without_unsaved(
 ) -> None:
     mc, save_calls = main_content
     # No unsaved changes
-    mc.mods_panel.active_mods_list.uuids = ["a", "b"]
+    mc.mods_panel.active_mods_list.paths = ["a", "b"]
     mc.active_mods_uuids_last_save = ["a", "b"]
     mc._do_run_game()
     # Dialogue not shown

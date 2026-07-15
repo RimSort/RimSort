@@ -8,6 +8,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -17,16 +18,22 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
-from app.controllers.settings_controller import SettingsController
 from app.models.image_label import ImageLabel
-from app.sort.mod_sorting import uuid_to_folder_size
+from app.models.metadata.metadata_db import Base
+from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ScenarioMod
+from app.models.settings import Settings
+from app.sort.mod_sorting import path_to_folder_size
 from app.utils.app_info import AppInfo
 from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.custom_list_widget_item import CustomListWidgetItem
+from app.utils.event_bus import EventBus
 from app.utils.generic import format_file_size, platform_specific_open, scanpath
-from app.utils.metadata import MetadataManager
+from app.utils.github.models import CacheBase, GitHubModEntry, GitHubReleaseCache
+from app.utils.github.provider import GitHubProvider, _releases_from_json
 from app.utils.mod_info import UNKNOWN, ModInfo
+from app.utils.mod_utils import resolve_aux_timestamps
 from app.views.description_widget import DescriptionWidget
 
 # Constants for layout proportions
@@ -104,15 +111,17 @@ class ModInfoPanel:
     mod information panel on the GUI.
     """
 
-    def __init__(self, settings_controller: SettingsController) -> None:
+    def __init__(
+        self, settings: Settings, metadata_controller: MetadataController
+    ) -> None:
         """
         Initialize the class.
         """
         logger.debug("Initializing ModInfo")
 
-        # Cache MetadataManager instance
-        self.metadata_manager = MetadataManager.instance()
-        self.settings_controller = settings_controller
+        # Cache MetadataController instance
+        self.metadata_controller = metadata_controller
+        self.settings = settings
 
         # Used to keep track of which mod items notes we are viewing/editing
         # This is set when a mod is clicked on
@@ -248,6 +257,27 @@ class ModInfoPanel:
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
         self.mod_info_steam_url_value.setWordWrap(True)
+        # GitHub source and version
+        self.mod_info_github_source_label = QLabel(self.tr("GitHub:"))
+        self.mod_info_github_source_label.setObjectName("summaryLabel")
+        self.mod_info_github_source_value = QLabel()
+        self.mod_info_github_source_value.setObjectName("summaryValue")
+        self.mod_info_github_source_value.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.mod_info_github_source_value.setWordWrap(True)
+
+        self.mod_info_github_version_label = QLabel(self.tr("Version:"))
+        self.mod_info_github_version_label.setObjectName("summaryLabel")
+        self.mod_info_github_version_combo = QComboBox()
+        self.mod_info_github_version_combo.setObjectName("githubVersionCombo")
+        self.mod_info_github_version_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
+
+        self.mod_info_github_update_label = QLabel()
+        self.mod_info_github_update_label.setObjectName("githubUpdateBadge")
+        self.mod_info_github_update_label.hide()
         self.mod_info_last_touched_label = QLabel(self.tr("Last Touched:"))
         self.mod_info_last_touched_label.setObjectName("summaryLabel")
         self.mod_info_last_touched_value = QLabel()
@@ -354,6 +384,23 @@ class ModInfoPanel:
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_label, 20)
         self.mod_info_steam_url_layout.addWidget(self.mod_info_steam_url_value, 80)
         self.mod_info_layout.addLayout(self.mod_info_steam_url_layout)
+        self.mod_info_github_source_row = QHBoxLayout()
+        self.mod_info_github_source_row.addWidget(
+            self.mod_info_github_source_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_github_source_row.addWidget(
+            self.mod_info_github_source_value, NAME_VALUE_RATIO
+        )
+        self.mod_info_layout.addLayout(self.mod_info_github_source_row)
+        self.mod_info_github_version_row = QHBoxLayout()
+        self.mod_info_github_version_row.addWidget(
+            self.mod_info_github_version_label, NAME_LABEL_RATIO
+        )
+        self.mod_info_github_version_row.addWidget(
+            self.mod_info_github_version_combo, NAME_VALUE_RATIO
+        )
+        self.mod_info_github_version_row.addWidget(self.mod_info_github_update_label)
+        self.mod_info_layout.addLayout(self.mod_info_github_version_row)
         self.notes_layout.addWidget(self.notes)
         self.mod_info_layout.addLayout(self.mod_info_last_touched)
         self.mod_info_layout.addLayout(self.mod_info_filesystem_time)
@@ -404,7 +451,151 @@ class ModInfoPanel:
         ):
             widget.hide()
 
+        self.hide_github_info()
+
+        EventBus().do_refresh_mods_lists.connect(self._refresh_github_info)
+
         logger.debug("Finished ModInfo initialization")
+
+    def show_github_info(
+        self,
+        owner_repo: str,
+        installed_version: str,
+        available_versions: list[str],
+        update_available: bool,
+        mod_path: str = "",
+    ) -> None:
+        """Show GitHub source info for a GitHub-tracked mod."""
+        self._github_owner_repo = owner_repo
+        self._github_installed_version = installed_version
+        self._github_mod_path = mod_path
+
+        self.mod_info_github_source_value.setText(owner_repo)
+
+        try:
+            self.mod_info_github_version_combo.activated.disconnect()
+        except RuntimeError:
+            pass  # No prior connection exists; safe to ignore
+
+        self.mod_info_github_version_combo.clear()
+        self.mod_info_github_version_combo.addItems(available_versions)
+        idx = self.mod_info_github_version_combo.findText(installed_version)
+        if idx >= 0:
+            self.mod_info_github_version_combo.setCurrentIndex(idx)
+
+        self.mod_info_github_version_combo.activated.connect(
+            self._on_github_version_selected
+        )
+
+        if update_available:
+            self.mod_info_github_update_label.setText(self.tr("(Update available)"))
+            self.mod_info_github_update_label.show()
+        else:
+            self.mod_info_github_update_label.hide()
+
+        self._set_github_row_visible(True)
+
+    def _on_github_version_selected(self, index: int) -> None:
+        """Handle user selecting a different version in the combo box."""
+        selected = self.mod_info_github_version_combo.itemText(index)
+        if selected == self._github_installed_version:
+            return
+
+        EventBus().github_version_switch_requested.emit(self._github_mod_path, selected)
+
+    def hide_github_info(self) -> None:
+        """Hide GitHub info row for non-GitHub mods."""
+        self._set_github_row_visible(False)
+
+    def _set_github_row_visible(self, visible: bool) -> None:
+        self.mod_info_github_source_label.setVisible(visible)
+        self.mod_info_github_source_value.setVisible(visible)
+        self.mod_info_github_version_label.setVisible(visible)
+        self.mod_info_github_version_combo.setVisible(visible)
+        self.mod_info_github_update_label.setVisible(visible)
+
+    def _refresh_github_info(self) -> None:
+        """Re-check GitHub info for the currently displayed mod after a version switch."""
+        try:
+            mod_path = getattr(self, "_github_mod_path", None)
+            if mod_path:
+                self._update_github_info(mod_path)
+        except Exception:
+            logger.debug("Could not refresh GitHub info for current mod")
+
+    def _update_github_info(self, mod_path: str | None) -> None:
+        """Check if mod is GitHub-tracked and show/hide info accordingly."""
+        if not mod_path:
+            self.hide_github_info()
+            return
+
+        try:
+            aux_controller = AuxMetadataController.get_or_create_cached_instance(
+                self.settings.aux_db_path
+            )
+            Base.metadata.create_all(aux_controller.engine)
+
+            with aux_controller.Session() as session:
+                entry = (
+                    session.query(GitHubModEntry).filter_by(mod_path=mod_path).first()
+                )
+                if entry is None:
+                    self.hide_github_info()
+                    return
+
+                owner_repo = entry.owner_repo
+                installed_version = entry.installed_version
+
+            versions = [installed_version]
+            update_available = False
+
+            try:
+                from sqlalchemy import create_engine
+                from sqlalchemy.orm import sessionmaker as sa_sessionmaker
+
+                cache_db = AppInfo().app_storage_folder / "github_release_cache.db"
+                cache_engine = create_engine(f"sqlite+pysqlite:///{cache_db}")
+                CacheBase.metadata.create_all(cache_engine)
+                cache_session = sa_sessionmaker(bind=cache_engine)()
+                try:
+                    cached = (
+                        cache_session.query(GitHubReleaseCache)
+                        .filter_by(owner_repo=owner_repo)
+                        .first()
+                    )
+                    if cached is not None:
+                        releases = _releases_from_json(cached.releases_json)
+                        if releases:
+                            versions = [r.tag for r in releases]
+                            versions.append("HEAD (latest commit)")
+                            latest = GitHubProvider.get_latest_stable_release(releases)
+                            if latest and installed_version != "HEAD":
+                                installed_rel = next(
+                                    (r for r in releases if r.tag == installed_version),
+                                    None,
+                                )
+                                if (
+                                    installed_rel
+                                    and latest.published_at > installed_rel.published_at
+                                ):
+                                    update_available = True
+                            elif latest and installed_version == "HEAD":
+                                update_available = True
+                finally:
+                    cache_session.close()
+            except Exception:
+                logger.debug("Could not load cached releases for {}", owner_repo)
+
+            self.show_github_info(
+                owner_repo=owner_repo,
+                installed_version=installed_version,
+                available_versions=versions,
+                update_available=update_available,
+                mod_path=mod_path,
+            )
+        except Exception:
+            logger.debug("Could not check GitHub mod status for {}", mod_path)
+            self.hide_github_info()
 
     def update_user_mod_notes(self) -> None:
         if self.current_mod_item is None:
@@ -413,21 +604,23 @@ class ModInfoPanel:
         mod_data = self.current_mod_item.data(Qt.ItemDataRole.UserRole)
         mod_data["user_notes"] = new_notes
         # Update Aux DB
-        aux_metadata_controller = AuxMetadataController.get_or_create_cached_instance(
-            self.settings_controller.settings.aux_db_path
-        )
-        uuid = mod_data["uuid"]
-        if not uuid:
-            logger.error("Unable to retrieve uuid when saving user notes to Aux DB.")
+        path = mod_data["path"]
+        if not path:
+            logger.error("Unable to retrieve path when saving user notes to Aux DB.")
             return
+        mod = self.metadata_controller.get_mod(path)
+        if mod is None:
+            logger.error(f"Mod not found for path {path} when saving user notes.")
+            return
+        mod_path = str(mod.mod_path) if mod.mod_path else path
+        aux_metadata_controller = self.metadata_controller.metadata_db_controller
         with aux_metadata_controller.Session() as aux_metadata_session:
-            mod_path = self.metadata_manager.internal_local_metadata[uuid]["path"]
             aux_metadata_controller.update(
                 aux_metadata_session,
                 mod_path,
                 user_notes=new_notes,
             )
-        logger.debug(f"Finished updating notes for UUID: {mod_data['uuid']}")
+        logger.debug(f"Finished updating notes for path: {mod_data['path']}")
 
     def show_user_mod_notes(self, item: CustomListWidgetItem) -> None:
         # Only show notes tab when a mod is selected
@@ -438,7 +631,7 @@ class ModInfoPanel:
         self.notes.blockSignals(True)
         self.notes.setText(mod_notes)
         self.notes.blockSignals(False)
-        logger.debug(f"Finished setting notes for UUID: {mod_data['uuid']}")
+        logger.debug(f"Finished setting notes for path: {mod_data['path']}")
 
     def _add_label_value_to_layout(
         self, layout: QHBoxLayout, label: QLabel, value: QLabel
@@ -495,7 +688,7 @@ class ModInfoPanel:
     def _set_mod_tags_info(self, uuid: str) -> None:
         """Set user-defined tags information."""
         try:
-            tags = auxdb_get_mod_tags(self.settings_controller, uuid)
+            tags = auxdb_get_mod_tags(self.settings, uuid)
         except Exception as e:
             logger.debug(f"Failed to load tags for mod info panel UUID {uuid}: {e}")
             tags = []
@@ -511,11 +704,8 @@ class ModInfoPanel:
     def _set_folder_size_info(self, uuid: str) -> None:
         """Set folder size information using optimized calculation."""
         try:
-            if self.settings_controller.settings.inactive_mods_sorting:
-                size_bytes = uuid_to_folder_size(uuid)
-                self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
-            else:
-                self.mod_info_folder_size_value.setText("Not available")
+            size_bytes = path_to_folder_size(uuid)
+            self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
         except Exception as e:
             logger.error(f"Error calculating folder size for UUID {uuid}: {e}")
             self.mod_info_folder_size_value.setText("Not available")
@@ -537,11 +727,7 @@ class ModInfoPanel:
 
     def _set_filesystem_time_info(self, mod_path: str | None) -> None:
         """Set filesystem modification time information."""
-        if (
-            self.settings_controller.settings.inactive_mods_sorting
-            and mod_path
-            and os.path.exists(mod_path)
-        ):
+        if mod_path and os.path.exists(mod_path):
             try:
                 fs_time = int(os.path.getmtime(mod_path))
                 self._set_timestamp_info(
@@ -560,7 +746,7 @@ class ModInfoPanel:
         external_time_updated = mod_metadata.get("external_time_updated")
         internal_time_updated = mod_metadata.get("internal_time_updated")
 
-        if external_time_created:
+        if external_time_created is not None and external_time_created > 0:
             try:
                 dt_created = datetime.fromtimestamp(int(external_time_created))
                 external_times.append(
@@ -569,7 +755,7 @@ class ModInfoPanel:
             except (ValueError, OSError, OverflowError):
                 external_times.append("Created: Invalid")
 
-        if external_time_updated:
+        if external_time_updated is not None and external_time_updated > 0:
             try:
                 dt_updated = datetime.fromtimestamp(int(external_time_updated))
                 external_times.append(
@@ -578,7 +764,7 @@ class ModInfoPanel:
             except (ValueError, OSError, OverflowError):
                 external_times.append("Updated: Invalid")
 
-        if internal_time_updated:
+        if internal_time_updated is not None and internal_time_updated > 0:
             try:
                 dt_int_updated = datetime.fromtimestamp(int(internal_time_updated))
                 external_times.append(
@@ -645,10 +831,12 @@ class ModInfoPanel:
         for widget in self.base_mod_info_widgets + self.scenario_info_widgets:
             widget.hide()
 
-    def _set_description(
-        self, mod_metadata: dict[str, Any], render_unity_rt: bool
-    ) -> None:
-        """Set the mod description with version-specific handling."""
+    def _set_description(self, mod_metadata: dict[str, Any]) -> None:
+        """
+        Set the mod description with version-specific handling.
+        render_unity_rt: Whether to render Unity rich text in descriptions
+        """
+        render_unity_rt = self.settings.render_unity_rich_text
         self.mod_info_path_value.setPath(mod_metadata.get("path"))
         # Set Steam URL value
         steam_url: str | None = None
@@ -684,7 +872,7 @@ class ModInfoPanel:
         elif "descriptionsbyversion" in mod_metadata and isinstance(
             mod_metadata["descriptionsbyversion"], dict
         ):
-            major, minor = self.metadata_manager.game_version.split(".")[
+            major, minor = self.metadata_controller.game_version.split(".")[
                 :2
             ]  # Split the version and take the first two parts
             version_regex = rf"v{major}\.{minor}"  # Construct the regex to match both major and minor versions
@@ -780,17 +968,22 @@ class ModInfoPanel:
                         )
                     )
 
-    def display_mod_info(self, uuid: str, render_unity_rt: bool) -> None:
+    def display_mod_info(self, uuid: str) -> None:
         """
-        This slot receives a the complete mod data json for
-        the mod that was just clicked on. It will set the relevant
-        information on the info panel.
+        This slot receives the UUID (path) of the mod that was just clicked on.
+        It will set the relevant information on the info panel.
 
-        :param uuid: UUID of the mod to display
+        :param uuid: UUID (path) of the mod to display
         """
-        mod_metadata = self.metadata_manager.internal_local_metadata.get(uuid, {})
-        is_invalid = mod_metadata and mod_metadata.get("invalid")
-        is_scenario = mod_metadata and mod_metadata.get("scenario")
+        mod = self.metadata_controller.get_mod(uuid)
+        if mod is None:
+            return
+
+        is_invalid = not isinstance(mod, AboutXmlMod)
+        is_scenario = isinstance(mod, ScenarioMod)
+
+        # Build a compatibility dict for helpers that still expect dict format
+        mod_metadata = self._build_mod_metadata_dict(uuid, mod)
 
         # Create ModInfo object - it handles all edge cases and formatting
         mod_info = ModInfo.from_metadata(uuid, mod_metadata)
@@ -815,12 +1008,76 @@ class ModInfoPanel:
             self._set_invalid_info_fields()
 
         # Set path
-        self.mod_info_path_value.setPath(mod_metadata.get("path"))
+        mod_path = str(mod.mod_path) if mod.mod_path else None
+        self.mod_info_path_value.setPath(mod_path)
+
+        # Show or hide GitHub info based on whether this mod is tracked
+        self._update_github_info(mod_path)
 
         # Set description
-        self._set_description(mod_metadata, render_unity_rt)
+        self._set_description(mod_metadata)
 
         # Load preview image
         self._load_preview_image(mod_metadata, is_scenario)
 
         logger.debug("Finished displaying mod info")
+
+    def _build_mod_metadata_dict(self, uuid: str, mod: ListedMod) -> dict[str, Any]:
+        """Build a backward-compatible metadata dict from a ListedMod.
+
+        This bridges the gap between the typed ListedMod API and helpers
+        that still expect dict-based metadata. Intended to be removed once
+        all helpers are fully migrated.
+        """
+        mod_path = str(mod.mod_path) if mod.mod_path else ""
+        metadata: dict[str, Any] = {
+            "uuid": uuid,
+            "name": mod.name,
+            "path": mod_path,
+            "description": mod.description,
+            "supportedversions": mod.supported_versions,
+            "publishedfileid": mod.published_file_id,
+            "internal_time_touched": mod.internal_time_touched,
+        }
+        if isinstance(mod, AboutXmlMod):
+            metadata["packageid"] = str(mod.package_id)
+            metadata["authors"] = mod.authors
+            metadata["modversion"] = mod.mod_version
+            metadata["url"] = mod.url
+        else:
+            metadata["packageid"] = mod.published_file_id or "unknown"
+            metadata["invalid"] = True
+        if isinstance(mod, ScenarioMod):
+            metadata["scenario"] = True
+            metadata["summary"] = mod.summary
+
+        # Derive steam_url from published_file_id
+        pfid = mod.published_file_id
+        if pfid:
+            metadata["pfid"] = pfid
+            metadata["steam_url"] = (
+                f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
+            )
+
+        # Get timestamps from aux DB
+        _, aux_entry = self.metadata_controller.get_metadata_with_path(uuid)
+        if aux_entry is not None:
+            metadata["external_time_created"] = getattr(
+                aux_entry, "external_time_created", None
+            )
+            metadata["external_time_updated"] = getattr(
+                aux_entry, "external_time_updated", None
+            )
+            metadata["internal_time_updated"] = getattr(
+                aux_entry, "internal_time_updated", None
+            )
+            # Use the shared resolve_aux_timestamps helper so the mod-info
+            # panel shows the same download / workshop-update values as the
+            # update panel and the main mod list.
+            acf_touched, ext_updated = resolve_aux_timestamps(aux_entry)
+            if acf_touched is not None:
+                metadata["acf_time_touched"] = acf_touched
+            if ext_updated is not None:
+                metadata["external_time_updated"] = ext_updated
+
+        return metadata

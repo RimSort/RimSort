@@ -16,6 +16,7 @@ from app.utils.gui_info import (
     show_dialogue_conditional,
     show_dialogue_file,
 )
+from app.utils.json_utils import atomic_json_dump
 from app.views.dialogue import show_information, show_warning
 from app.views.troubleshooting_dialog import TroubleshootingDialog
 
@@ -151,7 +152,7 @@ class TroubleshootingController:
                 ),
                 text=self.translate(
                     "TroubleshootingController",
-                    "Could not automatically start game installation through Steam.\n\nPlease manually verify/install the game through Steam.",
+                    "Could not automatically start game installation through Steam.<br><br>Please manually verify/install the game through Steam.",
                 ),
                 icon="warning",
             )
@@ -184,7 +185,7 @@ class TroubleshootingController:
             title=self.translate("TroubleshootingController", "Process complete"),
             text=self.translate(
                 "TroubleshootingController",
-                "Deleted all files in the Steam mods directory.\n\n Trying to restart Steam to trigger automatic redownload of subscribed mods.",
+                "Deleted all files in the Steam mods directory.<br><br> Trying to restart Steam to trigger automatic redownload of subscribed mods.",
             ),
         )
 
@@ -207,7 +208,7 @@ class TroubleshootingController:
                 ),
                 text=self.translate(
                     "TroubleshootingController",
-                    "Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.\n\nIf mods don't download automatically, try:\n1. Restart Steam\n2. Verify game files in Steam\n3. Visit the Workshop page of each mod",
+                    "Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.<br><br>If mods don't download automatically, try:<br>1. Restart Steam<br>2. Verify game files in Steam<br>3. Visit the Workshop page of each mod",
                 ),
                 icon="warning",
             )
@@ -230,7 +231,7 @@ class TroubleshootingController:
         for item in config_dir.iterdir():
             if item.is_file() and item.name not in protected_files:
                 try:
-                    print(f"Deleting {item}...")
+                    logger.info(f"Deleting {item}...")
                     item.unlink()
                     deleted_any = True
                     logger.info(f"Deleted {item} successfully.")
@@ -337,7 +338,7 @@ class TroubleshootingController:
             title=self.translate("TroubleshootingController", "Confirm Clear"),
             text=self.translate(
                 "TroubleshootingController",
-                "Are you sure you want to delete all mods?\n\nWARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.",
+                "Are you sure you want to delete all mods?<br><br>WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.",
             ),
             icon="warning",
         ):
@@ -488,8 +489,7 @@ class TroubleshootingController:
                 "knownExpansions": known_expansions_list,
             }
 
-            with open(save_path, "w") as f:
-                json.dump(export_data, f, indent=2)
+            atomic_json_dump(export_data, save_path, indent=2)
         except Exception as e:
             logger.error(f"Failed to export mod list: {e}")
             show_warning(
@@ -581,7 +581,7 @@ class TroubleshootingController:
                 ),
                 self.translate(
                     "TroubleshootingController",
-                    "The selected file is not a valid mod list file.\nDetails: {e}",
+                    "The selected file is not a valid mod list file.<br>Details: {e}",
                 ).format(e=str(e)),
             )
 
@@ -650,7 +650,7 @@ class TroubleshootingController:
                     title=self.translate("TroubleshootingController", "Cache Cleared"),
                     text=self.translate(
                         "TroubleshootingController",
-                        "Successfully deleted Steam's downloading folder.\nRestart Steam for the changes to take effect.",
+                        "Successfully deleted Steam's downloading folder.<br>Restart Steam for the changes to take effect.",
                     ),
                     icon="info",
                 )
@@ -671,7 +671,7 @@ class TroubleshootingController:
                 title=self.translate("TroubleshootingController", "Cache Clear Failed"),
                 text=self.translate(
                     "TroubleshootingController",
-                    "Could not delete Steam's downloading folder.\nPlease delete it manually: Steam/steamapps/downloading\nDetails: {e}",
+                    "Could not delete Steam's downloading folder.<br>Please delete it manually: Steam/steamapps/downloading<br>Details: {e}",
                 ).format(e=str(e)),
                 icon="warning",
                 buttons=["Ok"],
@@ -698,7 +698,7 @@ class TroubleshootingController:
                     title=self.translate("TroubleshootingController", "No Games Found"),
                     text=self.translate(
                         "TroubleshootingController",
-                        "No installed games found in this Steam library folder.\nYou may have games installed in a different Steam library folder or drive.",
+                        "No installed games found in this Steam library folder.<br>You may have games installed in a different Steam library folder or drive.",
                     ),
                     icon="warning",
                     buttons=["Ok"],
@@ -712,7 +712,7 @@ class TroubleshootingController:
                 ),
                 text=self.translate(
                     "TroubleshootingController",
-                    "This will verify all {len} games in your Steam library.\nThis may take a while. Continue?",
+                    "This will verify all {len} games in your Steam library.<br>This may take a while. Continue?",
                 ).format(len=len(app_ids)),
             ):
                 return
@@ -727,7 +727,7 @@ class TroubleshootingController:
                 ),
                 text=self.translate(
                     "TroubleshootingController",
-                    "Steam will now verify {len} games.\nYou can monitor progress in the Steam client.",
+                    "Steam will now verify {len} games.<br>You can monitor progress in the Steam client.",
                 ).format(len=len(app_ids)),
                 icon="info",
             )
@@ -740,7 +740,7 @@ class TroubleshootingController:
                 ),
                 text=self.translate(
                     "TroubleshootingController",
-                    "Could not repair Steam library.\nPlease verify your games manually through Steam.\nDetails: {e}",
+                    "Could not repair Steam library.<br>Please verify your games manually through Steam.<br>Details: {e}",
                 ).format(e=str(e)),
                 icon="warning",
             )
@@ -759,7 +759,7 @@ class TroubleshootingController:
                 title=self.translate("TroubleshootingController", "ACF File Not Found"),
                 text=self.translate(
                     "TroubleshootingController",
-                    "Could not find the Steam Workshop ACF file at:\n{acf_path}",
+                    "Could not find the Steam Workshop ACF file at:<br>{acf_path}",
                 ).format(acf_path=acf_path),
             )
             return
@@ -770,7 +770,7 @@ class TroubleshootingController:
             ),
             text=self.translate(
                 "TroubleshootingController",
-                "This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.\n\nA backup will be created before any changes are made.\n\nContinue?",
+                "This will remove stale workshop entries from the ACF metadata file for mods that no longer exist on disk.<br><br>A backup will be created before any changes are made.<br><br>Continue?",
             ),
             icon="warning",
         ):
@@ -782,7 +782,8 @@ class TroubleshootingController:
             if removed_pfids:
                 backup_path = str(acf_path) + ".backup"
                 details = (
-                    "\n".join(removed_pfids) + f"\n\nBackup saved to: {backup_path}"
+                    "<br>".join(removed_pfids)
+                    + f"<br><br>Backup saved to: {backup_path}"
                 )
                 show_information(
                     title=self.translate(

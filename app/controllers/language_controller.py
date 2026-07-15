@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
@@ -8,7 +11,9 @@ from app.models.settings import Settings
 from app.utils.app_info import AppInfo
 from app.utils.generic import restart_application
 from app.views import dialogue
-from app.views.settings_dialog import SettingsDialog
+
+if TYPE_CHECKING:
+    from app.views.settings_dialog import SettingsDialog
 
 
 class LanguageController:

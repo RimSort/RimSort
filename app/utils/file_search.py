@@ -1,20 +1,23 @@
 import os
 import re
-from typing import Any, Callable, Generator, Optional, Tuple
+from collections.abc import Callable, Generator
+from typing import Any, Optional
 
 from charset_normalizer import from_bytes
 from loguru import logger
 
-from app.utils.metadata import MetadataManager
+from app.controllers.metadata_controller import MetadataController
 from app.utils.mod_utils import get_mod_name_from_pfid
 
 
 class FileSearch:
     """Utility class for performing file searches with advanced features."""
 
-    def __init__(self, metadata_manager: Optional[MetadataManager] = None) -> None:
+    def __init__(
+        self, metadata_controller: Optional[MetadataController] = None
+    ) -> None:
         self.stop_requested = False
-        self.metadata_manager = metadata_manager or MetadataManager.instance()
+        self.metadata_controller = metadata_controller or MetadataController.instance()
 
     def stop_search(self) -> None:
         """Stop the current search operation."""
@@ -60,7 +63,7 @@ class FileSearch:
         root_paths: list[str],
         options: dict[str, Any],
         result_callback: Optional[Callable[..., None]] = None,
-    ) -> Generator[dict[str, str] | Tuple[str, str, str], None, None]:
+    ) -> Generator[dict[str, str] | tuple[str, str, str], None, None]:
         """
         Generic search method that handles all search types.
 
@@ -86,8 +89,21 @@ class FileSearch:
         preview = options.get("preview", False)
         return_dict = options.get("return_dict", False)
 
+        exclude_options = options.get("exclude_options", {})
+        excluded_dirs: set[str] = set()
+        if exclude_options.get("skip_translations"):
+            excluded_dirs.add("Languages")
+        if exclude_options.get("skip_git"):
+            excluded_dirs.add(".git")
+        if exclude_options.get("skip_source"):
+            excluded_dirs.add("Source")
+        if exclude_options.get("skip_textures"):
+            excluded_dirs.add("Textures")
+
         for root_path in root_paths:
-            for dirpath, _, filenames in os.walk(root_path):
+            for dirpath, dirnames, filenames in os.walk(root_path):
+                if excluded_dirs:
+                    dirnames[:] = [d for d in dirnames if d not in excluded_dirs]
                 if self.stop_requested:
                     logger.info("Search stopped by user.")
                     return
@@ -111,7 +127,7 @@ class FileSearch:
                                 content_chunk, search_text, case_sensitive, use_regex
                             ):
                                 if return_dict:
-                                    result: dict[str, str] | Tuple[str, str, str] = {
+                                    result: dict[str, str] | tuple[str, str, str] = {
                                         "file_path": file_path,
                                         "preview": self._get_preview(
                                             content_chunk, search_text, case_sensitive
@@ -168,7 +184,7 @@ class FileSearch:
         self, search_type: str
     ) -> Callable[
         [str, list[str], dict[str, Any], Optional[Callable[[str, str, str], None]]],
-        Generator[Tuple[str, str, str], None, None],
+        Generator[tuple[str, str, str], None, None],
     ]:
         """
         Factory method to create specialized search methods.
@@ -185,7 +201,7 @@ class FileSearch:
             root_paths: list[str],
             options: dict[str, Any],
             result_callback: Optional[Callable[[str, str, str], None]] = None,
-        ) -> Generator[Tuple[str, str, str], None, None]:
+        ) -> Generator[tuple[str, str, str], None, None]:
             # Apply search-type specific options
             search_options = options.copy()
             search_options["return_dict"] = False

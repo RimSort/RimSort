@@ -21,7 +21,6 @@ from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
 from app.utils import http
-from app.utils.app_info import AppInfo
 from app.utils.launch_command_parser import parse_launch_command
 from app.utils.platform.windows import scanpath_win32
 
@@ -444,6 +443,7 @@ def launch_process(
             p = subprocess.Popen(
                 popen_args,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                shell=True,
                 cwd=cwd,
                 env=env,
             )
@@ -502,7 +502,7 @@ def platform_specific_open(path: str | Path) -> None:
                     dialogue.show_warning(
                         title="Failed to open file",
                         text="Could not open the file",
-                        information=f"No default application is associated with this file type: {p.suffix}\n\nPlease manually associate an application with {p.suffix} files or open the file manually.",
+                        information=f"No default application is associated with this file type: {p.suffix}<br><br>Please manually associate an application with {p.suffix} files or open the file manually.",
                         details=str(e),
                     )
             else:
@@ -561,39 +561,27 @@ def format_file_size(size_in_bytes: int) -> str:
         return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
-def upload_data_to_0x0_st(path: str) -> tuple[bool, str]:
+def upload_log_to_privatebin(path: str) -> tuple[bool, str]:
     """
-    Function to upload data to https://0x0.st/
+    Read a log file and upload its contents to the RimSort PrivateBin instance.
 
-    :param path: a string path to a file containing data to upload
-    :return: a string that is the URL returned from https://0x0.st/
+    :param path: Path to the log file
+    :return: (success, url_or_error)
     """
-    logger.info(f"Uploading data to https://0x0.st/: {path}")
-    try:
-        with open(path, "rb") as f:
-            headers = {"User-Agent": f"RimSort/{AppInfo().app_version}"}
-            request = http.post(
-                url="https://0x0.st/",
-                files={"file": (Path(path).name, f)},
-                headers=headers,
-            )
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection Error. Failed to upload data to https://0x0.st: {e}")
-        return False, str(e)
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request Error. Failed to upload data to https://0x0.st: {e}")
-        return False, str(e)
-
-    if request.status_code == 200:
-        url = request.text.strip()
-        logger.info(f"Uploaded! Uploaded data can be found at: {url}")
-        return True, url
-    else:
-        body_snippet = request.text.strip()
-        logger.warning(
-            f"Failed to upload data to https://0x0.st. Status code: {request.status_code}; body: {body_snippet[:200]}"
+    max_size = 20 * 1024 * 1024  # 20 MB server limit
+    file_size = os.path.getsize(path)
+    if file_size > max_size:
+        return (
+            False,
+            f"File too large ({file_size // (1024 * 1024)} MB). Maximum is 20 MB.",
         )
-        return False, f"Status code: {request.status_code}\n{body_snippet}"
+
+    with open(path, encoding="utf-8", errors="replace") as f:
+        text = f.read()
+
+    from app.utils.privatebin import upload_to_privatebin
+
+    return upload_to_privatebin(text)
 
 
 def extract_git_dir_name(url: str) -> str:
@@ -699,12 +687,20 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
 
     if os.path.exists(steam_folder / primary_library):
         logger.debug(f"Attempting to get RimWorld path from {primary_library}")
-        with open(steam_folder / primary_library, "r") as f:
-            rimworld_path = __load_data(f)
+        try:
+            with open(steam_folder / primary_library, "r") as f:
+                rimworld_path = __load_data(f)
+        except Exception:
+            logger.warning(f"Failed to parse {primary_library}", exc_info=True)
+            return rimworld_path
     elif os.path.exists(steam_folder / backup_library):
         logger.debug(f"Attempting to get RimWorld path from {backup_library}")
-        with open(steam_folder / backup_library, "r") as f:
-            rimworld_path = __load_data(f)
+        try:
+            with open(steam_folder / backup_library, "r") as f:
+                rimworld_path = __load_data(f)
+        except Exception:
+            logger.warning(f"Failed to parse {backup_library}", exc_info=True)
+            return rimworld_path
     else:
         logger.warning("Failed retrieving RimWorld path from libraryfolders.vdf")
         return rimworld_path
@@ -748,7 +744,12 @@ def restart_application() -> None:
     if getattr(sys, "frozen", False):
         cmd = [sys.executable] + sys.argv[1:]
     else:
-        cmd = [sys.executable] + sys.argv
+        # `python -m app` sets sys.argv[0] to the resolved path of
+        # app/__main__.py, not "-m app". Re-launching with that path
+        # directly runs it as a plain script, which puts app/ (not the
+        # project root) on sys.path and breaks `from app...` imports.
+        # Reconstruct the original `-m app` invocation instead.
+        cmd = [sys.executable, "-m", "app"] + sys.argv[1:]
 
     subprocess.Popen(cmd)
 
@@ -802,7 +803,7 @@ def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
         tuple[str, int | None]: A tuple of (formatted_time_string, timestamp).
                                  If timestamp is None, returns ("Unknown", None).
     """
-    if timestamp is None:
+    if timestamp is None or timestamp <= 0:
         return "Unknown", None
 
     try:
@@ -811,3 +812,43 @@ def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
         return f"{abs_time} | {rel_time}", timestamp
     except (ValueError, TypeError, OSError):
         return "Invalid timestamp", None
+
+
+def show_no_steam_warning() -> None:
+    """
+    Show warning that Steam is not detected.
+    """
+    dialogue.show_warning(
+        title=translate("SteamworksInterface", "Steam Not Detected"),
+        text=translate("SteamworksInterface", "Steam Integration Unavailable"),
+        information=translate(
+            "SteamworksInterface",
+            "RimSort could not detect Steam client or it may be unresponsive.<br><br>"
+            "Please make sure Steam is installed and running.<br><br>"
+            "If you are a Steam user, please check that Steam is running and that you are logged in.<br><br>"
+            "Try restarting Steam.",
+        ),
+        details=translate(
+            "SteamworksInterface",
+            "If you are still facing issues even after Steam is installed and running, please report this issue to https://github.com/RimSort/RimSort/issues",
+        ),
+    )
+
+
+def show_snap_steam_warning() -> None:
+    """
+    Show snap steam warning in a thread-safe manner.
+    """
+    dialogue.show_warning(
+        title=translate("SteamworksInterface", "Snap Steam Detected"),
+        text=translate("SteamworksInterface", "Steam Integration Unavailable"),
+        information=translate(
+            "SteamworksInterface",
+            "For full Steam support, please install native Steam "
+            "from the official repository.",
+        ),
+        details=translate(
+            "SteamworksInterface",
+            "Snap Steam is sandboxed and incompatible with Steamworks API",
+        ),
+    )

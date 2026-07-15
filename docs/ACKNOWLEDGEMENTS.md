@@ -1,3 +1,9 @@
+---
+title: Acknowledgements
+layout: default
+nav_order: 5
+---
+
 # Acknowledgements
 
 RimSort was created by oceancabbage. Developing RimSort is only made possible by people who share their work and expertise with others. This file lists people or groups whose work has been helpful for RimSort.

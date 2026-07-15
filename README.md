@@ -4,10 +4,13 @@
     Built from the ground up to be reliable and community managed.<br>
     Includes support for Linux, Mac, and Windows.</p>
     <p align="center"><strong><a href="https://github.com/RimSort/RimSort/releases">Releases</a> | <a href="https://rimsort.github.io/RimSort/">Wiki</a> | <a href="https://discord.gg/aV7g69JmR2">Discord</a></strong> </p>
+    <p align="center">
+        <a href="https://codecov.io/gh/RimSort/RimSort"><img src="https://codecov.io/gh/RimSort/RimSort/graph/badge.svg" alt="codecov"></a>
+    </p>
     <br><br><br>
 </p>
 
-![RimSort Preview](./docs/rimsort_preview.png)
+![RimSort Preview](./docs/assets/images/rimsort_preview.png)
 
 ## Installation
 
@@ -32,6 +35,10 @@ Interested in helping translate RimSort to your language? Check out our [Transla
 If you have an issue, make sure you **checked the [wiki][Wiki]** for a solution.
 
 [![Join us on Discord](https://github-production-user-asset-6210df.s3.amazonaws.com/2766946/248529301-486f4f8c-fed5-4fe1-832f-6461b7ce3a55.png)][Discord]
+
+## Credits
+
+- "Update" icon by [Icons8](https://icons8.com) ([icon link](https://icons8.com/icon/aPgBhcyogqyV/update)).
 
 [Wiki]: https://rimsort.github.io/RimSort/
 [Issues]: https://github.com/RimSort/RimSort/issues

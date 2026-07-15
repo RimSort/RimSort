@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import functools
 import os
-from collections.abc import MutableSet
+from collections.abc import Mapping, MutableSet
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import AbstractSet, Any, Iterable, Iterator
+from typing import AbstractSet, Any, Iterable, Iterator, Literal
 from uuid import uuid4
 
 import msgspec
+from loguru import logger
 
+from app.utils.constants import KNOWN_TIER_ONE_MODS, KNOWN_TIER_ZERO_MODS
 from app.utils.files import subfolder_contains_candidate_path
 
 
@@ -19,6 +23,18 @@ class ModType(Enum):
     LUDEON = "Ludeon"
     GIT = "Git"
     UNKNOWN = "Unknown"
+
+
+@dataclass
+class ReplacementInfo:
+    """A recommended replacement mod from the Use This Instead database."""
+
+    name: str
+    author: str
+    packageid: str
+    pfid: str
+    supportedversions: list[str]
+    source: str = "database"
 
 
 class CaseInsensitiveStr(str):
@@ -261,6 +277,8 @@ class ListedMod(BaseMod):
 
     _mod_path: Path | None = None
     _mod_type: ModType = ModType.UNKNOWN
+    obsolete: bool = False
+    db_builder_no_name: bool = False
 
     @property
     def mod_path(self) -> Path | None:
@@ -321,23 +339,35 @@ class ListedMod(BaseMod):
     @functools.cached_property
     def published_file_id(
         self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
-    ) -> int:
-        """Cached property to return the published file id from the mod's path. If the file does not exist, returns
-        the mod folder if it is a valid published file id (non-zero natural number). Otherwise return -1."""
+    ) -> str | None:
+        """Return the published file id as a string, or None if absent."""
         if self.mod_path is None:
-            return -1
+            return None
 
         expected_path = self.mod_path.joinpath(expected_sub_path)
         if expected_path.exists():
-            with open(expected_path, "r") as file:
-                return int(file.read())
+            try:
+                with open(expected_path, encoding="utf-8-sig") as f:
+                    content = f.read().strip()
+            except OSError as e:
+                logger.error(
+                    f"Failed to read PublishedFileId.txt at {expected_path}: {e}"
+                )
+                return None
+            if not content.isdigit():
+                logger.error(
+                    f"PublishedFileId.txt at {expected_path} contains non-numeric value: {content!r}"
+                )
+                return None
+            if content:
+                return content
 
         if self.mod_folder is not None and self.mod_folder.isnumeric():
             candidate = int(self.mod_folder)
             if candidate > 0:
-                return candidate
+                return self.mod_folder
 
-        return -1
+        return None
 
     @functools.cached_property
     def c_sharp_mod(self) -> bool:
@@ -478,23 +508,6 @@ class AboutXmlMod(ListedMod, PackageIdMod):
 
         return overall_rules
 
-    @functools.cached_property
-    def overall_rules_with_deps(self) -> Rules:
-        """Returns the overall rules while applying the dependencies as load after rules.
-
-        Cached property
-
-        :return: The overall rules with dependencies applied.
-        :rtype: Rules
-        """
-        overall_rules = self.overall_rules
-
-        # Apply dependencies as load after
-        for dep in overall_rules.dependencies.values():
-            overall_rules.load_after.add(dep.package_id)
-
-        return overall_rules
-
     def clear_cache(self) -> None:
         """Clear the cached properties."""
         try:
@@ -502,14 +515,132 @@ class AboutXmlMod(ListedMod, PackageIdMod):
         except AttributeError:
             pass
 
-        try:
-            del self.overall_rules_with_deps
-        except AttributeError:
-            pass
+
+@dataclass
+class CompiledDependencyData:
+    """Standalone compiled dependency data."""
+
+    deps_graph: dict[str, set[str]] = field(default_factory=dict)
+    rev_deps_graph: dict[str, set[str]] = field(default_factory=dict)
+    tier_zero_mods: set[str] = field(default_factory=set)
+    tier_one_mods: set[str] = field(default_factory=set)
+    tier_three_mods: set[str] = field(default_factory=set)
+    incompatibilities: dict[str, set[str]] = field(default_factory=dict)
+    declared_incompatibilities: dict[str, set[str]] = field(default_factory=dict)
+
+    @classmethod
+    def build(
+        cls,
+        mods_metadata: Mapping[str, ListedMod],
+        use_moddependencies_as_loadTheseBefore: bool = False,
+        use_alternative_package_ids: bool = False,
+    ) -> CompiledDependencyData:
+        """Build compiled dependency data from parsed mods.
+
+        When ``use_moddependencies_as_loadTheseBefore`` is True, declared
+        ``modDependencies`` are treated as implicit ``loadAfter`` edges.
+        Explicit load-order rules always take precedence: if an explicit
+        rule says A loads after B, an inferred rule saying B loads after A
+        is silently dropped to avoid creating a cycle.
+
+        :param mods_metadata: Mapping of mod-path strings to ``ListedMod``.
+        :param use_moddependencies_as_loadTheseBefore: Treat modDependencies as loadAfter.
+        :param use_alternative_package_ids: Fall back to alternative package IDs for deps.
+        :return: A fully-populated ``CompiledDependencyData`` instance.
+        """
+        compiled = cls()
+
+        compiled.tier_zero_mods = KNOWN_TIER_ZERO_MODS.copy()
+        compiled.tier_one_mods = KNOWN_TIER_ONE_MODS.copy()
+
+        all_package_ids: set[str] = set()
+
+        for mod in mods_metadata.values():
+            if not isinstance(mod, AboutXmlMod):
+                continue
+            all_package_ids.add(str(mod.package_id))
+
+        for mod in mods_metadata.values():
+            if not isinstance(mod, AboutXmlMod):
+                continue
+
+            pid = str(mod.package_id)
+            rules = mod.overall_rules
+
+            for dep_ci in rules.load_after:
+                dep = str(dep_ci)
+                if dep not in all_package_ids:
+                    continue
+                compiled.deps_graph.setdefault(pid, set()).add(dep)
+                compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
+
+            for target_ci in rules.load_before:
+                target = str(target_ci)
+                if target not in all_package_ids:
+                    continue
+                compiled.deps_graph.setdefault(target, set()).add(pid)
+                compiled.rev_deps_graph.setdefault(pid, set()).add(target)
+
+            for incompat_ci in rules.incompatible_with:
+                incompat = str(incompat_ci)
+                if incompat not in all_package_ids:
+                    continue
+                compiled.incompatibilities.setdefault(pid, set()).add(incompat)
+                compiled.incompatibilities.setdefault(incompat, set()).add(pid)
+                compiled.declared_incompatibilities.setdefault(pid, set()).add(incompat)
+
+            if rules.load_first and pid not in compiled.tier_zero_mods:
+                compiled.tier_one_mods.add(pid)
+
+            if rules.load_last:
+                compiled.tier_three_mods.add(pid)
+
+        if use_moddependencies_as_loadTheseBefore:
+            excluded_tiers = compiled.tier_one_mods | compiled.tier_three_mods
+            conflicts_ignored = 0
+            for mod in mods_metadata.values():
+                if not isinstance(mod, AboutXmlMod):
+                    continue
+                pid = str(mod.package_id)
+                if pid in excluded_tiers:
+                    continue
+                for dep_mod in mod.overall_rules.dependencies.values():
+                    dep = str(dep_mod.package_id)
+                    if dep not in all_package_ids:
+                        if not use_alternative_package_ids:
+                            continue
+                        resolved = None
+                        for alt in dep_mod.alternative_package_ids:
+                            alt_str = str(alt)
+                            if alt_str in all_package_ids:
+                                resolved = alt_str
+                                break
+                        if resolved is None:
+                            continue
+                        dep = resolved
+                    if dep in excluded_tiers:
+                        continue
+                    if pid in compiled.deps_graph.get(dep, set()):
+                        logger.warning(
+                            f"Ignoring inferred dependency {pid} -> {dep}: "
+                            f"conflicts with explicit rule {dep} -> {pid}"
+                        )
+                        conflicts_ignored += 1
+                        continue
+                    compiled.deps_graph.setdefault(pid, set()).add(dep)
+                    compiled.rev_deps_graph.setdefault(dep, set()).add(pid)
+
+            if conflicts_ignored > 0:
+                logger.info(
+                    f"Resolved {conflicts_ignored} conflicts by prioritizing "
+                    f"explicit load order rules over inferred dependencies"
+                )
+
+        return compiled
 
 
 class SubExternalRule(msgspec.Struct, omit_defaults=True):
-    name: list[str] | str
+    name: list[str] | str = msgspec.field(default_factory=str)
     comment: list[str] | str = msgspec.field(default_factory=str)
 
 
@@ -526,13 +657,13 @@ class ExternalRule(msgspec.Struct, omit_defaults=True):
 
 
 class ExternalRulesSchema(msgspec.Struct, omit_defaults=True):
-    timestamp: int
-    rules: dict[str, ExternalRule]
+    timestamp: int = 0
+    rules: dict[str, ExternalRule] = msgspec.field(default_factory=dict)
 
 
 class SteamDbEntryDependency(msgspec.Struct, omit_defaults=True):
-    name: str
-    url: str
+    name: str = msgspec.field(default_factory=str)
+    url: str = msgspec.field(default_factory=str)
 
 
 class SteamDbEntryBlacklist(msgspec.Struct, omit_defaults=True):
@@ -554,8 +685,52 @@ class SteamDbEntry(msgspec.Struct, omit_defaults=True):
     blacklist: SteamDbEntryBlacklist = msgspec.field(
         default_factory=SteamDbEntryBlacklist
     )
+    tags: list[dict[str, str]] = msgspec.field(default_factory=list)
 
 
 class SteamDbSchema(msgspec.Struct):
-    version: int
+    version: int = 0
     database: dict[str, SteamDbEntry] = msgspec.field(default_factory=dict)
+
+
+# TODO: Someday, it is probably worth typing out the keys
+# For now, I'm creating this alias to make it clear in new code what this represents.
+ModMetadata = dict[str, Any]
+
+
+class ModReplacement:
+    """Metadata for a mod replacement entry from the Steam database."""
+
+    def __init__(
+        self,
+        name: str,
+        author: str,
+        packageid: str,
+        pfid: str,
+        supportedversions: list[str],
+        source: str = "database",
+    ):
+        self.name = name
+        self.author = author
+        self.packageid = packageid
+        self.pfid = pfid
+        self.supportedversions = supportedversions
+        self.source = source
+
+
+@dataclass
+class WorkshopUpdateResult:
+    """Result of a workshop mod update check.
+
+    :param status: Outcome — success, no_workshop_mods, partial, or failed
+    :param mods_checked: Number of workshop mod pfids we attempted to query
+    :param mods_updated: Number of mods that received update metadata
+    :param failed_pfids: PublishedFileIds that could not be queried
+    :param errors: Human-readable error descriptions for each failure
+    """
+
+    status: Literal["success", "no_workshop_mods", "partial", "failed"]
+    mods_checked: int
+    mods_updated: int
+    failed_pfids: list[str]
+    errors: list[str]

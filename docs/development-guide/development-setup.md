@@ -197,7 +197,7 @@ uv run python -m app --dev
 To use a custom dev data directory:
 
 ```shell
-uv run python -m app --dev RIMSORT_DEV_DIR=/tmp/rimsort-test
+RIMSORT_DEV_DIR=/tmp/rimsort-test uv run python -m app --dev
 ```
 
 Or via env vars only:

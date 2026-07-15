@@ -4,14 +4,17 @@ import sys
 from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication
 
+import app.utils.globals as app_globals
 from app.controllers.main_window_controller import MainWindowController
+from app.controllers.metadata_controller import MetadataController
+from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Settings
+from app.services.instance_service import InstanceService
 from app.utils.app_info import AppInfo
 from app.utils.dds_utility import DDSUtility
 from app.utils.gui_info import GUIInfo
-from app.utils.metadata import MetadataManager
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
 from app.views.settings_dialog import SettingsDialog
@@ -40,8 +43,10 @@ class AppController(QObject):
         self.initialize_steamcmd_interface()
         # Perform cleanup of orphaned DDS files if the setting is enabled
         self.do_dds_cleanup()
-        # Initialize the metadata manager
-        self.initialize_metadata_manager()
+        # Initialize the new MetadataController
+        self.initialize_metadata_controller()
+        # Initialize the instance service (self-subscribes to EventBus)
+        self.initialize_instance_service()
         # Initialize the main window controller
         self.initialize_main_window()
 
@@ -76,6 +81,7 @@ class AppController(QObject):
         self.settings_controller = SettingsController(
             model=self.settings, view=self.settings_dialog
         )
+        app_globals.SETTINGS = self.settings
 
     def initialize_theme_controller(self) -> None:
         """Initializes the ThemeController."""
@@ -111,24 +117,48 @@ class AppController(QObject):
     def do_dds_cleanup(self) -> None:
         """Performs cleanup of orphaned DDS files if the setting is enabled."""
         if self.settings.auto_delete_orphaned_dds:
-            dds_utility = DDSUtility(self.settings_controller)
+            dds_utility = DDSUtility(self.settings_controller.settings)
             dds_utility.delete_dds_files_without_png()
 
-    def initialize_metadata_manager(self) -> None:
-        """Initializes the MetadataManager."""
-        self.metadata_manager = MetadataManager.instance(
-            settings_controller=self.settings_controller
+    def initialize_metadata_controller(self) -> None:
+        """Initializes the MetadataController."""
+        aux_db_controller = AuxMetadataController.get_or_create_cached_instance(
+            self.settings_controller.settings.aux_db_path
+        )
+        self.metadata_controller = MetadataController.instance(
+            settings=self.settings_controller.settings,
+            get_active_instance=lambda: self.settings_controller.active_instance,
+            metadata_db_controller=aux_db_controller,
+        )
+
+    def initialize_instance_service(self) -> None:
+        """Initializes the instance service."""
+        InstanceService(
+            settings=self.settings_controller.settings,
+            steamcmd_wrapper=self.steamcmd_wrapper,
         )
 
     def initialize_main_window(self) -> None:
         """Initializes the main window and its controller."""
-        self.main_window = MainWindow(settings_controller=self.settings_controller)
+        self.main_window = MainWindow(
+            settings=self.settings,
+            get_active_instance=lambda: self.settings_controller.active_instance,
+            set_instance=self.settings_controller.set_instance,
+            show_settings_dialog=self.settings_controller.show_settings_dialog,
+            metadata_controller=self.metadata_controller,
+        )
         self.main_window_controller = MainWindowController(self.main_window)
 
     def run(self) -> int:
         """Runs the main application loop after initializing the main window."""
         self.main_window.show()
         self.main_window.initialize_content(is_initial=True)
+        # If the window was closed during initialization (e.g. user closed during
+        # mod scanning), skip the main event loop — Qt resets the quit flag in exec()
+        # so a prior quit() from quitOnLastWindowClosed would have no effect and the
+        # event loop would block forever with no visible windows.
+        if not self.main_window.isVisible():
+            return 0
         return self.app.exec()
 
     def shutdown_watchdog(self) -> None:

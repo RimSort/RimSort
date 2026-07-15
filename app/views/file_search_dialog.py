@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from app.utils.app_info import AppInfo
 from app.utils.generic import platform_specific_open
+from app.utils.json_utils import atomic_json_dump
 
 
 class FileSearchDialog(QDialog):
@@ -809,8 +810,12 @@ class FileSearchDialog(QDialog):
         recent_searches_file = app_info.app_storage_folder / "recent_searches.json"
 
         try:
-            with open(recent_searches_file, "w", encoding="utf-8") as f:
-                json.dump(self._recent_searches, f, ensure_ascii=False, indent=4)
+            atomic_json_dump(
+                self._recent_searches,
+                str(recent_searches_file),
+                ensure_ascii=False,
+                indent=4,
+            )
         except Exception as e:
             logger.error(f"Failed to save recent searches: {e}")
 

@@ -2,69 +2,79 @@
 
 from __future__ import annotations
 
-import sys
-from types import ModuleType
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QMainWindow
 
-# Ensure steamworks module is mockable for import chain
-if "steamworks" not in sys.modules:
-    sys.modules["steamworks"] = ModuleType("steamworks")
-    sys.modules["steamworks"].STEAMWORKS = MagicMock()  # type: ignore[attr-defined]
-
-if TYPE_CHECKING:
-    from app.views.main_window import MainWindow
-
-
-def _make_stub_main_window() -> MainWindow:
-    """Create a MainWindow instance without running MainWindow.__init__.
-
-    We call QMainWindow.__init__ to satisfy the C++ side (Shiboken),
-    then attach the minimal attributes that closeEvent expects.
-    """
-    from app.views.main_window import MainWindow
-
-    instance = MainWindow.__new__(MainWindow)
-    QMainWindow.__init__(instance)
-
-    # Attach attributes closeEvent relies on
-    instance.main_content_panel = MagicMock()
-    instance.watchdog_event_handler = None
-    instance.stop_watchdog_if_running = MagicMock()  # type: ignore[method-assign]
-
-    return instance
+from tests.views.conftest import make_stub_main_window
 
 
 class TestMainWindowCloseEvent:
     """Test that closeEvent closes child windows."""
 
-    def test_close_event_calls_close_child_windows(self, qapp: object) -> None:
+    def test_close_event_calls_close_child_windows(
+        self,
+        qapp: object,
+        mock_metadata_controller: MagicMock,
+    ) -> None:
         """Verify closeEvent delegates to MainContent.close_child_windows."""
-        window = _make_stub_main_window()
+        window = make_stub_main_window(mock_metadata_controller)
 
         event = QCloseEvent()
         window.closeEvent(event)
 
         window.main_content_panel.close_child_windows.assert_called_once()  # type: ignore[attr-defined]
 
-    def test_close_event_stops_watchdog(self, qapp: object) -> None:
+    def test_close_event_stops_watchdog(
+        self,
+        qapp: object,
+        mock_metadata_controller: MagicMock,
+    ) -> None:
         """Verify closeEvent stops the watchdog if running."""
-        window = _make_stub_main_window()
-        window.watchdog_event_handler = MagicMock()
+        window = make_stub_main_window(mock_metadata_controller)
+        mock_handler = MagicMock()
+        window.watchdog_event_handler = mock_handler
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        window.stop_watchdog_if_running.assert_called_once()  # type: ignore[attr-defined]
+        mock_handler.stop.assert_called_once()
 
-    def test_close_event_accepts(self, qapp: object) -> None:
-        """Verify closeEvent accepts the event to allow window closure."""
-        window = _make_stub_main_window()
+    def test_close_event_ignores_none_watchdog(
+        self,
+        qapp: object,
+        mock_metadata_controller: MagicMock,
+    ) -> None:
+        """No crash when watchdog_event_handler is None."""
+        window = make_stub_main_window(mock_metadata_controller)
+        assert window.watchdog_event_handler is None
 
         event = QCloseEvent()
         window.closeEvent(event)
 
-        assert event.isAccepted()
+    def test_close_event_aborts_metadata(
+        self,
+        qapp: object,
+        mock_metadata_controller: MagicMock,
+    ) -> None:
+        """Verify closeEvent requests metadata abort."""
+        window = make_stub_main_window(mock_metadata_controller)
+
+        event = QCloseEvent()
+        window.closeEvent(event)
+
+        # metadata_controller.is_abort_requested should be set to True
+        assert mock_metadata_controller.is_abort_requested is True
+
+    def test_close_event_calls_abort_loading(
+        self,
+        qapp: object,
+        mock_metadata_controller: MagicMock,
+    ) -> None:
+        """Verify closeEvent calls abort_loading on the main content panel."""
+        window = make_stub_main_window(mock_metadata_controller)
+
+        event = QCloseEvent()
+        window.closeEvent(event)
+
+        window.main_content_panel.abort_loading.assert_called_once()  # type: ignore[attr-defined]

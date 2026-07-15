@@ -51,10 +51,13 @@ class EventBus(QObject):
 
     # Download Menu bar signals
     do_add_git_mod = Signal()
+    do_open_github_mods_panel = Signal()
+    github_version_switch_requested = Signal(str, str)  # mod_path, target_tag
     do_add_zip_mod = Signal()
     do_browse_workshop = Signal()
     do_check_for_workshop_updates = Signal()
     do_steam_verify_game_files = Signal()
+    do_download_rimworld_version = Signal()
 
     # Instances Menu bar signals
     do_activate_current_instance = Signal(str)
@@ -80,6 +83,8 @@ class EventBus(QObject):
     do_download_no_version_warning_db_from_github = Signal()
     do_upload_use_this_instead_db_to_github = Signal()
     do_download_use_this_instead_db_from_github = Signal()
+    do_upload_rimworld_versions_db_to_github = Signal()
+    do_download_rimworld_versions_db_from_github = Signal()
     do_upload_log = Signal(Path)
     do_open_default_editor = Signal(Path)
     do_download_all_mods_via_steamcmd = Signal()

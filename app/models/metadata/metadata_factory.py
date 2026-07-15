@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import msgspec
-import pygit2
 from loguru import logger
 
 from app.models.metadata.metadata_structure import (
@@ -25,7 +24,12 @@ from app.models.metadata.metadata_structure import (
     ScenarioMod,
     SteamDbSchema,
 )
-from app.utils.constants import RIMWORLD_DLC_METADATA
+from app.utils.constants import DEFAULT_MISSING_PACKAGEID, RIMWORLD_DLC_METADATA
+
+# Import pygit2 through the SSL-safe loader so libgit2's TLS certificate
+# locations are initialized correctly in bundled builds. See
+# app/utils/pygit2_loader.py and https://github.com/RimSort/RimSort/issues/2234.
+from app.utils.pygit2_loader import pygit2
 from app.utils.xml import json_to_xml_write, xml_path_to_json
 
 
@@ -223,12 +227,16 @@ def create_scenario_mod(scenario_data: dict[str, Any]) -> tuple[bool, ScenarioMo
 
 
 def create_about_mod(
-    mod_data: dict[str, Any], target_version: str
+    mod_data: dict[str, Any],
+    target_version: str,
+    prefer_versioned: bool = True,
 ) -> tuple[bool, AboutXmlMod]:
     """Factory method for creating a ListedMod object.
 
     :param mod_data: The dictionary containing the mod data.
     :param target_version: The version of RimWorld to target.
+    :param prefer_versioned: When True, ByVersion keys override base values
+        (non-additive). When False, ByVersion keys are ignored.
     :return: A tuple containing a boolean indicating if the mod is valid and the mod object."""
     mod = _parse_basic(mod_data, AboutXmlMod())
 
@@ -237,7 +245,7 @@ def create_about_mod(
         ruled_mod.__dict__ = mod.__dict__
         mod = ruled_mod
 
-    mod = _parse_optional(mod_data, mod, target_version)
+    mod = _parse_optional(mod_data, mod, target_version, prefer_versioned)
 
     return mod.valid, mod
 
@@ -258,19 +266,19 @@ def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
 def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     """
     Parse the basic fields from the mod_data and set them on the mod object.
-    If package_id cannot be parsed correctly, the mod is considered invalid.
+    If package_id is missing or invalid, the sentinel value is assigned instead.
 
     :param mod_data: Dictionary with string keys to be used as the data source.
     :param mod: ListedMod the Listed mod that is the target of data being filled.
     :return: The filled out ListedMod
     """
     package_id = value_extractor(mod_data.get("packageId", False))
-    if isinstance(package_id, str):
+    if isinstance(package_id, str) and package_id.strip():
         mod.package_id = CaseInsensitiveStr(package_id)
     else:
-        _set_mod_invalid(
-            mod,
-            f"packageId was not a string: {package_id}. This mod will be considered invalid by RimWorld.",
+        mod.package_id = CaseInsensitiveStr(DEFAULT_MISSING_PACKAGEID)
+        logger.warning(
+            f"packageId missing or invalid: {package_id}. Assigned sentinel '{DEFAULT_MISSING_PACKAGEID}'."
         )
 
     # Prioritize app id from about.xml over hardcoded DLC app id
@@ -280,15 +288,23 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     elif mod.package_id in get_dlc_packageid_appid_map():
         mod.steam_app_id = int(get_dlc_packageid_appid_map()[mod.package_id])
 
+    # Official DLC About.xml files omit <name> and <description>
+    dlc_appid = get_dlc_packageid_appid_map().get(mod.package_id)
+    dlc_meta = RIMWORLD_DLC_METADATA.get(dlc_appid, {}) if dlc_appid else {}
+
     name = value_extractor(mod_data.get("name", False))
     if isinstance(name, str):
         mod.name = name
+    elif dlc_meta:
+        mod.name = dlc_meta["name"]
     else:
         mod.name = mod.package_id
 
     description = value_extractor(mod_data.get("description", False))
     if isinstance(description, str):
         mod.description = description
+    elif dlc_meta:
+        mod.description = dlc_meta["description"]
 
     author = value_extractor(mod_data.get("author", False))
     authors = value_extractor(mod_data.get("authors", False))
@@ -323,7 +339,10 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
 
 
 def _parse_optional(
-    mod_data: dict[str, Any], mod: AboutXmlMod, target_version: str
+    mod_data: dict[str, Any],
+    mod: AboutXmlMod,
+    target_version: str,
+    prefer_versioned: bool = True,
 ) -> AboutXmlMod:
     """
     Parse the optional fields from the mod_data and set them on the mod object.
@@ -341,7 +360,7 @@ def _parse_optional(
     if url and isinstance(url, str):
         mod.url = url
 
-    mod.about_rules = create_base_rules(mod_data, target_version)
+    mod.about_rules = create_base_rules(mod_data, target_version, prefer_versioned)
 
     descriptions_by_version: bool | dict[str, str] = mod_data.get(
         "descriptionsByVersion", False
@@ -401,27 +420,89 @@ def _set_mod_type(
     return mod
 
 
+def _match_byversion_raw(
+    byversion_data: dict[str, Any],
+    target_version: str,
+) -> tuple[bool, Any]:
+    """Match a ByVersion dict against a target version, returning the raw value.
+
+    Unlike ``match_version``, this does **not** apply truthiness filtering on
+    the matched value.  An empty dict/list value is a valid match (meaning
+    "no entries for this version"), so we distinguish "key found" from
+    "key not found" via the boolean.
+
+    :param byversion_data: The raw ByVersion dict straight from mod_data
+        (e.g. ``{"v1.5": {"li": ["mod.a"]}}``)
+    :param target_version: RimWorld version string like ``"1.5.1234"``.
+    :return: ``(True, raw_value)`` when a version key matches, ``(False, None)``
+        otherwise.
+    """
+    try:
+        major, minor = target_version.split(".")[:2]
+    except ValueError:
+        return False, None
+
+    version_regex = f"v{major}.{minor}"
+
+    # Direct key lookup first (most common case)
+    if version_regex in byversion_data:
+        return True, byversion_data[version_regex]
+    if f"{major}.{minor}" in byversion_data:
+        return True, byversion_data[f"{major}.{minor}"]
+
+    # Regex fallback for keys like "v1.5.1234"
+    for key, value in byversion_data.items():
+        if re.match(version_regex, key):
+            return True, value
+
+    return False, None
+
+
 def create_base_rules(
-    mod_data: dict[str, Any], target_version: str
+    mod_data: dict[str, Any],
+    target_version: str,
+    prefer_versioned: bool = True,
 ) -> BaseRules | Rules:
+    """Create base load-order rules from mod About.xml data.
+
+    :param mod_data: Parsed mod metadata dict.
+    :param target_version: RimWorld version string (e.g. ``"1.5.1234"``).
+    :param prefer_versioned: When ``True`` (default) and a ``*ByVersion`` key
+        matches *target_version*, the versioned values **replace** the
+        corresponding base values (non-additive override).  When ``False``,
+        all ``*ByVersion`` keys are ignored and only base values are used.
+    """
     rules = BaseRules()
 
-    # Dependencies
+    # ── Dependencies ──────────────────────────────────────────────────
     mod_dependencies = value_extractor(mod_data.get("modDependencies", []))
     mod_dependencies = (
         mod_dependencies if isinstance(mod_dependencies, list) else [mod_dependencies]
     )
-    versioned_mod_dependencies = value_extractor(
-        mod_data.get("modDependenciesByVersion", {})
-    )
 
-    if isinstance(versioned_mod_dependencies, dict):
-        _, dependencies = match_version(versioned_mod_dependencies, target_version)
-        if dependencies:
-            mod_dependencies.extend(dependencies)
+    if prefer_versioned:
+        byversion_deps = mod_data.get("modDependenciesByVersion", {})
+        if isinstance(byversion_deps, dict) and byversion_deps:
+            matched, versioned_deps_raw = _match_byversion_raw(
+                byversion_deps, target_version
+            )
+            if matched:
+                # Non-additive override: replace base deps entirely
+                versioned_deps = (
+                    value_extractor(versioned_deps_raw) if versioned_deps_raw else []
+                )
+                mod_dependencies = (
+                    versioned_deps
+                    if isinstance(versioned_deps, list)
+                    else [versioned_deps]
+                    if versioned_deps
+                    else []
+                )
 
     for dependency in mod_dependencies:
         if isinstance(dependency, dict):
+            if not dependency or dependency.get("@isNull") == "True":
+                continue
             deps: dict[str, Any] = {}
             for key, value in dependency.items():
                 if isinstance(value, str):
@@ -445,6 +526,10 @@ def create_base_rules(
                     # Store as a normalized list for create_mod_dependency
                     if alt_list:
                         deps["alternativePackageIds"] = alt_list
+                elif isinstance(value, dict) and (
+                    not value or value.get("@isNull") == "True"
+                ):
+                    continue
                 else:
                     logger.warning(
                         f"Skipping invalid dependency value: {value}. This mod's about.xml may be invalid."
@@ -458,23 +543,38 @@ def create_base_rules(
                 )
             else:
                 rules.dependencies[dep.package_id] = dep
-        else:
+        elif dependency:
             logger.warning(
                 f"Skipping invalid dependency: {dependency}. This mod may be invalid."
             )
 
+    # ── Load Before / Load After ──────────────────────────────────────
     def load_operations(
-        mod_data: dict[str, Any], key: str, force_key: str, target_version: str
+        mod_data: dict[str, Any],
+        key: str,
+        force_key: str,
+        target_version: str,
+        prefer_versioned: bool,
     ) -> CaseInsensitiveSet:
         load = value_extractor(mod_data.get(key, []))
         load = load if isinstance(load, list) else [load]
 
-        loadByVersion = value_extractor(mod_data.get(f"{key}ByVersion", {}))
-        if isinstance(loadByVersion, dict):
-            _, load_versioned = match_version(loadByVersion, target_version)
-            if load_versioned:
-                load.extend(load_versioned)
+        if prefer_versioned:
+            byversion = mod_data.get(f"{key}ByVersion", {})
+            if isinstance(byversion, dict) and byversion:
+                matched, versioned_raw = _match_byversion_raw(byversion, target_version)
+                if matched:
+                    # Non-additive override: replace base with versioned values
+                    versioned = value_extractor(versioned_raw) if versioned_raw else []
+                    load = (
+                        versioned
+                        if isinstance(versioned, list)
+                        else [versioned]
+                        if versioned
+                        else []
+                    )
 
+        # forceLoad* is ALWAYS applied regardless of prefer_versioned
         forceLoad = value_extractor(mod_data.get(force_key, []))
         forceLoad = forceLoad if isinstance(forceLoad, list) else [forceLoad]
         load.extend(forceLoad)
@@ -485,15 +585,15 @@ def create_base_rules(
 
     # Load Before
     rules.load_before = load_operations(
-        mod_data, "loadBefore", "forceLoadBefore", target_version
+        mod_data, "loadBefore", "forceLoadBefore", target_version, prefer_versioned
     )
 
     # Load After
     rules.load_after = load_operations(
-        mod_data, "loadAfter", "forceLoadAfter", target_version
+        mod_data, "loadAfter", "forceLoadAfter", target_version, prefer_versioned
     )
 
-    # incompatibleWith
+    # ── incompatibleWith ──────────────────────────────────────────────
     incompatible_with = value_extractor(mod_data.get("incompatibleWith", []))
     incompatible_with = (
         incompatible_with
@@ -501,13 +601,24 @@ def create_base_rules(
         else [incompatible_with]
     )
 
-    incompatible_withByVersion = value_extractor(
-        mod_data.get("incompatibleWithByVersion", {})
-    )
-    if isinstance(incompatible_withByVersion, dict):
-        _, incompatibles = match_version(incompatible_withByVersion, target_version)
-        if incompatibles:
-            incompatible_with.extend(incompatibles)
+    if prefer_versioned:
+        byversion_incompat = mod_data.get("incompatibleWithByVersion", {})
+        if isinstance(byversion_incompat, dict) and byversion_incompat:
+            matched, incompat_raw = _match_byversion_raw(
+                byversion_incompat, target_version
+            )
+            if matched:
+                # Non-additive override: replace base incompatibles
+                versioned_incompat = (
+                    value_extractor(incompat_raw) if incompat_raw else []
+                )
+                incompatible_with = (
+                    versioned_incompat
+                    if isinstance(versioned_incompat, list)
+                    else [versioned_incompat]
+                    if versioned_incompat
+                    else []
+                )
 
     incompatible_with = [
         item
@@ -550,7 +661,10 @@ def create_mod_dependency(input_dict: dict[str, str]) -> DependencyMod:
 
 
 def _create_about_mod_from_xml(
-    base_path: Path, mod_xml_path: Path, target_version: str
+    base_path: Path,
+    mod_xml_path: Path,
+    target_version: str,
+    prefer_versioned: bool = True,
 ) -> tuple[bool, AboutXmlMod]:
     try:
         mod_data = xml_path_to_json(str(mod_xml_path))
@@ -567,7 +681,7 @@ def _create_about_mod_from_xml(
         logger.error(f"Could not parse {mod_xml_path}.")
         return False, AboutXmlMod(valid=False)
 
-    valid, mod = create_about_mod(mod_data, target_version)
+    valid, mod = create_about_mod(mod_data, target_version, prefer_versioned)
 
     mod.mod_path = base_path
     return valid, mod
@@ -610,12 +724,30 @@ def create_rules_from_external_rules(external_rule: ExternalRule) -> Rules:
     return rules
 
 
+def _find_about_xml(mod_path: Path) -> Path | None:
+    """Case-insensitive lookup for About/About.xml inside a mod directory."""
+    for entry in mod_path.iterdir():
+        if entry.name.lower() == "about" and entry.is_dir():
+            for child in entry.iterdir():
+                if child.name.lower() == "about.xml" and child.is_file():
+                    if entry.name != "About" or child.name != "About.xml":
+                        logger.warning(
+                            f"Mod at {mod_path} uses non-standard About.xml path: "
+                            f"{child.relative_to(mod_path)} (expected About/About.xml)"
+                        )
+                    return child
+            break
+    return None
+
+
 def create_listed_mod_from_path(
     path: Path,
     target_version: str,
     local_path: Path,
     rimworld_path: Path,
     workshop_path: Path | None,
+    prefer_versioned: bool = True,
+    case_insensitive_about_xml: bool = True,
 ) -> tuple[bool, ListedMod]:
     """
     Create a ListedMod object from the given path.
@@ -625,16 +757,24 @@ def create_listed_mod_from_path(
     :param local_path: The path to the local mod.
     :param rimworld_path: The path to the RimWorld mods folder.
     :param workshop_path: The path to the workshop folder.
+    :param prefer_versioned: When True, ByVersion keys override base values
+        (non-additive). When False, ByVersion keys are ignored.
+    :param case_insensitive_about_xml: When True, use case-insensitive About.xml
+        lookup. When False, require exact "About/About.xml" path.
     :return: A tuple containing a boolean indicating if the mod is valid and the mod object.
     """
 
     # Check if path is a directory
     if path.is_dir():
-        # Check if About.xml exists
-        about_xml_path = path / Path("About/About.xml")
-        if about_xml_path.exists():
+        about_xml_path: Path | None
+        if case_insensitive_about_xml:
+            about_xml_path = _find_about_xml(path)
+        else:
+            candidate = path / "About" / "About.xml"
+            about_xml_path = candidate if candidate.exists() else None
+        if about_xml_path is not None:
             success, about_mod = _create_about_mod_from_xml(
-                path, about_xml_path, target_version
+                path, about_xml_path, target_version, prefer_versioned
             )
             return success, _set_mod_type(
                 about_mod, local_path, rimworld_path, workshop_path
@@ -690,12 +830,19 @@ def read_rules_db(
         logger.info(
             "DB exists!",
         )
-        with open(path, encoding="utf-8") as f:
-            json_string = f.read()
-            logger.info("Reading info from rules DB")
-            rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
-            logger.info(f"Loaded {len(rule_data.rules)} additional rules")
-            return rule_data
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from rules DB")
+                rule_data = msgspec.json.decode(json_string, type=ExternalRulesSchema)
+                rule_data.rules = {k.lower(): v for k, v in rule_data.rules.items()}
+                logger.info(f"Loaded {len(rule_data.rules)} additional rules")
+                return rule_data
+        except msgspec.DecodeError as e:
+            logger.error(
+                f"Rules DB at {path} could not be decoded: {e}. Try re-downloading the database."
+            )
+            return None
     else:  # Assume db_data_missing
         logger.warning("Rules DB not found at specified path.")
         return None
@@ -736,14 +883,21 @@ def read_steam_db(path: Path) -> SteamDbSchema | None:
         logger.info(
             "DB exists!",
         )
-        with open(path, encoding="utf-8") as f:
-            json_string = f.read()
-            logger.info("Reading info from SteamDB")
-            steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
-            logger.info(
-                f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
+        try:
+            with open(path, encoding="utf-8") as f:
+                json_string = f.read()
+                logger.info("Reading info from SteamDB")
+                steam_db = msgspec.json.decode(json_string, type=SteamDbSchema)
+                steam_db.database = {k.lower(): v for k, v in steam_db.database.items()}
+                logger.info(
+                    f"Loaded {len(steam_db.database)} mods from SteamDB version: {steam_db.version}"
+                )
+                return steam_db
+        except msgspec.DecodeError as e:
+            logger.error(
+                f"SteamDB at {path} could not be decoded: {e}. Try re-downloading the database."
             )
-            return steam_db
+            return None
     else:  # Assume db_data_missing
         logger.warning("SteamDB not found at specified path.")
         return None
