@@ -21,12 +21,8 @@ from app.utils.github.installer import GitHubInstaller
 from app.utils.github.models import CacheBase, GitHubModEntry, GitHubReleaseCache
 from app.utils.github.provider import GitHubProvider, ReleaseInfo, _releases_from_json
 from app.utils.github.worker import GitHubUpdateCheckWorker
-from app.windows.base_mods_panel import (
-    BaseModsPanel,
-    ButtonConfig,
-    ButtonType,
-    MenuItem,
-)
+from app.utils.button_factory import ButtonConfig, ButtonType, MenuItem
+from app.windows.base_mods_panel import BaseModsPanel
 
 # Column indices (after the checkbox column 0 added by BaseModsPanel)
 _COL_NAME = 1
