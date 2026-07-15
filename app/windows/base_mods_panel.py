@@ -737,6 +737,8 @@ class BaseModsPanel(QWidget):
             return self._create_delete_button_from_config(config, factory)
         elif config.button_type == ButtonType.CUSTOM:
             return self._create_custom_button_from_config(config, factory)
+        elif config.button_type == ButtonType.SELECT:
+            return self._create_select_button_from_config(config, factory)
 
         return None
 
@@ -786,6 +788,18 @@ class BaseModsPanel(QWidget):
         """Create a custom button from config."""
         if config.custom_callback is not None:
             return factory.create_custom_button(config.text, config.custom_callback)
+        return None
+
+    def _create_select_button_from_config(
+        self, config: ButtonConfig, factory: ButtonFactory
+    ) -> QWidget | None:
+        """Create a dropdown button from config with menu items."""
+        if config.menu_items is not None:
+            return factory.create_dropdown_button(
+                config.text,
+                "actionButton",
+                [(item.text, item.callback) for item in config.menu_items],
+            )
         return None
 
     def _create_custom_button(
