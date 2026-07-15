@@ -24,6 +24,7 @@ class ButtonType(Enum):
     DELETE = "delete"
 
     CUSTOM = "custom"
+    SELECT = "select"
 
 
 @dataclass
