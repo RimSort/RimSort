@@ -124,6 +124,13 @@ class MainContentController(QObject):
                 lambda: self.settings.external_no_version_warning_metadata_source,
                 DATABASE_DISPLAY_NAMES["no_version_warning"],
             ),
+            EventBus().do_download_rimworld_versions_db_from_github: (
+                AppInfo().databases_folder,
+                lambda: self.settings.external_rimworld_versions_repo_path,
+                lambda: self.settings.external_rimworld_versions_url,
+                lambda: self.settings.external_rimworld_versions_metadata_source,
+                DATABASE_DISPLAY_NAMES["rimworld_versions"],
+            ),
         }
 
         self._connect_signals()
@@ -294,6 +301,9 @@ class MainContentController(QObject):
     def _connect_signals(self) -> None:
         # Bind install mod signal
         EventBus().do_add_git_mod.connect(self._do_git_install_mod)
+        EventBus().do_download_rimworld_version.connect(
+            self._do_download_rimworld_version
+        )
         EventBus().do_open_github_mods_panel.connect(self._on_open_github_mods_panel)
 
         # Bind update check signals
@@ -740,6 +750,12 @@ class MainContentController(QObject):
                 settings.external_use_this_instead_repo_path,
                 settings.external_use_this_instead_url,
                 DATABASE_DISPLAY_NAMES["use_this_instead"],
+            ),
+            (
+                settings.external_rimworld_versions_metadata_source,
+                settings.external_rimworld_versions_repo_path,
+                settings.external_rimworld_versions_url,
+                DATABASE_DISPLAY_NAMES["rimworld_versions"],
             ),
         ]
 
@@ -2082,3 +2098,10 @@ class MainContentController(QObject):
             logger.warning(
                 f"Failed to update {len(failed)} database repositories: {[str(p) for p, e in failed]}"
             )
+
+    @Slot()
+    def _do_download_rimworld_version(self) -> None:
+        from app.views.download_rimworld_dialog import DownloadRimWorldDialog
+
+        dialog = DownloadRimWorldDialog()
+        dialog.exec()

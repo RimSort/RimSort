@@ -58,6 +58,7 @@ class MenuBar(QObject):
         self.reset_all_mod_colors_action: QAction
         self.add_git_mod_action: QAction
         self.add_zip_mod_action: QAction
+        self.download_rimworld_version_action: QAction
         self.browse_workshop_action: QAction
         self.update_workshop_mods_action: QAction
         self.github_mods_action: QAction
@@ -294,6 +295,10 @@ class MenuBar(QObject):
             QMenu: The created "Download" menu.
         """
         download_menu = self.menu_bar.addMenu(self.tr("Download"))
+        self.download_rimworld_version_action = self._add_action(
+            download_menu, self.tr("Download RimWorld Version")
+        )
+        download_menu.addSeparator()
         self.add_git_mod_action = self._add_action(
             download_menu, self.tr("Add Git Mod")
         )
