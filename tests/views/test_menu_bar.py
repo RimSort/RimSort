@@ -122,6 +122,60 @@ class TestMenuBarControllerWithDisabledUpdater:
             assert controller is not None
 
 
+class TestMenuBarGameFileVerification:
+    """Test confirmation before verifying game files from the menu bar."""
+
+    def test_verify_game_files_confirmed_emits_event(
+        self,
+        menu_bar_instance: MenuBar,
+        mock_settings_controller: MagicMock,
+    ) -> None:
+        """Confirming the warning emits the game-file verification event."""
+        with (
+            patch("app.controllers.menu_bar_controller.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.menu_bar_controller.show_dialogue_conditional",
+                return_value=True,
+            ) as mock_dialog,
+        ):
+            controller = MenuBarController(
+                menu_bar_instance, mock_settings_controller.settings, lambda: None
+            )
+
+            menu_bar_instance.steam_verify_game_files_action.trigger()
+
+            mock_dialog.assert_called_once_with(
+                title=controller.tr("Verify Game Files"),
+                text=controller.tr(
+                    "Are you sure you want to verify RimWorld's game files through Steam?"
+                    "<br><br>This process cannot be canceled once it has started."
+                ),
+                icon="warning",
+            )
+            mock_event_bus.return_value.do_steam_verify_game_files.emit.assert_called_once_with()
+
+    def test_verify_game_files_cancelled_does_not_emit_event(
+        self,
+        menu_bar_instance: MenuBar,
+        mock_settings_controller: MagicMock,
+    ) -> None:
+        """Cancelling the warning does not start game-file verification."""
+        with (
+            patch("app.controllers.menu_bar_controller.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.menu_bar_controller.show_dialogue_conditional",
+                return_value=False,
+            ) as mock_dialog,
+        ):
+            MenuBarController(
+                menu_bar_instance, mock_settings_controller.settings, lambda: None
+            )
+
+            menu_bar_instance.steam_verify_game_files_action.trigger()
+
+            mock_dialog.assert_called_once()
+            mock_event_bus.return_value.do_steam_verify_game_files.emit.assert_not_called()
+
 class TestDisableUpdaterFlag:
     """Test the --disable-updater command-line flag processing."""
 
