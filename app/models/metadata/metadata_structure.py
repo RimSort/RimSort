@@ -25,6 +25,34 @@ class ModType(Enum):
     UNKNOWN = "Unknown"
 
 
+# Source-priority orderings for resolving which physical copy of a mod wins when
+# several copies share the same package ID in the active list. RimWorld's
+# ModsConfig.xml identifies mods only by package ID, so when a package ID appears
+# more than once (e.g. a Steam Workshop copy alongside a local, git, or SteamCMD
+# copy) the winner is chosen by iterating one of these lists in order and taking
+# the first matching ModType. A bare package ID uses SOURCE_PRIORITY_DEFAULT
+# (local-style copies preferred over Workshop); RimWorld's "_steam" suffix forces
+# SOURCE_PRIORITY_STEAM (the Workshop copy preferred).
+#
+# Single source of truth: both MetadataController.get_mods_from_list and
+# app.models.mod_list import these. Every ModType that can back a duplicate must
+# appear, otherwise that source becomes unselectable and resolution silently
+# falls through to a lower-priority copy.
+SOURCE_PRIORITY_STEAM: list[ModType] = [
+    ModType.STEAM_WORKSHOP,
+    ModType.LOCAL,
+    ModType.STEAM_CMD,
+    ModType.GIT,
+]
+SOURCE_PRIORITY_DEFAULT: list[ModType] = [
+    ModType.LUDEON,
+    ModType.LOCAL,
+    ModType.STEAM_CMD,
+    ModType.GIT,
+    ModType.STEAM_WORKSHOP,
+]
+
+
 @dataclass
 class ReplacementInfo:
     """A recommended replacement mod from the Use This Instead database."""

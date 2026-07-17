@@ -525,6 +525,24 @@ class TestFromModsConfig:
         mod_list, missing = ModList.from_mods_config(config, mc)
         assert mod_list[0].path == "/local/mymod"
 
+    def test_no_suffix_prefers_git_over_workshop(self) -> None:
+        """Git-backed local copy must win over Workshop for a bare package ID.
+
+        The resolution ordering comes from the SOURCE_PRIORITY_* constants shared
+        with MetadataController via app.models.metadata.metadata_structure, so
+        ModType.GIT (and STEAM_CMD) stay selectable at both layers. Regression
+        guard for issue #2300.
+        """
+        mc = _make_mock_metadata_controller(
+            {
+                "/local/mymod": ("author.mod", ModType.GIT),
+                "/workshop/mymod": ("author.mod", ModType.STEAM_WORKSHOP),
+            }
+        )
+        config = _config("1.5", ["author.mod"])
+        mod_list, missing = ModList.from_mods_config(config, mc)
+        assert mod_list[0].path == "/local/mymod"
+
     def test_preserves_order(self) -> None:
         mc = _make_mock_metadata_controller(
             {

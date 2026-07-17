@@ -14,6 +14,8 @@ from PySide6.QtCore import QMutex, QObject, Signal, Slot
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_mediator import MetadataMediator
 from app.models.metadata.metadata_structure import (
+    SOURCE_PRIORITY_DEFAULT,
+    SOURCE_PRIORITY_STEAM,
     AboutXmlMod,
     CompiledDependencyData,
     ListedMod,
@@ -501,13 +503,6 @@ class MetadataController(QObject):
         :param mod_list: Path to .rws/.xml mod list file, or list of package IDs
         :return: (active_mod_paths, inactive_mod_paths, duplicate_mods, missing_mods)
         """
-        SOURCE_PRIORITY_STEAM: list[ModType] = [ModType.STEAM_WORKSHOP, ModType.LOCAL]
-        SOURCE_PRIORITY_DEFAULT: list[ModType] = [
-            ModType.LUDEON,
-            ModType.LOCAL,
-            ModType.STEAM_WORKSHOP,
-        ]
-
         all_mods = self.mods_metadata
         active_mod_paths: list[str] = []
         inactive_mod_paths: list[str] = []
