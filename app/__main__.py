@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
     # CRITICAL: Check for CLI mode BEFORE any imports that might use Qt
     # This must happen before AppInfo() or any other code that could trigger Qt initialization
-    
+
     # Intercept --steamcmd-helper flag before the single-instance lock.
     # Runs the helper script inside this process instead of launching the full GUI.
     if len(sys.argv) > 2 and sys.argv[1] == "--steamcmd-helper":
@@ -169,13 +169,14 @@ if __name__ == "__main__":
             try:
                 # Nuitka's attach mode doesn't update C-runtime fds.
                 # Map standard streams to the active console explicitly.
-                sys.stdin  = open("CONIN$",  "r", encoding="utf-8", errors="replace")
+                sys.stdin = open("CONIN$", "r", encoding="utf-8", errors="replace")
                 sys.stdout = open("CONOUT$", "w", encoding="utf-8", buffering=1)
                 sys.stderr = open("CONOUT$", "w", encoding="utf-8", buffering=1)
             except Exception:
                 pass  # No console available; carry on silently.
 
         import runpy
+
         # Override sys.argv so the helper script receives the correct arguments
         # Original: [RimSort.exe, --steamcmd-helper, script.py, config_b64]
         # New: [script.py, config_b64]
