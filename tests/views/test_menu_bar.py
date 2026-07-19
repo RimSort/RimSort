@@ -167,13 +167,20 @@ class TestMenuBarGameFileVerification:
                 return_value=False,
             ) as mock_dialog,
         ):
-            MenuBarController(
+            controller = MenuBarController(
                 menu_bar_instance, mock_settings_controller.settings, lambda: None
             )
 
             menu_bar_instance.steam_verify_game_files_action.trigger()
 
-            mock_dialog.assert_called_once()
+            mock_dialog.assert_called_once_with(
+                title=controller.tr("Verify Game Files"),
+                text=controller.tr(
+                    "Are you sure you want to verify RimWorld's game files through Steam?"
+                    "<br><br>This process cannot be canceled once it has started."
+                ),
+                icon="warning",
+            )
             mock_event_bus.return_value.do_steam_verify_game_files.emit.assert_not_called()
 
 class TestDisableUpdaterFlag:
