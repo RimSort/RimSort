@@ -94,6 +94,10 @@ def handle_exception(
 sys.excepthook = handle_exception
 
 
+# Process --dev flag if present (before any other initialization)
+if "--dev" in sys.argv:
+    os.environ["RIMSORT_DEV"] = "1"
+
 # Process --disable-updater flag if present (before any other initialization)
 if "--disable-updater" in sys.argv:
     os.environ["RIMSORT_DISABLE_UPDATER"] = "1"
@@ -157,6 +161,29 @@ if __name__ == "__main__":
 
     # CRITICAL: Check for CLI mode BEFORE any imports that might use Qt
     # This must happen before AppInfo() or any other code that could trigger Qt initialization
+
+    # Intercept --steamcmd-helper flag before the single-instance lock.
+    # Runs the helper script inside this process instead of launching the full GUI.
+    if len(sys.argv) > 2 and sys.argv[1] == "--steamcmd-helper":
+        if sys.platform == "win32" and "__compiled__" in globals():
+            try:
+                # Nuitka's attach mode doesn't update C-runtime fds.
+                # Map standard streams to the active console explicitly.
+                sys.stdin = open("CONIN$", "r", encoding="utf-8", errors="replace")
+                sys.stdout = open("CONOUT$", "w", encoding="utf-8", buffering=1)
+                sys.stderr = open("CONOUT$", "w", encoding="utf-8", buffering=1)
+            except Exception:
+                pass  # No console available; carry on silently.
+
+        import runpy
+
+        # Override sys.argv so the helper script receives the correct arguments
+        # Original: [RimSort.exe, --steamcmd-helper, script.py, config_b64]
+        # New: [script.py, config_b64]
+        sys.argv = [sys.argv[2]] + sys.argv[3:]
+        runpy.run_path(sys.argv[0], run_name="__main__")
+        sys.exit(0)
+
     if len(sys.argv) > 1 and sys.argv[1] in ["build-db", "--help", "--version"]:
         # CLI mode - import and run without any GUI setup
         try:
@@ -173,8 +200,12 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # GUI mode continues below with normal initialization
-    debug_file_path = AppInfo().app_storage_folder / "DEBUG"
-    DEBUG_MODE = debug_file_path.exists() and debug_file_path.is_file()
+    # Dev mode always enables debug logging; production checks for a DEBUG file
+    if AppInfo().is_dev_mode:
+        DEBUG_MODE = True
+    else:
+        debug_file_path = AppInfo().app_storage_folder / "DEBUG"
+        DEBUG_MODE = debug_file_path.exists() and debug_file_path.is_file()
 
     from app.utils.log_setup import setup_logging
 
@@ -199,6 +230,10 @@ if __name__ == "__main__":
         logger.debug("Running using Nuitka bundle")
 
     logger.info(f"Initializing RimSort application: {AppInfo().app_version}")
+    if AppInfo().is_dev_mode:
+        logger.info(
+            f"Running in dev mode - data stored at {AppInfo().app_storage_folder.parent}"
+        )
 
     # Single-instance lock: prevent multiple RimSort instances from running
     lock: SingleInstanceLock | None = None

@@ -127,6 +127,9 @@ class MenuBarController(QObject):
         )
 
         # Download menu
+        self.menu_bar.download_rimworld_version_action.triggered.connect(
+            EventBus().do_download_rimworld_version.emit
+        )
         self.menu_bar.add_git_mod_action.triggered.connect(
             EventBus().do_add_git_mod.emit
         )
@@ -141,6 +144,9 @@ class MenuBarController(QObject):
         )
         self.menu_bar.update_workshop_mods_action.triggered.connect(
             EventBus().do_check_for_workshop_updates
+        )
+        self.menu_bar.update_git_mods_action.triggered.connect(
+            EventBus().do_check_for_git_updates
         )
         self.menu_bar.steam_verify_game_files_action.triggered.connect(
             EventBus().do_steam_verify_game_files

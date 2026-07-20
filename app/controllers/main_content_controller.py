@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QInputDialog, QMessageBox
 from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_db import Base
+from app.models.metadata.metadata_structure import ModType
 from app.models.settings import Settings
 from app.utils import git_utils
 from app.utils.app_info import AppInfo
@@ -123,6 +124,13 @@ class MainContentController(QObject):
                 lambda: self.settings.external_no_version_warning_url,
                 lambda: self.settings.external_no_version_warning_metadata_source,
                 DATABASE_DISPLAY_NAMES["no_version_warning"],
+            ),
+            EventBus().do_download_rimworld_versions_db_from_github: (
+                AppInfo().databases_folder,
+                lambda: self.settings.external_rimworld_versions_repo_path,
+                lambda: self.settings.external_rimworld_versions_url,
+                lambda: self.settings.external_rimworld_versions_metadata_source,
+                DATABASE_DISPLAY_NAMES["rimworld_versions"],
             ),
         }
 
@@ -294,6 +302,9 @@ class MainContentController(QObject):
     def _connect_signals(self) -> None:
         # Bind install mod signal
         EventBus().do_add_git_mod.connect(self._do_git_install_mod)
+        EventBus().do_download_rimworld_version.connect(
+            self._do_download_rimworld_version
+        )
         EventBus().do_open_github_mods_panel.connect(self._on_open_github_mods_panel)
 
         # Bind update check signals
@@ -303,6 +314,8 @@ class MainContentController(QObject):
         ]
         for signal in update_targets:
             signal.connect(self._on_check_updates_requested)
+
+        EventBus().do_check_for_git_updates.connect(self._on_update_all_git_mods)
 
         # Bind download signals
         for event_signal, (
@@ -364,6 +377,25 @@ class MainContentController(QObject):
         )
         self.view.window_manager.register(self._github_mods_panel)
         self._github_mods_panel.show()
+
+    def _on_update_all_git_mods(self) -> None:
+        """Collect all git mod paths from metadata and check for updates."""
+        git_paths: list[Path] = []
+        for _path_key, mod_data in self.metadata_controller.mods_metadata.items():
+            if mod_data.mod_type == ModType.GIT and mod_data.mod_path:
+                git_paths.append(mod_data.mod_path)
+
+        # GitHub-managed mods have their own release-based update flow
+        git_paths = self._filter_non_github_repos(git_paths)
+
+        if not git_paths:
+            InformationBox(
+                title=self.tr("No Git Mods Found"),
+                text=self.tr("No git-based mods were found in your local mods folder."),
+            ).exec()
+            return
+
+        self._on_check_updates_requested(git_paths)
 
     @Slot(list)
     def _on_check_updates_requested(self, repos_paths: List[Path]) -> None:
@@ -740,6 +772,12 @@ class MainContentController(QObject):
                 settings.external_use_this_instead_repo_path,
                 settings.external_use_this_instead_url,
                 DATABASE_DISPLAY_NAMES["use_this_instead"],
+            ),
+            (
+                settings.external_rimworld_versions_metadata_source,
+                settings.external_rimworld_versions_repo_path,
+                settings.external_rimworld_versions_url,
+                DATABASE_DISPLAY_NAMES["rimworld_versions"],
             ),
         ]
 
@@ -2082,3 +2120,10 @@ class MainContentController(QObject):
             logger.warning(
                 f"Failed to update {len(failed)} database repositories: {[str(p) for p, e in failed]}"
             )
+
+    @Slot()
+    def _do_download_rimworld_version(self) -> None:
+        from app.views.download_rimworld_dialog import DownloadRimWorldDialog
+
+        dialog = DownloadRimWorldDialog()
+        dialog.exec()

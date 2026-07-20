@@ -868,6 +868,102 @@ def test_get_mods_from_list_steam_suffix_priority(
     assert missing == []
 
 
+def test_get_mods_from_list_git_duplicate_prefers_git_over_workshop(
+    metadata_controller: MetadataController,
+) -> None:
+    """Regression test for issue #2300.
+
+    For a bare package ID (no ``_steam`` suffix), a locally installed git-backed
+    copy of a mod must win over a Steam Workshop copy that shares the package ID.
+    If ``ModType.GIT`` is missing from the default source-priority order,
+    resolution falls through to the Workshop copy and the in-development mod is
+    deactivated on reload.
+    """
+    mod_git = _make_about_xml_mod(
+        "My Mod Git", "author.mymod", ModType.GIT, "/mods/local/mymod"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "My Mod Workshop",
+        "author.mymod",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/mymod",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/mymod": mod_git,
+        "/mods/workshop/mymod": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.mymod"]
+    )
+
+    assert active == ["/mods/local/mymod"]
+    assert "/mods/workshop/mymod" in inactive
+    assert missing == []
+
+
+def test_get_mods_from_list_steamcmd_duplicate_prefers_steamcmd_over_workshop(
+    metadata_controller: MetadataController,
+) -> None:
+    """A SteamCMD copy must also win over a Workshop copy for a bare package ID.
+
+    Like ``ModType.GIT``, ``ModType.STEAM_CMD`` must be selectable in the default
+    source-priority order rather than falling through to Steam Workshop.
+    """
+    mod_steamcmd = _make_about_xml_mod(
+        "My Mod SteamCMD", "author.mymod", ModType.STEAM_CMD, "/mods/local/mymod"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "My Mod Workshop",
+        "author.mymod",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/mymod",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/mymod": mod_steamcmd,
+        "/mods/workshop/mymod": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.mymod"]
+    )
+
+    assert active == ["/mods/local/mymod"]
+    assert "/mods/workshop/mymod" in inactive
+    assert missing == []
+
+
+def test_get_mods_from_list_steam_suffix_prefers_workshop_over_git(
+    metadata_controller: MetadataController,
+) -> None:
+    """The ``_steam`` suffix must still select the Workshop copy even when a
+    git-backed copy of the same package ID is present."""
+    mod_git = _make_about_xml_mod(
+        "My Mod Git", "author.mymod", ModType.GIT, "/mods/local/mymod"
+    )
+    mod_workshop = _make_about_xml_mod(
+        "My Mod Workshop",
+        "author.mymod",
+        ModType.STEAM_WORKSHOP,
+        "/mods/workshop/mymod",
+    )
+
+    metadata_controller.metadata_mediator._mods_metadata = {
+        "/mods/local/mymod": mod_git,
+        "/mods/workshop/mymod": mod_workshop,
+    }
+
+    active, inactive, duplicates, missing = metadata_controller.get_mods_from_list(
+        ["author.mymod_steam"]
+    )
+
+    assert active == ["/mods/workshop/mymod"]
+    assert "/mods/local/mymod" in inactive
+    assert missing == []
+
+
 def test_get_mods_from_list_no_duplicates_single_mod(
     metadata_controller: MetadataController,
 ) -> None:

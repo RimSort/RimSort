@@ -374,6 +374,7 @@ class SettingsDialog(QDialog):
         self._do_steam_workshop_db_group(tab_layout)
         self._do_no_version_warning_db_group(tab_layout)
         self._do_use_this_instead_db_group(tab_layout)
+        self._do_rimworld_versions_db_group(tab_layout)
 
     def _do_backup_settings_group(self, tab_layout: QBoxLayout) -> None:
         backup_group_label = self._make_section_label(
@@ -656,6 +657,24 @@ class SettingsDialog(QDialog):
             self.use_this_instead_db_local_file_radio,
             self.use_this_instead_db_local_file,
             self.use_this_instead_db_local_file_choose_button,
+        ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
+
+    def _do_rimworld_versions_db_group(self, tab_layout: QBoxLayout) -> None:
+        section_lbl = self.tr("RimWorld Versions Database")
+        none_lbl = self.tr("RimWorld Versions Database")
+        (
+            _,
+            self.rimworld_versions_db_none_radio,
+            self.rimworld_versions_db_github_radio,
+            self.rimworld_versions_db_github_url,
+            self.rimworld_versions_db_github_upload_button,
+            self.rimworld_versions_db_github_download_button,
+            self.rimworld_versions_db_url_radio,
+            self.rimworld_versions_db_url_input,
+            self.rimworld_versions_db_url_download_button,
+            self.rimworld_versions_db_local_file_radio,
+            self.rimworld_versions_db_local_file,
+            self.rimworld_versions_db_local_file_choose_button,
         ) = self.__create_db_group(section_lbl, none_lbl, tab_layout)
 
     def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:

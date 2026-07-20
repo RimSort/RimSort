@@ -97,6 +97,7 @@ DATABASE_DISPLAY_NAMES: dict[str, str] = {
     "steam_workshop": "Steam Workshop",
     "no_version_warning": "No Version Warning",
     "use_this_instead": "Use This Instead",
+    "rimworld_versions": "RimWorld Versions",
 }
 
 KNOWN_TIER_ONE_MODS = {
