@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -20,7 +20,7 @@ def patch_dialogue(monkeypatch: pytest.MonkeyPatch) -> Mock:
 @pytest.fixture
 def main_content(
     monkeypatch: pytest.MonkeyPatch,
-    qapp,
+    qapp: Any,
     mock_settings_controller: MagicMock,
     mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
@@ -37,11 +37,13 @@ def main_content(
             }
         ],
     )
-    mock_settings_controller.settings.save = MagicMock()
+    save_mock = MagicMock()
+    mock_settings_controller.settings.save = save_mock
     mc = MainContent(
         mock_settings_controller.settings,
         metadata_controller=mock_metadata_controller,
     )
+    mc._test_save_mock = save_mock  # type: ignore[attr-defined]
     monkeypatch.setattr(mc, "__duplicate_mods_prompt", Mock())
     monkeypatch.setattr(mc, "__missing_mods_prompt", Mock())
     monkeypatch.setattr(mc, "_insert_data_into_lists", Mock())
@@ -78,4 +80,4 @@ def test_importing_xml_mod_list_clears_stale_dividers(
     main_content._do_import_list_file_xml()
 
     assert main_content.settings.active_mods_dividers == []
-    main_content.settings.save.assert_called()
+    main_content._test_save_mock.assert_called()  # type: ignore[attr-defined]
