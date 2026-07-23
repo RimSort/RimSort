@@ -174,6 +174,83 @@
     </message>
 </context>
 <context>
+    <name>DownloadRimWorldDialog</name>
+    <message>
+        <source>Download RimWorld Version</source>
+        <translation>Baixe a versão RimWorld</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>Versão:</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>Navegar</translation>
+    </message>
+    <message>
+        <source>Destination:</source>
+        <translation>Destino:</translation>
+    </message>
+    <message>
+        <source>Steam Username</source>
+        <translation>Nome de usuário Steam</translation>
+    </message>
+    <message>
+        <source>Steam Username:</source>
+        <translation>Nome de usuário Steam:</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Download</translation>
+    </message>
+    <message>
+        <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
+        <translation>Nota: Um console interativo será aberto. Você será solicitado a inserir sua senha e código Steam Guard, se necessário.</translation>
+    </message>
+    <message>
+        <source>Select Destination Folder</source>
+        <translation>Selecione a pasta de destino</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Erro</translation>
+    </message>
+    <message>
+        <source>Please select a version.</source>
+        <translation>Selecione uma versão.</translation>
+    </message>
+    <message>
+        <source>Please select a destination folder.</source>
+        <translation>Selecione uma pasta de destino.</translation>
+    </message>
+    <message>
+        <source>Please enter your Steam username.</source>
+        <translation>Por favor, digite seu nome de usuário Steam.</translation>
+    </message>
+    <message>
+        <source>Could not determine depot IDs for this platform.</source>
+        <translation>Não foi possível determinar IDs de depósito para esta plataforma.</translation>
+    </message>
+    <message>
+        <source>SteamCMD is not set up. Please set it up in the settings first.</source>
+        <translation>SteamCMD não está configurado. Por favor, configure-o nas configurações primeiro.</translation>
+    </message>
+    <message>
+        <source>Download Started</source>
+        <translation>Download iniciado</translation>
+    </message>
+    <message>
+        <source>SteamCMD has been launched in a new terminal window.
+Please follow the prompts to complete the download.</source>
+        <translation>SteamCMD foi lançado em uma nova janela de terminal.
+Siga as instruções para concluir o download.</translation>
+    </message>
+    <message>
+        <source>Failed to start download: {e}</source>
+        <translation>Falha ao iniciar o download: {e}</translation>
+    </message>
+</context>
+<context>
     <name>DuplicateModsPanel</name>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
@@ -550,6 +627,62 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Selected</source>
         <translation>Atualização selecionada</translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation>Desinstalar</translation>
+    </message>
+    <message>
+        <source>Delete mod completely</source>
+        <translation>Excluir mod completamente</translation>
+    </message>
+    <message>
+        <source>Convert to plain git mod</source>
+        <translation>Converter para mod git simples</translation>
+    </message>
+    <message>
+        <source>Delete mods</source>
+        <translation>Excluir mods</translation>
+    </message>
+    <message>
+        <source>Delete the following mods completely? This cannot be undone.
+
+{mod_list}</source>
+        <translation>Excluir completamente os seguintes mods? Isto não pode ser desfeito.
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Deleted {n} mod(s).</source>
+        <translation>Excluídos {n} mod(s).</translation>
+    </message>
+    <message>
+        <source>File deletion failed for: {names}</source>
+        <translation>Falha na exclusão do arquivo para: {names}</translation>
+    </message>
+    <message>
+        <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
+
+{mod_list}</source>
+        <translation>Converter os seguintes mods em rastreamento git? Eles serão atualizados por meio do Git Mod Updater em vez das versões do GitHub.
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
+        <translation>Os mods baseados em lançamento serão clonados novamente do HEAD, substituindo os arquivos atuais.</translation>
+    </message>
+    <message>
+        <source>Convert to git tracking</source>
+        <translation>Converter para rastreamento git</translation>
+    </message>
+    <message>
+        <source>Converted {n} mod(s) to git tracking.</source>
+        <translation>{n} mod(s) convertido(s) em rastreamento git.</translation>
+    </message>
+    <message>
+        <source>Failed: {names}</source>
+        <translation>Falha: {nomes}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1490,6 +1623,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>Atualização automática do GitHub concluída</translation>
     </message>
     <message>
+        <source>No Git Mods Found</source>
+        <translation>Nenhum mod Git encontrado</translation>
+    </message>
+    <message>
+        <source>No git-based mods were found in your local mods folder.</source>
+        <translation>Nenhum mod baseado em git foi encontrado na sua pasta de mods local.</translation>
+    </message>
+    <message>
         <source>No Repositories</source>
         <translation>Sem Repositórios</translation>
     </message>
@@ -2349,6 +2490,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Baixar</translation>
     </message>
     <message>
+        <source>Download RimWorld Version</source>
+        <translation>Baixe a versão RimWorld</translation>
+    </message>
+    <message>
         <source>Add Git Mod</source>
         <translation>Adicionar Git Mod</translation>
     </message>
@@ -2363,6 +2508,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>Atualizar Mods do Workshop</translation>
+    </message>
+    <message>
+        <source>Update Git Mods</source>
+        <translation>Atualizar mods Git</translation>
     </message>
     <message>
         <source>GitHub Mods</source>
@@ -3222,6 +3371,10 @@ Um mod alternativo atualizado é recomendado:
     <message>
         <source>Tags</source>
         <translation>Etiquetas</translation>
+    </message>
+    <message>
+        <source>Show tags in mod list</source>
+        <translation>Mostrar tags na lista de mods</translation>
     </message>
     <message>
         <source>0 updated</source>
@@ -4248,6 +4401,10 @@ Um mod alternativo atualizado é recomendado:
     <message>
         <source>Topologically</source>
         <translation>Tipologia</translation>
+    </message>
+    <message>
+        <source>RimWorld Versions Database</source>
+        <translation>Banco de dados de versões RimWorld</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.

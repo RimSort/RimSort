@@ -4316,7 +4316,9 @@ class ModsPanel(QWidget):
         self.active_mods_show_tags_button.setCheckable(True)
         self.active_mods_show_tags_button.setText(self.tr("Tags"))
         self.active_mods_show_tags_button.setToolTip(self.tr("Show tags in mod list"))
-        self.active_mods_show_tags_button.toggled.connect(self.on_active_mods_show_tags_toggled)
+        self.active_mods_show_tags_button.toggled.connect(
+            self.on_active_mods_show_tags_toggled
+        )
 
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
@@ -4452,7 +4454,9 @@ class ModsPanel(QWidget):
         self.inactive_mods_show_tags_button.setCheckable(True)
         self.inactive_mods_show_tags_button.setText(self.tr("Tags"))
         self.inactive_mods_show_tags_button.setToolTip(self.tr("Show tags in mod list"))
-        self.inactive_mods_show_tags_button.toggled.connect(self.on_inactive_mods_show_tags_toggled)
+        self.inactive_mods_show_tags_button.toggled.connect(
+            self.on_inactive_mods_show_tags_toggled
+        )
 
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
         self.inactive_mods_sort_combobox.setParent(self)
@@ -5531,7 +5535,7 @@ class ModsPanel(QWidget):
                     )
 
         return translated_pkg_ids
-        
+
     def on_active_mods_show_tags_toggled(self, checked: bool) -> None:
         """Toggle visibility of tags in active mods list."""
         self.active_mods_list.set_tags_visible(checked)

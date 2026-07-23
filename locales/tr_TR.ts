@@ -174,6 +174,83 @@
     </message>
 </context>
 <context>
+    <name>DownloadRimWorldDialog</name>
+    <message>
+        <source>Download RimWorld Version</source>
+        <translation>RimWorld Sürümünü İndirin</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>Sürüm:</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>Göz at</translation>
+    </message>
+    <message>
+        <source>Destination:</source>
+        <translation>Varış noktası:</translation>
+    </message>
+    <message>
+        <source>Steam Username</source>
+        <translation>Steam Kullanıcı Adı</translation>
+    </message>
+    <message>
+        <source>Steam Username:</source>
+        <translation>Steam Kullanıcı Adı:</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>İndirmek</translation>
+    </message>
+    <message>
+        <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
+        <translation>Not: Etkileşimli bir konsol açılacaktır. Gerekirse şifrenizi ve Steam Guard kodunuzu girmeniz istenecektir.</translation>
+    </message>
+    <message>
+        <source>Select Destination Folder</source>
+        <translation>Hedef Klasörü Seçin</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Hata</translation>
+    </message>
+    <message>
+        <source>Please select a version.</source>
+        <translation>Lütfen bir sürüm seçin.</translation>
+    </message>
+    <message>
+        <source>Please select a destination folder.</source>
+        <translation>Lütfen bir hedef klasör seçin.</translation>
+    </message>
+    <message>
+        <source>Please enter your Steam username.</source>
+        <translation>Lütfen Steam kullanıcı adınızı giriniz.</translation>
+    </message>
+    <message>
+        <source>Could not determine depot IDs for this platform.</source>
+        <translation>Bu platform için depo kimlikleri belirlenemedi.</translation>
+    </message>
+    <message>
+        <source>SteamCMD is not set up. Please set it up in the settings first.</source>
+        <translation>SteamCMD kurulmamış. Lütfen önce ayarlarda ayarlayın.</translation>
+    </message>
+    <message>
+        <source>Download Started</source>
+        <translation>İndirme Başladı</translation>
+    </message>
+    <message>
+        <source>SteamCMD has been launched in a new terminal window.
+Please follow the prompts to complete the download.</source>
+        <translation>SteamCMD yeni bir terminal penceresinde başlatıldı.
+İndirmeyi tamamlamak için lütfen talimatları izleyin.</translation>
+    </message>
+    <message>
+        <source>Failed to start download: {e}</source>
+        <translation>İndirme işlemi başlatılamadı: {e}</translation>
+    </message>
+</context>
+<context>
     <name>DuplicateModsPanel</name>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
@@ -550,6 +627,62 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Selected</source>
         <translation>Seçileni Güncelle</translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation>Kaldır</translation>
+    </message>
+    <message>
+        <source>Delete mod completely</source>
+        <translation>Modu tamamen sil</translation>
+    </message>
+    <message>
+        <source>Convert to plain git mod</source>
+        <translation>Düz git moduna dönüştür</translation>
+    </message>
+    <message>
+        <source>Delete mods</source>
+        <translation>Modları sil</translation>
+    </message>
+    <message>
+        <source>Delete the following mods completely? This cannot be undone.
+
+{mod_list}</source>
+        <translation>Aşağıdaki modlar tamamen silinsin mi? Bu geri alınamaz.
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Deleted {n} mod(s).</source>
+        <translation>{n} mod silindi.</translation>
+    </message>
+    <message>
+        <source>File deletion failed for: {names}</source>
+        <translation>Şunun için dosya silme işlemi başarısız oldu: {names}</translation>
+    </message>
+    <message>
+        <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
+
+{mod_list}</source>
+        <translation>Aşağıdaki modlar git izlemeye dönüştürülsün mü? GitHub sürümleri yerine Git Mod Güncelleyici aracılığıyla güncellenecekler.
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
+        <translation>Sürüm tabanlı modlar, mevcut dosyaların yerine HEAD'den yeniden kopyalanacak.</translation>
+    </message>
+    <message>
+        <source>Convert to git tracking</source>
+        <translation>Git takibine dönüştür</translation>
+    </message>
+    <message>
+        <source>Converted {n} mod(s) to git tracking.</source>
+        <translation>{n} mod/modlar git izlemeye dönüştürüldü.</translation>
+    </message>
+    <message>
+        <source>Failed: {names}</source>
+        <translation>Başarısız oldu: {isimler}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -2152,6 +2285,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>GitHub Otomatik Güncelleme Tamamlandı</translation>
     </message>
     <message>
+        <source>No Git Mods Found</source>
+        <translation>Git Modu Bulunamadı</translation>
+    </message>
+    <message>
+        <source>No git-based mods were found in your local mods folder.</source>
+        <translation>Yerel modlar klasörünüzde git tabanlı mod bulunamadı.</translation>
+    </message>
+    <message>
         <source>Successful pushes:
 </source>
         <translation>Başarılı hamleler:</translation>
@@ -2351,6 +2492,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>İndir</translation>
     </message>
     <message>
+        <source>Download RimWorld Version</source>
+        <translation>RimWorld Sürümünü İndirin</translation>
+    </message>
+    <message>
         <source>Add Git Mod</source>
         <translation>Git Modu Ekle</translation>
     </message>
@@ -2365,6 +2510,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>Atöyle Modlarını Güncelle</translation>
+    </message>
+    <message>
+        <source>Update Git Mods</source>
+        <translation>Git Modlarını Güncelleyin</translation>
     </message>
     <message>
         <source>GitHub Mods</source>
@@ -3216,6 +3365,10 @@ An alternative updated mod is recommended:
     <message>
         <source>Tags</source>
         <translation>Etiketler</translation>
+    </message>
+    <message>
+        <source>Show tags in mod list</source>
+        <translation>Etiketleri mod listesinde göster</translation>
     </message>
     <message>
         <source>0 updated</source>
@@ -4242,6 +4395,10 @@ An alternative updated mod is recommended:
     <message>
         <source>Topologically</source>
         <translation>Topolojik olarak</translation>
+    </message>
+    <message>
+        <source>RimWorld Versions Database</source>
+        <translation>RimWorld Versiyon Veritabanı</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
