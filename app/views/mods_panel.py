@@ -4311,10 +4311,18 @@ class ModsPanel(QWidget):
             )
         )
 
+        # Кнопка показа тегов
+        self.active_mods_show_tags_button = QToolButton()
+        self.active_mods_show_tags_button.setCheckable(True)
+        self.active_mods_show_tags_button.setText(self.tr("Tags"))
+        self.active_mods_show_tags_button.setToolTip(self.tr("Show tags in mod list"))
+        self.active_mods_show_tags_button.toggled.connect(self.on_active_mods_show_tags_toggled)
+
         # Active mods search layouts
         self.active_mods_search_layout.addWidget(self.active_mods_search, 45)
         self.active_mods_search_layout.addWidget(self.active_mods_search_filter, 70)
         self.active_mods_search_layout.addWidget(self.active_filter_button)
+        self.active_mods_search_layout.addWidget(self.active_mods_show_tags_button)
         self.active_mods_search_layout.addWidget(
             self.active_mods_search_mode_filter_button
         )
@@ -4439,6 +4447,13 @@ class ModsPanel(QWidget):
             )
         )
 
+        # Кнопка показа тегов
+        self.inactive_mods_show_tags_button = QToolButton()
+        self.inactive_mods_show_tags_button.setCheckable(True)
+        self.inactive_mods_show_tags_button.setText(self.tr("Tags"))
+        self.inactive_mods_show_tags_button.setToolTip(self.tr("Show tags in mod list"))
+        self.inactive_mods_show_tags_button.toggled.connect(self.on_inactive_mods_show_tags_toggled)
+
         self.inactive_mods_sort_combobox: QComboBox = QComboBox()
         self.inactive_mods_sort_combobox.setParent(self)
         self.inactive_mods_sort_combobox.setObjectName("MainUI")
@@ -4504,6 +4519,7 @@ class ModsPanel(QWidget):
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search, 45)
         self.inactive_mods_search_layout.addWidget(self.inactive_mods_search_filter, 70)
         self.inactive_mods_search_layout.addWidget(self.inactive_filter_button)
+        self.inactive_mods_search_layout.addWidget(self.inactive_mods_show_tags_button)
         self.inactive_mods_search_layout.addWidget(
             self.inactive_mods_search_mode_filter_button
         )
@@ -5515,6 +5531,14 @@ class ModsPanel(QWidget):
                     )
 
         return translated_pkg_ids
+        
+    def on_active_mods_show_tags_toggled(self, checked: bool) -> None:
+        """Toggle visibility of tags in active mods list."""
+        self.active_mods_list.set_tags_visible(checked)
+
+    def on_inactive_mods_show_tags_toggled(self, checked: bool) -> None:
+        """Toggle visibility of tags in inactive mods list."""
+        self.inactive_mods_list.set_tags_visible(checked)
 
     def _on_auto_add_translations(self) -> None:
         """
