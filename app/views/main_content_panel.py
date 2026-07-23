@@ -21,6 +21,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QFrame,
     QHBoxLayout,
     QInputDialog,
@@ -82,6 +83,7 @@ from app.utils.zip_extractor import (
     ZipExtractThread,
     get_zip_contents,
 )
+from app.views.merge_preview_dialog import MergePreviewDialog
 from app.views.mod_info_panel import ModInfoPanel
 from app.views.mods_panel import (
     ModListWidget,
@@ -195,6 +197,7 @@ class MainContent(QObject):
         EventBus().do_import_mod_list_from_save_file.connect(
             self._do_import_list_from_save_file
         )
+        EventBus().do_merge_mod_list_from_file.connect(self._do_merge_list_file_xml)
         EventBus().do_save_mod_list_as.connect(self._do_export_list_file_xml)
         EventBus().do_export_mod_list_to_clipboard.connect(
             self._do_export_list_clipboard
@@ -1141,6 +1144,92 @@ class MainContent(QObject):
             self.__missing_mods_prompt()
         else:
             logger.info("USER ACTION: pressed cancel, passing")
+
+    def _do_merge_list_file_xml(self) -> None:
+        """
+        Merge mods from a user-selected XML file into the current active list.
+
+        Unlike import (which replaces), merge computes the union of the current
+        active list and the imported list, shows a preview dialog, then
+        auto-sorts via topological sort.
+        """
+        logger.info("Opening file dialog to select modlist file for merge")
+        file_path = dialogue.show_dialogue_file(
+            mode="open",
+            caption="Select mod list to merge",
+            _dir=str(AppInfo().saved_modlists_folder),
+            _filter="RimWorld mod list (*.rml *.rws *.xml)",
+        )
+        if not file_path:
+            logger.info("USER ACTION: pressed cancel, passing")
+            return
+
+        # Clear search/filter state
+        self.mods_panel.signal_clear_search(list_type="Active")
+        self.mods_panel.active_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Active")
+        self.mods_panel.signal_clear_search(list_type="Inactive")
+        self.mods_panel.inactive_mods_filter_data_source_index = len(
+            self.mods_panel.data_source_filter_icons
+        )
+        self.mods_panel.signal_search_source_filter(list_type="Inactive")
+
+        # Parse the imported file
+        logger.info(f"Parsing modlist for merge: {file_path}")
+        (
+            imported_active_uuids,
+            _imported_inactive_uuids,
+            self.duplicate_mods,
+            missing_mods,
+        ) = metadata.get_mods_from_list(mod_list=file_path)
+
+        # Snapshot current active list
+        current_active = list(self.mods_panel.active_mods_list.uuids)
+        current_active_set = set(current_active)
+
+        # Categorize imported mods
+        new_mods = [u for u in imported_active_uuids if u not in current_active_set]
+        already_present = [u for u in imported_active_uuids if u in current_active_set]
+
+        # Show preview dialog
+        source_filename = Path(file_path).name
+        total_imported = len(imported_active_uuids)
+        preview = MergePreviewDialog(
+            new_mods=new_mods,
+            already_present=already_present,
+            missing_packageids=missing_mods,
+            source_filename=source_filename,
+            total_imported=total_imported,
+        )
+        if preview.exec() != QDialog.DialogCode.Accepted:
+            logger.info("USER ACTION: cancelled merge preview")
+            return
+
+        # Merge: append new mods to end of current active list
+        merged_active = current_active + new_mods
+        merged_set = set(merged_active)
+
+        # Recompute inactive list
+        all_known = set(self.metadata_manager.internal_local_metadata.keys())
+        updated_inactive = [u for u in all_known if u not in merged_set]
+
+        logger.info(
+            f"Merging: {len(new_mods)} new mods into active list "
+            f"(total: {len(merged_active)})"
+        )
+        self._insert_data_into_lists(merged_active, updated_inactive)
+
+        # Sort before showing any prompts to avoid modal dialog interference
+        self._do_sort()
+
+        # Show duplicate mods dialog if applicable
+        self.__duplicate_mods_prompt()
+
+        # Prompt to download missing mods if applicable
+        self.missing_mods = missing_mods
+        self.__missing_mods_prompt()
 
     def _do_export_list_file_xml(self) -> None:
         """
