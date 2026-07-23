@@ -174,6 +174,83 @@
     </message>
 </context>
 <context>
+    <name>DownloadRimWorldDialog</name>
+    <message>
+        <source>Download RimWorld Version</source>
+        <translation>下载环世界版本</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>版本：</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>浏览</translation>
+    </message>
+    <message>
+        <source>Destination:</source>
+        <translation>目的地：</translation>
+    </message>
+    <message>
+        <source>Steam Username</source>
+        <translation>蒸汽用户名</translation>
+    </message>
+    <message>
+        <source>Steam Username:</source>
+        <translation>蒸汽用户名：</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>下载</translation>
+    </message>
+    <message>
+        <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
+        <translation>注意：将打开一个交互式控制台。如果需要，系统将提示您输入密码和 Steam 令牌代码。</translation>
+    </message>
+    <message>
+        <source>Select Destination Folder</source>
+        <translation>选择目标文件夹</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <source>Please select a version.</source>
+        <translation>请选择一个版本。</translation>
+    </message>
+    <message>
+        <source>Please select a destination folder.</source>
+        <translation>请选择目标文件夹。</translation>
+    </message>
+    <message>
+        <source>Please enter your Steam username.</source>
+        <translation>请输入您的 Steam 用户名。</translation>
+    </message>
+    <message>
+        <source>Could not determine depot IDs for this platform.</source>
+        <translation>无法确定该平台的软件仓库 ID。</translation>
+    </message>
+    <message>
+        <source>SteamCMD is not set up. Please set it up in the settings first.</source>
+        <translation>SteamCMD 未设置。请先在设置中进行设置。</translation>
+    </message>
+    <message>
+        <source>Download Started</source>
+        <translation>下载开始</translation>
+    </message>
+    <message>
+        <source>SteamCMD has been launched in a new terminal window.
+Please follow the prompts to complete the download.</source>
+        <translation>SteamCMD 已在新的终端窗口中启动。
+请按照提示完成下载。</translation>
+    </message>
+    <message>
+        <source>Failed to start download: {e}</source>
+        <translation>无法开始下载：{e}</translation>
+    </message>
+</context>
+<context>
     <name>DuplicateModsPanel</name>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
@@ -550,6 +627,62 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Selected</source>
         <translation>更新所选内容</translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation>卸载</translation>
+    </message>
+    <message>
+        <source>Delete mod completely</source>
+        <translation>完全删除模组</translation>
+    </message>
+    <message>
+        <source>Convert to plain git mod</source>
+        <translation>转换为纯 git mod</translation>
+    </message>
+    <message>
+        <source>Delete mods</source>
+        <translation>删除模组</translation>
+    </message>
+    <message>
+        <source>Delete the following mods completely? This cannot be undone.
+
+{mod_list}</source>
+        <translation>完全删除以下模组吗？此操作无法撤消。
+
+{mod_列表}</translation>
+    </message>
+    <message>
+        <source>Deleted {n} mod(s).</source>
+        <translation>已删除 {n} 个模组。</translation>
+    </message>
+    <message>
+        <source>File deletion failed for: {names}</source>
+        <translation>文件删除失败：{name}</translation>
+    </message>
+    <message>
+        <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
+
+{mod_list}</source>
+        <translation>将以下 mod 转换为 git 跟踪？它们将通过 Git Mod Updater 而不是 GitHub 版本进行更新。
+
+{mod_列表}</translation>
+    </message>
+    <message>
+        <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
+        <translation>基于发布的 mod 将从 HEAD 重新克隆，替换当前文件。</translation>
+    </message>
+    <message>
+        <source>Convert to git tracking</source>
+        <translation>转换为 git 跟踪</translation>
+    </message>
+    <message>
+        <source>Converted {n} mod(s) to git tracking.</source>
+        <translation>将 {n} mod(s) 转换为 git 跟踪。</translation>
+    </message>
+    <message>
+        <source>Failed: {names}</source>
+        <translation>失败：{名称}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1490,6 +1623,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>GitHub 自动更新完成</translation>
     </message>
     <message>
+        <source>No Git Mods Found</source>
+        <translation>未找到 Git 模组</translation>
+    </message>
+    <message>
+        <source>No git-based mods were found in your local mods folder.</source>
+        <translation>在您的本地 mods 文件夹中找不到基于 git 的 mods。</translation>
+    </message>
+    <message>
         <source>No Repositories</source>
         <translation>没有仓库</translation>
     </message>
@@ -2345,6 +2486,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>下载</translation>
     </message>
     <message>
+        <source>Download RimWorld Version</source>
+        <translation>下载环世界版本</translation>
+    </message>
+    <message>
         <source>Add Git Mod</source>
         <translation>添加 Git 模组</translation>
     </message>
@@ -2359,6 +2504,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>更新创意工坊模组</translation>
+    </message>
+    <message>
+        <source>Update Git Mods</source>
+        <translation>更新 Git 模组</translation>
     </message>
     <message>
         <source>GitHub Mods</source>
@@ -3221,6 +3370,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Tags</source>
         <translation>标签</translation>
+    </message>
+    <message>
+        <source>Show tags in mod list</source>
+        <translation>在模组列表中显示标签</translation>
     </message>
     <message>
         <source>0 updated</source>
@@ -4247,6 +4400,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Topologically</source>
         <translation>按拓扑排序</translation>
+    </message>
+    <message>
+        <source>RimWorld Versions Database</source>
+        <translation>RimWorld 版本数据库</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.

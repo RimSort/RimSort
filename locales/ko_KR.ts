@@ -174,6 +174,83 @@
     </message>
 </context>
 <context>
+    <name>DownloadRimWorldDialog</name>
+    <message>
+        <source>Download RimWorld Version</source>
+        <translation>림월드 ​​버전 다운로드</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>버전:</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>먹다</translation>
+    </message>
+    <message>
+        <source>Destination:</source>
+        <translation>목적지:</translation>
+    </message>
+    <message>
+        <source>Steam Username</source>
+        <translation>Steam 사용자 이름</translation>
+    </message>
+    <message>
+        <source>Steam Username:</source>
+        <translation>스팀 사용자 이름:</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>다운로드</translation>
+    </message>
+    <message>
+        <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
+        <translation>참고: 대화형 콘솔이 열립니다. 필요한 경우 비밀번호와 Steam Guard 코드를 입력하라는 메시지가 표시됩니다.</translation>
+    </message>
+    <message>
+        <source>Select Destination Folder</source>
+        <translation>대상 폴더 선택</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>오류</translation>
+    </message>
+    <message>
+        <source>Please select a version.</source>
+        <translation>버전을 선택하세요.</translation>
+    </message>
+    <message>
+        <source>Please select a destination folder.</source>
+        <translation>대상 폴더를 선택하세요.</translation>
+    </message>
+    <message>
+        <source>Please enter your Steam username.</source>
+        <translation>Steam 사용자 이름을 입력하세요.</translation>
+    </message>
+    <message>
+        <source>Could not determine depot IDs for this platform.</source>
+        <translation>이 플랫폼에 대한 저장소 ID를 확인할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>SteamCMD is not set up. Please set it up in the settings first.</source>
+        <translation>SteamCMD가 설정되지 않았습니다. 먼저 설정에서 설정해주세요.</translation>
+    </message>
+    <message>
+        <source>Download Started</source>
+        <translation>다운로드가 시작되었습니다</translation>
+    </message>
+    <message>
+        <source>SteamCMD has been launched in a new terminal window.
+Please follow the prompts to complete the download.</source>
+        <translation>SteamCMD가 새 터미널 창에서 실행되었습니다.
+지시에 따라 다운로드를 완료하십시오.</translation>
+    </message>
+    <message>
+        <source>Failed to start download: {e}</source>
+        <translation>다운로드를 시작하지 못했습니다: {e}</translation>
+    </message>
+</context>
+<context>
     <name>DuplicateModsPanel</name>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
@@ -549,6 +626,62 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Selected</source>
         <translation>선택한 업데이트</translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation>제거</translation>
+    </message>
+    <message>
+        <source>Delete mod completely</source>
+        <translation>모드를 완전히 삭제하세요</translation>
+    </message>
+    <message>
+        <source>Convert to plain git mod</source>
+        <translation>일반 git 모드로 변환</translation>
+    </message>
+    <message>
+        <source>Delete mods</source>
+        <translation>모드 삭제</translation>
+    </message>
+    <message>
+        <source>Delete the following mods completely? This cannot be undone.
+
+{mod_list}</source>
+        <translation>다음 모드를 완전히 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Deleted {n} mod(s).</source>
+        <translation>{n}개의 모드를 삭제했습니다.</translation>
+    </message>
+    <message>
+        <source>File deletion failed for: {names}</source>
+        <translation>다음에 대한 파일 삭제 실패: {names}</translation>
+    </message>
+    <message>
+        <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
+
+{mod_list}</source>
+        <translation>다음 모드를 Git 추적으로 변환하시겠습니까? GitHub 릴리스 대신 Git Mod Updater를 통해 업데이트됩니다.
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
+        <translation>릴리스 기반 모드는 HEAD에서 다시 복제되어 현재 파일을 대체합니다.</translation>
+    </message>
+    <message>
+        <source>Convert to git tracking</source>
+        <translation>Git 추적으로 변환</translation>
+    </message>
+    <message>
+        <source>Converted {n} mod(s) to git tracking.</source>
+        <translation>{n}개의 모드를 Git 추적으로 변환했습니다.</translation>
+    </message>
+    <message>
+        <source>Failed: {names}</source>
+        <translation>실패: {names}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1489,6 +1622,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>GitHub 자동 업데이트 완료</translation>
     </message>
     <message>
+        <source>No Git Mods Found</source>
+        <translation>Git 모드를 찾을 수 없습니다</translation>
+    </message>
+    <message>
+        <source>No git-based mods were found in your local mods folder.</source>
+        <translation>로컬 mods 폴더에서 git 기반 모드를 찾을 수 없습니다.</translation>
+    </message>
+    <message>
         <source>No Repositories</source>
         <translation>저장소가 없습니다</translation>
     </message>
@@ -2348,6 +2489,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>다운로드</translation>
     </message>
     <message>
+        <source>Download RimWorld Version</source>
+        <translation>림월드 ​​버전 다운로드</translation>
+    </message>
+    <message>
         <source>Add Git Mod</source>
         <translation>Git 모드 추가</translation>
     </message>
@@ -2362,6 +2507,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>창작마당 업데이트</translation>
+    </message>
+    <message>
+        <source>Update Git Mods</source>
+        <translation>Git Mod 업데이트</translation>
     </message>
     <message>
         <source>GitHub Mods</source>
@@ -3218,6 +3367,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Tags</source>
         <translation>태그</translation>
+    </message>
+    <message>
+        <source>Show tags in mod list</source>
+        <translation>모드 목록에 태그 표시</translation>
     </message>
     <message>
         <source>0 updated</source>
@@ -4243,6 +4396,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Topologically</source>
         <translation>우선순위</translation>
+    </message>
+    <message>
+        <source>RimWorld Versions Database</source>
+        <translation>RimWorld 버전 데이터베이스</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.

@@ -174,6 +174,83 @@
     </message>
 </context>
 <context>
+    <name>DownloadRimWorldDialog</name>
+    <message>
+        <source>Download RimWorld Version</source>
+        <translation>リムワールドのバージョンをダウンロード</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>バージョン:</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation>ブラウズ</translation>
+    </message>
+    <message>
+        <source>Destination:</source>
+        <translation>行き先：</translation>
+    </message>
+    <message>
+        <source>Steam Username</source>
+        <translation>Steam ユーザー名</translation>
+    </message>
+    <message>
+        <source>Steam Username:</source>
+        <translation>Steam ユーザー名:</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>ダウンロード</translation>
+    </message>
+    <message>
+        <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
+        <translation>注: 対話型コンソールが開きます。必要に応じて、パスワードと Steam ガード コードの入力を求められます。</translation>
+    </message>
+    <message>
+        <source>Select Destination Folder</source>
+        <translation>宛先フォルダーの選択</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>エラー</translation>
+    </message>
+    <message>
+        <source>Please select a version.</source>
+        <translation>バージョンを選択してください。</translation>
+    </message>
+    <message>
+        <source>Please select a destination folder.</source>
+        <translation>保存先のフォルダーを選択してください。</translation>
+    </message>
+    <message>
+        <source>Please enter your Steam username.</source>
+        <translation>Steam ユーザー名を入力してください。</translation>
+    </message>
+    <message>
+        <source>Could not determine depot IDs for this platform.</source>
+        <translation>このプラットフォームのデポ ID を特定できませんでした。</translation>
+    </message>
+    <message>
+        <source>SteamCMD is not set up. Please set it up in the settings first.</source>
+        <translation>SteamCMD がセットアップされていません。まずは設定で設定を行ってください。</translation>
+    </message>
+    <message>
+        <source>Download Started</source>
+        <translation>ダウンロード開始</translation>
+    </message>
+    <message>
+        <source>SteamCMD has been launched in a new terminal window.
+Please follow the prompts to complete the download.</source>
+        <translation>SteamCMD が新しいターミナル ウィンドウで起動されました。
+プロンプトに従ってダウンロードを完了してください。</translation>
+    </message>
+    <message>
+        <source>Failed to start download: {e}</source>
+        <translation>ダウンロードの開始に失敗しました: {e}</translation>
+    </message>
+</context>
+<context>
     <name>DuplicateModsPanel</name>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
@@ -549,6 +626,62 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Selected</source>
         <translation>選択したものを更新します</translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation>アンインストール</translation>
+    </message>
+    <message>
+        <source>Delete mod completely</source>
+        <translation>MODを完全に削除する</translation>
+    </message>
+    <message>
+        <source>Convert to plain git mod</source>
+        <translation>プレーン git mod に変換する</translation>
+    </message>
+    <message>
+        <source>Delete mods</source>
+        <translation>MODの削除</translation>
+    </message>
+    <message>
+        <source>Delete the following mods completely? This cannot be undone.
+
+{mod_list}</source>
+        <translation>以下のMODを完全に削除しますか？これを元に戻すことはできません。
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Deleted {n} mod(s).</source>
+        <translation>{n} 個の MOD を削除しました。</translation>
+    </message>
+    <message>
+        <source>File deletion failed for: {names}</source>
+        <translation>ファイルの削除に失敗しました: {names}</translation>
+    </message>
+    <message>
+        <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
+
+{mod_list}</source>
+        <translation>次の MOD を git tracking に変換しますか?これらは、GitHub リリースではなく Git Mod Updater 経由で更新されます。
+
+{mod_list}</translation>
+    </message>
+    <message>
+        <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
+        <translation>リリースベースの MOD は HEAD から再クローンされ、現在のファイルを置き換えます。</translation>
+    </message>
+    <message>
+        <source>Convert to git tracking</source>
+        <translation>git トラッキングに変換する</translation>
+    </message>
+    <message>
+        <source>Converted {n} mod(s) to git tracking.</source>
+        <translation>{n} 個の mod を git tracking に変換しました。</translation>
+    </message>
+    <message>
+        <source>Failed: {names}</source>
+        <translation>失敗しました: {名前}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1489,6 +1622,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>GitHub の自動更新が完了しました</translation>
     </message>
     <message>
+        <source>No Git Mods Found</source>
+        <translation>Git Mod が見つかりません</translation>
+    </message>
+    <message>
+        <source>No git-based mods were found in your local mods folder.</source>
+        <translation>ローカルの MOD フォルダーに Git ベースの MOD が見つかりませんでした。</translation>
+    </message>
+    <message>
         <source>No Repositories</source>
         <translation>リポジトリがありません</translation>
     </message>
@@ -2348,6 +2489,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>ダウンロード</translation>
     </message>
     <message>
+        <source>Download RimWorld Version</source>
+        <translation>リムワールドのバージョンをダウンロード</translation>
+    </message>
+    <message>
         <source>Add Git Mod</source>
         <translation>Gitモッドを追加</translation>
     </message>
@@ -2362,6 +2507,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Update Workshop Mods</source>
         <translation>クリエイティブワークショップを更新</translation>
+    </message>
+    <message>
+        <source>Update Git Mods</source>
+        <translation>Git Mod を更新する</translation>
     </message>
     <message>
         <source>GitHub Mods</source>
@@ -3218,6 +3367,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Tags</source>
         <translation>タグ</translation>
+    </message>
+    <message>
+        <source>Show tags in mod list</source>
+        <translation>MODリストにタグを表示</translation>
     </message>
     <message>
         <source>0 updated</source>
@@ -4243,6 +4396,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Topologically</source>
         <translation>トポロジカル</translation>
+    </message>
+    <message>
+        <source>RimWorld Versions Database</source>
+        <translation>rimWorld バージョン データベース</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
