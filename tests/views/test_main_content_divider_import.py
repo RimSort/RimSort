@@ -1,20 +1,13 @@
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
 from PySide6.QtCore import QObject
 
-import app.views.dialogue as dialogue
+from app.views import dialogue
 from app.views.main_content_panel import MainContent
-
-
-@pytest.fixture(autouse=True)
-def patch_dialogue(monkeypatch: pytest.MonkeyPatch) -> Mock:
-    mock_dialog = Mock()
-    mock_dialog.return_value = None
-    monkeypatch.setattr(dialogue, "show_dialogue_conditional", mock_dialog)
-    return mock_dialog
 
 
 @pytest.fixture
