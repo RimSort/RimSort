@@ -183,6 +183,7 @@ class TestMenuBarGameFileVerification:
             )
             mock_event_bus.return_value.do_steam_verify_game_files.emit.assert_not_called()
 
+
 class TestDisableUpdaterFlag:
     """Test the --disable-updater command-line flag processing."""
 
