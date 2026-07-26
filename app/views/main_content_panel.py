@@ -188,6 +188,7 @@ class MainContent(QObject):
         EventBus().settings_have_changed.connect(self._on_settings_have_changed)
         EventBus().do_check_for_application_update.connect(self._do_check_for_update)
         EventBus().do_open_mod_list.connect(self._do_import_list_file_xml)
+        EventBus().do_append_mod_list.connect(self._do_append_list_file_xml)
         EventBus().do_import_mod_list_from_rentry.connect(self._do_import_list_rentry)
         EventBus().do_import_mod_list_from_workshop_collection.connect(
             self._do_import_list_workshop_collection
@@ -808,6 +809,8 @@ class MainContent(QObject):
         # If the loop was quit externally (e.g. window close), skip UI cleanup
         if not loading_animation.animation_finished:
             return None
+        if loading_animation.exception:
+            raise loading_animation.exception
         data = loading_animation.data
         # Remove text label if it was passed
         if text and loading_animation_text_label is not None:
@@ -1133,6 +1136,59 @@ class MainContent(QObject):
             ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
             self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+
+            # check if we have duplicate mods, prompt user
+            self.__duplicate_mods_prompt()
+
+            # check if we have missing mods, prompt user
+            self.__missing_mods_prompt()
+        else:
+            logger.info("USER ACTION: pressed cancel, passing")
+
+    def _do_append_list_file_xml(self) -> None:
+        """
+        Open a user-selected XML file. Append new active mods from this file
+        on top of the existing active list, and remove them from the inactive list.
+        """
+        logger.info("Opening file dialog to select input file for appending")
+        file_path = dialogue.show_dialogue_file(
+            mode="open",
+            caption="Append RimWorld mod list",
+            _dir=str(AppInfo().saved_modlists_folder),
+            _filter="RimWorld mod list (*.rml *.rws *.xml)",
+        )
+        logger.info(f"Selected path for appending: {file_path}")
+        if file_path:
+            self.mods_panel.reset_all_filters_and_search("Active")
+            self.mods_panel.reset_all_filters_and_search("Inactive")
+            logger.info(f"Trying to append mods list from XML: {file_path}")
+            (
+                active_mods_uuids,
+                inactive_mods_uuids,
+                new_duplicate_mods,
+                new_missing_mods,
+            ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
+            logger.info("Got new mods according to appended XML")
+
+            current_active = list(self.mods_panel.active_mods_list.paths)
+            current_inactive = list(self.mods_panel.inactive_mods_list.paths)
+
+            active_set = {u for u in current_active if not is_divider_uuid(u)}
+
+            appended_count = 0
+            for u in active_mods_uuids:
+                if u not in active_set and not is_divider_uuid(u):
+                    current_active.append(u)
+                    appended_count += 1
+                    if u in current_inactive:
+                        current_inactive.remove(u)
+
+            logger.info(f"Appended {appended_count} new mods to active list")
+            self._insert_data_into_lists(current_active, current_inactive)
+
+            # Update duplicate/missing states and trigger prompts if any exist
+            self.duplicate_mods = new_duplicate_mods
+            self.missing_mods = new_missing_mods
 
             # check if we have duplicate mods, prompt user
             self.__duplicate_mods_prompt()
@@ -1600,13 +1656,27 @@ class MainContent(QObject):
             )
             return
 
-        success, ret = self.do_threaded_loading_animation(
-            gif_path=str(AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"),
-            target=partial(upload_log_to_privatebin, str(path)),
-            text=self.tr("Uploading {path_name} to RimSort Logs...").format(
-                path_name=path.name
-            ),
-        )
+        try:
+            res = self.do_threaded_loading_animation(
+                gif_path=str(
+                    AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
+                ),
+                target=partial(upload_log_to_privatebin, str(path)),
+                text=self.tr("Uploading {path_name} to RimSort Logs...").format(
+                    path_name=path.name
+                ),
+            )
+            if res is None:
+                return
+            success, ret = res
+        except Exception as e:
+            logger.exception(f"Failed to upload log: {e}")
+            dialogue.show_warning(
+                title=self.tr("Upload failed"),
+                text=self.tr("Failed to upload log file to RimSort Logs."),
+                details=str(e),
+            )
+            return
 
         if success:
             copy_to_clipboard_safely(ret)
@@ -1947,19 +2017,24 @@ class MainContent(QObject):
     def _do_check_for_workshop_updates(self) -> None:
         if not check_internet_connection():
             return
-        result: WorkshopUpdateResult = self.do_threaded_loading_animation(
-            gif_path=str(
-                AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
-            ),
-            target=partial(
-                query_workshop_update_data,
-                mods=self.metadata_controller.mods_metadata,
-                metadata_controller=self.metadata_controller,
-            ),
-            text=self.tr("Checking Steam Workshop mods for updates..."),
-        )
+        try:
+            result: WorkshopUpdateResult = self.do_threaded_loading_animation(
+                gif_path=str(
+                    AppInfo().theme_data_folder / "default-icons" / "steam_api.gif"
+                ),
+                target=partial(
+                    query_workshop_update_data,
+                    mods=self.metadata_controller.mods_metadata,
+                    metadata_controller=self.metadata_controller,
+                ),
+                text=self.tr("Checking Steam Workshop mods for updates..."),
+            )
+        except Exception as e:
+            logger.exception(f"Failed to check for Workshop updates: {e}")
+            self.status_signal.emit(self.tr("Failed to check for Workshop updates"))
+            return
 
-        if result.status == "no_workshop_mods":
+        if not result or result.status == "no_workshop_mods":
             self.status_signal.emit(self.tr("No Workshop mods to check for updates"))
             return
 

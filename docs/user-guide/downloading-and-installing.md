@@ -63,13 +63,13 @@ macOS
 >
 >     xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app
 >
-> If you are for some reason trying to run the `i386` build on Apple silicon, don't enable watchdog when running the build through Rosetta
+> If you are for some reason trying to run the `x86_64` build on Apple silicon, don't enable watchdog when running the build through Rosetta
 
 {: .note }
 
 > todds texture tool does not currently (as of May 2023) support Apple silicon (Mac M1/M2 ARM64 CPU).
 
-- Download the and extract the Darwin/macOS release that matches your CPU architecture (ARM64 for Apple Silicon, i386 for Intel)
+- Download the and extract the Darwin/macOS release that matches your CPU architecture (ARM64 for Apple Silicon, x86_64 for Intel)
 - Use the `xattr` command to circumvent [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web) and whitelist `RimSort.app` and `libsteam_api.dylib`
 - Open the app bundle: `RimSort.app`
 

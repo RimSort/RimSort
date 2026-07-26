@@ -26,6 +26,7 @@ class EventBus(QObject):
 
     # Menu bar signals
     do_open_mod_list = Signal()
+    do_append_mod_list = Signal()
     do_save_mod_list_as = Signal()
     do_import_mod_list_from_rentry = Signal()
     do_import_mod_list_from_workshop_collection = Signal()

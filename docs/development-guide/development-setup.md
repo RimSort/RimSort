@@ -116,7 +116,7 @@ Ensure that build requirements are installed by running `uv sync --group build`.
 
 See their respective sections for information on how to set them up. Alternatively, use `distribute.py` to do so automatically. By default, the script will build RimSort, but it can be configured to enable or disable various steps including building. See `uv run python distribute.py --help` for more info.
 
-- If you are using a Mac with an Apple M1/M2 CPU, the following instructions also work for i386, if you would rather use MacPorts over Homebrew or another method. Consider the following:
+- If you are using a Mac with an Apple M1/M2 CPU, the following instructions also work for x86_64, if you would rather use MacPorts over Homebrew or another method. Consider the following:
   - `sudo port select --set pip3 pip39`
   - `sudo port select --set python python9`
 

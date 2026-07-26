@@ -41,7 +41,7 @@
     - from_filenames:
         relative_path: "../libs"
         prefixes:
-          - "*arm"
+          - "*arm64"
         suffixes:
           - "dylib"
       dest_path: "."
@@ -49,7 +49,7 @@
     - from_filenames:
         relative_path: "../libs"
         prefixes:
-          - "*i386"
+          - "*x86_64"
         suffixes:
           - "dylib"
       dest_path: "."

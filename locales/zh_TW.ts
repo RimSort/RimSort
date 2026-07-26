@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_TW">
 <context>
@@ -28,7 +28,7 @@
         <translation>所有可搜索列</translation>
     </message>
     <message>
-        <source>Searches selected column or all searchable columns if set to 'All'</source>
+        <source>Searches selected column or all searchable columns if set to &apos;All&apos;</source>
         <translation>搜索選定列或所有可搜索列（如果設置為“全部”）</translation>
     </message>
 </context>
@@ -102,7 +102,7 @@
         <translation>導入不完整</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
         <translation>由於缺少套件 ID，無法匯入 {len(failed_mods)} mod。如果您沒有下載所有模組，則可能會發生這種情況。 &lt;br&gt;&lt;br&gt;請先嘗試訂閱該合集</translation>
     </message>
 </context>
@@ -145,7 +145,7 @@
         <translation>- 這將產生 2 個 Steam DB 之間的依賴性數據的準確比較。 &lt;br&gt;產生差異報告。系統會依序提示您輸入這些路徑：&lt;br&gt;&lt;br&gt; 1) 選擇輸入 A&lt;br&gt; 2) 選擇輸入 B</translation>
     </message>
     <message>
-        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
+        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
         <translation>- 這將有效地遞歸地以 B 的鍵/值覆蓋結果資料庫中的 A 的鍵/值。 &lt;br&gt;- 異常不會被遞歸更新。相反，它們將被 B 的密鑰完全覆蓋。 &lt;br&gt;- 將出現以下例外：&lt;br&gt;&lt;br&gt; {DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;產生的資料庫 C 將儲存到使用者指定的路徑。系統會依序提示您輸入這些路徑：&lt;br&gt;&lt;br&gt; 1) 選擇輸入 A（要更新的資料庫）&lt;br&gt; 2) 選擇輸入 B（更新來源）&lt;br&gt; 3) 選擇輸出 C（產生的資料庫）</translation>
     </message>
     <message>
@@ -153,7 +153,7 @@
         <translation>Steam DB 比較報告：找到 {count} 個</translation>
     </message>
     <message>
-        <source>Click 'Show Details' to see the full report!</source>
+        <source>Click &apos;Show Details&apos; to see the full report!</source>
         <translation>點擊“顯示詳細資訊”查看完整報告！</translation>
     </message>
     <message>
@@ -271,7 +271,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>{error_msg}&lt;br&gt;&lt;br&gt;嘗試使用管理員權限執行 RimSort 或檢查資料夾權限。</translation>
     </message>
     <message>
-        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
         <translation>{error_msg}&lt;br&gt;&lt;br&gt;嘗試小批量搜尋或對非常大的檔案使用「串流搜尋」方法。</translation>
     </message>
     <message>
@@ -283,7 +283,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>文件訪問錯誤</translation>
     </message>
     <message>
-        <source>RimSort doesn't have permission to access some files.</source>
+        <source>RimSort doesn&apos;t have permission to access some files.</source>
         <translation>RimSort 沒有權限訪問部分文件。</translation>
     </message>
     <message>
@@ -372,14 +372,14 @@ The following table displays duplicate mods grouped by package ID. Select which 
     <message>
         <source>Enable to use regular expressions in search
 Examples:
-- 'def.*\(' to find function definitions
-- '&lt;[^&gt;]+&gt;' to find XML tags
-- '\d+\.\d+(\.\d+)?' to find version numbers</source>
+- &apos;def.*\(&apos; to find function definitions
+- &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
+- &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</source>
         <translation>使用正則表達式（模式搜索）
 示例：
-- 'def.*\(' 查找函數定義
-- '&lt;[^&gt;]+&gt;' 查找 XML 標籤
-- '\d+\.\d+(\.\d+)?' 查找版本號</translation>
+- &apos;def.*\(&apos; 查找函數定義
+- &apos;&lt;[^&gt;]+&gt;&apos; 查找 XML 標籤
+- &apos;\d+\.\d+(\.\d+)?&apos; 查找版本號</translation>
     </message>
     <message>
         <source>XML files only</source>
@@ -665,7 +665,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>提供實例名稱</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
+        <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
         <translation>輸入備份實例的唯一名稱，該名稱不是“{name}”</translation>
     </message>
     <message>
@@ -729,7 +729,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>無效路徑：{path}</translation>
     </message>
     <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
+        <source>Couldn&apos;t restore steamcmd symlink/junction</source>
         <translation>無法恢復 steamcmd 符號鏈結/連接</translation>
     </message>
     <message>
@@ -761,7 +761,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>您想對配置好的 Workshop mods 資料夾做什麼？</translation>
     </message>
     <message>
-        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
         <translation>創意工坊資料夾：&lt;br&gt;&lt;br&gt;選項 1：轉換為 SteamCMD&lt;br&gt;RimSort 會將所有創意工坊模組複製到新實例的本機模組資料夾，將它們轉換為您可以在新實例中管理的 SteamCMD 模組。此實例的創意工坊資料夾將被忽略，以防止重複模組。 &lt;br&gt;&lt;br&gt;選項 2：保留創意工坊資料夾&lt;br&gt;新實例將使用與原始實例相同的創意工坊資料夾。如果需要，您可以稍後在設定中變更此設定。 &lt;br&gt;&lt;br&gt;您想如何繼續？ {folder}</translation>
     </message>
     <message>
@@ -793,7 +793,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>無法克隆實例。</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{name}' or empty.</source>
+        <source>Please enter a valid, unique instance name. It cannot be &apos;{name}&apos; or empty.</source>
         <translation>請輸入有效、唯一的實例名稱。它不能是“{name}”或為空。</translation>
     </message>
     <message>
@@ -935,7 +935,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>複製啟用模組列表報告到剪切板...</translation>
     </message>
     <message>
-        <source>Click "Show Details" to see the full report!</source>
+        <source>Click &quot;Show Details&quot; to see the full report!</source>
         <translation>點擊【顯示詳細資訊】以查看完整報告！</translation>
     </message>
     <message>
@@ -1005,6 +1005,14 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>File: {path}</source>
         <translation>文件：{path}</translation>
+    </message>
+    <message>
+        <source>Upload failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to upload log file to RimSort Logs.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Uploaded file</source>
@@ -1091,6 +1099,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>正在檢查 Steam 工作坊模組的更新...</translation>
     </message>
     <message>
+        <source>Failed to check for Workshop updates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>No Workshop mods to check for updates</source>
         <translation>沒有創意工坊模組來檢查更新</translation>
     </message>
@@ -1147,8 +1159,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>找不到 SteamCMD 的可執行程序</translation>
     </message>
     <message>
-        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
-        <translation>請設置一個現有的 SteamCMD 前綴，或使用 "Setup SteamCMD" 設置一個新的前綴。</translation>
+        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
+        <translation>請設置一個現有的 SteamCMD 前綴，或使用 &quot;Setup SteamCMD&quot; 設置一個新的前綴。</translation>
     </message>
     <message>
         <source>Processing Steam subscription action(s) via Steamworks API...</source>
@@ -1259,11 +1271,11 @@ Manage mods installed from GitHub releases.</source>
         <translation>請在“設置”→“Steam”中啟用“Steam 客戶端集成”才能使用此功能。</translation>
     </message>
     <message>
-        <source>Please configure "Use This Instead" database in settings.</source>
+        <source>Please configure &quot;Use This Instead&quot; database in settings.</source>
         <translation>請在設置中配置“使用此替代”數據庫。</translation>
     </message>
     <message>
-        <source>No suggestions were found in the "Use This Instead" database.</source>
+        <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
         <translation>在『改用此項』資料庫中沒有找到任何建議。</translation>
     </message>
     <message>
@@ -1283,7 +1295,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>這可能是由於格式錯誤的設定或版本或不同模組管理器之間的遷移不當造成的。 &lt;br&gt;&lt;br&gt;嘗試重置您的設定、選擇不同的排序演算法或刪除您的設定檔。 &lt;br&gt;&lt;br&gt;如果問題仍然存在，請將其報告給開發人員。</translation>
     </message>
     <message>
-        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
+        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
         <translation>下載完成後，您需要重新進行 Rentry 匯入。 &lt;br&gt;&lt;br&gt;如果下載完成後缺少模組，它們將顯示在缺少模組面板中。 &lt;br&gt;&lt;br&gt;如果 RimSort 仍然無法下載某些模組，這是因為 Rentry 連結和 Steam 資料庫中都沒有模組資料。</translation>
     </message>
     <message>
@@ -1751,7 +1763,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>該存儲庫託管在 GitHub 上。您可以將其安裝為 GitHub Mod 來追蹤發布和管理版本，或直接將其複製為標準 git mod。</translation>
     </message>
     <message>
-        <source>No releases found for this repository. You can install it as a GitHub Mod tracking the latest commit (you'll be notified if releases are published in the future), or clone it directly as a standard git mod.</source>
+        <source>No releases found for this repository. You can install it as a GitHub Mod tracking the latest commit (you&apos;ll be notified if releases are published in the future), or clone it directly as a standard git mod.</source>
         <translation>未找到此儲存庫的版本。您可以將其安裝為追蹤最新提交的 GitHub Mod（如果將來發布版本，您將收到通知），或直接將其複製為標準 git mod。</translation>
     </message>
     <message>
@@ -2111,7 +2123,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>上傳社區規則資料庫</translation>
     </message>
     <message>
-        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
+        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won&apos;t appear until you refresh. Refresh now?</source>
         <translation>{count} 個 mod(s) 已自動更新。 &lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;刷新後才會顯示更新的版本。現在刷新？</translation>
     </message>
     <message>
@@ -2131,7 +2143,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>配置的儲存庫無法克隆/初始化！ &lt;br&gt;&lt;br&gt;您是否已連線到 Internet？ &lt;br&gt;&lt;br&gt;您配置的儲存庫是否有效？</translation>
     </message>
     <message>
-        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
+        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
         <translation>請在設定中重新配置儲存庫！ &lt;br&gt;有效的儲存庫是不為空且前綴為「http://」或「https://」的儲存庫 URL</translation>
     </message>
     <message>
@@ -2269,6 +2281,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>從 Rentry.co 導入</translation>
     </message>
     <message>
+        <source>Append Mod List…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>From Workshop collection</source>
         <translation>從 工作坊合集 導入</translation>
     </message>
@@ -2373,7 +2389,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>實例</translation>
     </message>
     <message>
-        <source>Current: "Default"</source>
+        <source>Current: &quot;Default&quot;</source>
         <translation>目前：預設</translation>
     </message>
     <message>
@@ -2565,15 +2581,15 @@ Please contact the mod authors to add these properties to their mods.</source>
         <source>
 User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
 
-Rimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. 
+Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
 
 Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
         <translation>
 已查詢用戶配置的 SteamDB 資料庫。下表顯示了可以從 Steam 下載的模組。
 
-Steam Workshop 上的 RimWorld 模組如果共享相同的 包名，則為 '變體'。在下載之前，請注意這一點。
+Steam Workshop 上的 RimWorld 模組如果共享相同的 包名，則為 &apos;變體&apos;。在下載之前，請注意這一點。
 
-請選擇你在下表中偏好的 模組變體。你也可以在 Steam 或網頁瀏覽器中開啟每個變體進行驗證。"</translation>
+請選擇你在下表中偏好的 模組變體。你也可以在 Steam 或網頁瀏覽器中開啟每個變體進行驗證。&quot;</translation>
     </message>
 </context>
 <context>
@@ -2687,8 +2703,8 @@ Steam Workshop 上的 RimWorld 模組如果共享相同的 包名，則為 '變�
         <translation>無法刪除{result.failed_count} mod（s）。檢查日誌以獲取詳細資訊。</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>發生在帶有錯誤代碼{error_code}的。 {e.strerror or 'Unknown error'} {e.filename or mod_path}</translation>
+        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>發生在帶有錯誤代碼{error_code}的。 {e.strerror or &apos;Unknown error&apos;} {e.filename or mod_path}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3149,7 +3165,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
-Incompatible (per other mod's rules):</source>
+Incompatible (per other mod&apos;s rules):</source>
         <translation>不相容（根據其他模組的規則）：</translation>
     </message>
     <message>
@@ -3319,7 +3335,7 @@ Alternative Dependencies:</source>
         <translation>點擊僅顯示有錯誤的模組</translation>
     </message>
     <message>
-        <source>Check "Use This Instead" Database</source>
+        <source>Check &quot;Use This Instead&quot; Database</source>
         <translation>檢查『改用此項』資料庫</translation>
     </message>
     <message>
@@ -3509,7 +3525,7 @@ Alternative Dependencies:</source>
         <translation>加載遊戲日誌</translation>
     </message>
     <message>
-        <source>Loads the game's Player.log file.</source>
+        <source>Loads the game&apos;s Player.log file.</source>
         <translation>加載遊戲的 Player.log 文件。</translation>
     </message>
     <message>
@@ -3898,8 +3914,8 @@ Alternative Dependencies:</source>
                       這對你自己的記錄以及其他人都有用。</translation>
     </message>
     <message>
-        <source>Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed.</source>
-        <translation>從模組 About.xml 的規則不能被修改。只有 'Community Rules' 和 'User Rules' 是被允許的。</translation>
+        <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
+        <translation>從模組 About.xml 的規則不能被修改。只有 &apos;Community Rules&apos; 和 &apos;User Rules&apos; 是被允許的。</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
@@ -4021,7 +4037,7 @@ Alternative Dependencies:</source>
         <translation>SteamCMD報告了登錄誤差。請確保您連接到Internet，並且防火牆不會阻止SteamCMD。</translation>
     </message>
     <message>
-        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click 'Show Details' to see a list of mods that failed.</source>
+        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click &apos;Show Details&apos; to see a list of mods that failed.</source>
         <translation>SteamCMD 無法下載模組！您想重試下載失敗的模組嗎？ &lt;br&gt;&lt;br&gt;按一下「顯示詳細資料」以查看失敗的模組清單。</translation>
     </message>
 </context>
@@ -4043,8 +4059,8 @@ Alternative Dependencies:</source>
         <translation>設定載入錯誤</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>如果繼續，損壞檔案的備份將會儲存到 {AppInfo().settings_backups_folder / 'settings.json.corrupted'}。</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}.</source>
+        <translation>如果繼續，損壞檔案的備份將會儲存到 {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}。</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4059,7 +4075,7 @@ Alternative Dependencies:</source>
         <translation>Settings Recovery Failed</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring &quot;settings.json.backup&quot; or &quot;settings.json.backup.old&quot; from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
         <translation>RimSort 无法从备份恢复您的设置。您可以透過將「settings.json.backup」或「settings.json.backup.old」從 {AppInfo().settings_backups_folder} 還原到 {self._settings_file} 來手動恢復您的設定。</translation>
     </message>
 </context>
@@ -4086,7 +4102,7 @@ Alternative Dependencies:</source>
         <translation>所選的設定資料夾不包含 ModsConfig.xml。 &lt;br&gt;&lt;br&gt;請選擇有效的設定資料夾。 &lt;br&gt;&lt;br&gt;如果您之前未啟動過遊戲，&lt;br&gt;&lt;br&gt;請至少啟動遊戲一次以產生必要的設定檔。</translation>
     </message>
     <message>
-        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a 'Mods' subfolder within the game folder.</source>
+        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a &apos;Mods&apos; subfolder within the game folder.</source>
         <translation>所選的本機 mods 資料夾位置不是有效的目錄。 &lt;br&gt;&lt;br&gt;請為本機 mods 選擇一個有效的資料夾。 &lt;br&gt;&lt;br&gt;本地 mods 資料夾應該是遊戲資料夾內的「Mods」子資料夾。</translation>
     </message>
     <message>
@@ -4229,11 +4245,11 @@ Alternative Dependencies:</source>
         <translation>Steam 工作坊資料庫</translation>
     </message>
     <message>
-        <source>"No Version Warning" Database</source>
-        <translation>''無版本警告'' 資料庫</translation>
+        <source>&quot;No Version Warning&quot; Database</source>
+        <translation>&apos;&apos;無版本警告&apos;&apos; 資料庫</translation>
     </message>
     <message>
-        <source>"Use This Instead" Database</source>
+        <source>&quot;Use This Instead&quot; Database</source>
         <translation>『改用此項』資料庫</translation>
     </message>
     <message>
@@ -4321,7 +4337,7 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>顯示每個模組的啟動載入時間</translation>
     </message>
     <message>
-        <source>Shows each mod's game startup time, measured by the 'Loading Progress' mod. Requires that mod with its 'Track startup loading impact' setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
+        <source>Shows each mod&apos;s game startup time, measured by the &apos;Loading Progress&apos; mod. Requires that mod with its &apos;Track startup loading impact&apos; setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
         <translation>顯示每個模組的遊戲啟動時間，由「載入進度」模組測量。需要該 mod 啟用「追蹤啟動載入影響」設置，並儲存啟動影響報告（RimWorld 保存資料資料夾中的 StartupImpactData.xml）。</translation>
     </message>
     <message>
@@ -4341,7 +4357,7 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>從本地安裝的模組獲取 PublishedFileIDs</translation>
     </message>
     <message>
-        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods' About.xml files.</source>
+        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
         <translation>你希望更新的模組必須已安裝，因為初始資料庫是根據模組的 About.xml 文件中的數據構建的。</translation>
     </message>
     <message>
@@ -4349,7 +4365,7 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>從 Steam 工作坊獲取 PublishedFileIDs</translation>
     </message>
     <message>
-        <source>Mods to be updated don't have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
+        <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
         <translation>需要更新的模組不必已安裝，因為初始資料庫是通過抓取 Steam 工作坊構建的。</translation>
     </message>
     <message>
@@ -4452,7 +4468,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
-        <translation>"啟用主題/樣式表而非系統預設主題"</translation>
+        <translation>&quot;啟用主題/樣式表而非系統預設主題&quot;</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
@@ -4613,7 +4629,7 @@ This may potentially prevent some issues with downloading mods such as download 
 
  NOTE: wrapper commands will be ignored on macOS
 
- NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+ NOTE: These arguments are ignored if &apos;Launch game via Steam protocol&apos; is enabled</source>
         <translation>使用 Steam 風格的語法和可選的 %command% 佔位符輸入啟動選項：
 
  基本示例（僅限遊戲參數）：
@@ -4653,22 +4669,22 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>To add your own theme / stylesheet 
 
-1) Create a new-folder in 'themes' folder in your 'RimSort' config folder 
-2) Using the default 'RimPy' theme copy it to the folder you created 
-3) Edit the copied 'style.qss' as per your imagination 
-4) Start 'RimSort' and select your theme from dropdown 
-5) Click 'ok' to save settings and apply the selected theme 
+1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
+2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
+3) Edit the copied &apos;style.qss&apos; as per your imagination 
+4) Start &apos;RimSort&apos; and select your theme from dropdown 
+5) Click &apos;ok&apos; to save settings and apply the selected theme 
 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
         <translation>要添加自定義主題/樣式表
 
-1) 在你的'RimSort'配置資料夾中的'themes'資料夾內新建一個資料夾
-2) 將預設的'RimPy'主題複製到你創建的資料夾中
-3) 根據你的創意編輯複製的'style.qss'文件
-4) 啟動'RimSort'並從下拉菜單中選擇你的主題
-5) 點擊'確定'保存設置並應用所選主題 
+1) 在你的&apos;RimSort&apos;配置資料夾中的&apos;themes&apos;資料夾內新建一個資料夾
+2) 將預設的&apos;RimPy&apos;主題複製到你創建的資料夾中
+3) 根據你的創意編輯複製的&apos;style.qss&apos;文件
+4) 啟動&apos;RimSort&apos;並從下拉菜單中選擇你的主題
+5) 點擊&apos;確定&apos;保存設置並應用所選主題 
 
 注意
 資料夾名稱將用作主題名稱，任何無效主題將被忽略
@@ -4731,10 +4747,10 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>使用替代packageids作為令人滿意的依賴項</translation>
     </message>
     <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
-E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
+E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
         <translation>如果啟用了，則在about.xml中的替代packageIdS條目可以滿足MOD的依賴項時，當丟失主要依賴關係時。
-例如，'oels。</translation>
+例如，&apos;oels。</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -4833,7 +4849,7 @@ Please choose one of the following options to proceed.</source>
         <translation>你想如何添加該合集？</translation>
     </message>
     <message>
-        <source>You can choose to add all mods from the collection or only the ones you don't have installed.</source>
+        <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
         <translation>你可以選擇添加合集中的所有模組，或者只添加你沒有安裝的模組。</translation>
     </message>
     <message>
@@ -4920,7 +4936,7 @@ Please choose one of the following options to proceed.</source>
         <translation>新符號連結：&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
-        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
+        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
         <translation>符號鏈接目標路徑已經存在。你想刪除現有的目標並創建一個新的符號鏈接嗎？</translation>
     </message>
     <message>
@@ -4936,7 +4952,7 @@ Please choose one of the following options to proceed.</source>
         <translation>&amp;是</translation>
     </message>
     <message>
-        <source>&amp;Don't Ask Again</source>
+        <source>&amp;Don&apos;t Ask Again</source>
         <translation>&amp;不再詢問</translation>
     </message>
 </context>
@@ -5005,8 +5021,8 @@ Please choose one of the following options to proceed.</source>
         <translation>主題路徑錯誤</translation>
     </message>
     <message>
-        <source>Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.</source>
-        <translation>主題 '{theme_name}' 的樣式表路徑不存在，重置為預設主題 '{default_theme}'。</translation>
+        <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
+        <translation>主題 &apos;{theme_name}&apos; 的樣式表路徑不存在，重置為預設主題 &apos;{default_theme}&apos;。</translation>
     </message>
     <message>
         <source>Theme Error</source>
@@ -5103,11 +5119,11 @@ Please reach out to us for support at: {support_url}</source>
         <translation>所選檔案不是有效的模組清單檔案。 &lt;br&gt;詳細資訊：{e}</translation>
     </message>
     <message>
-        <source>Successfully deleted Steam's downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
+        <source>Successfully deleted Steam&apos;s downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
         <translation>已成功刪除 Steam 的下載資料夾。 &lt;br&gt;重新啟動 Steam 以使變更生效。</translation>
     </message>
     <message>
-        <source>Could not delete Steam's downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
+        <source>Could not delete Steam&apos;s downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
         <translation>無法刪除 Steam 的下載資料夾。 &lt;br&gt;請手動移除：Steam/steamapps/downloading&lt;br&gt;詳細資料：{e}</translation>
     </message>
     <message>
@@ -5183,7 +5199,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>刪除了 Steam mods 目錄中的所有檔案。 &lt;br&gt;&lt;br&gt; 嘗試重新啟動 Steam 以觸發訂閱 mods 的自動重新下載。</translation>
     </message>
     <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don't download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don&apos;t download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
         <translation>模組已被刪除。請重新啟動 Steam 以觸發自動重新下載已訂閱的模組。 &lt;br&gt;&lt;br&gt;如果模組未自動下載，請嘗試：&lt;br&gt;1.重新啟動 Steam&lt;br&gt;2。驗證 Steam 中的遊戲檔案&lt;br&gt;3。造訪每個模組的創意工坊頁面</translation>
     </message>
     <message>
@@ -5235,7 +5251,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>清除緩存</translation>
     </message>
     <message>
-        <source>Steam's downloading folder is already empty.</source>
+        <source>Steam&apos;s downloading folder is already empty.</source>
         <translation>Steam 的下載資料夾已經是空的。</translation>
     </message>
     <message>
@@ -5294,7 +5310,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>遊戲文件恢復</translation>
     </message>
     <message>
-        <source>If you're experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
+        <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
         <translation>如果你在遊戲中遇到問題，可以嘗試以下恢復選項，Steam 將在下次啟動時自動重新下載已刪除的文件。</translation>
     </message>
     <message>
@@ -5390,7 +5406,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>Steam 工具</translation>
     </message>
     <message>
-        <source>Delete Steam's downloading folder to fix download issues</source>
+        <source>Delete Steam&apos;s downloading folder to fix download issues</source>
         <translation>刪除 Steam 下載資料夾以修復下載問題</translation>
     </message>
     <message>
@@ -5488,7 +5504,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>已有可替代的模組可用於工作坊模組！</translation>
     </message>
     <message>
-        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
+        <source>The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database, grouped by replacement mod.</source>
         <translation>下表顯示了根據“使用此替代”數據庫提供的建議替換的創意工坊模組，並按替換模組分組。</translation>
     </message>
     <message>

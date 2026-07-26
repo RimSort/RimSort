@@ -64,13 +64,13 @@ macOS
 >
 >     xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app
 >
-> 如果因某些原因尝试在 Apple Silicon 芯片上运行 `i386` 架构版本，使用 Rosetta 运行时应禁用看门狗功能。
+> 如果因某些原因尝试在 Apple Silicon 芯片上运行 `x86_64` 架构版本，使用 Rosetta 运行时应禁用看门狗功能。
 
 {: .note }
 
 > 截至 2023 年 5 月，todds 纹理工具目前不支持 Apple Silicon 芯片（Mac M1/M2 ARM64 CPU）。
 
-- 下载并解压与你的 CPU 架构匹配的 Darwin/macOS 版本（Apple Silicon 选择 ARM64，Intel 选择 i386）
+- 下载并解压与你的 CPU 架构匹配的 Darwin/macOS 版本（Apple Silicon 选择 ARM64，Intel 选择 x86_64）
 - 使用 `xattr` 命令绕过 [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)，将 `RimSort.app` 和 `libsteam_api.dylib` 加入白名单
 - 打开应用：`RimSort.app`
 

@@ -1002,6 +1002,14 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Upload failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to upload log file to RimSort Logs.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Uploaded file</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1083,6 +1091,10 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Checking Steam Workshop mods for updates...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to check for Workshop updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2227,6 +2239,10 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Open Mod List…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Append Mod List…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
