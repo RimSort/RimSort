@@ -122,6 +122,54 @@ class TestMenuBarControllerWithDisabledUpdater:
             assert controller is not None
 
 
+class TestMenuBarGameFileVerification:
+    """Test confirmation before verifying game files from the menu bar."""
+
+    @pytest.mark.parametrize(
+        ("dialog_result", "should_emit"),
+        [
+            (True, True),
+            (False, False),
+        ],
+        ids=["confirmed_emits_event", "cancelled_does_not_emit_event"],
+    )
+    def test_verify_game_files_confirmation_flow(
+        self,
+        menu_bar_instance: MenuBar,
+        mock_settings_controller: MagicMock,
+        dialog_result: bool,
+        should_emit: bool,
+    ) -> None:
+        """Verify confirm and cancel behavior for menu-bar game-file verification."""
+        with (
+            patch("app.controllers.menu_bar_controller.EventBus") as mock_event_bus,
+            patch(
+                "app.controllers.menu_bar_controller.show_dialogue_conditional",
+                return_value=dialog_result,
+            ) as mock_dialog,
+        ):
+            controller = MenuBarController(
+                menu_bar_instance, mock_settings_controller.settings, lambda: None
+            )
+
+            menu_bar_instance.steam_verify_game_files_action.trigger()
+
+            mock_dialog.assert_called_once_with(
+                title=controller.tr("Verify Game Files"),
+                text=controller.tr(
+                    "Are you sure you want to verify RimWorld's game files through Steam?"
+                    "<br><br>This process cannot be canceled once it has started."
+                ),
+                icon="warning",
+            )
+
+            emit_mock = mock_event_bus.return_value.do_steam_verify_game_files.emit
+            if should_emit:
+                emit_mock.assert_called_once_with()
+            else:
+                emit_mock.assert_not_called()
+
+
 class TestDisableUpdaterFlag:
     """Test the --disable-updater command-line flag processing."""
 
