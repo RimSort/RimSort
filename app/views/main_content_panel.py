@@ -1132,6 +1132,11 @@ class MainContent(QObject):
                 self.missing_mods,
             ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
             logger.info("Got new mods according to imported XML")
+            # Normal RimWorld XML mod lists only contain package IDs, not RimSort UI
+            # divider metadata. Clear persisted divider state so dividers from the
+            # previously loaded list are not reinserted at stale numeric positions.
+            self.settings.active_mods_dividers = []
+            self.settings.save()
             self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
 
             # check if we have duplicate mods, prompt user
