@@ -2302,6 +2302,9 @@ class UpdateManager(QObject):
 
         # Try primary method first (direct bash for Linux, osascript for macOS)
         try:
+            if self._system == "Linux" and needs_elevation:
+                raise Exception("sudo requires a terminal emulator on Linux")
+
             logger.debug(f"Attempting primary launch method on {self._system}")
             p = subprocess.Popen(
                 args_repr,
