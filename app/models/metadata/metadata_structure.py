@@ -387,8 +387,9 @@ class ListedMod(BaseMod):
                     f"PublishedFileId.txt at {expected_path} contains non-numeric value: {content!r}"
                 )
                 return None
-            if content:
+            if int(content) > 0:
                 return content
+            return None
 
         if self.mod_folder is not None and self.mod_folder.isnumeric():
             candidate = int(self.mod_folder)

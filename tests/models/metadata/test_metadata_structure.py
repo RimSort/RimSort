@@ -280,6 +280,15 @@ class TestPublishedFileId:
         mod.mod_path = tmp_path
         assert mod.published_file_id is None
 
+    def test_zero_id_returns_none(self, tmp_path: Path) -> None:
+        """A zero placeholder is not a valid Steam Workshop ID."""
+        about = tmp_path / "About"
+        about.mkdir()
+        (about / "PublishedFileId.txt").write_text("0")
+        mod = ListedMod()
+        mod.mod_path = tmp_path
+        assert mod.published_file_id is None
+
     def test_bom_handled(self, tmp_path: Path) -> None:
         """UTF-8 BOM is stripped by utf-8-sig encoding."""
         about = tmp_path / "About"
