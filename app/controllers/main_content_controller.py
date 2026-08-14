@@ -296,7 +296,7 @@ class MainContentController(QObject):
                 "Refresh now?"
             ).format(count=len(succeeded), summary="<br>".join(summary_parts)),
         )
-        if refresh_now:
+        if refresh_now == QMessageBox.StandardButton.Yes:
             EventBus().do_refresh_mods_lists.emit()
 
     def _connect_signals(self) -> None:
