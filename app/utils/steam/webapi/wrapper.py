@@ -894,7 +894,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     total = len(publishedfileids)
     items_processed = 0
 
-    for chunk in list(chunks(_list=publishedfileids, limit=5000)):
+    for chunk in list(chunks(_list=publishedfileids, limit=300)):
         chunk_size = len(chunk)
         items_processed += chunk_size
 
