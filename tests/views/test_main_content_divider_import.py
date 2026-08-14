@@ -90,8 +90,14 @@ def test_appending_xml_mod_list_appends_only_new_mods(
     )
 
     # Set initial lists
-    main_content.mods_panel.active_mods_list.paths = ["existing.mod.a", "existing.mod.b"]
-    main_content.mods_panel.inactive_mods_list.paths = ["appended.mod.c", "inactive.mod.d"]
+    main_content.mods_panel.active_mods_list.paths = [
+        "existing.mod.a",
+        "existing.mod.b",
+    ]
+    main_content.mods_panel.inactive_mods_list.paths = [
+        "appended.mod.c",
+        "inactive.mod.d",
+    ]
 
     # Mock get_mods_from_list output: active has a duplicate (a), a moved mod (c), and a new mod (e)
     mock_metadata_controller.get_mods_from_list.return_value = (
@@ -103,9 +109,7 @@ def test_appending_xml_mod_list_appends_only_new_mods(
 
     main_content._do_append_list_file_xml()
 
-    # The insert method is mocked in the main_content fixture, let's verify its arguments
-    main_content._insert_data_into_lists.assert_called_once_with(
+    main_content._insert_data_into_lists.assert_called_once_with(  # type: ignore[attr-defined]
         ["existing.mod.a", "existing.mod.b", "appended.mod.c", "new.mod.e"],
         ["inactive.mod.d"],
     )
-
