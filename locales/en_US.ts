@@ -174,6 +174,82 @@
     </message>
 </context>
 <context>
+    <name>DownloadRimWorldDialog</name>
+    <message>
+        <source>Download RimWorld Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Destination:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Username</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam Username:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select Destination Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please select a version.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please select a destination folder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please enter your Steam username.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not determine depot IDs for this platform.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD is not set up. Please set it up in the settings first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download Started</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD has been launched in a new terminal window.
+Please follow the prompts to complete the download.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to start download: {e}</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DuplicateModsPanel</name>
     <message>
         <source>RimSort - Duplicate Mods Found</source>
@@ -544,6 +620,58 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Update Selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uninstall</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete mod completely</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Convert to plain git mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete the following mods completely? This cannot be undone.
+
+{mod_list}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleted {n} mod(s).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File deletion failed for: {names}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
+
+{mod_list}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Convert to git tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Converted {n} mod(s) to git tracking.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed: {names}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1497,6 +1625,14 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>No Git Mods Found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No git-based mods were found in your local mods folder.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>No Repositories</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2358,6 +2494,10 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Download RimWorld Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Add Git Mod</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2371,6 +2511,10 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Update Workshop Mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update Git Mods</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2458,6 +2602,14 @@ Manage mods installed from GitHub releases.</source>
     <name>MenuBarController</name>
     <message>
         <source>Current: {current_instance}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3211,6 +3363,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show tags in mod list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4236,6 +4392,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Topologically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimWorld Versions Database</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

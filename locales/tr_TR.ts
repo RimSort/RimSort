@@ -670,7 +670,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
-        <translation>Sürüm tabanlı modlar, mevcut dosyaların yerine HEAD'den yeniden kopyalanacak.</translation>
+        <translation>Sürüm tabanlı modlar, mevcut dosyaların yerine HEAD&apos;den yeniden kopyalanacak.</translation>
     </message>
     <message>
         <source>Convert to git tracking</source>
@@ -2617,6 +2617,14 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Current: {current_instance}</source>
         <translation>Akım: {current_instance}</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

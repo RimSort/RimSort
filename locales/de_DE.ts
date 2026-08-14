@@ -2616,6 +2616,14 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
         <source>Current: {current_instance}</source>
         <translation>Aktuell: {current_instance}</translation>
     </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished">Überprüfen Sie die Spieldateien</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MissingDependenciesDialog</name>

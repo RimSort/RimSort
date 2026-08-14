@@ -193,11 +193,11 @@
     </message>
     <message>
         <source>Steam Username</source>
-        <translation>Nom d'utilisateur Steam</translation>
+        <translation>Nom d&apos;utilisateur Steam</translation>
     </message>
     <message>
         <source>Steam Username:</source>
-        <translation>Nom d'utilisateur Steam :</translation>
+        <translation>Nom d&apos;utilisateur Steam&#xa0;:</translation>
     </message>
     <message>
         <source>Download</source>
@@ -205,7 +205,7 @@
     </message>
     <message>
         <source>Note: An interactive console will open. You will be prompted to enter your password and Steam Guard code if required.</source>
-        <translation>Remarque : Une console interactive s'ouvrira. Vous serez invité à saisir votre mot de passe et votre code Steam Guard si nécessaire.</translation>
+        <translation>Remarque&#xa0;: Une console interactive s&apos;ouvrira. Vous serez invité à saisir votre mot de passe et votre code Steam Guard si nécessaire.</translation>
     </message>
     <message>
         <source>Select Destination Folder</source>
@@ -225,7 +225,7 @@
     </message>
     <message>
         <source>Please enter your Steam username.</source>
-        <translation>Veuillez entrer votre nom d'utilisateur Steam.</translation>
+        <translation>Veuillez entrer votre nom d&apos;utilisateur Steam.</translation>
     </message>
     <message>
         <source>Could not determine depot IDs for this platform.</source>
@@ -233,7 +233,7 @@
     </message>
     <message>
         <source>SteamCMD is not set up. Please set it up in the settings first.</source>
-        <translation>SteamCMD n'est pas configuré. Veuillez d'abord le configurer dans les paramètres.</translation>
+        <translation>SteamCMD n&apos;est pas configuré. Veuillez d&apos;abord le configurer dans les paramètres.</translation>
     </message>
     <message>
         <source>Download Started</source>
@@ -247,7 +247,7 @@ Veuillez suivre les instructions pour terminer le téléchargement.</translation
     </message>
     <message>
         <source>Failed to start download: {e}</source>
-        <translation>Échec du démarrage du téléchargement : {e}</translation>
+        <translation>Échec du démarrage du téléchargement&#xa0;: {e}</translation>
     </message>
 </context>
 <context>
@@ -648,7 +648,7 @@ Manage mods installed from GitHub releases.</source>
         <source>Delete the following mods completely? This cannot be undone.
 
 {mod_list}</source>
-        <translation>Supprimer complètement les mods suivants ? Cela ne peut pas être annulé.
+        <translation>Supprimer complètement les mods suivants&#xa0;? Cela ne peut pas être annulé.
 
 {liste_mod}</translation>
     </message>
@@ -658,13 +658,13 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>File deletion failed for: {names}</source>
-        <translation>Échec de la suppression du fichier pour : {names}</translation>
+        <translation>Échec de la suppression du fichier pour&#xa0;:&#xa0;{names}</translation>
     </message>
     <message>
         <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
 
 {mod_list}</source>
-        <translation>Convertir les mods suivants en suivi git ? Ils seront mis à jour via Git Mod Updater au lieu des versions GitHub.
+        <translation>Convertir les mods suivants en suivi git&#xa0;? Ils seront mis à jour via Git Mod Updater au lieu des versions GitHub.
 
 {liste_mod}</translation>
     </message>
@@ -682,7 +682,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Failed: {names}</source>
-        <translation>Échec : {names}</translation>
+        <translation>Échec&#xa0;:&#xa0;{names}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1640,7 +1640,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>No git-based mods were found in your local mods folder.</source>
-        <translation>Aucun mod basé sur git n'a été trouvé dans votre dossier de mods local.</translation>
+        <translation>Aucun mod basé sur git n&apos;a été trouvé dans votre dossier de mods local.</translation>
     </message>
     <message>
         <source>No Repositories</source>
@@ -2615,6 +2615,14 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Current: {current_instance}</source>
         <translation>Actuel: {current_instance}</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
