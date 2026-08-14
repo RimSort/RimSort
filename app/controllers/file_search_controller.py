@@ -72,10 +72,10 @@ class SearchWorker(QThread):
         self.memory_warning_shown = False
 
         # Set thread priority to lower to avoid UI freezing
-        if not self.isRunning():
+        if self.isRunning():
+            self.setPriority(QThread.Priority.LowPriority)
+        else:
             logger.warning("Thread is not running. Skipping priority setting.")
-            return
-        self.setPriority(QThread.Priority.LowPriority)
 
         # Validate regex pattern if using regex
         if options.get("use_regex", False):

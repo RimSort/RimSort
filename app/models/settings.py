@@ -100,6 +100,17 @@ class Settings(QObject):
             "https://github.com/emipa606/UseThisInstead/archive/refs/heads/main.zip"
         )
 
+        self.external_rimworld_versions_metadata_source: str = "Configured URL"
+        self.external_rimworld_versions_file_path: str = str(
+            AppInfo().databases_folder / "rimworld-versions" / "rimworld_versions.json"
+        )
+        self.external_rimworld_versions_repo_path: str = (
+            "https://github.com/bukforks/rimworld-versions"
+        )
+        self.external_rimworld_versions_url: str = (
+            "https://github.com/bukforks/rimworld-versions/archive/refs/heads/main.zip"
+        )
+
         # Sorting
         self.sorting_algorithm: SortMethod = SortMethod.TOPOLOGICAL
         # Whether to use moddependencies as loadTheseBefore rules

@@ -92,6 +92,8 @@ def mock_app_info(
     stub._app_version = "0.0.0-test"
     stub._app_copyright = ""
     stub._application_folder = base / "app"
+    stub._is_dev_mode = False
+    stub._dev_root = None
     stub._app_storage_folder = storage
     stub._user_log_folder = logs
     stub._databases_folder = storage / "dbs"

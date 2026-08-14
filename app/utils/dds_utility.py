@@ -1,5 +1,4 @@
-import os
-from glob import glob
+from pathlib import Path
 
 from loguru import logger
 
@@ -30,21 +29,22 @@ class DDSUtility:
         # Combine both paths to search for DDS files
         combined_paths = [local_mods_target, workshop_mods_target]
         combined_paths = [
-            path for path in combined_paths if path and os.path.exists(path)
+            path for path in combined_paths if path and Path(path).exists()
         ]
 
-        dds_files = []
+        dds_files: list[Path] = []
         for path in combined_paths:
-            dds_files.extend(glob(os.path.join(path, "**", "*.dds"), recursive=True))
+            dds_files.extend(Path(path).rglob("*.dds"))
 
         # Check for corresponding PNG files
         deleted_count = 0
         for dds_file in dds_files:
-            png_file = dds_file.replace(".dds", ".png")
-            if not os.path.exists(png_file):
+            dds_path = Path(dds_file)
+            png_path = dds_path.with_suffix(".png")
+            if not png_path.exists():
                 logger.warning(f"Deleting DDS file without PNG: {dds_file}")
                 try:
-                    os.remove(dds_file)
+                    dds_path.unlink()
                     deleted_count += 1
                 except OSError as e:
                     logger.error(f"Failed to delete {dds_file}: {e}")

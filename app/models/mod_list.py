@@ -15,6 +15,8 @@ from loguru import logger
 from natsort import natsorted
 
 from app.models.metadata.metadata_structure import (
+    SOURCE_PRIORITY_DEFAULT,
+    SOURCE_PRIORITY_STEAM,
     AboutXmlMod,
     CaseInsensitiveStr,
     ModsConfig,
@@ -27,20 +29,6 @@ if TYPE_CHECKING:
 
 _STEAM_SUFFIX = "_steam"
 _SYNTHETIC_PID_PREFIX = "__path:"
-
-_SOURCE_PRIORITY_STEAM: list[ModType] = [
-    ModType.STEAM_WORKSHOP,
-    ModType.LOCAL,
-    ModType.STEAM_CMD,
-    ModType.GIT,
-]
-_SOURCE_PRIORITY_DEFAULT: list[ModType] = [
-    ModType.LUDEON,
-    ModType.LOCAL,
-    ModType.STEAM_CMD,
-    ModType.GIT,
-    ModType.STEAM_WORKSHOP,
-]
 
 
 @dataclass(frozen=True)
@@ -332,7 +320,7 @@ class ModList:
                 missing.append(raw_pid)
                 continue
 
-            sources = _SOURCE_PRIORITY_STEAM if is_steam else _SOURCE_PRIORITY_DEFAULT
+            sources = SOURCE_PRIORITY_STEAM if is_steam else SOURCE_PRIORITY_DEFAULT
             resolved_path = cls._resolve_path(
                 candidate_paths,
                 sources,
