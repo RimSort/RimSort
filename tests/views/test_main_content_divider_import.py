@@ -74,3 +74,38 @@ def test_importing_xml_mod_list_clears_stale_dividers(
 
     assert main_content.settings.active_mods_dividers == []
     main_content._test_save_mock.assert_called()  # type: ignore[attr-defined]
+
+
+def test_appending_xml_mod_list_appends_only_new_mods(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    main_content: MainContent,
+    mock_metadata_controller: MagicMock,
+) -> None:
+    """Test that appending an XML mod list only adds new active mods and removes them from inactive."""
+    imported_list = tmp_path / "append-list.xml"
+    imported_list.write_text("<ModsConfigData></ModsConfigData>")
+    monkeypatch.setattr(
+        dialogue, "show_dialogue_file", Mock(return_value=str(imported_list))
+    )
+
+    # Set initial lists
+    main_content.mods_panel.active_mods_list.paths = ["existing.mod.a", "existing.mod.b"]
+    main_content.mods_panel.inactive_mods_list.paths = ["appended.mod.c", "inactive.mod.d"]
+
+    # Mock get_mods_from_list output: active has a duplicate (a), a moved mod (c), and a new mod (e)
+    mock_metadata_controller.get_mods_from_list.return_value = (
+        ["existing.mod.a", "appended.mod.c", "new.mod.e"],
+        ["inactive.mod.d"],
+        {},
+        {},
+    )
+
+    main_content._do_append_list_file_xml()
+
+    # The insert method is mocked in the main_content fixture, let's verify its arguments
+    main_content._insert_data_into_lists.assert_called_once_with(
+        ["existing.mod.a", "existing.mod.b", "appended.mod.c", "new.mod.e"],
+        ["inactive.mod.d"],
+    )
+
