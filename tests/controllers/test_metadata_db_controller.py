@@ -157,11 +157,11 @@ def test_schema_migration_from_legacy_published_file_id(tmp_path: Path) -> None:
     # Insert legacy rows: one valid integer ID, one placeholder -1
     cursor.execute(
         "INSERT INTO auxiliary_metadata (path, published_file_id) VALUES (?, ?)",
-        ("/mods/mod_a", 123456)
+        (str(Path("/mods/mod_a")), 123456)
     )
     cursor.execute(
         "INSERT INTO auxiliary_metadata (path, published_file_id) VALUES (?, ?)",
-        ("/mods/mod_b", -1)
+        (str(Path("/mods/mod_b")), -1)
     )
     conn.commit()
     conn.close()
