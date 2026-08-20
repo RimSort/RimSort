@@ -286,6 +286,10 @@ class SteamcmdInterface:
     # Internal helpers
     # ------------------------------------------------------------------
 
+    @property
+    def console_log_path(self) -> Path:
+        return Path(self.steamcmd_install_path) / "logs" / "console_log.txt"
+
     def _build_download_script(self, publishedfileids: list[str]) -> str:
         """Write a SteamCMD script for *publishedfileids* and return its path.
 
@@ -373,6 +377,7 @@ class SteamcmdInterface:
         )
         script_path = self._build_download_script(first_batch)
         runner.message(f"Compiled & using script: {script_path}")
+        runner._steamcmd_console_log_path = str(self.console_log_path)
         runner.execute(
             self.steamcmd,
             [f'+runscript "{script_path}"'],

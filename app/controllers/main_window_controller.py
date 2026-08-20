@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QPushButton
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.divider import is_divider_uuid
-from app.models.metadata.metadata_structure import AboutXmlMod
+from app.services.dependency_resolver import build_dependencies_dialog_context
 from app.utils.event_bus import EventBus
 from app.views.main_window import MainWindow
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
@@ -105,82 +105,17 @@ class MainWindowController(QObject):
             if not is_divider_uuid(u)
         }
 
-        mods_metadata = self.metadata_controller.mods_metadata
+        deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
+            self.metadata_controller, active_mods
+        )
 
-        # Precompute active package IDs for quick lookup
-        active_ids: set[str] = set()
-        for u in active_mods:
-            mod = mods_metadata.get(u)
-            if mod and isinstance(mod, AboutXmlMod):
-                active_ids.add(str(mod.package_id))
-
-        # Build a full deps summary and missing deps dict
-        deps_summary: dict[str, dict[str, set[str]]] = {}
-        missing_deps: dict[str, set[str]] = {}
-
-        # Precompute all local package IDs (for "local" classification)
-        all_local_package_ids: set[str] = set()
-        for mod in mods_metadata.values():
-            if isinstance(mod, AboutXmlMod):
-                all_local_package_ids.add(str(mod.package_id))
-
-        consider_alternatives = self.metadata_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
-
-        # Check each active mod's dependencies
-        for path in active_mods:
-            mod = mods_metadata.get(path)
-            if not isinstance(mod, AboutXmlMod):
-                continue
-            mod_id = str(mod.package_id)
-            if not mod_id:
-                continue
-
-            # Get the mod's dependencies (dict[CaseInsensitiveStr, DependencyMod])
-            dependencies = mod.overall_rules.dependencies
-            if not dependencies:
-                continue
-
-            satisfied: set[str] = set()
-            local: set[str] = set()
-            download: set[str] = set()
-
-            # Check each dependency, honoring alternativePackageIds
-            for dep_id_key, dep_mod in dependencies.items():
-                dep_id = str(dep_id_key)
-                alt_ids = {str(a) for a in dep_mod.alternative_package_ids}
-
-                # Check if the dependency is satisfied (in active mods)
-                is_satisfied = dep_id in active_ids
-                if not is_satisfied and consider_alternatives:
-                    is_satisfied = any(alt in active_ids for alt in alt_ids)
-
-                if is_satisfied:
-                    satisfied.add(dep_id)
-                else:
-                    # Classify missing deps: local vs download
-                    is_local = dep_id in all_local_package_ids or (
-                        consider_alternatives
-                        and any(alt in all_local_package_ids for alt in alt_ids)
-                    )
-                    if is_local:
-                        local.add(dep_id)
-                    else:
-                        download.add(dep_id)
-
-            deps_summary[mod_id] = {
-                "satisfied": satisfied,
-                "local": local,
-                "download": download,
-            }
-
-            if local or download:
-                missing_deps[mod_id] = local | download
-
-        # Always show the dialog (even if no missing deps)
         dialog = MissingDependenciesDialog(
             metadata_controller=self.metadata_controller, parent=self.main_window
         )
-        selected_deps = dialog.show_dialog(deps_summary, missing_deps)
+        dialog.download_requested.connect(
+            self.main_window.main_content_panel._download_single_workshop_mod
+        )
+        selected_deps = dialog.show_dialog(deps_summary, missing_deps, dep_resolve)
 
         if not missing_deps:
             # No missing deps at all - user was shown an informational dialog

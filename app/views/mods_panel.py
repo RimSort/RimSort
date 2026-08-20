@@ -3010,6 +3010,15 @@ class ModListWidget(QListWidget):
         if widget is not None and isinstance(widget, ModListItemInner):
             widget.repolish(item)
 
+    def repolish_all_items(self) -> None:
+        for row in range(self.count()):
+            item = self.item(row)
+            if item is None:
+                continue
+            widget = self.itemWidget(item)
+            if widget is not None and isinstance(widget, ModListItemInner):
+                widget.repolish(item)
+
     def handle_other_list_row_added(self, uuid: str) -> None:
         """
         When a mod is moved from Inactive->Active, the uuid is removed from the Inactive list.

@@ -2497,6 +2497,18 @@ All dependencies are satisfied. No missing dependencies found.</source>
         <source>Dependency Manager</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MissingModPropertiesPanel</name>

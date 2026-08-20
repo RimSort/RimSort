@@ -2445,6 +2445,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>Настройки…</translation>
     </message>
     <message>
+        <source>Upload Log</source>
+        <translation>Загрузить журнал</translation>
+    </message>
+    <message>
+        <source>Open Log in Default Editor</source>
+        <translation>Открыть журнал в редакторе</translation>
+    </message>
+    <message>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>
@@ -2657,6 +2665,18 @@ All dependencies are satisfied. No missing dependencies found.</source>
     <message>
         <source>Dependency Manager</source>
         <translation>Менеджер зависимостей</translation>
+    </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation>Открыть мастерскую</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Загрузить</translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation>ID мастерской не найден — откройте мастерскую для ручного поиска</translation>
     </message>
 </context>
 <context>

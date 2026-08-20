@@ -39,7 +39,9 @@ from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
 from app.models.metadata.metadata_structure import AboutXmlMod, ModType
 from app.models.settings import Settings
+from app.services.dependency_resolver import build_dependencies_dialog_context
 from app.services.import_export_service import ImportExportService
+from app.services.mod_list_parser import ModListFormatError, parse_mod_list_file
 from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
@@ -69,6 +71,7 @@ from app.utils.steam.steamworks.wrapper import (
     SteamworksSubscriptionHandler,
 )
 from app.utils.steam.webapi.wrapper import CollectionImport
+from app.utils.steam.workshop_urls import WORKSHOP_BROWSE_URL
 from app.utils.steam.workshop_utils import (
     WorkshopUpdateResult,
     check_if_pfids_blacklisted,
@@ -145,6 +148,7 @@ class MainContent(QObject):
     def _init_services(self) -> None:
         self.db_builder = DatabaseBuilder(self.settings)
         self.steam_browser: SteamBrowser | None = None
+        self._workshop_restore_target: QWidget | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
         self._import_export_service = ImportExportService(
@@ -264,6 +268,7 @@ class MainContent(QObject):
 
         EventBus().do_add_zip_mod.connect(self._do_add_zip_mod)
         EventBus().do_browse_workshop.connect(self._do_browse_workshop)
+        EventBus().do_browse_workshop_url.connect(self._do_browse_workshop_url)
         EventBus().do_check_for_workshop_updates.connect(
             self._do_check_for_workshop_updates
         )
@@ -575,6 +580,12 @@ class MainContent(QObject):
             key=sort_key,
             descending=descending,
         )
+        self.mods_panel.active_mods_list._latest_save_package_ids = None
+        self.mods_panel.inactive_mods_list._latest_save_package_ids = None
+        self.mods_panel.recalculate_list_errors_warnings("Active")
+        self.mods_panel.recalculate_list_errors_warnings("Inactive")
+        self.mods_panel.active_mods_list.repolish_all_items()
+        self.mods_panel.inactive_mods_list.repolish_all_items()
         logger.info(
             f"Finished inserting mod data into active [{len(active_mods_uuids)}] and inactive [{len(inactive_mods_uuids)}] mod lists"
         )
@@ -974,25 +985,18 @@ class MainContent(QObject):
 
         # Check for missing dependencies if enabled in settings and check_deps is True
         if check_deps and self.settings.check_dependencies_on_sort:
-            missing_deps = self.metadata_controller.get_missing_dependencies(
-                active_mods
+            deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
+                self.metadata_controller, active_mods
             )
             if missing_deps:
                 dialog = MissingDependenciesDialog(
                     metadata_controller=self.metadata_controller
                 )
                 self.window_manager.register(dialog)
-
-                # Build a deps_summary from the missing deps for the dialog display
-                deps_summary: dict[str, dict[str, set[str]]] = {}
-                for mod_id, deps in missing_deps.items():
-                    deps_summary[mod_id] = {
-                        "satisfied": set(),
-                        "local": set(),
-                        "download": deps,
-                    }
-
-                selected_deps = dialog.show_dialog(deps_summary, missing_deps)
+                dialog.download_requested.connect(self._download_single_workshop_mod)
+                selected_deps = dialog.show_dialog(
+                    deps_summary, missing_deps, dep_resolve
+                )
 
                 if selected_deps:
                     # Add selected mods to active mods
@@ -1125,12 +1129,23 @@ class MainContent(QObject):
             self.mods_panel.reset_all_filters_and_search("Active")
             self.mods_panel.reset_all_filters_and_search("Inactive")
             logger.info(f"Trying to import mods list from XML: {file_path}")
+            try:
+                parsed = parse_mod_list_file(file_path)
+            except ModListFormatError as exc:
+                dialogue.show_warning(
+                    title=self.tr("Import failed"),
+                    text=self.tr("Could not read the selected mod list file."),
+                    information=str(exc),
+                )
+                return
             (
                 active_mods_uuids,
                 inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
+            ) = self.metadata_controller.get_mods_from_list(
+                mod_list=parsed.package_ids
+            )
             logger.info("Got new mods according to imported XML")
             # Normal RimWorld XML mod lists only contain package IDs, not RimSort UI
             # divider metadata. Clear persisted divider state so dividers from the
@@ -1930,24 +1945,57 @@ class MainContent(QObject):
             logger.debug("user cancelled reset of SteamCMD ACF data file")
             return
 
-    def _do_browse_workshop(self) -> None:
-        # Clean up previous instance if it still exists
-        if self.steam_browser:
-            self.steam_browser.close()
-            self.steam_browser.deleteLater()
+    def _open_steam_browser(self, startpage: str) -> None:
+        restore_target = EventBus().workshop_restore_target
+        EventBus().workshop_restore_target = None
+
+        if self.steam_browser is not None:
+            try:
+                self.steam_browser.destroyed.disconnect(self._on_steam_browser_restore)
+            except (TypeError, RuntimeError):
+                pass
+            self._workshop_restore_target = restore_target
+            self.steam_browser.web_view.load(startpage)
+            self.steam_browser.show()
+            self.steam_browser.raise_()
+            self.steam_browser.activateWindow()
+            if self._workshop_restore_target is not None:
+                self.steam_browser.destroyed.connect(self._on_steam_browser_restore)
+            return
 
         self.steam_browser = SteamBrowser(
-            "https://steamcommunity.com/app/294100/workshop/",
+            startpage,
             self.metadata_controller,
             self.settings,
         )
         self.window_manager.register_attr(self, "steam_browser")
 
-        # Automatically null the reference when browser is destroyed
+        self._workshop_restore_target = restore_target
+
         self.steam_browser.destroyed.connect(
             lambda: setattr(self, "steam_browser", None)
         )
+        if self._workshop_restore_target is not None:
+            self.steam_browser.destroyed.connect(self._on_steam_browser_restore)
         self.steam_browser.show()
+        self.steam_browser.raise_()
+        self.steam_browser.activateWindow()
+
+    def _on_steam_browser_restore(self) -> None:
+        target = self._workshop_restore_target
+        self._workshop_restore_target = None
+        if target is None:
+            return
+        if not target.isVisible():
+            target.show()
+            target.raise_()
+            target.activateWindow()
+
+    def _do_browse_workshop(self) -> None:
+        self._open_steam_browser(WORKSHOP_BROWSE_URL)
+
+    def _do_browse_workshop_url(self, url: str) -> None:
+        self._open_steam_browser(url)
 
     def _do_check_for_workshop_updates(self) -> None:
         if not check_internet_connection():
@@ -2075,6 +2123,13 @@ class MainContent(QObject):
                 ),
             )
 
+    def _download_single_workshop_mod(self, workshop_id: str) -> None:
+        """Download a single mod immediately via SteamCMD."""
+        if not self.steamcmd_wrapper.setup:
+            self._do_setup_steamcmd()
+        if self.steamcmd_wrapper.setup:
+            self._do_download_mods_with_steamcmd([workshop_id])
+
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
@@ -2125,6 +2180,8 @@ class MainContent(QObject):
             self.window_manager.register_attr(self, "steamcmd_runner")
             self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
             self.steamcmd_runner.show()
+            self.steamcmd_runner.raise_()
+            self.steamcmd_runner.activateWindow()
             self.steamcmd_runner.message(
                 f"Downloading {len(publishedfileids)} mods with SteamCMD..."
             )

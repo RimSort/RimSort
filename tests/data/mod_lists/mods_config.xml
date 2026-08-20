@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.5</version>
+  <activeMods>
+    <li>ludeon.rimworld</li>
+    <li>author.testmod</li>
+  </activeMods>
+  <knownExpansions>
+    <li>Ludeon.RimWorld</li>
+  </knownExpansions>
+</ModsConfigData>
