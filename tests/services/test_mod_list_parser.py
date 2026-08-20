@@ -144,6 +144,4 @@ class TestModListParser:
         result = parsed_to_mods_config_dict(parsed)
         assert result["ModsConfigData"]["version"] == "1.6"
         assert result["ModsConfigData"]["activeMods"]["li"] == ["a.b", "c.d"]
-        assert result["ModsConfigData"]["knownExpansions"]["li"] == [
-            "Ludeon.RimWorld"
-        ]
+        assert result["ModsConfigData"]["knownExpansions"]["li"] == ["Ludeon.RimWorld"]

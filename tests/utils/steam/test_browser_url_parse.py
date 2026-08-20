@@ -16,8 +16,7 @@ class TestParsePublishedfileidFromUrl:
 
     def test_url_with_searchtext(self) -> None:
         url = (
-            "https://steamcommunity.com/sharedfiles/filedetails/?id=111"
-            "&searchtext=test"
+            "https://steamcommunity.com/sharedfiles/filedetails/?id=111&searchtext=test"
         )
         assert parse_publishedfileid_from_url(url) == "111"
 
@@ -84,4 +83,7 @@ class TestToolbarAddToListVisible:
         assert toolbar_add_to_list_visible(url) is False
 
     def test_non_steam_url(self) -> None:
-        assert toolbar_add_to_list_visible("https://example.com/filedetails/?id=1") is False
+        assert (
+            toolbar_add_to_list_visible("https://example.com/filedetails/?id=1")
+            is False
+        )

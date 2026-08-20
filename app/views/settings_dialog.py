@@ -748,9 +748,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         # Dependencies group
         _, deps_group_box_layout = self._add_group_box(tab_layout)
 
-        deps_label = self._make_section_label(
-            self.tr("Dependencies Handling Behavior")
-        )
+        deps_label = self._make_section_label(self.tr("Dependencies Handling Behavior"))
         deps_group_box_layout.addWidget(deps_label)
 
         # Use dependencies for sorting checkbox

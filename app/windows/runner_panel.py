@@ -416,7 +416,9 @@ class RunnerPanel(QWidget):
                 self._steamcmd_log_partial = ""
             return
 
-        combined = self._steamcmd_log_partial + new_bytes.decode("utf-8", errors="replace")
+        combined = self._steamcmd_log_partial + new_bytes.decode(
+            "utf-8", errors="replace"
+        )
         combined = combined.replace("\r\n", "\n").replace("\r", "\n")
         lines = combined.split("\n")
 

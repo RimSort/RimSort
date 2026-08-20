@@ -1,7 +1,7 @@
 """Resolve Steam Workshop IDs for mod dependencies."""
 
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from typing import Literal
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element
@@ -97,7 +97,9 @@ def _resolve_from_about_xml(
                         used_versioned = True
                         lis = candidate.findall("li")
                         if lis:
-                            workshop_id = _find_workshop_id_in_deps(candidate, package_id)
+                            workshop_id = _find_workshop_id_in_deps(
+                                candidate, package_id
+                            )
 
             if not used_versioned:
                 deps = root.find("modDependencies")
@@ -174,9 +176,7 @@ def build_dependencies_dialog_context(
         if isinstance(mod, AboutXmlMod):
             all_local_package_ids.add(str(mod.package_id))
 
-    consider_alternatives = (
-        metadata_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
-    )
+    consider_alternatives = metadata_controller.settings.use_alternative_package_ids_as_satisfying_dependencies
 
     for path in active_mod_paths:
         mod = mods_metadata.get(path)

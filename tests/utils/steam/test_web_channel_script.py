@@ -88,7 +88,9 @@ class TestWebChannelScriptSubstitute:
             Path(__file__).resolve().parents[3] / "setup_web_channel_script.js"
         )
         raw = template_path.read_text(encoding="utf-8")
-        assert "const TILE_SELECTORS = ['.workshopItem', '[data-publishedfileid]'];" in raw
+        assert (
+            "const TILE_SELECTORS = ['.workshopItem', '[data-publishedfileid]'];" in raw
+        )
         assert "function rimsortBrowseTileFromLink" in raw
 
     def test_deferred_workshop_setup_wrapper(self) -> None:

@@ -1144,9 +1144,7 @@ class MainContent(QObject):
                 inactive_mods_uuids,
                 self.duplicate_mods,
                 self.missing_mods,
-            ) = self.metadata_controller.get_mods_from_list(
-                mod_list=parsed.package_ids
-            )
+            ) = self.metadata_controller.get_mods_from_list(mod_list=parsed.package_ids)
             logger.info("Got new mods according to imported XML")
             # Normal RimWorld XML mod lists only contain package IDs, not RimSort UI
             # divider metadata. Clear persisted divider state so dividers from the
@@ -2180,7 +2178,9 @@ class MainContent(QObject):
                 steam_db=steam_db,
             )
             self.window_manager.register_attr(self, "steamcmd_runner")
-            self.steamcmd_runner.setWindowTitle(self.tr("RimSort - SteamCMD downloader"))
+            self.steamcmd_runner.setWindowTitle(
+                self.tr("RimSort - SteamCMD downloader")
+            )
             self.steamcmd_runner.show()
             self.steamcmd_runner.raise_()
             self.steamcmd_runner.activateWindow()

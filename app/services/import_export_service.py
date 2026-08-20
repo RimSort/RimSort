@@ -20,7 +20,6 @@ from app.utils.steam.webapi.wrapper import (
 from app.utils.xml import json_to_xml_write
 
 from .mod_list_parser import (
-    ModListFormatError,
     parse_mod_list_file,
     parsed_to_mods_config_dict,
 )
