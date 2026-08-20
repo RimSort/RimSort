@@ -1,7 +1,7 @@
 import os
 import sys
 
-from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
+from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTimer, QTranslator
 from PySide6.QtWidgets import QApplication
 
 import app.utils.globals as app_globals
@@ -10,10 +10,13 @@ from app.controllers.metadata_controller import MetadataController
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.controllers.settings_controller import SettingsController
 from app.controllers.theme_controller import ThemeController
+from app.mcp.command_queue import clear_gui_alive, drain, mark_gui_alive
+from app.mcp.supervisor import stop_mcp_subprocess, sync_mcp_subprocess
 from app.models.settings import Settings
 from app.services.instance_service import InstanceService
 from app.utils.app_info import AppInfo
 from app.utils.dds_utility import DDSUtility
+from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.views.main_window import MainWindow
@@ -49,6 +52,13 @@ class AppController(QObject):
         self.initialize_instance_service()
         # Initialize the main window controller
         self.initialize_main_window()
+        self._mcp_sync_timer = QTimer(self)
+        self._mcp_sync_timer.setSingleShot(True)
+        self._mcp_sync_timer.timeout.connect(self._sync_mcp_subprocess)
+        EventBus().settings_have_changed.connect(self._schedule_mcp_sync)
+        self._mcp_drain_timer = QTimer(self)
+        self._mcp_drain_timer.timeout.connect(self._drain_mcp_commands)
+        self.app.aboutToQuit.connect(self._shutdown_mcp)
 
     def set_language(self) -> None:
         """Sets the language of the application on initial setup."""
@@ -159,7 +169,36 @@ class AppController(QObject):
         # event loop would block forever with no visible windows.
         if not self.main_window.isVisible():
             return 0
+        mark_gui_alive()
+        self._mcp_drain_timer.start(400)
+        self._sync_mcp_subprocess()
         return self.app.exec()
+
+    def _shutdown_mcp(self) -> None:
+        self._mcp_drain_timer.stop()
+        clear_gui_alive()
+        stop_mcp_subprocess()
+
+    def _drain_mcp_commands(self) -> None:
+        bus = EventBus()
+        for cmd in drain():
+            ctype = cmd.get("type", "")
+            if ctype == "steamcmd_download":
+                pfids = cmd.get("publishedfileids", [])
+                if isinstance(pfids, list) and pfids:
+                    bus.do_steamcmd_download.emit([str(p) for p in pfids])
+            elif ctype == "sort":
+                bus.do_sort_active_mods_list.emit()
+            elif ctype == "save":
+                bus.do_save_active_mods_list.emit()
+            elif ctype == "run_game":
+                bus.do_run_game.emit()
+
+    def _schedule_mcp_sync(self) -> None:
+        self._mcp_sync_timer.start(300)
+
+    def _sync_mcp_subprocess(self) -> None:
+        sync_mcp_subprocess(self.settings)
 
     def shutdown_watchdog(self) -> None:
         """Initiates the shutdown procedure for the watchdog."""

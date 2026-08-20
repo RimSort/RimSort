@@ -1676,6 +1676,29 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         self.setTabOrder(self.github_username, self.github_token)
 
+        mcp_group = QGroupBox(self.tr("MCP Server"))
+        mcp_layout = QGridLayout(mcp_group)
+        self.mcp_server_enabled_checkbox = QCheckBox(
+            self.tr("Enable MCP server (local HTTP subprocess)")
+        )
+        mcp_layout.addWidget(self.mcp_server_enabled_checkbox, 0, 0, 1, 2)
+        mcp_layout.addWidget(QLabel(self.tr("Port:")), 1, 0)
+        self.mcp_server_port = QSpinBox()
+        self.mcp_server_port.setRange(1024, 65535)
+        self.mcp_server_port.setValue(17342)
+        mcp_layout.addWidget(self.mcp_server_port, 1, 1)
+        mcp_layout.addWidget(QLabel(self.tr("Token (optional):")), 2, 0)
+        self.mcp_server_token = self._style_line_edit(QLineEdit())
+        self.mcp_server_token.setEchoMode(QLineEdit.EchoMode.Password)
+        mcp_layout.addWidget(self.mcp_server_token, 2, 1)
+        self.mcp_config_snippet = QLabel()
+        self.mcp_config_snippet.setWordWrap(True)
+        self.mcp_config_snippet.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        mcp_layout.addWidget(self.mcp_config_snippet, 3, 0, 1, 2)
+        tab_layout.addWidget(mcp_group)
+
         tab_layout.addStretch()
 
     def _find_tab_index(self, tab_name: str) -> int:
