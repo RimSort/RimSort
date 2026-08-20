@@ -1,6 +1,7 @@
 ---
 title: Руководство пользователя
 nav_order: 3
+permalink: user-guide/
 lang: ru
 ---
 

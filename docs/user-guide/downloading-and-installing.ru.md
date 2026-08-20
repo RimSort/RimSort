@@ -1,6 +1,6 @@
 ---
 title: Загрузка и установка
-parent: User Guide
+parent: Руководство пользователя
 nav_order: 1
 permalink: user-guide/downloading-and-installing
 lang: ru

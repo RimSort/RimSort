@@ -1,7 +1,7 @@
 ---
 title: SteamCMD и браузер мастерской
 nav_order: 5
-parent: User Guide
+parent: Руководство пользователя
 permalink: user-guide/steamcmd-browser
 lang: ru
 ---
