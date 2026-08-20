@@ -2,7 +2,7 @@
 title: Базовое использование
 nav_order: 2
 layout: default
-parent: User Guide
+parent: Руководство пользователя
 permalink: user-guide/basic-usage
 lang: ru
 ---

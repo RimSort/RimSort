@@ -1,6 +1,6 @@
 ---
 title: Загрузка и установка
-parent: User Guide
+parent: Руководство пользователя
 nav_order: 1
 permalink: user-guide/downloading-and-installing
 lang: ru
@@ -10,9 +10,9 @@ lang: ru
 
 {: .warning }
 
-> Большинству пользователей нужны [готовые релизы](https://github.com/RimSort/RimSort/releases), а не ZIP исходников с GitHub.
+> Большинству пользователей достаточно [готовых релизов](https://github.com/RimSort/RimSort/releases), а не ZIP исходников с GitHub.
 
-Есть **Stable** и **Edge** сборки. Edge выходит чаще, но может быть менее стабилен.
+Есть **Stable** и **Edge** сборки. Edge выходят чаще, но могут быть менее стабильны.
 
 ## Windows
 

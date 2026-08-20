@@ -1,8 +1,9 @@
 ---
-title: FAQ
+title: Частые вопросы
 nav_order: 2
 description: "Частые вопросы"
 layout: default
+permalink: faq/
 lang: ru
 ---
 
