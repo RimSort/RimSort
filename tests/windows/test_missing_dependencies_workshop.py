@@ -1,9 +1,12 @@
-from urllib.parse import parse_qs, urlparse
 from unittest.mock import MagicMock
+from urllib.parse import parse_qs, urlparse
 
 from pytestqt.qtbot import QtBot
 
-from app.utils.steam.workshop_urls import WORKSHOP_BROWSE_URL, build_workshop_text_search_url
+from app.utils.steam.workshop_urls import (
+    WORKSHOP_BROWSE_URL,
+    build_workshop_text_search_url,
+)
 from app.views.main_content_panel import MainContent
 
 

@@ -785,18 +785,14 @@ class SteamBrowser(QWidget):
             self._load_show_fallback_timer.stop()
         self._load_show_fallback_timer = QTimer(self)
         self._load_show_fallback_timer.setSingleShot(True)
-        self._load_show_fallback_timer.timeout.connect(
-            self._on_load_show_fallback
-        )
+        self._load_show_fallback_timer.timeout.connect(self._on_load_show_fallback)
         self._load_show_fallback_timer.start(1200)
 
     def _on_load_stall(self) -> None:
         if self.progress_bar.value() > 0 or self._load_stall_reloaded:
             return
         assert self.web_view is not None
-        logger.warning(
-            "Steam browser load stalled at 0%; reloading once per session"
-        )
+        logger.warning("Steam browser load stalled at 0%; reloading once per session")
         self._load_stall_reloaded = True
         self.web_view.reload()
 

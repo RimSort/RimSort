@@ -546,9 +546,7 @@ class TroubleshootingController:
             return
 
         try:
-            service = ImportExportService(
-                MetadataController.instance(), self.settings
-            )
+            service = ImportExportService(MetadataController.instance(), self.settings)
             service.import_from_file(str(import_path), target="mods_config")
             EventBus().do_refresh_mods_lists.emit()
 

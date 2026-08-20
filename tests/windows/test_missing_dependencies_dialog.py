@@ -26,9 +26,7 @@ def metadata_controller() -> MagicMock:
 
 
 @pytest.fixture
-def dialog(
-    metadata_controller: MagicMock, qtbot: QtBot
-) -> MissingDependenciesDialog:
+def dialog(metadata_controller: MagicMock, qtbot: QtBot) -> MissingDependenciesDialog:
     missing_dialog = MissingDependenciesDialog(metadata_controller)
     qtbot.addWidget(missing_dialog)
     return missing_dialog
@@ -110,7 +108,8 @@ class TestMissingDependenciesDialogPopulate:
         assert blocker.args == ["12345"]
 
     def test_download_without_workshop_id_disables_download_button(
-        self, dialog: MissingDependenciesDialog,
+        self,
+        dialog: MissingDependenciesDialog,
     ) -> None:
         deps_summary = {
             "active.mod": {

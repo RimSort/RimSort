@@ -10,7 +10,9 @@ def test_console_log_path() -> None:
     assert iface.console_log_path == Path("/steamcmd/logs/console_log.txt")
 
 
-@patch.object(SteamcmdInterface, "_build_download_script", return_value="/tmp/script.txt")
+@patch.object(
+    SteamcmdInterface, "_build_download_script", return_value="/tmp/script.txt"
+)
 def test_download_mods_sets_console_log_path(mock_build_script: MagicMock) -> None:
     iface = SteamcmdInterface.__new__(SteamcmdInterface)
     iface.setup = True

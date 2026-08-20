@@ -87,15 +87,13 @@ def test_check_dependencies_adds_local_mods_and_sorts(
     mock_dialog_cls.return_value = mock_dialog
 
     controller, main_window, mock_metadata = _make_controller(["/mods/parent"])
-    mock_metadata.packageid_to_paths.get.side_effect = (
-        lambda pkg_id: {"/mods/localdep"} if pkg_id == "author.localdep" else None
+    mock_metadata.packageid_to_paths.get.side_effect = lambda pkg_id: (
+        {"/mods/localdep"} if pkg_id == "author.localdep" else None
     )
 
     controller.check_dependencies()
 
-    active_paths = (
-        main_window.main_content_panel.mods_panel.active_mods_list.paths
-    )
+    active_paths = main_window.main_content_panel.mods_panel.active_mods_list.paths
     assert "/mods/localdep" in active_paths
     main_window.main_content_panel._do_sort.assert_called_once_with(check_deps=False)
 
