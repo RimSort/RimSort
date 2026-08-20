@@ -1,0 +1,2 @@
+# Local-only override: fork() is unavailable on Windows Ruby
+parallel_localization: false
