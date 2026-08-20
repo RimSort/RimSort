@@ -112,7 +112,7 @@ shfmt-fix:
 
 # Run copy/paste detection (jscpd) using the project's .jscpd.json config
 jscpd:
-    npx jscpd@4 . --config .jscpd.json
+    npx --yes jscpd@latest . --config .jscpd.json
 
 # Run all code quality checks: super-linter + typecheck + pyright
 [unix]
