@@ -29,6 +29,8 @@ def parse_workshop_id_from_url(url: str) -> str | None:
         return None
     if "?" in workshop_id:
         workshop_id = workshop_id.split("?")[0]
+    if "&" in workshop_id:
+        workshop_id = workshop_id.split("&")[0]
     if "/" in workshop_id:
         workshop_id = workshop_id.split("/")[0]
     return workshop_id or None

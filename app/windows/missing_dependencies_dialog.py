@@ -17,6 +17,13 @@ from app.services.dependency_resolver import DepResolveResult
 from app.utils.event_bus import EventBus
 from app.utils.steam.workshop_urls import build_workshop_text_search_url
 
+_DEPS_SUMMARY_ARGS_DOC = (
+    "deps_summary: dict mapping each mod package ID to a dict with keys:\n"
+    '    - "satisfied": set of dep package IDs already active\n'
+    '    - "local": set of dep package IDs available locally but not active\n'
+    '    - "download": set of dep package IDs that need to be downloaded'
+)
+
 
 class MissingDependenciesDialog(QDialog):
     """
@@ -105,13 +112,11 @@ class MissingDependenciesDialog(QDialog):
         Show the dialog with all dependencies (satisfied + missing) for each mod.
 
         Args:
-            deps_summary: dict mapping each mod package ID to a dict with keys:
-                - "satisfied": set of dep package IDs already active
-                - "local": set of dep package IDs available locally but not active
-                - "download": set of dep package IDs that need to be downloaded
+            deps_summary: See module constant ``_DEPS_SUMMARY_ARGS_DOC``.
             missing_deps: dict mapping mod package IDs to sets of missing
                           dependency package IDs (same as before, used to
                           determine if there are any missing deps at all)
+            dep_resolve: optional map of download dep package IDs to workshop resolve results
 
         Returns:
             Set of selected mod package IDs if user accepted, empty set otherwise.
@@ -138,11 +143,7 @@ class MissingDependenciesDialog(QDialog):
         Populate the dialog with all dependencies grouped by mod.
         Each mod shows: satisfied, local, and download dependencies.
 
-        Args:
-            deps_summary: dict mapping each mod package ID to a dict with keys:
-                - "satisfied": set of dep package IDs already active
-                - "local": set of dep package IDs available locally but not active
-                - "download": set of dep package IDs that need to be downloaded
+        See ``_DEPS_SUMMARY_ARGS_DOC`` for the ``deps_summary`` shape.
         """
         self.clear_dependencies()
 

@@ -23,6 +23,26 @@ class TestModListParser:
         parsed = parse_mod_list_file(empty)
         assert parsed.source_format == "mods_config_xml"
         assert parsed.package_ids == []
+        assert parsed.known_expansions == []
+
+    def test_parse_mods_config_without_active_mods(self, tmp_path: Path) -> None:
+        xml = tmp_path / "no_active.xml"
+        xml.write_text(
+            "<ModsConfigData><version>1.6</version></ModsConfigData>",
+            encoding="utf-8",
+        )
+        parsed = parse_mod_list_file(xml)
+        assert parsed.package_ids == []
+        assert parsed.game_version == "1.6"
+
+    def test_parse_empty_known_expansions_object(self, tmp_path: Path) -> None:
+        xml = tmp_path / "empty_expansions.xml"
+        xml.write_text(
+            "<ModsConfigData><knownExpansions></knownExpansions></ModsConfigData>",
+            encoding="utf-8",
+        )
+        parsed = parse_mod_list_file(xml)
+        assert parsed.known_expansions == []
 
     def test_parse_single_li_xml(self) -> None:
         parsed = parse_mod_list_file(FIXTURES / "single_li.xml")
