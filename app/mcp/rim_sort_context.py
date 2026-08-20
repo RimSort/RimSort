@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
-from app.ai.tools.localization_finder import find_russian_localizations_for_active_mods
+from app.ai.tools.localization_finder import find_localizations_for_active_mods
 from app.utils.app_info import AppInfo
 from app.utils.schema import validate_rimworld_mods_list
 from app.utils.steam.workshop_search import search_workshop_by_text
@@ -291,7 +291,8 @@ def search_workshop_mods(
         return {"query": q, "matches": [], "error": str(exc)}
 
 
-def find_russian_localizations_for_active_mods_tool(
+def find_localizations_for_active_mods_tool(
+    language: str,
     instance_name: str | None = None,
     limit_per_mod: int = 5,
     package_ids: list[str] | None = None,
@@ -301,10 +302,11 @@ def find_russian_localizations_for_active_mods_tool(
     api_key = _resolve_steam_apikey(steam_apikey_override)
     active_mods = _active_mod_entries(instance_name)
     installed = _installed_mods_by_package_id(instance_name)
-    result = find_russian_localizations_for_active_mods(
+    result = find_localizations_for_active_mods(
         active_mods,
         installed,
         api_key,
+        language=language,
         limit_per_mod=limit_per_mod,
         package_ids=package_ids,
         on_progress=on_progress,

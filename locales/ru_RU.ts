@@ -44,7 +44,7 @@
     <message>
         <location filename="../app/windows/ai_assistant_panel.py" line="75"/>
         <source>AI Assistant</source>
-        <translation>AI-ассистент</translation>
+        <translation>AI Агент</translation>
     </message>
     <message>
         <location filename="../app/windows/ai_assistant_panel.py" line="83"/>
@@ -3412,7 +3412,7 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <location filename="../app/views/menu_bar.py" line="402"/>
         <source>AI Assistant</source>
-        <translation>AI-ассистент</translation>
+        <translation>AI Агент</translation>
     </message>
     <message>
         <location filename="../app/views/menu_bar.py" line="145"/>

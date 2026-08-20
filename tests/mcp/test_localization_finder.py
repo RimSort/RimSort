@@ -3,20 +3,22 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from app.ai.tools.localization_finder import (
-    _has_rus_marker,
+    _has_language_marker,
     _is_already_localized,
     _score_candidate,
-    find_russian_localizations_for_active_mods,
+    find_localizations_for_active_mods,
 )
 
 
-def test_has_rus_marker() -> None:
-    assert _has_rus_marker("Allow Tool Russian")
-    assert _has_rus_marker("mod [RU]")
-    assert _has_rus_marker("[sbz] Fridge RU")
-    assert _has_rus_marker("Fortifications - Industrial RU")
-    assert not _has_rus_marker("Harmony")
-    assert not _has_rus_marker("Syrus.CaravanMoodBuff")
+def test_has_language_marker() -> None:
+    assert _has_language_marker("Allow Tool Russian", "ru")
+    assert _has_language_marker("mod [RU]", "ru")
+    assert _has_language_marker("[sbz] Fridge RU", "ru")
+    assert _has_language_marker("Fortifications - Industrial RU", "ru")
+    assert not _has_language_marker("Harmony", "ru")
+    assert not _has_language_marker("Syrus.CaravanMoodBuff", "ru")
+    assert _has_language_marker("Mod French Translation", "fr")
+    assert not _has_language_marker("Mod French Translation", "de")
 
 
 def test_is_already_localized_by_name() -> None:
@@ -29,7 +31,9 @@ def test_is_already_localized_by_name() -> None:
             "mod_dependencies": [],
         }
     }
-    assert _is_already_localized("author.mod", "My Mod Russian", active, installed)
+    assert _is_already_localized(
+        "author.mod", "My Mod Russian", active, installed, "ru"
+    )
 
 
 def test_is_already_localized_by_companion() -> None:
@@ -48,7 +52,7 @@ def test_is_already_localized_by_companion() -> None:
             "mod_dependencies": [],
         },
     }
-    assert _is_already_localized("base.mod", "Base Mod", active, installed)
+    assert _is_already_localized("base.mod", "Base Mod", active, installed, "ru")
 
 
 def test_is_already_localized_by_name_overlap() -> None:
@@ -68,7 +72,7 @@ def test_is_already_localized_by_name_overlap() -> None:
         },
     }
     assert _is_already_localized(
-        "duz.almosttherefork", "Almost There! Fork", active, installed
+        "duz.almosttherefork", "Almost There! Fork", active, installed, "ru"
     )
 
 
@@ -89,7 +93,7 @@ def test_is_already_localized_fridge_ru_companion() -> None:
         },
     }
     assert _is_already_localized(
-        "sbz.NeatStorageFridge", "[sbz] Fridge", active, installed
+        "sbz.NeatStorageFridge", "[sbz] Fridge", active, installed, "ru"
     )
 
 
@@ -98,26 +102,40 @@ def test_score_candidate_prefers_russian_title() -> None:
         {"title": "Allow Tool Russian"},
         "Allow Tool",
         "unlimitedhugs.allowtool",
+        "ru",
     )
     low = _score_candidate(
         {"title": "Some Other Mod"},
         "Allow Tool",
         "unlimitedhugs.allowtool",
+        "ru",
     )
     assert high > low
 
 
-def test_find_russian_localizations_no_api_key() -> None:
-    result = find_russian_localizations_for_active_mods(
+def test_find_localizations_no_api_key() -> None:
+    result = find_localizations_for_active_mods(
         [{"package_id": "a.b", "name": "Mod A"}],
         {},
         "",
+        language="ru",
     )
     assert result["suggestions"] == []
     assert result["errors"]
 
 
-def test_find_russian_localizations_with_mock_search() -> None:
+def test_find_localizations_unsupported_language() -> None:
+    result = find_localizations_for_active_mods(
+        [{"package_id": "a.b", "name": "Mod A"}],
+        {},
+        "steam-key",
+        language="xx",
+    )
+    assert result["suggestions"] == []
+    assert result["errors"]
+
+
+def test_find_localizations_with_mock_search() -> None:
     active = [{"package_id": "author.mod", "name": "Cool Mod"}]
     installed = {
         "author.mod": {
@@ -141,10 +159,11 @@ def test_find_russian_localizations_with_mock_search() -> None:
         "app.ai.tools.localization_finder.search_workshop_by_text",
         return_value=[fake_match],
     ):
-        result = find_russian_localizations_for_active_mods(
+        result = find_localizations_for_active_mods(
             active,
             installed,
             "steam-key",
+            language="ru",
             limit_per_mod=3,
             on_progress=on_progress,
         )
@@ -155,7 +174,7 @@ def test_find_russian_localizations_with_mock_search() -> None:
     assert any("Workshop search" in msg for _, _, msg in progress_log)
 
 
-def test_find_russian_localizations_skips_official_dlc() -> None:
+def test_find_localizations_skips_official_dlc() -> None:
     active = [{"package_id": "ludeon.rimworld.odyssey", "name": "RimWorld - Odyssey"}]
     installed = {
         "ludeon.rimworld.odyssey": {
@@ -168,10 +187,11 @@ def test_find_russian_localizations_skips_official_dlc() -> None:
     with patch(
         "app.ai.tools.localization_finder.search_workshop_by_text"
     ) as mock_search:
-        result = find_russian_localizations_for_active_mods(
+        result = find_localizations_for_active_mods(
             active,
             installed,
             "steam-key",
+            language="ru",
             limit_per_mod=3,
         )
     assert result["mods_needing_localization"] == []

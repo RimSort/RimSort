@@ -183,7 +183,7 @@ def _fake_localization_result(
     }
 
 
-def test_find_russian_localizations_validates_candidates(
+def test_find_localizations_validates_candidates(
     patch_app_info: None,
 ) -> None:
     fake_result = _fake_localization_result(
@@ -205,7 +205,7 @@ def test_find_russian_localizations_validates_candidates(
     )
     with (
         patch(
-            "app.mcp.rim_sort_context.find_russian_localizations_for_active_mods",
+            "app.mcp.rim_sort_context.find_localizations_for_active_mods",
             return_value=fake_result,
         ),
         patch(
@@ -213,8 +213,9 @@ def test_find_russian_localizations_validates_candidates(
             return_value={"valid": ["111"], "invalid": ["999"], "valid_details": []},
         ),
     ):
-        result = rim_sort_context.find_russian_localizations_for_active_mods_tool(
-            steam_apikey_override="test-key"
+        result = rim_sort_context.find_localizations_for_active_mods_tool(
+            language="ru",
+            steam_apikey_override="test-key",
         )
 
     assert len(result["suggestions"]) == 1
@@ -224,7 +225,7 @@ def test_find_russian_localizations_validates_candidates(
     assert result["validation"]["removed_invalid_candidates"] == 1
 
 
-def test_find_russian_localizations_keeps_metadata_only_candidates(
+def test_find_localizations_keeps_metadata_only_candidates(
     patch_app_info: None,
 ) -> None:
     fake_result = _fake_localization_result(
@@ -241,7 +242,7 @@ def test_find_russian_localizations_keeps_metadata_only_candidates(
     metadata = [{"publishedfileid": "555", "title": "X Y Russian"}]
     with (
         patch(
-            "app.mcp.rim_sort_context.find_russian_localizations_for_active_mods",
+            "app.mcp.rim_sort_context.find_localizations_for_active_mods",
             return_value=fake_result,
         ),
         patch(
@@ -249,8 +250,9 @@ def test_find_russian_localizations_keeps_metadata_only_candidates(
             return_value=(metadata, [], []),
         ),
     ):
-        result = rim_sort_context.find_russian_localizations_for_active_mods_tool(
-            steam_apikey_override="test-key"
+        result = rim_sort_context.find_localizations_for_active_mods_tool(
+            language="ru",
+            steam_apikey_override="test-key",
         )
 
     assert len(result["suggestions"]) == 1

@@ -79,16 +79,22 @@ def list_tools() -> list[dict[str, Any]]:
             "inputSchema": _QUERY_LIMIT_SCHEMA,
         },
         {
-            "name": "find_russian_localizations_for_active_mods",
+            "name": "find_localizations_for_active_mods",
             "description": (
-                "Find Russian localization mods on Steam Workshop for active mods "
-                "that lack rus/Russian markers or an active localization. Uses real "
-                "Steam API search. Returns verified publishedfileids with recommended "
-                "pick per mod. Use this instead of guessing workshop IDs."
+                "Find localization mods on Steam Workshop, in the given language, "
+                "for active mods that lack a language marker or an active "
+                "localization. Uses real Steam API search. Returns verified "
+                "publishedfileids with recommended pick per mod. Use this instead "
+                "of guessing workshop IDs."
             ),
             "inputSchema": {
                 "type": "object",
                 "properties": {
+                    "language": {
+                        "type": "string",
+                        "enum": ["ru", "en", "fr", "de", "es", "zh", "ja", "pl", "pt"],
+                        "description": "ISO 639-1 code of the translation language",
+                    },
                     "limit_per_mod": {
                         "type": "integer",
                         "minimum": 1,
@@ -100,6 +106,7 @@ def list_tools() -> list[dict[str, Any]]:
                         "description": "Optional subset of active package IDs",
                     },
                 },
+                "required": ["language"],
             },
         },
         {
@@ -252,13 +259,17 @@ def call_tool(
             limit=limit,
             steam_apikey_override=steam_apikey_override,
         )
-    if name == "find_russian_localizations_for_active_mods":
+    if name == "find_localizations_for_active_mods":
+        language = str(args.get("language", "")).strip().lower()
+        if not language:
+            return {"error": "language is required"}
         limit_per_mod = _parse_limit(args.get("limit_per_mod", 5), 5, 10)
         raw_pids = args.get("package_ids")
         package_ids: list[str] | None = None
         if isinstance(raw_pids, list):
             package_ids = [str(p).strip() for p in raw_pids if str(p).strip()]
-        return rim_sort_context.find_russian_localizations_for_active_mods_tool(
+        return rim_sort_context.find_localizations_for_active_mods_tool(
+            language=language,
             limit_per_mod=limit_per_mod,
             package_ids=package_ids,
             steam_apikey_override=steam_apikey_override,

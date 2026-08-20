@@ -109,7 +109,7 @@ def test_queue_download_rejects_wrong_appid_ids() -> None:
     assert "777" in result["invalid_ids"]
 
 
-def test_find_russian_localizations_tool() -> None:
+def test_find_localizations_tool() -> None:
     fake: dict[str, Any] = {
         "mods_needing_localization": [],
         "suggestions": [],
@@ -117,13 +117,18 @@ def test_find_russian_localizations_tool() -> None:
         "errors": [],
     }
     with patch(
-        "app.mcp.tools.rim_sort_context.find_russian_localizations_for_active_mods_tool",
+        "app.mcp.tools.rim_sort_context.find_localizations_for_active_mods_tool",
         return_value=fake,
     ) as mock_find:
-        result = call_tool("find_russian_localizations_for_active_mods", {})
+        result = call_tool("find_localizations_for_active_mods", {"language": "ru"})
 
     mock_find.assert_called_once()
     assert result == fake
+
+
+def test_find_localizations_tool_requires_language() -> None:
+    result = call_tool("find_localizations_for_active_mods", {})
+    assert "error" in result
 
 
 def test_validate_workshop_ids_tool() -> None:

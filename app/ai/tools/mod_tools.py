@@ -13,7 +13,7 @@ def summarize_tool_result(name: str, result: dict[str, Any]) -> str:
         return f"error: {result['error']}"
     if name in ("search_workshop_mods", "search_steam_workshop"):
         return f"{result.get('count', len(result.get('matches', [])))} matches"
-    if name == "find_russian_localizations_for_active_mods":
+    if name == "find_localizations_for_active_mods":
         needing = len(result.get("mods_needing_localization", []))
         suggestions = len(result.get("suggestions", []))
         with_rec = sum(1 for s in result.get("suggestions", []) if s.get("recommended"))

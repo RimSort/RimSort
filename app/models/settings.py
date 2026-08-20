@@ -239,6 +239,7 @@ class Settings(QObject):
         self.ai_api_key: str = ""
         self.ai_proxy: str = ""
         self.ai_model: str = "gemini-3.5-flash-lite"
+        self.ai_localization_language: str = ""
 
         # GitHub Mod Updates
         self.github_update_check_enabled: bool = True

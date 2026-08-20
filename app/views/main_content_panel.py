@@ -995,6 +995,9 @@ class MainContent(QObject):
                 )
                 self.window_manager.register(dialog)
                 dialog.download_requested.connect(self._download_single_workshop_mod)
+                dialog.download_selected_requested.connect(
+                    self._download_selected_workshop_mods
+                )
                 selected_deps = dialog.show_dialog(
                     deps_summary, missing_deps, dep_resolve
                 )
@@ -2131,6 +2134,13 @@ class MainContent(QObject):
             self._do_setup_steamcmd()
         if self.steamcmd_wrapper.setup:
             self._do_download_mods_with_steamcmd([workshop_id])
+
+    def _download_selected_workshop_mods(self, publishedfileids: list[str]) -> None:
+        """Download a batch of mods immediately via SteamCMD."""
+        if not self.steamcmd_wrapper.setup:
+            self._do_setup_steamcmd()
+        if self.steamcmd_wrapper.setup:
+            self._do_download_mods_with_steamcmd(publishedfileids)
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         logger.debug(
