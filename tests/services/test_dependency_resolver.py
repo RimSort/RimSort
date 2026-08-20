@@ -35,6 +35,28 @@ def _make_mod(
     return mod
 
 
+def _make_alt_dependency_metadata(active_paths: set[str]) -> MetadataController:
+    parent = _make_mod(
+        "author.parent",
+        "/mods/parent",
+        dependencies={
+            "author.required": DependencyMod(
+                package_id=CaseInsensitiveStr("author.required"),
+                alternative_package_ids={CaseInsensitiveStr("author.alt")},
+            )
+        },
+    )
+    alt = _make_mod("author.alt", "/mods/alt")
+    return cast(
+        MetadataController,
+        MagicMockMetadata(
+            mods_metadata={"/mods/parent": parent, "/mods/alt": alt},
+            active_paths=active_paths,
+            use_alternatives=True,
+        ),
+    )
+
+
 class TestParseWorkshopIdFromUrl:
     def test_query_id(self) -> None:
         url = "https://steamcommunity.com/sharedfiles/filedetails/?id=12345"
@@ -280,56 +302,22 @@ class TestBuildDependenciesDialogContext:
         assert dep_resolve == {}
 
     def test_alternative_package_id_satisfies_dependency(self) -> None:
-        parent = _make_mod(
-            "author.parent",
-            "/mods/parent",
-            dependencies={
-                "author.required": DependencyMod(
-                    package_id=CaseInsensitiveStr("author.required"),
-                    alternative_package_ids={CaseInsensitiveStr("author.alt")},
-                )
-            },
-        )
-        alt = _make_mod("author.alt", "/mods/alt")
-        metadata = MagicMockMetadata(
-            mods_metadata={
-                "/mods/parent": parent,
-                "/mods/alt": alt,
-            },
-            active_paths={"/mods/parent", "/mods/alt"},
-            use_alternatives=True,
-        )
+        paths = {"/mods/parent", "/mods/alt"}
+        metadata = _make_alt_dependency_metadata(paths)
 
         deps_summary, missing_deps, _ = build_dependencies_dialog_context(
-            cast(MetadataController, metadata), {"/mods/parent", "/mods/alt"}
+            metadata, paths
         )
 
         assert deps_summary["author.parent"]["satisfied"] == {"author.required"}
         assert "author.parent" not in missing_deps
 
     def test_alternative_local_dep_classified_as_local(self) -> None:
-        parent = _make_mod(
-            "author.parent",
-            "/mods/parent",
-            dependencies={
-                "author.required": DependencyMod(
-                    package_id=CaseInsensitiveStr("author.required"),
-                    alternative_package_ids={CaseInsensitiveStr("author.alt")},
-                )
-            },
-        )
-        alt = _make_mod("author.alt", "/mods/alt")
-        metadata = MagicMockMetadata(
-            mods_metadata={
-                "/mods/parent": parent,
-                "/mods/alt": alt,
-            },
-            active_paths={"/mods/parent"},
-            use_alternatives=True,
-        )
+        paths = {"/mods/parent"}
+        metadata = _make_alt_dependency_metadata(paths)
 
         deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
-            cast(MetadataController, metadata), {"/mods/parent"}
+            metadata, paths
         )
 
         assert deps_summary["author.parent"]["local"] == {"author.required"}
