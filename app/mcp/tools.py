@@ -12,6 +12,15 @@ _GUI_REQUIRED = (
     "RimSort GUI must be running. Enable MCP in Settings and keep RimSort open."
 )
 
+_QUERY_LIMIT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "query": {"type": "string"},
+        "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+    },
+    "required": ["query"],
+}
+
 
 def list_tools() -> list[dict[str, Any]]:
     return [
@@ -49,14 +58,7 @@ def list_tools() -> list[dict[str, Any]]:
         {
             "name": "search_installed_mods",
             "description": "Search installed mods by substring in name or package_id",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string"},
-                    "limit": {"type": "integer", "minimum": 1, "maximum": 50},
-                },
-                "required": ["query"],
-            },
+            "inputSchema": _QUERY_LIMIT_SCHEMA,
         },
         {
             "name": "search_workshop_mods",
@@ -66,14 +68,7 @@ def list_tools() -> list[dict[str, Any]]:
                 "Does not require workshop_folder. Returns publishedfileid, title, "
                 "url, and short description. Use these IDs for queue_download."
             ),
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string"},
-                    "limit": {"type": "integer", "minimum": 1, "maximum": 50},
-                },
-                "required": ["query"],
-            },
+            "inputSchema": _QUERY_LIMIT_SCHEMA,
         },
         {
             "name": "search_steam_workshop",
@@ -81,14 +76,7 @@ def list_tools() -> list[dict[str, Any]]:
                 "Alias for search_workshop_mods: search RimWorld Steam Workshop "
                 "by text via Steam Web API (requires steam_apikey in settings)."
             ),
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string"},
-                    "limit": {"type": "integer", "minimum": 1, "maximum": 50},
-                },
-                "required": ["query"],
-            },
+            "inputSchema": _QUERY_LIMIT_SCHEMA,
         },
         {
             "name": "find_russian_localizations_for_active_mods",
@@ -217,6 +205,13 @@ def _parse_limit(raw: Any, default: int, maximum: int) -> int:
         return default
 
 
+def _require_query(args: dict[str, Any]) -> tuple[str, int] | dict[str, Any]:
+    query = str(args.get("query", "")).strip()
+    if not query:
+        return {"matches": [], "error": "query is required"}
+    return query, _parse_limit(args.get("limit", 20), 20, 50)
+
+
 def call_tool(
     name: str,
     arguments: dict[str, Any] | None = None,
@@ -241,17 +236,17 @@ def call_tool(
             return {"found": False, "package_id": pid}
         return {"found": True, **info}
     if name == "search_installed_mods":
-        query = str(args.get("query", "")).strip()
-        if not query:
-            return {"matches": [], "error": "query is required"}
-        limit = _parse_limit(args.get("limit", 20), 20, 50)
+        parsed = _require_query(args)
+        if isinstance(parsed, dict):
+            return parsed
+        query, limit = parsed
         matches = rim_sort_context.search_installed_mods(query, limit=limit)
         return {"query": query, "matches": matches, "count": len(matches)}
     if name in ("search_workshop_mods", "search_steam_workshop"):
-        query = str(args.get("query", "")).strip()
-        if not query:
-            return {"matches": [], "error": "query is required"}
-        limit = _parse_limit(args.get("limit", 20), 20, 50)
+        parsed = _require_query(args)
+        if isinstance(parsed, dict):
+            return parsed
+        query, limit = parsed
         return rim_sort_context.search_workshop_mods(
             query,
             limit=limit,
@@ -311,9 +306,7 @@ def call_tool(
                 "invalid_ids": invalid,
                 "valid_ids": [],
             }
-        command_queue.enqueue(
-            {"type": "steamcmd_download", "publishedfileids": valid}
-        )
+        command_queue.enqueue({"type": "steamcmd_download", "publishedfileids": valid})
         result: dict[str, Any] = {
             "ok": True,
             "queued": "steamcmd_download",

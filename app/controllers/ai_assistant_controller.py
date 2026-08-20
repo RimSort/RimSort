@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from PySide6.QtCore import QObject
 
@@ -8,18 +8,21 @@ from app.windows.ai_assistant_panel import AiAssistantPanel
 
 
 class AiAssistantController(QObject):
+    # jscpd:ignore-start
     def __init__(
         self,
         settings: Settings,
         metadata_controller: MetadataController,
         get_active_paths: Callable[[], list[str]],
-        parent=None,
+        parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self.settings = settings
         self.metadata_controller = metadata_controller
         self._get_active_paths = get_active_paths
         self._panel: AiAssistantPanel | None = None
+
+    # jscpd:ignore-end
 
     def open_panel(self) -> None:
         if not self.settings.ai_assistant_enabled:

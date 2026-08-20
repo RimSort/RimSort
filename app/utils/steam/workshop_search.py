@@ -51,6 +51,7 @@ def search_workshop_by_text(
 
     limit = max(1, min(int(limit), 50))
     api = WebAPI(api_key.strip(), format="json", https=True)
+    # jscpd:ignore-start
     response = api.call(
         method_path="IPublishedFileService.QueryFiles",
         key=api_key.strip(),
@@ -93,6 +94,7 @@ def search_workshop_by_text(
         strip_description_bbcode=True,
         admin_query=False,
     )
+    # jscpd:ignore-end
 
     raw_items = response.get("response", {}).get("publishedfiledetails", [])
     if not isinstance(raw_items, list):

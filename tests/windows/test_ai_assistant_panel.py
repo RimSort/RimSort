@@ -1,5 +1,5 @@
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,18 +11,6 @@ from app.windows.ai_assistant_panel import AiAssistantPanel
 
 
 @pytest.fixture()
-def _mock_settings_deps() -> Generator[None, None, None]:
-    with (
-        patch("app.models.settings.QApplication") as mock_qapp,
-        patch("app.models.settings.AppInfo") as mock_app_info,
-    ):
-        mock_qapp.font.return_value.family.return_value = "monospace"
-        mock_app_info.return_value.app_storage_folder = MagicMock()
-        mock_app_info.return_value.app_settings_file = MagicMock()
-        yield
-
-
-@pytest.fixture()
 def settings(_mock_settings_deps: None) -> Settings:
     model = Settings()
     model.save = MagicMock()  # type: ignore[method-assign]
@@ -30,7 +18,7 @@ def settings(_mock_settings_deps: None) -> Settings:
 
 
 @pytest.fixture()
-def panel(settings: Settings, qtbot: QtBot) -> AiAssistantPanel:
+def panel(settings: Settings, qtbot: QtBot) -> Generator[AiAssistantPanel, None, None]:
     metadata_controller = MagicMock()
     metadata_controller.game_version = "1.6"
     with patch("app.windows.ai_assistant_panel.ChatStore") as mock_store:
@@ -38,7 +26,7 @@ def panel(settings: Settings, qtbot: QtBot) -> AiAssistantPanel:
         widget = AiAssistantPanel(
             settings,
             metadata_controller,
-            lambda: [],
+            list,
         )
         qtbot.addWidget(widget)
         yield widget
@@ -56,7 +44,7 @@ class TestAiAssistantPanelCredentials:
         assert settings.ai_api_key == "secret-key"
         assert settings.ai_proxy == "127.0.0.1:8080"
         assert settings.ai_model == panel._current_model_id()
-        settings.save.assert_called_once()
+        settings.save.assert_called_once()  # type: ignore[attr-defined]
 
     def test_close_event_persists_credentials(
         self, panel: AiAssistantPanel, settings: Settings, qtbot: QtBot
@@ -68,7 +56,7 @@ class TestAiAssistantPanelCredentials:
 
         assert settings.ai_api_key == "another-key"
         assert settings.ai_proxy == "socks5://127.0.0.1:1080"
-        settings.save.assert_called_once()
+        settings.save.assert_called_once()  # type: ignore[attr-defined]
 
     def test_clear_chat_clears_store_and_history(
         self, panel: AiAssistantPanel, tmp_path: Path

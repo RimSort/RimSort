@@ -1,15 +1,16 @@
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from loguru import logger
 
 from app.ai.gemini_models import DEFAULT_GEMINI_MODEL, format_quota_error_message
+from app.ai.provider_base import AIProvider
 from app.ai.proxy import (
     ProxyParseError,
     ProxyUnavailableError,
     resolve_working_proxy,
 )
 from app.utils import http
-from app.ai.provider_base import AIProvider
 
 ToolExecutor = Callable[[str, dict[str, Any]], dict[str, Any]]
 OnToolCall = Callable[[str, dict[str, Any], dict[str, Any]], None]
@@ -131,7 +132,9 @@ class GeminiProvider(AIProvider):
         candidate = data["candidates"][0]
         content = candidate["content"]
         parts = content.get("parts", [])
-        function_calls = [part["functionCall"] for part in parts if "functionCall" in part]
+        function_calls = [
+            part["functionCall"] for part in parts if "functionCall" in part
+        ]
         return content, function_calls
 
     def complete(

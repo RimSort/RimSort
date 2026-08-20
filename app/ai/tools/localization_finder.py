@@ -146,9 +146,7 @@ def _search_localization_candidates(
         except Exception:
             continue
         filtered = [
-            m
-            for m in matches
-            if _title_looks_localized(str(m.get("title", "")))
+            m for m in matches if _title_looks_localized(str(m.get("title", "")))
         ]
         _merge_candidates(merged, filtered if filtered else matches)
 
@@ -201,9 +199,7 @@ def find_russian_localizations_for_active_mods(
             continue
         if _is_official_rimworld_content(pid):
             continue
-        mods_to_scan.append(
-            {"package_id": pid, "name": mod.get("name", pid)}
-        )
+        mods_to_scan.append({"package_id": pid, "name": mod.get("name", pid)})
 
     scan_total = len(mods_to_scan)
     if on_progress is not None:
@@ -226,7 +222,9 @@ def find_russian_localizations_for_active_mods(
     search_total = len(mods_needing)
 
     if on_progress is not None and search_total > 0:
-        on_progress(0, search_total, "Searching Steam Workshop for Russian localizations")
+        on_progress(
+            0, search_total, "Searching Steam Workshop for Russian localizations"
+        )
 
     for index, mod in enumerate(mods_needing, start=1):
         pid = mod["package_id"]

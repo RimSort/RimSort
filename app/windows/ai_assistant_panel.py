@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from app.ai.chat_store import ChatStore
@@ -119,7 +120,7 @@ class AiAssistantPanel(QDialog):
         settings: Settings,
         metadata_controller: MetadataController,
         get_active_paths: Callable[[], list[str]],
-        parent=None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.settings = settings

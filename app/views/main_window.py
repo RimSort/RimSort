@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         add the three main views, and set up relevant signals and slots.
         """
         logger.info("Initializing MainWindow")
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         self.settings = settings
         self._get_active_instance = get_active_instance
@@ -377,8 +377,6 @@ class MainWindow(QMainWindow):
             if diag.exec_is_positive():
                 instance.steam_client_integration = True
                 self._set_instance(instance)
-
-        return
 
     def __switch_to_instance(self, instance: str) -> None:
         """Switch to a different instance."""

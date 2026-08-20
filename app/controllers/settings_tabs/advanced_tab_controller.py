@@ -94,11 +94,7 @@ class AdvancedTabController(BaseTabController):
         token = self.dialog.mcp_server_token.text().strip()
         auth = ""
         if token:
-            auth = (
-                ',\n      "headers": {'
-                f'"Authorization": "Bearer {token}"'
-                "}"
-            )
+            auth = f',\n      "headers": {{"Authorization": "Bearer {token}"}}'
         snippet = (
             '{\n  "mcpServers": {\n    "rimsort": {\n'
             f'      "url": "http://127.0.0.1:{port}/mcp"{auth}\n'

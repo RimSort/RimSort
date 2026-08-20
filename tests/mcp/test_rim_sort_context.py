@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -16,7 +17,9 @@ def mcp_instance_layout(tmp_path: Path) -> dict[str, Any]:
     storage.mkdir()
     logs = tmp_path / "logs"
     logs.mkdir()
-    logs.joinpath("RimSort.log").write_text("line1\nline2\nerror: boom\n", encoding="utf-8")
+    logs.joinpath("RimSort.log").write_text(
+        "line1\nline2\nerror: boom\n", encoding="utf-8"
+    )
 
     game = tmp_path / "game"
     game.mkdir()
@@ -67,20 +70,22 @@ def mcp_instance_layout(tmp_path: Path) -> dict[str, Any]:
 
 
 @pytest.fixture
-def patch_app_info(mcp_instance_layout: dict[str, Any]):
+def patch_app_info(
+    mcp_instance_layout: dict[str, Any],
+) -> Generator[None, None, None]:
     with patch("app.mcp.rim_sort_context.AppInfo") as mock_info:
         mock_info.return_value.app_storage_folder = mcp_instance_layout["storage"]
         mock_info.return_value.user_log_folder = mcp_instance_layout["logs"]
         yield
 
 
-def test_search_installed_mods(patch_app_info) -> None:
+def test_search_installed_mods(patch_app_info: None) -> None:
     matches = rim_sort_context.search_installed_mods("fish", limit=10)
     assert len(matches) == 1
     assert matches[0]["package_id"] == "bs.fishery"
 
 
-def test_describe_mod(patch_app_info) -> None:
+def test_describe_mod(patch_app_info: None) -> None:
     info = rim_sort_context.describe_mod("bs.fishery")
     assert info is not None
     assert info["name"] == "Fishery - Modding Library"
@@ -88,12 +93,14 @@ def test_describe_mod(patch_app_info) -> None:
     assert "missing.dep" in info["mod_dependencies"]
 
 
-def test_list_missing_deps(patch_app_info) -> None:
+def test_list_missing_deps(patch_app_info: None) -> None:
     result = rim_sort_context.list_missing_deps()
     assert result["missing_by_mod"]["bs.fishery"] == ["missing.dep"]
 
 
-def test_get_instance_summary(patch_app_info, mcp_instance_layout) -> None:
+def test_get_instance_summary(
+    patch_app_info: None, mcp_instance_layout: dict[str, Any]
+) -> None:
     summary = rim_sort_context.get_instance_summary()
     assert summary["current_instance"] == "Default"
     assert summary["installed_mod_count"] == 2
@@ -112,26 +119,26 @@ def test_get_instance_summary_steam_key_override() -> None:
     assert summary["steam_apikey_length"] == 32
 
 
-def test_read_log_rimsort(patch_app_info) -> None:
+def test_read_log_rimsort(patch_app_info: None) -> None:
     result = rim_sort_context.read_log("rimsort", tail_lines=10)
     assert result["line_count"] == 3
     assert "error: boom" in result["lines"][-1]
 
 
-def test_read_log_player_grep(patch_app_info) -> None:
+def test_read_log_player_grep(patch_app_info: None) -> None:
     result = rim_sort_context.read_log("player", tail_lines=10, grep="Exception")
     assert result["line_count"] == 1
     assert "Exception" in result["lines"][0]
 
 
-def test_search_workshop_mods_no_api_key(patch_app_info) -> None:
+def test_search_workshop_mods_no_api_key(patch_app_info: None) -> None:
     result = rim_sort_context.search_workshop_mods("harmony")
     assert result["matches"] == []
     assert "steam_apikey" in result["error"]
 
 
 def test_search_workshop_mods_with_api_key(
-    patch_app_info, mcp_instance_layout: dict[str, Any]
+    patch_app_info: None, mcp_instance_layout: dict[str, Any]
 ) -> None:
     settings_path = mcp_instance_layout["storage"] / "settings.json"
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
@@ -157,36 +164,45 @@ def test_search_workshop_mods_with_api_key(
     assert result["source"] == "steam_api"
 
 
-def test_find_russian_localizations_validates_candidates(
-    patch_app_info,
-) -> None:
-    fake_result = {
+def _fake_localization_result(
+    candidates: list[dict[str, Any]], recommended: dict[str, Any]
+) -> dict[str, Any]:
+    return {
         "mods_needing_localization": [{"package_id": "x.y", "name": "X Y"}],
         "skipped_already_localized": [],
         "suggestions": [
             {
                 "target_package_id": "x.y",
                 "target_name": "X Y",
-                "candidates": [
-                    {
-                        "publishedfileid": "111",
-                        "title": "X Y Russian",
-                        "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=111",
-                        "score": 2.0,
-                    },
-                    {
-                        "publishedfileid": "999",
-                        "title": "Fake",
-                        "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=999",
-                        "score": 1.0,
-                    },
-                ],
-                "recommended": {"publishedfileid": "111", "title": "X Y Russian"},
+                "candidates": candidates,
+                "recommended": recommended,
             }
         ],
         "errors": [],
         "source": "steam_api",
     }
+
+
+def test_find_russian_localizations_validates_candidates(
+    patch_app_info: None,
+) -> None:
+    fake_result = _fake_localization_result(
+        candidates=[
+            {
+                "publishedfileid": "111",
+                "title": "X Y Russian",
+                "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=111",
+                "score": 2.0,
+            },
+            {
+                "publishedfileid": "999",
+                "title": "Fake",
+                "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=999",
+                "score": 1.0,
+            },
+        ],
+        recommended={"publishedfileid": "111", "title": "X Y Russian"},
+    )
     with (
         patch(
             "app.mcp.rim_sort_context.find_russian_localizations_for_active_mods",
@@ -209,29 +225,19 @@ def test_find_russian_localizations_validates_candidates(
 
 
 def test_find_russian_localizations_keeps_metadata_only_candidates(
-    patch_app_info,
+    patch_app_info: None,
 ) -> None:
-    fake_result = {
-        "mods_needing_localization": [{"package_id": "x.y", "name": "X Y"}],
-        "skipped_already_localized": [],
-        "suggestions": [
+    fake_result = _fake_localization_result(
+        candidates=[
             {
-                "target_package_id": "x.y",
-                "target_name": "X Y",
-                "candidates": [
-                    {
-                        "publishedfileid": "555",
-                        "title": "X Y Russian",
-                        "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=555",
-                        "score": 2.0,
-                    }
-                ],
-                "recommended": {"publishedfileid": "555", "title": "X Y Russian"},
+                "publishedfileid": "555",
+                "title": "X Y Russian",
+                "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=555",
+                "score": 2.0,
             }
         ],
-        "errors": [],
-        "source": "steam_api",
-    }
+        recommended={"publishedfileid": "555", "title": "X Y Russian"},
+    )
     metadata = [{"publishedfileid": "555", "title": "X Y Russian"}]
     with (
         patch(

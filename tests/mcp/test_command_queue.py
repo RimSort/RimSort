@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -10,7 +11,7 @@ from app.mcp import command_queue, tools
 
 
 @pytest.fixture
-def queue_storage(tmp_path: Path):
+def queue_storage(tmp_path: Path) -> Generator[Path, None, None]:
     storage = tmp_path / "storage"
     storage.mkdir()
     with patch("app.mcp.command_queue.AppInfo") as mock_info:
@@ -69,7 +70,9 @@ def test_drain_app_controller_emits_event_bus() -> None:
             {"type": "save"},
             {"type": "run_game"},
         ]
-        app_controller.AppController._drain_mcp_commands(object())
+        app_controller.AppController._drain_mcp_commands(
+            MagicMock(spec=app_controller.AppController)
+        )
         mock_bus.do_steamcmd_download.emit.assert_called_once_with(["1"])
         mock_bus.do_sort_active_mods_list.emit.assert_called_once()
         mock_bus.do_save_active_mods_list.emit.assert_called_once()

@@ -69,8 +69,10 @@ def _active_mod_entries(instance_name: str | None = None) -> list[dict[str, str]
 
 def get_instance_config(instance_name: str | None = None) -> dict[str, Any]:
     data = _load_settings()
-    name = instance_name or os.environ.get("RIMSORT_INSTANCE") or data.get(
-        "current_instance", "Default"
+    name = (
+        instance_name
+        or os.environ.get("RIMSORT_INSTANCE")
+        or data.get("current_instance", "Default")
     )
     instances = data.get("instances", {})
     if name not in instances:
@@ -193,42 +195,42 @@ def list_installed_mods(instance_name: str | None = None) -> list[dict[str, Any]
     for package_id, mod_path in _iter_mod_paths(instance_name):
         info = _parse_about_path(mod_path)
         if info:
-            mods.append(
-                {
-                    "package_id": info["package_id"],
-                    "name": info["name"],
-                    "path": info["path"],
-                    "mod_type": info["mod_type"],
-                }
-            )
+            mods.append(_mod_summary(info))
     return mods
+
+
+def _mod_summary(info: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "package_id": info["package_id"],
+        "name": info["name"],
+        "path": info["path"],
+        "mod_type": info["mod_type"],
+    }
+
+
+def _find_mod_path(package_id: str, instance_name: str | None) -> Path | None:
+    needle = package_id.lower()
+    for pid, mod_path in _iter_mod_paths(instance_name):
+        if pid.lower() == needle:
+            return mod_path
+    return None
 
 
 def get_mod_info(
     package_id: str, instance_name: str | None = None
 ) -> dict[str, Any] | None:
-    needle = package_id.lower()
-    for pid, mod_path in _iter_mod_paths(instance_name):
-        if pid.lower() == needle:
-            info = _parse_about_path(mod_path)
-            if info:
-                return {
-                    "package_id": info["package_id"],
-                    "name": info["name"],
-                    "path": info["path"],
-                    "mod_type": info["mod_type"],
-                }
-    return None
+    mod_path = _find_mod_path(package_id, instance_name)
+    if mod_path is None:
+        return None
+    info = _parse_about_path(mod_path)
+    return _mod_summary(info) if info else None
 
 
 def describe_mod(
     package_id: str, instance_name: str | None = None
 ) -> dict[str, Any] | None:
-    needle = package_id.lower()
-    for pid, mod_path in _iter_mod_paths(instance_name):
-        if pid.lower() == needle:
-            return _parse_about_path(mod_path)
-    return None
+    mod_path = _find_mod_path(package_id, instance_name)
+    return _parse_about_path(mod_path) if mod_path is not None else None
 
 
 def search_installed_mods(

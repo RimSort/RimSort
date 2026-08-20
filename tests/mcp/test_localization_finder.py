@@ -3,10 +3,10 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from app.ai.tools.localization_finder import (
-    find_russian_localizations_for_active_mods,
     _has_rus_marker,
     _is_already_localized,
     _score_candidate,
+    find_russian_localizations_for_active_mods,
 )
 
 
@@ -165,7 +165,9 @@ def test_find_russian_localizations_skips_official_dlc() -> None:
             "mod_dependencies": [],
         }
     }
-    with patch("app.ai.tools.localization_finder.search_workshop_by_text") as mock_search:
+    with patch(
+        "app.ai.tools.localization_finder.search_workshop_by_text"
+    ) as mock_search:
         result = find_russian_localizations_for_active_mods(
             active,
             installed,

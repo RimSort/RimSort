@@ -14,7 +14,9 @@ def validate_publishedfileids(ids: list[str]) -> dict[str, Any]:
     if not cleaned:
         return {"valid": [], "invalid": [], "valid_details": []}
 
-    metadata, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(cleaned)
+    metadata, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(
+        cleaned
+    )
     valid_details: list[dict[str, Any]] = []
     valid_ids: list[str] = []
 

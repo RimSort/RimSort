@@ -11,7 +11,7 @@ def test_http_initialize_and_tools_list() -> None:
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), _McpHttpHandler)
     thread = Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
-    host, port = httpd.server_address
+    host, port = str(httpd.server_address[0]), httpd.server_address[1]
     try:
         conn = HTTPConnection(host, port, timeout=5)
         body = json.dumps(
@@ -47,7 +47,9 @@ def test_http_initialize_and_tools_list() -> None:
         names = [t["name"] for t in listed["result"]["tools"]]
         assert "get_mod_info" in names
 
-        conn.request("POST", "/mcp", body="{}", headers={"Content-Type": "application/json"})
+        conn.request(
+            "POST", "/mcp", body="{}", headers={"Content-Type": "application/json"}
+        )
         assert conn.getresponse().status == 401
     finally:
         httpd.shutdown()
