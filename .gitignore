@@ -33,6 +33,7 @@ Scripts/
 # IDE
 .idea/
 .vs
+.cursor
 
 # Nuitka / build
 *.build/

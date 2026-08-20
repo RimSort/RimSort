@@ -22,7 +22,7 @@ class TroubleshootingDialog(QDialog):
         super().__init__()
 
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setWindowTitle("Troubleshooting")
+        self.setWindowTitle(self.tr("Troubleshooting"))
 
         main_layout = QVBoxLayout()
         main_layout.setSpacing(8)

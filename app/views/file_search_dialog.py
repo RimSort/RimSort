@@ -39,7 +39,7 @@ class FileSearchDialog(QDialog):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("File Search")
+        self.setWindowTitle(self.tr("File Search"))
         self._search_paths: list[str] = []
         self._recent_searches: list[str] = []
         self._max_recent_searches = 10

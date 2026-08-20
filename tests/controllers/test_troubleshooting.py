@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from shutil import rmtree
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6.QtWidgets import QApplication
@@ -565,12 +565,13 @@ class TestModListImportExport:
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
             ),
-            patch("builtins.open", create=True) as mock_open,
-            patch("json.load", return_value=import_data),
+            patch(
+                "app.controllers.troubleshooting_controller.MetadataController"
+            ) as mock_metadata_cls,
             patch(
                 "app.controllers.troubleshooting_controller.EventBus"
             ) as mock_event_bus,
         ):
+            mock_metadata_cls.instance.return_value = MagicMock()
             controller._on_mod_import_list_button_clicked()
-            mock_open.assert_called()
             mock_event_bus.return_value.do_refresh_mods_lists.emit.assert_called()

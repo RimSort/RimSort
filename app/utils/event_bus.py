@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Union
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QPushButton, QWidget
 
 
 class EventBus(QObject):
@@ -55,6 +55,7 @@ class EventBus(QObject):
     github_version_switch_requested = Signal(str, str)  # mod_path, target_tag
     do_add_zip_mod = Signal()
     do_browse_workshop = Signal()
+    do_browse_workshop_url = Signal(str)
     do_check_for_workshop_updates = Signal()
     do_check_for_git_updates = Signal()
     do_steam_verify_game_files = Signal()
@@ -158,3 +159,4 @@ class EventBus(QObject):
             return
         super().__init__()
         self._is_initialized: bool = True
+        self.workshop_restore_target: QWidget | None = None

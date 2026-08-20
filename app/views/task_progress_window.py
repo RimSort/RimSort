@@ -67,7 +67,7 @@ class TaskProgressWindow(QWidget):
         layout.addWidget(self.progress_bar)
 
         # Cancel button
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(self.tr("Cancel"))
         self.cancel_button.clicked.connect(self._on_cancel_clicked)
         layout.addWidget(self.cancel_button)
 

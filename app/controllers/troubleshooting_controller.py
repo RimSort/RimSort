@@ -1,4 +1,3 @@
-import json
 import re
 import xml.etree.ElementTree as ElementTree
 from pathlib import Path
@@ -8,7 +7,10 @@ from typing import List, Optional
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
 
+from app.controllers.metadata_controller import MetadataController
 from app.models.settings import Settings
+from app.services.import_export_service import ImportExportService
+from app.services.mod_list_parser import ModListFormatError
 from app.utils.acf_utils import cleanup_orphaned_workshop_items
 from app.utils.event_bus import EventBus
 from app.utils.generic import platform_specific_open
@@ -544,35 +546,27 @@ class TroubleshootingController:
             return
 
         try:
-            # read and validate import file
-            with open(import_path) as f:
-                import_data = json.load(f)
-
-            if not all(key in import_data for key in ["version", "activeMods"]):
-                raise ValueError("Invalid mod list format")
-
-            # create new ModsConfig.xml content
-            root = ElementTree.Element("ModsConfigData")
-            version = ElementTree.SubElement(root, "version")
-            version.text = import_data["version"]
-
-            active_mods = ElementTree.SubElement(root, "activeMods")
-            for mod in import_data["activeMods"]:
-                mod_elem = ElementTree.SubElement(active_mods, "li")
-                mod_elem.text = mod
-
-            known_expansions = ElementTree.SubElement(root, "knownExpansions")
-            for exp in import_data.get("knownExpansions", []):
-                exp_elem = ElementTree.SubElement(known_expansions, "li")
-                exp_elem.text = exp
-
-            tree = ElementTree.ElementTree(root)
-            tree.write(mods_config, encoding="utf-8", xml_declaration=True)
-
-            # refresh mod list so user dont need to click refresh button in main window
+            service = ImportExportService(
+                MetadataController.instance(), self.settings
+            )
+            service.import_from_file(str(import_path), target="mods_config")
             EventBus().do_refresh_mods_lists.emit()
 
-        except (json.JSONDecodeError, ValueError, KeyError) as e:
+        except ModListFormatError as e:
+            logger.error(f"Failed to import mod list: {e}")
+            show_warning(
+                title=self.translate("TroubleshootingController", "Error"),
+                text=self.translate(
+                    "TroubleshootingController", "Failed to import mod list"
+                ),
+                information=self.translate(
+                    "TroubleshootingController",
+                    "The selected file is not a valid mod list file.<br>"
+                    "Expected RimWorld ModsConfig XML or RimSort JSON export.<br>"
+                    "Details: {e}",
+                ).format(e=str(e)),
+            )
+        except Exception as e:
             logger.error(f"Failed to import mod list: {e}")
             show_dialogue_conditional(
                 self.translate("TroubleshootingController", "Error"),

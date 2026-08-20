@@ -240,15 +240,25 @@ if __name__ == "__main__":
     try:
         lock = SingleInstanceLock(AppInfo().app_storage_folder / "rimsort.lock")
         if not lock.acquire():
+            from PySide6.QtCore import QCoreApplication
             from PySide6.QtWidgets import QApplication, QMessageBox
 
             _app = QApplication(sys.argv)
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setWindowTitle("RimSort Already Running")
-            msg.setText("Another instance of RimSort is already running.")
+            msg.setWindowTitle(
+                QCoreApplication.translate("RimSort", "RimSort Already Running")
+            )
+            msg.setText(
+                QCoreApplication.translate(
+                    "RimSort", "Another instance of RimSort is already running."
+                )
+            )
             msg.setInformativeText(
-                "Please close the existing instance before starting a new one."
+                QCoreApplication.translate(
+                    "RimSort",
+                    "Please close the existing instance before starting a new one.",
+                )
             )
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()

@@ -19,6 +19,12 @@ from app.utils.steam.webapi.wrapper import (
 )
 from app.utils.xml import json_to_xml_write
 
+from .mod_list_parser import (
+    ModListFormatError,
+    parse_mod_list_file,
+    parsed_to_mods_config_dict,
+)
+
 
 @dataclass
 class ExportData:
@@ -298,3 +304,26 @@ class ImportExportService:
         )
         json_to_xml_write(mods_config_data, mods_config_path)
         return mods_config_path
+
+    def import_from_file(
+        self,
+        path: str,
+        target: str = "mods_config",
+    ) -> list[str]:
+        """Import a mod list file in JSON or XML format.
+
+        :param path: Path to the mod list file.
+        :param target: ``mods_config`` writes ModsConfig.xml; ``ui`` returns package IDs only.
+        :return: List of package IDs from the file.
+        :raises ModListFormatError: If the file format is not recognized.
+        """
+        parsed = parse_mod_list_file(path)
+        if target == "ui":
+            return parsed.package_ids
+
+        mods_config_path = str(
+            Path(self.settings.instances[self.settings.current_instance].config_folder)
+            / "ModsConfig.xml"
+        )
+        json_to_xml_write(parsed_to_mods_config_dict(parsed), mods_config_path)
+        return parsed.package_ids
