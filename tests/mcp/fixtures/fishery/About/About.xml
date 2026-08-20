@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<name>Fishery - Modding Library</name>
+	<packageId>bs.fishery</packageId>
+	<supportedVersions>
+		<li>1.5</li>
+	</supportedVersions>
+	<author>bradson</author>
+	<loadAfter>
+		<li>brrainz.harmony</li>
+	</loadAfter>
+	<modDependencies>
+		<li>
+			<packageId>brrainz.harmony</packageId>
+		</li>
+		<li>
+			<packageId>missing.dep</packageId>
+		</li>
+	</modDependencies>
+	<description>Test mod for MCP</description>
+</ModMetaData>

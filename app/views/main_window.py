@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.controllers.ai_assistant_controller import AiAssistantController
 from app.controllers.file_search_controller import FileSearchController
 from app.controllers.instance_controller import InstanceController
 from app.controllers.main_content_controller import MainContentController
@@ -28,6 +29,7 @@ from app.controllers.metadata_controller import MetadataController
 from app.controllers.mods_panel_controller import ModsPanelController
 from app.controllers.todds_controller import ToddsController
 from app.controllers.troubleshooting_controller import TroubleshootingController
+from app.models.divider import is_divider_uuid
 from app.models.instance import Instance
 from app.models.settings import Settings
 from app.utils import globals
@@ -68,7 +70,7 @@ class MainWindow(QMainWindow):
         add the three main views, and set up relevant signals and slots.
         """
         logger.info("Initializing MainWindow")
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         self.settings = settings
         self._get_active_instance = get_active_instance
@@ -223,11 +225,22 @@ class MainWindow(QMainWindow):
             settings=self.settings,
         )
 
+        self.ai_assistant_controller = AiAssistantController(
+            settings=self.settings,
+            metadata_controller=self.metadata_controller,
+            get_active_paths=lambda: [
+                path
+                for path in self.main_content_panel.mods_panel.active_mods_list.paths
+                if not is_divider_uuid(path)
+            ],
+        )
+
         self.menu_bar = MenuBar(menu_bar=self.menuBar(), settings=self.settings)
         self.menu_bar_controller = MenuBarController(
             view=self.menu_bar,
             settings=self.settings,
             show_settings_dialog=self._show_settings_dialog,
+            open_ai_assistant=self.ai_assistant_controller.open_panel,
         )
 
         self.main_content_controller = MainContentController(
@@ -364,8 +377,6 @@ class MainWindow(QMainWindow):
             if diag.exec_is_positive():
                 instance.steam_client_integration = True
                 self._set_instance(instance)
-
-        return
 
     def __switch_to_instance(self, instance: str) -> None:
         """Switch to a different instance."""

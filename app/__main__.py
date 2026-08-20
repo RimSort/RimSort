@@ -33,7 +33,16 @@ import traceback
 from logging import WARNING, getLogger
 from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
-from typing import Type
+
+# MCP helper must start before Qt imports. Same argv works for source and Nuitka.
+if __name__ == "__main__" and "--mcp" in sys.argv:
+    if "--dev" in sys.argv:
+        os.environ["RIMSORT_DEV"] = "1"
+    sys.argv = [a for a in sys.argv if a not in ("--mcp", "--dev")]
+    from app.mcp.server import main as mcp_main
+
+    mcp_main()
+    raise SystemExit(0)
 
 from loguru import logger
 
@@ -60,7 +69,7 @@ elif SYSTEM == "Windows":
 
 
 def handle_exception(
-    exc_type: Type[BaseException],
+    exc_type: type[BaseException],
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:

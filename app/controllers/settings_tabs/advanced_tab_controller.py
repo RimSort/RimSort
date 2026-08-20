@@ -9,7 +9,7 @@ class AdvancedTabController(BaseTabController):
 
     Manages: debug logging, watchdog, clear/DLC behavior, mod update checks,
     DB auto-update, mod name search scope, backup policy,
-    save-comparison indicators, Auxiliary DB settings,
+    save-comparison indicators, Auxiliary DB settings, MCP server settings,
     and Authentication fields.
     """
 
@@ -26,6 +26,8 @@ class AdvancedTabController(BaseTabController):
         self.dialog.include_mod_notes_in_mod_name_filter_checkbox.stateChanged.connect(
             self._on_include_mod_notes_in_mod_name_filter_changed
         )
+        self.dialog.mcp_server_port.valueChanged.connect(self._update_mcp_snippet)
+        self.dialog.mcp_server_token.textChanged.connect(self._update_mcp_snippet)
 
     def update_view_from_model(self) -> None:
         try:
@@ -79,6 +81,27 @@ class AdvancedTabController(BaseTabController):
         self.dialog.github_token.setText(self.settings.github_token)
         self.dialog.github_token.setCursorPosition(0)
 
+        self.dialog.mcp_server_enabled_checkbox.setChecked(
+            self.settings.mcp_server_enabled
+        )
+        self.dialog.mcp_server_port.setValue(self.settings.mcp_server_port)
+        self.dialog.mcp_server_token.setText(self.settings.mcp_server_token)
+        self.dialog.mcp_server_token.setCursorPosition(0)
+        self._update_mcp_snippet()
+
+    def _update_mcp_snippet(self) -> None:
+        port = self.dialog.mcp_server_port.value()
+        token = self.dialog.mcp_server_token.text().strip()
+        auth = ""
+        if token:
+            auth = f',\n      "headers": {{"Authorization": "Bearer {token}"}}'
+        snippet = (
+            '{\n  "mcpServers": {\n    "rimsort": {\n'
+            f'      "url": "http://127.0.0.1:{port}/mcp"{auth}\n'
+            "    }\n  }\n}"
+        )
+        self.dialog.mcp_config_snippet.setText(snippet)
+
     def update_model_from_view(self) -> None:
         self.settings.debug_logging_enabled = (
             self.dialog.debug_logging_checkbox.isChecked()
@@ -122,6 +145,12 @@ class AdvancedTabController(BaseTabController):
         self.settings.rentry_auth_code = self.dialog.rentry_auth_code.text()
         self.settings.github_username = self.dialog.github_username.text()
         self.settings.github_token = self.dialog.github_token.text()
+
+        self.settings.mcp_server_enabled = (
+            self.dialog.mcp_server_enabled_checkbox.isChecked()
+        )
+        self.settings.mcp_server_port = self.dialog.mcp_server_port.value()
+        self.settings.mcp_server_token = self.dialog.mcp_server_token.text()
 
     @Slot(bool)
     def _on_toggle_show_save_comparison_indicators(self, checked: bool) -> None:

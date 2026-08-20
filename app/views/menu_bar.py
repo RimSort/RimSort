@@ -1,7 +1,7 @@
 import os
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Callable
 
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
@@ -73,6 +73,7 @@ class MenuBar(QObject):
         self.delete_dds_textures_action: QAction
         self.wiki_action: QAction
         self.github_action: QAction
+        self.ai_assistant_action: QAction
         self.show_translation_status_action: QAction
         self.auto_add_translations_action: QAction
         self.check_for_updates_action: QAction | None = None
@@ -396,6 +397,11 @@ class MenuBar(QObject):
         help_menu.addSeparator()
         return help_menu
 
+    def _create_ai_assistant_action(self) -> None:
+        """Top-level menu bar button (right side on Windows) after Help."""
+        self.ai_assistant_action = QAction(self.tr("AI Assistant"), self)
+        self.menu_bar.addAction(self.ai_assistant_action)
+
     def _create_menu_bar(self) -> None:
         """
         Create the menu bar. On macOS, include the app menu.
@@ -420,3 +426,4 @@ class MenuBar(QObject):
         if not os.getenv("RIMSORT_DISABLE_UPDATER"):
             self._create_update_menu()
         self._create_help_menu()
+        self._create_ai_assistant_action()

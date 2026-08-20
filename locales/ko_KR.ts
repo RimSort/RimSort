@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ko_KR">
 <context>
@@ -28,8 +28,71 @@
         <translation>검색 가능한 모든 열</translation>
     </message>
     <message>
-        <source>Searches selected column or all searchable columns if set to 'All'</source>
-        <translation>선택한 열 또는 '모두'로 설정된 경우 검색 가능한 모든 열을 검색합니다.</translation>
+        <source>Searches selected column or all searchable columns if set to &apos;All&apos;</source>
+        <translation>선택한 열 또는 &apos;모두&apos;로 설정된 경우 검색 가능한 모든 열을 검색합니다.</translation>
+    </message>
+</context>
+<context>
+    <name>AiAssistantPanel</name>
+    <message>
+        <source>AI Assistant</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Provider:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Model:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>API key:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Proxy:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>host:port, user:pass@host:port, login:pass:host:port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Assistant</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tool: {call}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{current}/{total}: {message}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading{dots}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Model quota exceeded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Switch to {name}</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -102,7 +165,7 @@
         <translation>불완전한 가져오기</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
         <translation>패키지 ID 누락으로 인해 {len(failed_mods)} 모드를 가져올 수 없습니다. 모든 모드를 다운로드하지 않은 경우 이런 일이 발생할 수 있습니다.&lt;br&gt;&lt;br&gt;먼저 컬렉션을 구독해 보세요.</translation>
     </message>
 </context>
@@ -145,7 +208,7 @@
         <translation>- 이렇게 하면 2개의 Steam DB 간의 종속성 데이터를 정확하게 비교할 수 있습니다.&lt;br&gt;불일치 보고서가 생성됩니다. 다음 경로를 순서대로 입력하라는 메시지가 표시됩니다.&lt;br&gt;&lt;br&gt; 1) 입력 A 선택&lt;br&gt; 2) 입력 B 선택</translation>
     </message>
     <message>
-        <source>- This will effectively recursively overwrite A's key/value with B's key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B's key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
+        <source>- This will effectively recursively overwrite A&apos;s key/value with B&apos;s key/value to the resultant database.&lt;br&gt;- Exceptions will not be recursively updated. Instead, they will be overwritten with B&apos;s key entirely.&lt;br&gt;- The following exceptions will be made:&lt;br&gt;&lt;br&gt;	{DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;The resultant database, C, is saved to a user-specified path. You will be prompted for these paths in order:&lt;br&gt;&lt;br&gt;	1) Select input A (db to-be-updated)&lt;br&gt;	2) Select input B (update source)&lt;br&gt;	3) Select output C (resultant db)</source>
         <translation>- 결과 데이터베이스에 A의 키/값을 B의 키/값으로 재귀적으로 덮어씁니다.&lt;br&gt;- 예외는 재귀적으로 업데이트되지 않습니다. 대신 B의 키로 완전히 덮어쓰게 됩니다.&lt;br&gt;- 다음과 같은 예외가 적용됩니다.&lt;br&gt;&lt;br&gt; {DB_BUILDER_RECURSE_EXCEPTIONS}&lt;br&gt;&lt;br&gt;결과 데이터베이스 C는 사용자가 지정한 경로에 저장됩니다. 다음 경로를 순서대로 입력하라는 메시지가 표시됩니다.&lt;br&gt;&lt;br&gt; 1) 입력 A(업데이트할 DB) 선택&lt;br&gt; 2) 입력 B(업데이트 소스) 선택&lt;br&gt; 3) 출력 C(결과 DB) 선택</translation>
     </message>
     <message>
@@ -153,8 +216,8 @@
         <translation>Steam DB 비교 보고서: {count}개 발견됨</translation>
     </message>
     <message>
-        <source>Click 'Show Details' to see the full report!</source>
-        <translation>전체 보고서를 보려면 '세부정보 표시'를 클릭하세요!</translation>
+        <source>Click &apos;Show Details&apos; to see the full report!</source>
+        <translation>전체 보고서를 보려면 &apos;세부정보 표시&apos;를 클릭하세요!</translation>
     </message>
     <message>
         <source>This operation will merge 2 databases, A &amp; B, by recursively updating A with B, barring exceptions.</source>
@@ -348,8 +411,8 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>{error_msg}&lt;br&gt;&lt;br&gt;관리자 권한으로 RimSort를 실행하거나 폴더 권한을 확인해보세요.</translation>
     </message>
     <message>
-        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the 'streaming search' method for very large files.</source>
-        <translation>{error_msg}&lt;br&gt;&lt;br&gt;작은 배치로 검색해 보거나 대용량 파일의 경우 '스트리밍 검색' 방법을 사용하세요.</translation>
+        <source>{error_msg}&lt;br&gt;&lt;br&gt;Try searching in smaller batches or use the &apos;streaming search&apos; method for very large files.</source>
+        <translation>{error_msg}&lt;br&gt;&lt;br&gt;작은 배치로 검색해 보거나 대용량 파일의 경우 &apos;스트리밍 검색&apos; 방법을 사용하세요.</translation>
     </message>
     <message>
         <source>{error_msg}&lt;br&gt;&lt;br&gt;Please check your settings and try again.</source>
@@ -360,7 +423,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>파일 액세스 오류</translation>
     </message>
     <message>
-        <source>RimSort doesn't have permission to access some files.</source>
+        <source>RimSort doesn&apos;t have permission to access some files.</source>
         <translation>RimSort에 일부 파일에 액세스할 수 있는 권한이 없습니다.</translation>
     </message>
     <message>
@@ -449,13 +512,13 @@ The following table displays duplicate mods grouped by package ID. Select which 
     <message>
         <source>Enable to use regular expressions in search
 Examples:
-- 'def.*\(' to find function definitions
-- '&lt;[^&gt;]+&gt;' to find XML tags
-- '\d+\.\d+(\.\d+)?' to find version numbers</source>
+- &apos;def.*\(&apos; to find function definitions
+- &apos;&lt;[^&gt;]+&gt;&apos; to find XML tags
+- &apos;\d+\.\d+(\.\d+)?&apos; to find version numbers</source>
         <translation>정규 표현식을 사용하면 다음과 같은 예를 찾을 수 있습니다:
-- 'def.*\(': 함수 정의 찾기
-- '&amp;lt;[^&amp;gt;]+&amp;gt;': XML 태그 찾기
-- '\d+\.\d+(\.\d+)?': 버전 번호 찾기 &lt;[^&gt;</translation>
+- &apos;def.*\(&apos;: 함수 정의 찾기
+- &apos;&amp;lt;[^&amp;gt;]+&amp;gt;&apos;: XML 태그 찾기
+- &apos;\d+\.\d+(\.\d+)?&apos;: 버전 번호 찾기 &lt;[^&gt;</translation>
     </message>
     <message>
         <source>XML files only</source>
@@ -797,8 +860,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>인스턴스 이름 제공</translation>
     </message>
     <message>
-        <source>Input a unique name for the backed up instance that is not "{name}"</source>
-        <translation>"{name}"이 아닌 백업된 인스턴스의 고유 이름을 입력하세요.</translation>
+        <source>Input a unique name for the backed up instance that is not &quot;{name}&quot;</source>
+        <translation>&quot;{name}&quot;이 아닌 백업된 인스턴스의 고유 이름을 입력하세요.</translation>
     </message>
     <message>
         <source>Compressing [{instance_name}] instance folder to archive...</source>
@@ -861,7 +924,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>잘못된 경로: {path}</translation>
     </message>
     <message>
-        <source>Couldn't restore steamcmd symlink/junction</source>
+        <source>Couldn&apos;t restore steamcmd symlink/junction</source>
         <translation>steamcmd 심볼릭 링크/접합을 복원할 수 없습니다.</translation>
     </message>
     <message>
@@ -893,7 +956,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>구성된 Workshop mods 폴더로 무엇을 하시겠습니까?</translation>
     </message>
     <message>
-        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
+        <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance&apos;s local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
         <translation>창작마당 폴더: {folder}&lt;br&gt;&lt;br&gt;옵션 1: SteamCMD로 변환&lt;br&gt;RimSort는 모든 창작마당 모드를 새 인스턴스의 로컬 mods 폴더에 복사하여 새 인스턴스 내에서 관리할 수 있는 SteamCMD 모드로 변환합니다. 모드 중복을 방지하기 위해 이 인스턴스에서는 Workshop 폴더가 무시됩니다.&lt;br&gt;&lt;br&gt;옵션 2: Workshop 폴더 유지&lt;br&gt;새 인스턴스는 원본 인스턴스와 동일한 Workshop 폴더를 사용합니다. 필요한 경우 나중에 설정에서 변경할 수 있습니다.&lt;br&gt;&lt;br&gt;어떻게 진행하시겠습니까?</translation>
     </message>
     <message>
@@ -925,8 +988,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>인스턴스를 복제할 수 없습니다.</translation>
     </message>
     <message>
-        <source>Please enter a valid, unique instance name. It cannot be '{name}' or empty.</source>
-        <translation>유효하고 고유한 인스턴스 이름을 입력하세요. '{name}'이거나 비어 있을 수 없습니다.</translation>
+        <source>Please enter a valid, unique instance name. It cannot be &apos;{name}&apos; or empty.</source>
+        <translation>유효하고 고유한 인스턴스 이름을 입력하세요. &apos;{name}&apos;이거나 비어 있을 수 없습니다.</translation>
     </message>
     <message>
         <source>Create new instance [{instance_name}]</source>
@@ -1067,8 +1130,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>활성 모드를 파일로 내보냈습니다</translation>
     </message>
     <message>
-        <source>Click "Show Details" to see the full report!</source>
-        <translation>'상세 정보 표시'를 클릭하여 전체 보고서를 확인하세요!</translation>
+        <source>Click &quot;Show Details&quot; to see the full report!</source>
+        <translation>&apos;상세 정보 표시&apos;를 클릭하여 전체 보고서를 확인하세요!</translation>
     </message>
     <message>
         <source>Report too long</source>
@@ -1283,8 +1346,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>SteamCMD 실행 파일을 찾을 수 없습니다.</translation>
     </message>
     <message>
-        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with "Setup SteamCMD".</source>
-        <translation>기존 SteamCMD 접두사를 설정하거나 "Setup SteamCMD"를 통해 새 접두사를 설정해 주세요.</translation>
+        <source>Please setup an existing SteamCMD prefix, or setup a new prefix with &quot;Setup SteamCMD&quot;.</source>
+        <translation>기존 SteamCMD 접두사를 설정하거나 &quot;Setup SteamCMD&quot;를 통해 새 접두사를 설정해 주세요.</translation>
     </message>
     <message>
         <source>Processing Steam subscription action(s) via Steamworks API...</source>
@@ -1440,19 +1503,19 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Please enable Steam Client Integration in Settings → Steam to use this feature.</source>
-        <translation>이 기능을 사용하려면 '설정' -&gt; 'Steam'에서 Steam 클라이언트 통합을 활성화하십시오.</translation>
+        <translation>이 기능을 사용하려면 &apos;설정&apos; -&gt; &apos;Steam&apos;에서 Steam 클라이언트 통합을 활성화하십시오.</translation>
     </message>
     <message>
         <source>Use This Instead</source>
         <translation>대신 이것을 사용</translation>
     </message>
     <message>
-        <source>Please configure "Use This Instead" database in settings.</source>
-        <translation>설정에서 '대신 이것을 사용' 데이터베이스를 구성하십시오.</translation>
+        <source>Please configure &quot;Use This Instead&quot; database in settings.</source>
+        <translation>설정에서 &apos;대신 이것을 사용&apos; 데이터베이스를 구성하십시오.</translation>
     </message>
     <message>
-        <source>No suggestions were found in the "Use This Instead" database.</source>
-        <translation>'대신 이것을 사용' 데이터베이스에서 제안을 찾을 수 없습니다.</translation>
+        <source>No suggestions were found in the &quot;Use This Instead&quot; database.</source>
+        <translation>&apos;대신 이것을 사용&apos; 데이터베이스에서 제안을 찾을 수 없습니다.</translation>
     </message>
     <message>
         <source>Failed to read existing database</source>
@@ -1471,7 +1534,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>이는 잘못된 설정이나 버전 간 또는 다른 모드 관리자 간의 부적절한 마이그레이션으로 인해 발생할 수 있습니다.&lt;br&gt;&lt;br&gt;설정을 재설정하거나, 다른 정렬 알고리즘을 선택하거나, 설정 파일을 삭제해 보세요.&lt;br&gt;&lt;br&gt;문제가 지속되면 개발자에게 신고해 주세요.</translation>
     </message>
     <message>
-        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It's due to the mod data not being available in both Rentry link and steam database.</source>
+        <source>You will need to redo Rentry import again after downloads complete.&lt;br&gt;&lt;br&gt;If there missing mods after download completes, they will be shown inside the missing mods panel.&lt;br&gt;&lt;br&gt;If RimSort is still not able to download some mods, It&apos;s due to the mod data not being available in both Rentry link and steam database.</source>
         <translation>다운로드가 완료된 후 Rentry 가져오기를 다시 실행해야 합니다.&lt;br&gt;&lt;br&gt;다운로드가 완료된 후 누락된 모드가 있는 경우 누락된 모드 패널 내에 표시됩니다.&lt;br&gt;&lt;br&gt;RimSort가 여전히 일부 모드를 다운로드할 수 없는 경우 이는 Rentry 링크와 Steam 데이터베이스 모두에서 모드 데이터를 사용할 수 없기 때문입니다.</translation>
     </message>
     <message>
@@ -1891,7 +1954,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>이 저장소는 GitHub에서 호스팅됩니다. GitHub Mod로 설치하여 릴리스를 추적하고 버전을 관리하거나 표준 git mod로 직접 복제할 수 있습니다.</translation>
     </message>
     <message>
-        <source>No releases found for this repository. You can install it as a GitHub Mod tracking the latest commit (you'll be notified if releases are published in the future), or clone it directly as a standard git mod.</source>
+        <source>No releases found for this repository. You can install it as a GitHub Mod tracking the latest commit (you&apos;ll be notified if releases are published in the future), or clone it directly as a standard git mod.</source>
         <translation>이 저장소에 대한 릴리스가 없습니다. 최신 커밋을 추적하는 GitHub Mod로 설치하거나(향후 릴리스가 게시되면 알림을 받음) 표준 git mod로 직접 복제할 수 있습니다.</translation>
     </message>
     <message>
@@ -2251,7 +2314,7 @@ Manage mods installed from GitHub releases.</source>
         <translation>커뮤니티 규칙 데이터베이스 업로드</translation>
     </message>
     <message>
-        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won't appear until you refresh. Refresh now?</source>
+        <source>{count} mod(s) were auto-updated.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;The updated versions won&apos;t appear until you refresh. Refresh now?</source>
         <translation>{count}개의 모드가 자동 업데이트되었습니다.&lt;br&gt;&lt;br&gt;{summary}&lt;br&gt;&lt;br&gt;업데이트된 버전은 새로 고칠 때까지 표시되지 않습니다. 지금 새로고침하시겠습니까?</translation>
     </message>
     <message>
@@ -2271,8 +2334,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>구성된 저장소가 복제/초기화되지 못했습니다!&lt;br&gt;&lt;br&gt;인터넷에 연결되어 있습니까?&lt;br&gt;&lt;br&gt;구성된 저장소가 유효합니까?</translation>
     </message>
     <message>
-        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with "http://" or "https://"</source>
-        <translation>설정에서 저장소를 다시 구성하세요!&lt;br&gt;유효한 저장소는 비어 있지 않고 "http://" 또는 "https://"로 시작하는 저장소 URL입니다.</translation>
+        <source>Please reconfigure a repository in settings!&lt;br&gt;A valid repository is a repository URL which is not empty and is prefixed with &quot;http://&quot; or &quot;https://&quot;</source>
+        <translation>설정에서 저장소를 다시 구성하세요!&lt;br&gt;유효한 저장소는 비어 있지 않고 &quot;http://&quot; 또는 &quot;https://&quot;로 시작하는 저장소 URL입니다.</translation>
     </message>
     <message>
         <source>URL: {repo_url}&lt;br&gt;Error: {error}</source>
@@ -2525,8 +2588,8 @@ Manage mods installed from GitHub releases.</source>
         <translation>인스턴스</translation>
     </message>
     <message>
-        <source>Current: "Default"</source>
-        <translation>현재: "Default"</translation>
+        <source>Current: &quot;Default&quot;</source>
+        <translation>현재: &quot;Default&quot;</translation>
     </message>
     <message>
         <source>Backup Instance…</source>
@@ -2581,6 +2644,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>RimSort 위키…</translation>
     </message>
     <message>
+        <source>AI Assistant</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>From Save file…</source>
         <translation>저장 파일에서…</translation>
     </message>
@@ -2598,6 +2665,14 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Current: {current_instance}</source>
         <translation>현재: {current_instance}</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2701,13 +2776,13 @@ Please contact the mod authors to add these properties to their mods.</source>
         <source>
 User-configured SteamDB database was queried. The following table displays mods available for download from Steam. 
 
-Rimworld mods on Steam Workshop that share a packageId are "variants". Please keep this in mind before downloading. 
+Rimworld mods on Steam Workshop that share a packageId are &quot;variants&quot;. Please keep this in mind before downloading. 
 
 Please select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify.</source>
         <translation>
 사용자가 구성한 SteamDB 데이터베이스가 쿼리되었습니다. 아래 표에는 Steam에서 다운로드 가능한 모드가 표시됩니다.
 
-패키지 ID를 공유하는 Rimworld의 Steam 워크숍 모드는 '변체'라고 불립니다. 다운로드하기 전에 이 점을 고려하십시오.
+패키지 ID를 공유하는 Rimworld의 Steam 워크숍 모드는 &apos;변체&apos;라고 불립니다. 다운로드하기 전에 이 점을 고려하십시오.
 
 아래 표에서 선호하는 모드 변체를 선택하십시오. 또한 각 변체를 Steam/웹 브라우저에서 열어 확인할 수도 있습니다.</translation>
     </message>
@@ -2835,8 +2910,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>{result.failed_count}개의 모드를 삭제하지 못했습니다. 자세한 내용은 로그를 확인하세요.</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.filename or mod_path}에서 오류 코드 {error_code}가 발생했습니다: {e.strerror or 'Unknown error'}</translation>
+        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <translation>{e.filename or mod_path}에서 오류 코드 {error_code}가 발생했습니다: {e.strerror or &apos;Unknown error&apos;}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3297,7 +3372,7 @@ Incompatibilities:</source>
     </message>
     <message>
         <source>
-Incompatible (per other mod's rules):</source>
+Incompatible (per other mod&apos;s rules):</source>
         <translation>호환되지 않음(다른 모드의 규칙에 따라):</translation>
     </message>
     <message>
@@ -3497,7 +3572,7 @@ Alternative Dependencies:</source>
         <translation>에러를 표시하는 모드만 표시</translation>
     </message>
     <message>
-        <source>Check "Use This Instead" Database</source>
+        <source>Check &quot;Use This Instead&quot; Database</source>
         <translation>이 데이터베이스 사용</translation>
     </message>
     <message>
@@ -3659,7 +3734,7 @@ Alternative Dependencies:</source>
         <translation>게임 로그 로드</translation>
     </message>
     <message>
-        <source>Loads the game's Player.log file.</source>
+        <source>Loads the game&apos;s Player.log file.</source>
         <translation>게임의 player.log 파일을 로드합니다.</translation>
     </message>
     <message>
@@ -4047,8 +4122,8 @@ Alternative Dependencies:</source>
         <translation>이것은 자신의 기록에 유용하며, 다른 사람들에게도 유용합니다.</translation>
     </message>
     <message>
-        <source>Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed.</source>
-        <translation>모드의 About.xml에 있는 규칙은 변경할 수 없습니다. '커뮤니티 규칙'과 '사용자 규칙'만 허용됩니다.</translation>
+        <source>Rules from mods&apos;s About.xml cannot be modified. Only &apos;Community Rules&apos; and &apos;User Rules&apos; are allowed.</source>
+        <translation>모드의 About.xml에 있는 규칙은 변경할 수 없습니다. &apos;커뮤니티 규칙&apos;과 &apos;사용자 규칙&apos;만 허용됩니다.</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
@@ -4146,8 +4221,8 @@ Alternative Dependencies:</source>
         <translation>SteamCMD 다운로더</translation>
     </message>
     <message>
-        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click 'Show Details' to see a list of mods that failed.</source>
-        <translation>SteamCMD가 모드를 다운로드하지 못했습니다! 실패한 모드를 다시 다운로드하시겠습니까?&lt;br&gt;&lt;br&gt;실패한 모드 목록을 보려면 '세부정보 표시'를 클릭하세요.</translation>
+        <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click &apos;Show Details&apos; to see a list of mods that failed.</source>
+        <translation>SteamCMD가 모드를 다운로드하지 못했습니다! 실패한 모드를 다시 다운로드하시겠습니까?&lt;br&gt;&lt;br&gt;실패한 모드 목록을 보려면 &apos;세부정보 표시&apos;를 클릭하세요.</translation>
     </message>
     <message>
         <source>Process Complete</source>
@@ -4192,8 +4267,8 @@ Alternative Dependencies:</source>
         <translation>설정 로드 오류</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>계속하면 손상된 파일의 백업이 {AppInfo().settings_backups_folder / 'settings.json.corrupted'}에 저장됩니다.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}.</source>
+        <translation>계속하면 손상된 파일의 백업이 {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}에 저장됩니다.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4208,8 +4283,8 @@ Alternative Dependencies:</source>
         <translation>설정 복구에 실패했습니다</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>rimSort가 백업에서 설정을 복원하지 못했습니다. {AppInfo().settings_backups_folder}에서 {self._settings_file}로 'settings.json.backup' 또는 'settings.json.backup.old'를 복원하여 설정을 수동으로 복구할 수 있습니다.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring &quot;settings.json.backup&quot; or &quot;settings.json.backup.old&quot; from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <translation>rimSort가 백업에서 설정을 복원하지 못했습니다. {AppInfo().settings_backups_folder}에서 {self._settings_file}로 &apos;settings.json.backup&apos; 또는 &apos;settings.json.backup.old&apos;를 복원하여 설정을 수동으로 복구할 수 있습니다.</translation>
     </message>
 </context>
 <context>
@@ -4235,8 +4310,8 @@ Alternative Dependencies:</source>
         <translation>선택한 구성 폴더에 ModsConfig.xml이 포함되어 있지 않습니다.&lt;br&gt;&lt;br&gt;유효한 구성 폴더를 선택하세요.&lt;br&gt;&lt;br&gt;이전에 게임을 실행한 적이 없다면&lt;br&gt;&lt;br&gt;게임을 한 번 이상 실행하여 필요한 구성 파일을 생성하세요.</translation>
     </message>
     <message>
-        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a 'Mods' subfolder within the game folder.</source>
-        <translation>선택한 로컬 모드 폴더 위치는 유효한 디렉터리가 아닙니다.&lt;br&gt;&lt;br&gt;로컬 모드에 대해 유효한 폴더를 선택하세요.&lt;br&gt;&lt;br&gt;로컬 모드 폴더는 게임 폴더 내의 'Mods' 하위 폴더여야 합니다.</translation>
+        <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be a &apos;Mods&apos; subfolder within the game folder.</source>
+        <translation>선택한 로컬 모드 폴더 위치는 유효한 디렉터리가 아닙니다.&lt;br&gt;&lt;br&gt;로컬 모드에 대해 유효한 폴더를 선택하세요.&lt;br&gt;&lt;br&gt;로컬 모드 폴더는 게임 폴더 내의 &apos;Mods&apos; 하위 폴더여야 합니다.</translation>
     </message>
     <message>
         <source>Invalid Game Location</source>
@@ -4378,12 +4453,12 @@ Alternative Dependencies:</source>
         <translation>Steam 워크숍 데이터베이스</translation>
     </message>
     <message>
-        <source>"No Version Warning" Database</source>
-        <translation>"버전 경고 없음" 데이터베이스</translation>
+        <source>&quot;No Version Warning&quot; Database</source>
+        <translation>&quot;버전 경고 없음&quot; 데이터베이스</translation>
     </message>
     <message>
-        <source>"Use This Instead" Database</source>
-        <translation>"이것을 사용하세요" 데이터베이스</translation>
+        <source>&quot;Use This Instead&quot; Database</source>
+        <translation>&quot;이것을 사용하세요&quot; 데이터베이스</translation>
     </message>
     <message>
         <source>Sorting</source>
@@ -4474,8 +4549,8 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>모드당 시작 로드 시간 표시</translation>
     </message>
     <message>
-        <source>Shows each mod's game startup time, measured by the 'Loading Progress' mod. Requires that mod with its 'Track startup loading impact' setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
-        <translation>'로드 진행률' 모드로 측정된 각 모드의 게임 시작 시간을 표시합니다. '시작 로딩 영향 추적' 설정이 활성화된 모드와 저장된 시작 영향 보고서(RimWorld 저장 데이터 폴더의 StartupImpactData.xml)가 필요합니다.</translation>
+        <source>Shows each mod&apos;s game startup time, measured by the &apos;Loading Progress&apos; mod. Requires that mod with its &apos;Track startup loading impact&apos; setting enabled, and a saved startup impact report (StartupImpactData.xml in the RimWorld save data folder).</source>
+        <translation>&apos;로드 진행률&apos; 모드로 측정된 각 모드의 게임 시작 시간을 표시합니다. &apos;시작 로딩 영향 추적&apos; 설정이 활성화된 모드와 저장된 시작 영향 보고서(RimWorld 저장 데이터 폴더의 StartupImpactData.xml)가 필요합니다.</translation>
     </message>
     <message>
         <source>Hides invalid mods, not recommended to enable</source>
@@ -4494,7 +4569,7 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>로컬에 설치된 모드에서 PublishedFileID를 가져옵니다.</translation>
     </message>
     <message>
-        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods' About.xml files.</source>
+        <source>Mods you wish to update must be installed, as the initial DB is built including data from mods&apos; About.xml files.</source>
         <translation>업데이트하려는 모드가 설치되어 있어야 합니다. 초기 데이터베이스는 모드의 About.xml 파일 데이터를 포함하여 빌드됩니다.</translation>
     </message>
     <message>
@@ -4502,7 +4577,7 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>Steam 창작마당에서 PublishedFileID를 가져옵니다.</translation>
     </message>
     <message>
-        <source>Mods to be updated don't have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
+        <source>Mods to be updated don&apos;t have to be installed, as the initial DB is built by scraping the Steam Workshop.</source>
         <translation>업데이트하려는 모드가 설치되어 있을 필요가 없습니다. 초기 데이터베이스는 Steam 창작마당을 스크래핑하여 빌드됩니다.</translation>
     </message>
     <message>
@@ -4609,21 +4684,21 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>To add your own theme / stylesheet 
 
-1) Create a new-folder in 'themes' folder in your 'RimSort' config folder 
-2) Using the default 'RimPy' theme copy it to the folder you created 
-3) Edit the copied 'style.qss' as per your imagination 
-4) Start 'RimSort' and select your theme from dropdown 
-5) Click 'ok' to save settings and apply the selected theme 
+1) Create a new-folder in &apos;themes&apos; folder in your &apos;RimSort&apos; config folder 
+2) Using the default &apos;RimPy&apos; theme copy it to the folder you created 
+3) Edit the copied &apos;style.qss&apos; as per your imagination 
+4) Start &apos;RimSort&apos; and select your theme from dropdown 
+5) Click &apos;ok&apos; to save settings and apply the selected theme 
 
 NOTE 
 Name of folder will be used as name of the theme and any invalid theme will be ignored 
 </source>
         <translation>자신만의 테마 /스타일시트를 추가하려면
 
-1) "rimsort" 구성 폴더의 "Themes" 폴더에 새 폴더를 만듭니다
-2) 기본 "rimpy" 테마를 생성한 폴더에 복사합니다
-3) 상상력을 발휘하여 복사된 "style.qss"를 편집합니다
-4) "rimsort"를 실행하고 드롭다운에서 테마를 선택합니다
+1) &quot;rimsort&quot; 구성 폴더의 &quot;Themes&quot; 폴더에 새 폴더를 만듭니다
+2) 기본 &quot;rimpy&quot; 테마를 생성한 폴더에 복사합니다
+3) 상상력을 발휘하여 복사된 &quot;style.qss&quot;를 편집합니다
+4) &quot;rimsort&quot;를 실행하고 드롭다운에서 테마를 선택합니다
 5) [확인]을 클릭하여 설정을 저장하고 선택한 테마를 적용합니다
 
 참고
@@ -4664,6 +4739,22 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     <message>
         <source>Enable watchdog file monitor daemon</source>
         <translation>파일 감시 데몬 활성화</translation>
+    </message>
+    <message>
+        <source>MCP Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable MCP server (local HTTP subprocess)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Port:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Token (optional):</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Hide invalid mods when filtering</source>
@@ -4768,7 +4859,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
  NOTE: wrapper commands will be ignored on macOS
 
- NOTE: These arguments are ignored if 'Launch game via Steam protocol' is enabled</source>
+ NOTE: These arguments are ignored if &apos;Launch game via Steam protocol&apos; is enabled</source>
         <translation>선택 사항인 %command% 플레이스홀더를 사용하여 Steam 스타일의 구문으로 실행 옵션을 입력합니다.
 
  기본 예시 (게임 인수만 해당):
@@ -4787,7 +4878,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
  참고: 래퍼 명령은 macOS에서 무시됩니다.
 
- 참고: 'Steam 프로토콜을 통해 게임 실행'이 활성화된 경우 이 인수들은 무시됩니다.</translation>
+ 참고: &apos;Steam 프로토콜을 통해 게임 실행&apos;이 활성화된 경우 이 인수들은 무시됩니다.</translation>
     </message>
     <message>
         <source>Enable editing</source>
@@ -4882,10 +4973,10 @@ This checks may take few seconds depending on the number of .dds files present.<
         <translation>대체 PackageId를 충족하는 의존성으로 사용합니다</translation>
     </message>
     <message>
-        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod's dependency when the main dependency is missing. 
-E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</source>
+        <source>If enabled, an alternativePackageIds entry in About.xml can satisfy a mod&apos;s dependency when the main dependency is missing. 
+E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapframework.dev&apos;</source>
         <translation>활성화하면 about.xml의 대체 PackageIDS 항목은 주요 종속성이 누락되었을 때 모드 종속성을 충족할 수 있습니다.
-예를 들어, 'oels.vehiclemapframework', 대체: 'oels.vehiclemapframework.dev'</translation>
+예를 들어, &apos;oels.vehiclemapframework&apos;, 대체: &apos;oels.vehiclemapframework.dev&apos;</translation>
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
@@ -4984,7 +5075,7 @@ Please choose one of the following options to proceed.</source>
         <translation>컬렉션을 어떻게 추가하시겠습니까?</translation>
     </message>
     <message>
-        <source>You can choose to add all mods from the collection or only the ones you don't have installed.</source>
+        <source>You can choose to add all mods from the collection or only the ones you don&apos;t have installed.</source>
         <translation>컬렉션에서 모든 모드를 추가할지, 설치되지 않은 모드만 추가할지 선택할 수 있습니다.</translation>
     </message>
     <message>
@@ -5071,7 +5162,7 @@ Please choose one of the following options to proceed.</source>
         <translation>새 심볼릭 링크:&lt;br&gt;[{symlink_source_path}] -&gt;</translation>
     </message>
     <message>
-        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it's place?</source>
+        <source>The symlink destination path already exists. Would you like to remove the existing destination and create a new symlink in it&apos;s place?</source>
         <translation>심볼릭 링크 대상 경로가 이미 존재합니다. 기존 대상을 삭제하고 해당 위치에 새 심볼릭 링크를 만드시겠습니까?</translation>
     </message>
     <message>
@@ -5087,7 +5178,7 @@ Please choose one of the following options to proceed.</source>
         <translation>&amp;예</translation>
     </message>
     <message>
-        <source>&amp;Don't Ask Again</source>
+        <source>&amp;Don&apos;t Ask Again</source>
         <translation>다시 묻지 마세요</translation>
     </message>
 </context>
@@ -5156,8 +5247,8 @@ Please choose one of the following options to proceed.</source>
         <translation>테마 경로 오류</translation>
     </message>
     <message>
-        <source>Stylesheet path does not exist for theme '{theme_name}' Resetting to default theme '{default_theme}'.</source>
-        <translation>테마 '{theme_name}'의 스타일시트 경로가 존재하지 않습니다. 기본 테마 '{default_theme}'(으)로 재설정합니다.</translation>
+        <source>Stylesheet path does not exist for theme &apos;{theme_name}&apos; Resetting to default theme &apos;{default_theme}&apos;.</source>
+        <translation>테마 &apos;{theme_name}&apos;의 스타일시트 경로가 존재하지 않습니다. 기본 테마 &apos;{default_theme}&apos;(으)로 재설정합니다.</translation>
     </message>
     <message>
         <source>Theme Error</source>
@@ -5165,7 +5256,7 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>Failed to apply theme: {selected_theme_name},Resetting to default theme: {self.default_theme}</source>
-        <translation>'{selected_theme_name}' 테마를 적용하지 못했습니다. 기본 테마인 '{self.default_theme}'(으)로 재설정합니다.</translation>
+        <translation>&apos;{selected_theme_name}&apos; 테마를 적용하지 못했습니다. 기본 테마인 &apos;{self.default_theme}&apos;(으)로 재설정합니다.</translation>
     </message>
 </context>
 <context>
@@ -5254,11 +5345,11 @@ Please reach out to us for support at: {support_url}</source>
         <translation>선택한 파일은 유효한 모드 목록 파일이 아닙니다.&lt;br&gt;세부정보: {e}</translation>
     </message>
     <message>
-        <source>Successfully deleted Steam's downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
+        <source>Successfully deleted Steam&apos;s downloading folder.&lt;br&gt;Restart Steam for the changes to take effect.</source>
         <translation>Steam의 다운로드 폴더를 삭제했습니다.&lt;br&gt;변경 사항을 적용하려면 Steam을 다시 시작하세요.</translation>
     </message>
     <message>
-        <source>Could not delete Steam's downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
+        <source>Could not delete Steam&apos;s downloading folder.&lt;br&gt;Please delete it manually: Steam/steamapps/downloading&lt;br&gt;Details: {e}</source>
         <translation>Steam의 다운로드 폴더를 삭제할 수 없습니다.&lt;br&gt;수동으로 삭제하세요: Steam/steamapps/downloading&lt;br&gt;세부정보: {e}</translation>
     </message>
     <message>
@@ -5334,7 +5425,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>Steam mods 디렉토리의 모든 파일을 삭제했습니다.&lt;br&gt;&lt;br&gt; 구독한 모드의 자동 재다운로드를 실행하기 위해 Steam을 다시 시작하려고 합니다.</translation>
     </message>
     <message>
-        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don't download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
+        <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don&apos;t download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
         <translation>모드가 삭제되었습니다. 구독한 모드의 자동 재다운로드를 실행하려면 Steam을 다시 시작하세요.&lt;br&gt;&lt;br&gt;모드가 자동으로 다운로드되지 않으면 다음을 시도해 보세요.&lt;br&gt;1. Steam을 다시 시작하세요&lt;br&gt;2. Steam&lt;br&gt;3에서 게임 파일을 확인하세요. 각 모드의 창작마당 페이지를 방문하세요.</translation>
     </message>
     <message>
@@ -5386,7 +5477,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>캐시 삭제</translation>
     </message>
     <message>
-        <source>Steam's downloading folder is already empty.</source>
+        <source>Steam&apos;s downloading folder is already empty.</source>
         <translation>Steam 다운로드 폴더가 이미 비어 있습니다.</translation>
     </message>
     <message>
@@ -5446,7 +5537,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>게임 파일 복구</translation>
     </message>
     <message>
-        <source>If you're experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
+        <source>If you&apos;re experiencing issues with your game, you can try the following recovery options. Steam will automatically redownload any deleted files on next launch.</source>
         <translation>게임에 문제가 발생한 경우, 다음 복구 옵션을 시도해 보세요. Steam은 다음 실행 시 삭제된 파일을 자동으로 다시 다운로드합니다.</translation>
     </message>
     <message>
@@ -5542,7 +5633,7 @@ Please reach out to us for support at: {support_url}</source>
         <translation>Steam 유틸리티</translation>
     </message>
     <message>
-        <source>Delete Steam's downloading folder to fix download issues</source>
+        <source>Delete Steam&apos;s downloading folder to fix download issues</source>
         <translation>다운로드 문제를 해결하기 위해 Steam 다운로드 폴더 삭제</translation>
     </message>
     <message>
@@ -5640,8 +5731,8 @@ Please reach out to us for support at: {support_url}</source>
         <translation>창작마당 모드 대체 항목을 사용할 수 있습니다!</translation>
     </message>
     <message>
-        <source>The following table displays Workshop mods with suggested replacements according to the "Use This Instead" database, grouped by replacement mod.</source>
-        <translation>다음 표는 "대신 이것을 사용하세요" 데이터베이스를 기반으로 권장 대체 항목이 포함된 창작마당 모드를 대체 모드별로 그룹화하여 표시합니다.</translation>
+        <source>The following table displays Workshop mods with suggested replacements according to the &quot;Use This Instead&quot; database, grouped by replacement mod.</source>
+        <translation>다음 표는 &quot;대신 이것을 사용하세요&quot; 데이터베이스를 기반으로 권장 대체 항목이 포함된 창작마당 모드를 대체 모드별로 그룹화하여 표시합니다.</translation>
     </message>
     <message>
         <source>Do nothing and exit</source>

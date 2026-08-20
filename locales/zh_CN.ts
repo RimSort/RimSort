@@ -33,6 +33,69 @@
     </message>
 </context>
 <context>
+    <name>AiAssistantPanel</name>
+    <message>
+        <source>AI Assistant</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Provider:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Model:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>API key:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Proxy:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>host:port, user:pass@host:port, login:pass:host:port</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Clear chat</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Assistant</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>User</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Tool: {call}</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>{current}/{total}: {message}</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Loading{dots}</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Model quota exceeded</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Switch to {name}</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>BaseModsPanel</name>
     <message>
         <source>Deselect all</source>
@@ -650,7 +713,7 @@ Manage mods installed from GitHub releases.</source>
 {mod_list}</source>
         <translation>完全删除以下模组吗？此操作无法撤消。
 
-{mod_列表}</translation>
+ {mod_list}</translation>
     </message>
     <message>
         <source>Deleted {n} mod(s).</source>
@@ -658,7 +721,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>File deletion failed for: {names}</source>
-        <translation>文件删除失败：{name}</translation>
+        <translation>文件删除失败： {names}</translation>
     </message>
     <message>
         <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
@@ -666,7 +729,7 @@ Manage mods installed from GitHub releases.</source>
 {mod_list}</source>
         <translation>将以下 mod 转换为 git 跟踪？它们将通过 Git Mod Updater 而不是 GitHub 版本进行更新。
 
-{mod_列表}</translation>
+ {mod_list}</translation>
     </message>
     <message>
         <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
@@ -682,7 +745,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Failed: {names}</source>
-        <translation>失败：{名称}</translation>
+        <translation>失败： {names}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -2566,6 +2629,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>RimSort Wiki</translation>
     </message>
     <message>
+        <source>AI Assistant</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Check for Updates…</source>
         <translation>检查更新</translation>
     </message>
@@ -2599,6 +2666,14 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Current: {current_instance}</source>
         <translation>当前：{current_instance}</translation>
+    </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation type="unfinished">验证游戏文件</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld's game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -4646,6 +4721,22 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Enable watchdog file monitor daemon</source>
         <translation>启用文件监护进程</translation>
+    </message>
+    <message>
+        <source>MCP Server</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Enable MCP server (local HTTP subprocess)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Port:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Token (optional):</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <source>Hide invalid mods when filtering</source>
