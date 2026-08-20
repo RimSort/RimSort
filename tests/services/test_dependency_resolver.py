@@ -55,6 +55,10 @@ class TestParseWorkshopIdFromUrl:
     def test_unrecognized_url_returns_none(self) -> None:
         assert parse_workshop_id_from_url("https://example.com/mod") is None
 
+    def test_query_id_with_ampersand_suffix(self) -> None:
+        url = "https://steamcommunity.com/sharedfiles/filedetails/?id=33333&foo=bar"
+        assert parse_workshop_id_from_url(url) == "33333"
+
 
 class TestResolveDependencyWorkshopId:
     def test_steam_db_match(self) -> None:
@@ -104,6 +108,90 @@ class TestResolveDependencyWorkshopId:
         )
 
         assert result.workshop_id == "55555"
+        assert result.source == "about_xml"
+
+    def test_no_match_returns_none_source(self) -> None:
+        metadata = MagicMockMetadata(steam_db_empty=True)
+        result = resolve_dependency_workshop_id(
+            cast(MetadataController, metadata), "author.unknown", set()
+        )
+        assert result.workshop_id is None
+        assert result.workshop_url is None
+        assert result.source == "none"
+
+    def test_versioned_about_xml_match(self, tmp_path: Path) -> None:
+        parent_path = tmp_path / "parent"
+        about_dir = parent_path / "About"
+        about_dir.mkdir(parents=True)
+        about_xml = """<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <modDependenciesByVersion>
+    <v1.5>
+      <li>
+        <packageId>author.versioned</packageId>
+        <steamWorkshopUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=77777</steamWorkshopUrl>
+      </li>
+    </v1.5>
+  </modDependenciesByVersion>
+</ModMetaData>
+"""
+        (about_dir / "About.xml").write_text(about_xml, encoding="utf-8")
+
+        parent = _make_mod(
+            "author.parent",
+            str(parent_path),
+            dependencies={
+                "author.versioned": DependencyMod(
+                    package_id=CaseInsensitiveStr("author.versioned")
+                )
+            },
+        )
+        metadata = MagicMockMetadata(
+            mods_metadata={str(parent_path): parent},
+            active_paths={str(parent_path)},
+            steam_db_empty=True,
+            prefer_versioned=True,
+        )
+
+        result = resolve_dependency_workshop_id(
+            cast(MetadataController, metadata),
+            "author.versioned",
+            {str(parent_path)},
+        )
+
+        assert result.workshop_id == "77777"
+        assert result.source == "about_xml"
+
+    def test_about_xml_package_id_case_insensitive(self, tmp_path: Path) -> None:
+        parent_path = tmp_path / "parent"
+        about_dir = parent_path / "About"
+        about_dir.mkdir(parents=True)
+        about_xml = """<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <modDependencies>
+    <li>
+      <packageId>Author.MixedCase</packageId>
+      <steamWorkshopUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=88888</steamWorkshopUrl>
+    </li>
+  </modDependencies>
+</ModMetaData>
+"""
+        (about_dir / "About.xml").write_text(about_xml, encoding="utf-8")
+
+        parent = _make_mod("author.parent", str(parent_path))
+        metadata = MagicMockMetadata(
+            mods_metadata={str(parent_path): parent},
+            active_paths={str(parent_path)},
+            steam_db_empty=True,
+        )
+
+        result = resolve_dependency_workshop_id(
+            cast(MetadataController, metadata),
+            "author.mixedcase",
+            {str(parent_path)},
+        )
+
+        assert result.workshop_id == "88888"
         assert result.source == "about_xml"
 
 
@@ -219,6 +307,60 @@ class TestBuildDependenciesDialogContext:
         assert deps_summary["author.parent"]["satisfied"] == {"author.required"}
         assert "author.parent" not in missing_deps
 
+    def test_alternative_local_dep_classified_as_local(self) -> None:
+        parent = _make_mod(
+            "author.parent",
+            "/mods/parent",
+            dependencies={
+                "author.required": DependencyMod(
+                    package_id=CaseInsensitiveStr("author.required"),
+                    alternative_package_ids={CaseInsensitiveStr("author.alt")},
+                )
+            },
+        )
+        alt = _make_mod("author.alt", "/mods/alt")
+        metadata = MagicMockMetadata(
+            mods_metadata={
+                "/mods/parent": parent,
+                "/mods/alt": alt,
+            },
+            active_paths={"/mods/parent"},
+            use_alternatives=True,
+        )
+
+        deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
+            cast(MetadataController, metadata), {"/mods/parent"}
+        )
+
+        assert deps_summary["author.parent"]["local"] == {"author.required"}
+        assert deps_summary["author.parent"]["download"] == set()
+        assert missing_deps["author.parent"] == {"author.required"}
+        assert "author.required" not in dep_resolve
+
+    def test_skips_mod_without_package_id(self) -> None:
+        parent = _make_mod(
+            "author.parent",
+            "/mods/parent",
+            dependencies={
+                "author.missing": DependencyMod(
+                    package_id=CaseInsensitiveStr("author.missing")
+                )
+            },
+        )
+        parent.package_id = CaseInsensitiveStr("")
+        metadata = MagicMockMetadata(
+            mods_metadata={"/mods/parent": parent},
+            active_paths={"/mods/parent"},
+        )
+
+        deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
+            cast(MetadataController, metadata), {"/mods/parent"}
+        )
+
+        assert deps_summary == {}
+        assert missing_deps == {}
+        assert dep_resolve == {}
+
 
 class MagicMockMetadata:
     def __init__(
@@ -227,6 +369,7 @@ class MagicMockMetadata:
         active_paths: set[str] | None = None,
         steam_db_empty: bool = False,
         use_alternatives: bool = False,
+        prefer_versioned: bool = False,
     ) -> None:
         self.mods_metadata = mods_metadata or {}
         self.active_paths = active_paths or set()
@@ -248,7 +391,7 @@ class MagicMockMetadata:
             "S",
             (),
             {
-                "prefer_versioned_about_tags": False,
+                "prefer_versioned_about_tags": prefer_versioned,
                 "use_alternative_package_ids_as_satisfying_dependencies": use_alternatives,
             },
         )()
