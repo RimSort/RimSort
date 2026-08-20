@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import patch
 
 from app.ai.gemini_provider import GeminiProvider
@@ -5,12 +6,12 @@ from app.ai.gemini_provider import GeminiProvider
 
 def test_complete_on_tool_call_callback() -> None:
     provider = GeminiProvider("test-key", model="gemini-2.0-flash")
-    traces: list[tuple[str, dict, dict]] = []
+    traces: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
 
-    def on_tool_call(name: str, args: dict, result: dict) -> None:
+    def on_tool_call(name: str, args: dict[str, Any], result: dict[str, Any]) -> None:
         traces.append((name, args, result))
 
-    def fake_executor(name: str, args: dict) -> dict:
+    def fake_executor(name: str, args: dict[str, Any]) -> dict[str, Any]:
         return {"count": 2}
 
     tool_call_response = {
@@ -29,13 +30,11 @@ def test_complete_on_tool_call_callback() -> None:
             }
         ]
     }
-    text_response = {
-        "candidates": [
-            {"content": {"parts": [{"text": "Found mods."}]}}
-        ]
-    }
+    text_response = {"candidates": [{"content": {"parts": [{"text": "Found mods."}]}}]}
 
-    with patch.object(provider, "_post", side_effect=[tool_call_response, text_response]):
+    with patch.object(
+        provider, "_post", side_effect=[tool_call_response, text_response]
+    ):
         text = provider.complete(
             [{"role": "user", "content": "find russian mods"}],
             tools=[{"name": "search_workshop_mods"}],

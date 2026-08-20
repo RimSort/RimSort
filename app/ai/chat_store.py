@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 from app.utils.app_info import AppInfo
 from app.utils.json_utils import atomic_json_dump

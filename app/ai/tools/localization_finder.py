@@ -1,4 +1,4 @@
-"""Find Russian localization mods on Steam Workshop for active mods (no Qt)."""
+"""Find localization mods on Steam Workshop for active mods (no Qt)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,31 @@ from app.utils.steam.workshop_search import search_workshop_by_text
 
 ProgressCallback = Callable[[int, int, str], None]
 
-RUS_MARKERS = ("russian", "рус", "русификатор", "[ru]", "(ru)")
+# Marker substrings (lowercase) that indicate a Workshop item is a localization
+# for a given language, plus a short English search term used to query the
+# Workshop for that language ("<mod name> <search_term>").
+LANGUAGE_MARKERS: dict[str, tuple[str, ...]] = {
+    "ru": ("russian", "рус", "русификатор", "[ru]", "(ru)"),
+    "en": ("english", "[en]", "(en)"),
+    "fr": ("french", "française", "francais", "[fr]", "(fr)"),
+    "de": ("german", "deutsch", "[de]", "(de)"),
+    "es": ("spanish", "español", "espanol", "[es]", "(es)"),
+    "zh": ("chinese", "简体中文", "繁體中文", "中文", "[zh]", "(zh)"),
+    "ja": ("japanese", "日本語", "[ja]", "(ja)"),
+    "pl": ("polish", "polski", "[pl]", "(pl)"),
+    "pt": ("portuguese", "português", "portugues", "[pt]", "(pt)"),
+}
+LANGUAGE_SEARCH_TERMS: dict[str, str] = {
+    "ru": "russian",
+    "en": "english",
+    "fr": "french",
+    "de": "german",
+    "es": "spanish",
+    "zh": "chinese",
+    "ja": "japanese",
+    "pl": "polish",
+    "pt": "portuguese",
+}
 WIP_MARKERS = ("wip", "outdated", "deprecated", "abandon")
 NAME_STOPWORDS = {
     "continued",
@@ -28,15 +52,16 @@ def _is_official_rimworld_content(package_id: str) -> bool:
     return package_id.lower().startswith("ludeon.rimworld")
 
 
-def _has_rus_marker(text: str) -> bool:
+def _has_language_marker(text: str, language: str) -> bool:
     lower = text.lower()
-    if any(marker in lower for marker in RUS_MARKERS):
+    markers = LANGUAGE_MARKERS.get(language, ())
+    if any(marker in lower for marker in markers):
         return True
-    return re.search(r"\b(ru|rus)\b", lower) is not None
+    return re.search(rf"\b{re.escape(language)}\b", lower) is not None
 
 
-def _title_looks_localized(title: str) -> bool:
-    return _has_rus_marker(title)
+def _title_looks_localized(title: str, language: str) -> bool:
+    return _has_language_marker(title, language)
 
 
 def _name_tokens(text: str) -> set[str]:
@@ -53,8 +78,11 @@ def _is_already_localized(
     target_name: str,
     active_package_ids: set[str],
     installed_by_pid: dict[str, dict[str, Any]],
+    language: str,
 ) -> bool:
-    if _has_rus_marker(target_name) or _has_rus_marker(target_package_id):
+    if _has_language_marker(target_name, language) or _has_language_marker(
+        target_package_id, language
+    ):
         return True
 
     target_lower = target_name.lower()
@@ -67,7 +95,9 @@ def _is_already_localized(
         if info is None:
             continue
         name = str(info.get("name", ""))
-        if not _has_rus_marker(name) and not _has_rus_marker(pid):
+        if not _has_language_marker(name, language) and not _has_language_marker(
+            pid, language
+        ):
             continue
         name_lower = name.lower()
         if target_lower and target_lower in name_lower:
@@ -89,16 +119,18 @@ def _score_candidate(
     candidate: dict[str, Any],
     target_name: str,
     target_package_id: str,
+    language: str,
 ) -> float:
     title = str(candidate.get("title", ""))
     title_lower = title.lower()
     score = 0.0
 
-    if "russian" in title_lower:
+    search_term = LANGUAGE_SEARCH_TERMS.get(language, language)
+    if search_term in title_lower:
         score += 2.0
-    if re.search(r"\brus\b", title_lower) or "[ru]" in title_lower:
+    if re.search(rf"\b{re.escape(language)}\b", title_lower) or f"[{language}]" in title_lower:
         score += 1.5
-    if _has_rus_marker(title):
+    if _has_language_marker(title, language):
         score += 0.5
 
     target_lower = target_name.lower()
@@ -131,11 +163,13 @@ def _search_localization_candidates(
     target_name: str,
     target_package_id: str,
     limit_per_mod: int,
+    language: str,
 ) -> list[dict[str, Any]]:
+    search_term = LANGUAGE_SEARCH_TERMS.get(language, language)
     queries = [
-        f"{target_name} russian",
-        f"{target_name} rus",
-        f"{target_package_id} russian",
+        f"{target_name} {search_term}",
+        f"{target_name} {language}",
+        f"{target_package_id} {search_term}",
     ]
     merged: dict[str, dict[str, Any]] = {}
     per_query = max(3, min(limit_per_mod, 10))
@@ -148,14 +182,16 @@ def _search_localization_candidates(
         filtered = [
             m
             for m in matches
-            if _title_looks_localized(str(m.get("title", "")))
+            if _title_looks_localized(str(m.get("title", "")), language)
         ]
         _merge_candidates(merged, filtered if filtered else matches)
 
     scored = []
     for item in merged.values():
-        score = _score_candidate(item, target_name, target_package_id)
-        if score <= 0 and not _title_looks_localized(str(item.get("title", ""))):
+        score = _score_candidate(item, target_name, target_package_id, language)
+        if score <= 0 and not _title_looks_localized(
+            str(item.get("title", "")), language
+        ):
             continue
         entry = dict(item)
         entry["score"] = round(score, 2)
@@ -165,18 +201,33 @@ def _search_localization_candidates(
     return scored[:limit_per_mod]
 
 
-def find_russian_localizations_for_active_mods(
+def find_localizations_for_active_mods(
     active_mods: list[dict[str, str]],
     installed_by_pid: dict[str, dict[str, Any]],
     api_key: str,
     *,
+    language: str,
     limit_per_mod: int = 5,
     package_ids: list[str] | None = None,
     on_progress: ProgressCallback | None = None,
 ) -> dict[str, Any]:
-    """Find workshop Russian localization candidates for active mods."""
+    """Find workshop localization candidates (for `language`) for active mods."""
     limit_per_mod = max(1, min(int(limit_per_mod), 10))
     api_key = api_key.strip()
+    language = language.strip().lower()
+
+    if language not in LANGUAGE_MARKERS:
+        return {
+            "suggestions": [],
+            "mods_needing_localization": [],
+            "skipped_already_localized": [],
+            "errors": [
+                (
+                    f"Unsupported language '{language}'. Supported: "
+                    f"{', '.join(sorted(LANGUAGE_MARKERS))}."
+                )
+            ],
+        }
 
     if not api_key:
         return {
@@ -201,9 +252,7 @@ def find_russian_localizations_for_active_mods(
             continue
         if _is_official_rimworld_content(pid):
             continue
-        mods_to_scan.append(
-            {"package_id": pid, "name": mod.get("name", pid)}
-        )
+        mods_to_scan.append({"package_id": pid, "name": mod.get("name", pid)})
 
     scan_total = len(mods_to_scan)
     if on_progress is not None:
@@ -216,7 +265,7 @@ def find_russian_localizations_for_active_mods(
         name = mod["name"]
         if on_progress is not None:
             on_progress(index, scan_total, f"Checking: {name}")
-        if _is_already_localized(pid, name, active_set, installed_by_pid):
+        if _is_already_localized(pid, name, active_set, installed_by_pid, language):
             skipped.append({"package_id": pid, "name": name})
         else:
             mods_needing.append({"package_id": pid, "name": name})
@@ -226,7 +275,9 @@ def find_russian_localizations_for_active_mods(
     search_total = len(mods_needing)
 
     if on_progress is not None and search_total > 0:
-        on_progress(0, search_total, "Searching Steam Workshop for Russian localizations")
+        on_progress(
+            0, search_total, "Searching Steam Workshop for localizations"
+        )
 
     for index, mod in enumerate(mods_needing, start=1):
         pid = mod["package_id"]
@@ -235,7 +286,7 @@ def find_russian_localizations_for_active_mods(
             on_progress(index, search_total, f"Workshop search: {name}")
         try:
             candidates = _search_localization_candidates(
-                api_key, name, pid, limit_per_mod
+                api_key, name, pid, limit_per_mod, language
             )
         except Exception as exc:
             errors.append(f"{pid}: {exc}")

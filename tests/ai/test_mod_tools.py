@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from app.ai.tools.mod_tools import ModToolExecutor
@@ -55,7 +57,7 @@ class TestModToolExecutor:
             limit: int = 20,
             instance_name: str | None = None,
             steam_apikey_override: str | None = None,
-        ) -> dict:
+        ) -> dict[str, Any]:
             captured["override"] = steam_apikey_override
             return {"query": query, "matches": [], "count": 0, "source": "steam_api"}
 

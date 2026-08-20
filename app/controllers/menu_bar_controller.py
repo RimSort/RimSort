@@ -193,9 +193,7 @@ class MenuBarController(QObject):
             self._on_menu_bar_github_triggered
         )
         if self._open_ai_assistant is not None:
-            self.menu_bar.ai_assistant_action.triggered.connect(
-                self._open_ai_assistant
-            )
+            self.menu_bar.ai_assistant_action.triggered.connect(self._open_ai_assistant)
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)
@@ -230,11 +228,9 @@ class MenuBarController(QObject):
         )
         self.menu_bar.instances_submenu.setActiveAction(
             next(
-                (
-                    action
-                    for action in self.menu_bar.instances_submenu.actions()
-                    if action.text() == current_instance
-                )
+                action
+                for action in self.menu_bar.instances_submenu.actions()
+                if action.text() == current_instance
             )
         )
         if initialize:

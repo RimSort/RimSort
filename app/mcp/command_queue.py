@@ -44,7 +44,7 @@ def _pid_is_alive(pid: int) -> bool:
     if os.name == "nt":
         import ctypes
 
-        kernel32 = ctypes.windll.kernel32
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         handle = kernel32.OpenProcess(0x1000, False, pid)
         if handle:
             kernel32.CloseHandle(handle)

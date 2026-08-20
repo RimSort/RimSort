@@ -6,6 +6,19 @@ import pytest
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication, QDialog
 
+
+@pytest.fixture()
+def _mock_settings_deps() -> Generator[None, None, None]:
+    """Patch QApplication and AppInfo so Settings() can be instantiated in tests."""
+    with (
+        patch("app.models.settings.QApplication") as mock_qapp,
+        patch("app.models.settings.AppInfo") as mock_app_info,
+    ):
+        mock_qapp.font.return_value.family.return_value = "monospace"
+        mock_app_info.return_value.app_storage_folder = MagicMock()
+        mock_app_info.return_value.app_settings_file = MagicMock()
+        yield
+
 _real_popen = subprocess.Popen
 
 

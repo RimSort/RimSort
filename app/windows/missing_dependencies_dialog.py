@@ -32,6 +32,7 @@ class MissingDependenciesDialog(QDialog):
     """
 
     download_requested = Signal(str)
+    download_selected_requested = Signal(list)
 
     def __init__(
         self,
@@ -76,6 +77,11 @@ class MissingDependenciesDialog(QDialog):
         main_layout.addWidget(self.scroll_area)
 
         button_layout = QHBoxLayout()
+
+        download_selected_button = QPushButton(self.tr("Download Selected"))
+        download_selected_button.setObjectName("dangerButton")
+        download_selected_button.clicked.connect(self._download_selected)
+        button_layout.addWidget(download_selected_button)
 
         select_all_button = QPushButton(self.tr("Select All"))
         select_all_button.setObjectName("primaryButton")
@@ -385,6 +391,20 @@ class MissingDependenciesDialog(QDialog):
             self.selected_mods.add(mod_id)
         else:
             self.selected_mods.discard(mod_id)
+
+    def _download_selected(self) -> None:
+        """
+        Emit download_selected_requested with the workshop IDs of all
+        currently checked "download" dependencies that have a resolved
+        publishedfileid.
+        """
+        pfids = [
+            str(self._dep_resolve[mod_id].workshop_id)
+            for mod_id in self.selected_mods
+            if mod_id in self._dep_resolve and self._dep_resolve[mod_id].workshop_id
+        ]
+        if pfids:
+            self.download_selected_requested.emit(pfids)
 
     def get_selected_mods(self) -> set[str]:
         """

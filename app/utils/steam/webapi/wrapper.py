@@ -988,5 +988,40 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
     return metadata, failed_pfids, errors
 
 
+def ISteamUser_GetPlayerSummaries(steamids: list[str], api_key: str) -> dict[str, str]:
+    """
+    Resolve Steam persona (display) names for a list of steamids.
+
+    https://steamapi.xpaw.me/#ISteamUser/GetPlayerSummaries
+
+    :param steamids: Steam64 IDs to resolve
+    :param api_key: Steam Web API key (required by this endpoint)
+    :return: dict of steamid -> personaname (missing/failed ids are omitted)
+    """
+    url = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
+    names: dict[str, str] = {}
+    if not api_key.strip():
+        return names
+
+    for chunk in list(chunks(_list=steamids, limit=100)):
+        try:
+            request = http.get(
+                url,
+                params={"key": api_key, "steamids": ",".join(chunk)},
+                timeout=(5, 30),
+            )
+            request.raise_for_status()
+            players = request.json().get("response", {}).get("players", [])
+            for player in players:
+                steamid = str(player.get("steamid", ""))
+                personaname = player.get("personaname")
+                if steamid and personaname:
+                    names[steamid] = str(personaname)
+        except Exception as e:
+            logger.warning(f"GetPlayerSummaries failed for a chunk of ids: {e}")
+
+    return names
+
+
 if __name__ == "__main__":
     sys.exit()

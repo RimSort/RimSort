@@ -1,17 +1,26 @@
+from typing import Any
 from unittest.mock import patch
 
 from app.mcp.tools import call_tool
 
 
 def test_queue_download_rejects_invalid_ids() -> None:
-    with patch(
-        "app.mcp.tools.command_queue.require_gui_for_mutation",
-        return_value=None,
-    ), patch(
-        "app.mcp.tools.command_queue.enqueue",
-    ) as mock_enqueue, patch(
-        "app.mcp.tools.validate_publishedfileids",
-        return_value={"valid": ["111"], "invalid": ["fake999"], "valid_details": []},
+    with (
+        patch(
+            "app.mcp.tools.command_queue.require_gui_for_mutation",
+            return_value=None,
+        ),
+        patch(
+            "app.mcp.tools.command_queue.enqueue",
+        ) as mock_enqueue,
+        patch(
+            "app.mcp.tools.validate_publishedfileids",
+            return_value={
+                "valid": ["111"],
+                "invalid": ["fake999"],
+                "valid_details": [],
+            },
+        ),
     ):
         result = call_tool(
             "queue_download",
@@ -27,12 +36,15 @@ def test_queue_download_rejects_invalid_ids() -> None:
 
 
 def test_queue_download_all_invalid() -> None:
-    with patch(
-        "app.mcp.tools.command_queue.require_gui_for_mutation",
-        return_value=None,
-    ), patch(
-        "app.mcp.tools.validate_publishedfileids",
-        return_value={"valid": [], "invalid": ["bad"], "valid_details": []},
+    with (
+        patch(
+            "app.mcp.tools.command_queue.require_gui_for_mutation",
+            return_value=None,
+        ),
+        patch(
+            "app.mcp.tools.validate_publishedfileids",
+            return_value={"valid": [], "invalid": ["bad"], "valid_details": []},
+        ),
     ):
         result = call_tool("queue_download", {"publishedfileids": ["bad"]})
 
@@ -42,14 +54,18 @@ def test_queue_download_all_invalid() -> None:
 
 def test_queue_download_accepts_metadata_only_ids() -> None:
     metadata = [{"publishedfileid": "555", "title": "Metadata Only Mod"}]
-    with patch(
-        "app.mcp.tools.command_queue.require_gui_for_mutation",
-        return_value=None,
-    ), patch(
-        "app.mcp.tools.command_queue.enqueue",
-    ) as mock_enqueue, patch(
-        "app.utils.steam.workshop_validate.ISteamRemoteStorage_GetPublishedFileDetails",
-        return_value=(metadata, [], []),
+    with (
+        patch(
+            "app.mcp.tools.command_queue.require_gui_for_mutation",
+            return_value=None,
+        ),
+        patch(
+            "app.mcp.tools.command_queue.enqueue",
+        ) as mock_enqueue,
+        patch(
+            "app.utils.steam.workshop_validate.ISteamRemoteStorage_GetPublishedFileDetails",
+            return_value=(metadata, [], []),
+        ),
     ):
         result = call_tool(
             "queue_download",
@@ -73,12 +89,15 @@ def test_queue_download_rejects_wrong_appid_ids() -> None:
             "title": "CS2 Skin",
         }
     ]
-    with patch(
-        "app.mcp.tools.command_queue.require_gui_for_mutation",
-        return_value=None,
-    ), patch(
-        "app.utils.steam.workshop_validate.ISteamRemoteStorage_GetPublishedFileDetails",
-        return_value=(metadata, [], []),
+    with (
+        patch(
+            "app.mcp.tools.command_queue.require_gui_for_mutation",
+            return_value=None,
+        ),
+        patch(
+            "app.utils.steam.workshop_validate.ISteamRemoteStorage_GetPublishedFileDetails",
+            return_value=(metadata, [], []),
+        ),
     ):
         result = call_tool(
             "queue_download",
@@ -90,21 +109,26 @@ def test_queue_download_rejects_wrong_appid_ids() -> None:
     assert "777" in result["invalid_ids"]
 
 
-def test_find_russian_localizations_tool() -> None:
-    fake = {
+def test_find_localizations_tool() -> None:
+    fake: dict[str, Any] = {
         "mods_needing_localization": [],
         "suggestions": [],
         "skipped_already_localized": [],
         "errors": [],
     }
     with patch(
-        "app.mcp.tools.rim_sort_context.find_russian_localizations_for_active_mods_tool",
+        "app.mcp.tools.rim_sort_context.find_localizations_for_active_mods_tool",
         return_value=fake,
     ) as mock_find:
-        result = call_tool("find_russian_localizations_for_active_mods", {})
+        result = call_tool("find_localizations_for_active_mods", {"language": "ru"})
 
     mock_find.assert_called_once()
     assert result == fake
+
+
+def test_find_localizations_tool_requires_language() -> None:
+    result = call_tool("find_localizations_for_active_mods", {})
+    assert "error" in result
 
 
 def test_validate_workshop_ids_tool() -> None:

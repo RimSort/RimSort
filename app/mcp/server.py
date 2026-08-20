@@ -32,7 +32,7 @@ def dispatch(msg: dict[str, Any]) -> dict[str, Any] | None:
             "result": {
                 "protocolVersion": client_version or PROTOCOL_VERSION,
                 "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "rimsort-mcp", "version": "1.2.0"},
+                "serverInfo": {"name": "rimsort-mcp", "version": "1.2.0"},
             },
         }
 
@@ -59,7 +59,10 @@ def dispatch(msg: dict[str, Any]) -> dict[str, Any] | None:
                 "id": msg_id,
                 "result": {
                     "content": [
-                        {"type": "text", "text": json.dumps(content, ensure_ascii=False)}
+                        {
+                            "type": "text",
+                            "text": json.dumps(content, ensure_ascii=False),
+                        }
                     ],
                     "isError": False,
                 },
@@ -131,8 +134,8 @@ def _authorized(handler: BaseHTTPRequestHandler, token: str) -> bool:
 class _McpHttpHandler(BaseHTTPRequestHandler):
     token = ""
 
-    def log_message(self, fmt: str, *args: object) -> None:
-        logger.debug("mcp-http {}", fmt % args)
+    def log_message(self, format: str, *args: Any) -> None:
+        logger.debug("mcp-http {}", format % args)
 
     def _send_bytes(self, code: int, body: bytes, content_type: str) -> None:
         self.send_response(code)
@@ -198,7 +201,9 @@ class _McpHttpHandler(BaseHTTPRequestHandler):
                 return
             blob = json.dumps(reply).encode("utf-8")
         else:
-            blob = b'{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"}}'
+            blob = (
+                b'{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"}}'
+            )
         self._send_bytes(200, blob, "application/json")
 
 

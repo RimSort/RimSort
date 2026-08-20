@@ -13,11 +13,13 @@ def summarize_tool_result(name: str, result: dict[str, Any]) -> str:
         return f"error: {result['error']}"
     if name in ("search_workshop_mods", "search_steam_workshop"):
         return f"{result.get('count', len(result.get('matches', [])))} matches"
-    if name == "find_russian_localizations_for_active_mods":
+    if name == "find_localizations_for_active_mods":
         needing = len(result.get("mods_needing_localization", []))
         suggestions = len(result.get("suggestions", []))
         with_rec = sum(1 for s in result.get("suggestions", []) if s.get("recommended"))
-        return f"{needing} need localization, {with_rec}/{suggestions} with recommendation"
+        return (
+            f"{needing} need localization, {with_rec}/{suggestions} with recommendation"
+        )
     if name == "validate_workshop_ids":
         valid = len(result.get("valid", []))
         invalid = len(result.get("invalid", []))
@@ -52,7 +54,8 @@ class ModToolExecutor:
     def __init__(
         self,
         steam_apikey_override: str | None = None,
-        on_tool_call: Callable[[str, dict[str, Any], dict[str, Any]], None] | None = None,
+        on_tool_call: Callable[[str, dict[str, Any], dict[str, Any]], None]
+        | None = None,
         on_progress: ProgressCallback | None = None,
     ) -> None:
         self._steam_apikey_override = steam_apikey_override

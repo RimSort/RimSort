@@ -47,7 +47,7 @@ def format_active_mods_context(
 def describe_mod(
     metadata_controller: MetadataController, package_id: str
 ) -> dict[str, str] | None:
-    paths = metadata_controller.packageid_to_paths.get(package_id.lower(), [])
+    paths = metadata_controller.packageid_to_paths.get(package_id.lower(), set())
     for path in paths:
         mod = metadata_controller.get_mod(path)
         if isinstance(mod, AboutXmlMod):
@@ -72,9 +72,7 @@ def search_mods(
         name = (mod.name or "").lower()
         pid = str(mod.package_id).lower()
         if q in name or q in pid:
-            matches.append(
-                {"package_id": str(mod.package_id), "name": mod.name or pid}
-            )
+            matches.append({"package_id": str(mod.package_id), "name": mod.name or pid})
         if len(matches) >= limit:
             break
     return matches

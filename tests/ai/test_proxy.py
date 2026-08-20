@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -178,13 +179,11 @@ class TestGeminiProvider:
         text_response = MagicMock()
         text_response.ok = True
         text_response.json.return_value = {
-            "candidates": [
-                {"content": {"parts": [{"text": "Mod details loaded."}]}}
-            ]
+            "candidates": [{"content": {"parts": [{"text": "Mod details loaded."}]}}]
         }
         mock_post.side_effect = [tool_response, text_response]
 
-        def tool_executor(name: str, args: dict) -> dict:
+        def tool_executor(name: str, args: dict[str, Any]) -> dict[str, Any]:
             assert name == "describe_mod"
             return {"found": True, "name": "Test Mod"}
 

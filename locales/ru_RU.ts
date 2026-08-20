@@ -42,83 +42,71 @@
 <context>
     <name>AiAssistantPanel</name>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="131"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="75"/>
         <source>AI Assistant</source>
-        <translation>AI-ассистент</translation>
+        <translation>AI Агент</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="139"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="83"/>
         <source>Provider:</source>
         <translation>Провайдер:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="143"/>
         <source>Model:</source>
         <translation>Модель:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="158"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="87"/>
         <source>API key:</source>
         <translation>Ключ API:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="166"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="95"/>
         <source>Proxy:</source>
         <translation>Прокси:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="169"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="98"/>
         <source>host:port, user:pass@host:port, login:pass:host:port</source>
         <translation>host:port, user:pass@host:port, login:pass:host:port</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="185"/>
         <source>Clear chat</source>
         <translation>Очистить чат</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="191"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="112"/>
         <source>Send</source>
         <translation>Отправить</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="198"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="119"/>
         <source>Assistant</source>
         <translation>Ассистент</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="199"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="120"/>
         <source>User</source>
         <translation>Пользователь</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="212"/>
         <source>Tool: {call}</source>
         <translation>Инструмент: {call}</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="222"/>
-        <location filename="../app/windows/ai_assistant_panel.py" line="263"/>
         <source>{current}/{total}: {message}</source>
         <translation>{current}/{total}: {message}</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="229"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="137"/>
         <source>Loading{dots}</source>
         <translation>Загрузка{dots}</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="238"/>
-        <source>Loading...</source>
-        <translation>Загрузка...</translation>
-    </message>
-    <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="401"/>
         <source>Model quota exceeded</source>
         <translation>Лимит модели исчерпан</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="403"/>
         <source>Switch to {name}</source>
         <translation>Переключить на {name}</translation>
     </message>
@@ -3422,9 +3410,9 @@ Manage mods installed from GitHub releases.</source>
         <translation>Вики RimSort…</translation>
     </message>
     <message>
-        <location filename="../app/views/menu_bar.py" line="397"/>
-        <source>AI Assistant…</source>
-        <translation>AI-ассистент…</translation>
+        <location filename="../app/views/menu_bar.py" line="402"/>
+        <source>AI Assistant</source>
+        <translation>AI Агент</translation>
     </message>
     <message>
         <location filename="../app/views/menu_bar.py" line="145"/>
@@ -5807,6 +5795,16 @@ Alternative Dependencies:</source>
         <translation>По алфавиту</translation>
     </message>
     <message>
+        <location filename="../app/views/settings_dialog.py" line="1704"/>
+        <source>Enable MCP server (local HTTP subprocess)</source>
+        <translation>Включить сервер MCP (локальный HTTP-подпроцесс)</translation>
+    </message>
+    <message>
+        <location filename="../app/views/settings_dialog.py" line="1707"/>
+        <source>Port:</source>
+        <translation>Порт:</translation>
+    </message>
+    <message>
         <location filename="../app/views/settings_dialog.py" line="730"/>
         <source>Topologically</source>
         <translation>Топологически</translation>
@@ -6277,47 +6275,12 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>Включить службу слежения за файлами (watchdog)</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="1703"/>
-        <source>AI Assistant</source>
-        <translation>AI-ассистент</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1706"/>
-        <source>Enable AI assistant</source>
-        <translation>Включить AI-ассистент</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1709"/>
-        <source>Gemini API key:</source>
-        <translation>Ключ Gemini API:</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1713"/>
-        <source>Proxy (optional):</source>
-        <translation>Прокси (необязательно):</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1716"/>
-        <source>host:port, user:pass@host:port, login:pass:host:port</source>
-        <translation>host:port, user:pass@host:port, login:pass:host:port</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1721"/>
+        <location filename="../app/views/settings_dialog.py" line="1701"/>
         <source>MCP Server</source>
         <translation>Сервер MCP</translation>
     </message>
     <message>
-        <location filename="../app/views/settings_dialog.py" line="1724"/>
-        <source>Enable MCP server (stdio subprocess)</source>
-        <translation>Включить сервер MCP (stdio subprocess)</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1727"/>
-        <source>Port (HTTP v2):</source>
-        <translation>Порт (HTTP v2):</translation>
-    </message>
-    <message>
-        <location filename="../app/views/settings_dialog.py" line="1732"/>
+        <location filename="../app/views/settings_dialog.py" line="1712"/>
         <source>Token (optional):</source>
         <translation>Токен (необязательно):</translation>
     </message>

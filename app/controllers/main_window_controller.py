@@ -79,6 +79,9 @@ class MainWindowController(QObject):
         dialog.download_requested.connect(
             self.main_window.main_content_panel._download_single_workshop_mod
         )
+        dialog.download_selected_requested.connect(
+            self.main_window.main_content_panel._download_selected_workshop_mods
+        )
         selected_deps = dialog.show_dialog(deps_summary, missing_deps, dep_resolve)
 
         if not missing_deps:

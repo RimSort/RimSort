@@ -3,12 +3,11 @@ import os
 import platform
 import re
 from enum import Enum
-from functools import partial
 from pathlib import Path
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer, QUrl
+from PySide6.QtCore import Qt, QTimer, QUrl
 from PySide6.QtGui import QAction, QCloseEvent, QPixmap
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import (
@@ -18,23 +17,16 @@ from PySide6.QtWebEngineCore import (
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
-    QDialog,
     QHBoxLayout,
-    QLabel,
     QLayout,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
-    QMenu,
     QProgressBar,
     QPushButton,
     QSizePolicy,
-    QTextEdit,
     QToolBar,
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtWidgets import QDialogButtonBox as ButtonBox
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.image_label import ImageLabel
@@ -49,6 +41,7 @@ from app.utils.steam.webapi.wrapper import (
 from app.utils.window_launch_state import apply_window_launch_state
 from app.views.dialogue import show_dialogue_conditional, show_warning
 
+from .download_list_widget import ModDownloadListWidget
 from .js_bridge import JavaScriptBridge
 
 URL_PREFIX_SHAREDFILES = "https://steamcommunity.com/sharedfiles/filedetails/?id="
@@ -209,11 +202,6 @@ class SteamBrowser(QWidget):
             logger.info("Setting QTWEBENGINE_DISABLE_SANDBOX for non-Windows platform")
             os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = "1"
 
-        # Add Mods by Workshop ID Button (always create, not just non-Windows)
-        self.add_mods_by_id_button = QPushButton(self.tr("Add Mods by Workshop ID"))
-        self.add_mods_by_id_button.setObjectName("browserPanelAddModsByID")
-        self.add_mods_by_id_button.clicked.connect(self._show_add_mods_by_id_dialog)
-
         # VARIABLES
         profile_dir = Path(AppInfo()._browser_profile_folder)
         profile_dir.mkdir(parents=True, exist_ok=True)
@@ -231,8 +219,6 @@ class SteamBrowser(QWidget):
         self.current_title = "RimSort - Steam Browser"
         self.current_url = startpage
 
-        self.downloader_list_mods_tracking: list[str] = []
-        self.downloader_list_dupe_tracking: dict[str, Any] = {}
         self.startpage = QUrl(startpage)
 
         self.searchtext_string = "&searchtext="
@@ -256,36 +242,29 @@ class SteamBrowser(QWidget):
         self.downloader_layout = QVBoxLayout()
 
         # DOWNLOADER WIDGETS
-        self.downloader_label = QLabel(self.tr("Mod Downloader"))
-        self.downloader_label.setObjectName("browserPaneldownloader_label")
-        self.downloader_list = QListWidget()
-        self.downloader_list.setFixedWidth(200)
-        self.downloader_list.setItemAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.downloader_list.setContextMenuPolicy(
-            Qt.ContextMenuPolicy.CustomContextMenu
-        )
-        self.downloader_list.customContextMenuRequested.connect(
-            self._downloader_item_contextmenu_event
-        )
-        self.downloader_list.itemDoubleClicked.connect(self._open_mod_url)
         self.add_to_list2_button = QPushButton(self.tr("Add to List"))
         self.add_to_list2_button.clicked.connect(self._add_collection_or_mod_to_list)
-        self.clear_list_button = QPushButton(self.tr("Clear List"))
-        self.clear_list_button.setObjectName("browserPanelClearList")
-        self.clear_list_button.clicked.connect(self._clear_downloader_list)
-        self.download_steamcmd_button = QPushButton(
-            self.tr("Download mod(s) (SteamCMD)")
+
+        self.download_list = ModDownloadListWidget(
+            title=self.tr("Mod Downloader"),
+            show_steamworks_button=True,
+            url_builder=lambda pfid: f"{self.url_prefix_sharedfiles}{pfid}",
         )
-        self.download_steamcmd_button.clicked.connect(
-            partial(
-                EventBus().do_steamcmd_download.emit,
-                self.downloader_list_mods_tracking,
-            )
+        self.download_list.title_label.setObjectName("browserPaneldownloader_label")
+        self.download_list.clear_list_button.setObjectName("browserPanelClearList")
+        self.download_list.add_by_id_button.setObjectName("browserPanelAddModsByID")
+        self.download_list.download_requested.connect(
+            EventBus().do_steamcmd_download.emit
         )
-        self.download_steamworks_button = QPushButton(
-            self.tr("Download mod(s) (Steam app)")
+        self.download_list.mod_added.connect(
+            lambda pfid: self._update_badge_js(pfid, BadgeState.ADDED)
         )
-        self.download_steamworks_button.clicked.connect(
+        self.download_list.mod_removed.connect(
+            lambda pfid: self._update_badge_js(pfid, BadgeState.DEFAULT)
+        )
+        self.download_list.open_mod_requested.connect(self._open_mod_url)
+        assert self.download_list.download_steamworks_button is not None
+        self.download_list.download_steamworks_button.clicked.connect(
             self._subscribe_to_mods_from_list
         )
 
@@ -360,13 +339,8 @@ class SteamBrowser(QWidget):
         self.progress_bar.setVisible(True)
 
         # Build the downloader layout
-        self.downloader_layout.addWidget(self.downloader_label)
-        self.downloader_layout.addWidget(self.downloader_list)
         self.downloader_layout.addWidget(self.add_to_list2_button)
-        self.downloader_layout.addWidget(self.add_mods_by_id_button)
-        self.downloader_layout.addWidget(self.download_steamcmd_button)
-        self.downloader_layout.addWidget(self.download_steamworks_button)
-        self.downloader_layout.addWidget(self.clear_list_button)
+        self.downloader_layout.addWidget(self.download_list)
 
         # Build the browser layout
         self.browser_layout.addWidget(self.location)
@@ -392,32 +366,6 @@ class SteamBrowser(QWidget):
     def _start_initial_load(self) -> None:
         assert self.web_view is not None
         self.web_view.load(self.startpage)
-
-    def _show_add_mods_by_id_dialog(self) -> None:
-        dialog = QDialog(self)
-        dialog.setWindowTitle(self.tr("Add Mods by Workshop ID"))
-        layout = QVBoxLayout(dialog)
-        label = QLabel(
-            self.tr(
-                "Enter one or more Workshop IDs (one per line or separated by commas):"
-            )
-        )
-        layout.addWidget(label)
-        text_edit = QTextEdit()
-        layout.addWidget(text_edit)
-        buttons = ButtonBox(
-            ButtonBox.StandardButton.Ok | ButtonBox.StandardButton.Cancel
-        )
-        layout.addWidget(buttons)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            ids_text = text_edit.toPlainText()
-            ids = re.split(r"[\s,]+", ids_text.strip())
-            ids = [id_.strip() for id_ in ids if id_.strip()]
-            for workshop_id in ids:
-                self._add_mod_to_list(publishedfileid=workshop_id)
 
     def _launch_browser_window(self) -> None:
         """Apply browser window launch state from settings"""
@@ -568,10 +516,11 @@ class SteamBrowser(QWidget):
                         "Please reach out to us on Github Issues page or<br>#rimsort-testing on the Rocketman/CAI discord"
                     ),
                 )
-        if len(self.downloader_list_dupe_tracking.keys()) > 0:
+        dupe_report_dict = self.download_list.pop_dupe_report()
+        if dupe_report_dict:
             # Build a report from our dict
             dupe_report = ""
-            for pfid, name in self.downloader_list_dupe_tracking.items():
+            for pfid, name in dupe_report_dict.items():
                 dupe_report = dupe_report + f"{name} | {pfid}<br>"
             # Notify the user
             show_warning(
@@ -582,7 +531,6 @@ class SteamBrowser(QWidget):
                 ),
                 details=dupe_report,
             )
-            self.downloader_list_dupe_tracking = {}
 
     def __compile_collection_datas(self, publishedfileid: str) -> dict[str, Any]:
         collection_mods_pfid_to_title: dict[str, Any] = {}
@@ -647,66 +595,22 @@ class SteamBrowser(QWidget):
         page_title = (
             extracted_page_title if extracted_page_title else self.current_title
         )
-        # Check if the mod is already in the list
-        if publishedfileid not in self.downloader_list_mods_tracking:
-            # Add pfid to tracking list
-            logger.debug(f"Tracking PublishedFileId for download: {publishedfileid}")
-            self.downloader_list_mods_tracking.append(publishedfileid)
-            # Create our list item
-            item = QListWidgetItem()
-            item.setData(Qt.ItemDataRole.UserRole, publishedfileid)
-            # Set list item label
-            if not title:  # If title wasn't passed, get it from the web_view title
-                label = QLabel(page_title)
-                item.setToolTip(f"{label.text()}\n--> {self.current_url}")
-            else:  # If the title passed, use it
-                label = QLabel(title)
-                item.setToolTip(
-                    f"{label.text()}\n--> {self.url_prefix_sharedfiles}{publishedfileid}"
-                )
-            label.setObjectName("ListItemLabel")
-            # Set the size hint of the item to be the size of the label
-            item.setSizeHint(label.sizeHint())
-            self.downloader_list.addItem(item)
-            self.downloader_list.setItemWidget(item, label)
-            self._update_badge_js(publishedfileid, BadgeState.ADDED)
+        if title:
+            display_title = title
+            url = f"{self.url_prefix_sharedfiles}{publishedfileid}"
         else:
-            logger.debug(
-                f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
-            )
-            if publishedfileid not in self.downloader_list_dupe_tracking.keys():
-                if not title:
-                    self.downloader_list_dupe_tracking[publishedfileid] = page_title
-                else:
-                    self.downloader_list_dupe_tracking[publishedfileid] = title
+            display_title = page_title
+            url = self.current_url
+        self.download_list.add_mod(
+            publishedfileid,
+            title=display_title,
+            tooltip=f"{display_title}\n--> {url}",
+        )
 
-    def _open_mod_url(self, item: QListWidgetItem) -> None:
-        publishedfileid = item.data(Qt.ItemDataRole.UserRole)
+    def _open_mod_url(self, publishedfileid: str) -> None:
         if publishedfileid and self.web_view is not None:
             url = f"{self.url_prefix_sharedfiles}{publishedfileid}"
             self.web_view.load(QUrl(url))
-
-    def _clear_downloader_list(self) -> None:
-        mods_to_clear_badges_for = list(self.downloader_list_mods_tracking)
-
-        self.downloader_list.clear()
-        self.downloader_list_mods_tracking.clear()
-        self.downloader_list_dupe_tracking.clear()
-        for mod_id in mods_to_clear_badges_for:
-            self._update_badge_js(mod_id, BadgeState.DEFAULT)
-
-    def _downloader_item_contextmenu_event(self, point: QPoint) -> None:
-        context_item = self.downloader_list.itemAt(point)
-
-        if context_item:  # Check if the right-clicked point corresponds to an item
-            publishedfileid = context_item.data(Qt.ItemDataRole.UserRole)
-
-            context_menu = QMenu(self)  # Downloader item context menu event
-            remove_item = context_menu.addAction(self.tr("Remove mod from list"))
-            remove_item.triggered.connect(
-                partial(self._remove_mod_from_list, publishedfileid)
-            )
-            context_menu.exec_(self.downloader_list.mapToGlobal(point))
 
     def _remove_mod_from_list(self, publishedfileid: str) -> None:
         """
@@ -714,36 +618,16 @@ class SteamBrowser(QWidget):
         and updates its badge status to DEFAULT.
         This method is called both from the UI context menu and from the JS bridge.
         """
-        if publishedfileid in self.downloader_list_mods_tracking:
-            self.downloader_list_mods_tracking.remove(publishedfileid)
-
-            item_found_in_ui = False
-            for i in range(self.downloader_list.count()):
-                item = self.downloader_list.item(i)
-                if item.data(Qt.ItemDataRole.UserRole) == publishedfileid:
-                    self.downloader_list.takeItem(i)
-                    item_found_in_ui = True
-                    break
-
-            if not item_found_in_ui:
-                logger.warning(
-                    f"Mod {publishedfileid} removed from tracking, but corresponding UI item was not found."
-                )
-
-            self._update_badge_js(publishedfileid, BadgeState.DEFAULT)
-        else:
-            logger.warning(
-                f"Mod {publishedfileid} not found in download tracking list, cannot remove."
-            )
+        self.download_list.remove_mod(publishedfileid)
 
     def _subscribe_to_mods_from_list(self) -> None:
         logger.debug(
-            f"Signaling Steamworks subscription handler with {len(self.downloader_list_mods_tracking)} mods"
+            f"Signaling Steamworks subscription handler with {len(self.download_list.mods_tracking)} mods"
         )
         EventBus().do_steamworks_api_call.emit(
             [
                 "subscribe",
-                [int(str_pfid) for str_pfid in self.downloader_list_mods_tracking],
+                [int(str_pfid) for str_pfid in self.download_list.mods_tracking],
             ]
         )
 
@@ -1079,11 +963,7 @@ class SteamBrowser(QWidget):
 
     def _get_added_mods_list(self) -> list[str]:
         """Get list of mod IDs added to the download list"""
-        added_mods = []
-        for modId in self.downloader_list_mods_tracking:
-            added_mods.append(modId)
-
-        return added_mods
+        return list(self.download_list.mods_tracking)
 
     def _update_badge_js(self, mod_id: str, status: BadgeState) -> None:
         """Calls a JavaScript function in the web view to update a specific mod's badge"""
@@ -1157,8 +1037,7 @@ class SteamBrowser(QWidget):
         self.metadata_controller = None
         self.settings = None
         self.js_bridge = None
-        self.downloader_list_mods_tracking.clear()
-        self.downloader_list_dupe_tracking.clear()
+        self.download_list.clear_list()
 
         # Clear layouts
         self.clear_layout(self.window_layout)
