@@ -17,6 +17,13 @@ class TestModListParser:
         assert parsed.source_format == "rimsort_json"
         assert parsed.package_ids == ["ludeon.rimworld", "author.jsonmod"]
 
+    def test_parse_empty_mods_config_xml(self, tmp_path: Path) -> None:
+        empty = tmp_path / "empty.xml"
+        empty.write_text("<ModsConfigData></ModsConfigData>", encoding="utf-8")
+        parsed = parse_mod_list_file(empty)
+        assert parsed.source_format == "mods_config_xml"
+        assert parsed.package_ids == []
+
     def test_parse_single_li_xml(self) -> None:
         parsed = parse_mod_list_file(FIXTURES / "single_li.xml")
         assert parsed.package_ids == ["ludeon.rimworld"]

@@ -16,6 +16,7 @@ from PySide6.QtCore import (
     QObject,
     QProcess,
     Qt,
+    QUrl,
     Signal,
     Slot,
 )
@@ -1955,7 +1956,8 @@ class MainContent(QObject):
             except (TypeError, RuntimeError):
                 pass
             self._workshop_restore_target = restore_target
-            self.steam_browser.web_view.load(startpage)
+            assert self.steam_browser.web_view is not None
+            self.steam_browser.web_view.load(QUrl(startpage))
             self.steam_browser.show()
             self.steam_browser.raise_()
             self.steam_browser.activateWindow()
@@ -2103,7 +2105,7 @@ class MainContent(QObject):
         if local_mods_path and os.path.exists(local_mods_path):
             self.steamcmd_runner = RunnerPanel()
             self.window_manager.register_attr(self, "steamcmd_runner")
-            self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD setup")
+            self.steamcmd_runner.setWindowTitle(self.tr("RimSort - SteamCMD setup"))
             self.steamcmd_runner.show()
             self.steamcmd_runner.message("Setting up steamcmd...")
             self.steamcmd_wrapper.setup_steamcmd(
@@ -2178,7 +2180,7 @@ class MainContent(QObject):
                 steam_db=steam_db,
             )
             self.window_manager.register_attr(self, "steamcmd_runner")
-            self.steamcmd_runner.setWindowTitle("RimSort - SteamCMD downloader")
+            self.steamcmd_runner.setWindowTitle(self.tr("RimSort - SteamCMD downloader"))
             self.steamcmd_runner.show()
             self.steamcmd_runner.raise_()
             self.steamcmd_runner.activateWindow()

@@ -754,6 +754,7 @@ class SteamBrowser(QWidget):
         script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation)
         script.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld)
         script.setRunsOnSubFrames(True)
+        assert self.web_profile is not None
         self.web_profile.scripts().insert(script)
 
     def _web_view_load_started(self) -> None:

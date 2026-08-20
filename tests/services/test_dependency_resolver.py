@@ -1,5 +1,7 @@
 from pathlib import Path
+from typing import Any, cast
 
+from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     BaseRules,
@@ -44,7 +46,7 @@ class TestResolveDependencyWorkshopId:
     def test_steam_db_match(self) -> None:
         metadata = MagicMockMetadata()
         result = resolve_dependency_workshop_id(
-            metadata, "author.missing", set()
+            cast(MetadataController, metadata), "author.missing", set()
         )
         assert isinstance(result, DepResolveResult)
         assert result.workshop_id == "999"
@@ -68,7 +70,7 @@ class TestBuildDependenciesDialogContext:
         )
 
         deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
-            metadata, {"/mods/parent"}
+            cast(MetadataController, metadata), {"/mods/parent"}
         )
 
         assert deps_summary["author.parent"]["download"] == {"author.missing"}
@@ -98,7 +100,7 @@ class TestBuildDependenciesDialogContext:
         )
 
         deps_summary, missing_deps, dep_resolve = build_dependencies_dialog_context(
-            metadata, {"/mods/parent"}
+            cast(MetadataController, metadata), {"/mods/parent"}
         )
 
         assert deps_summary["author.parent"]["local"] == {"author.localdep"}

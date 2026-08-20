@@ -31,6 +31,11 @@ def _normalize_package_ids(raw: Any) -> list[str]:
         return []
     if isinstance(raw, str):
         return [raw]
+    if isinstance(raw, dict):
+        if "li" in raw:
+            return _normalize_package_ids(raw["li"])
+        if not raw:
+            return []
     if isinstance(raw, list):
         result: list[str] = []
         for item in raw:
@@ -82,18 +87,23 @@ def _parse_json_mod_list(data: dict[str, Any]) -> ParsedModList:
 
 def _parse_xml_mod_list(path: Path, data: dict[str, Any]) -> ParsedModList:
     source_format = _detect_source_format(path, data)
-    package_ids = validate_rimworld_mods_list(data)
+    mods_config = data.get("ModsConfigData")
+    if not isinstance(mods_config, dict):
+        mods_config = {}
+
+    raw_active = mods_config.get("activeMods")
+    if not raw_active:
+        package_ids: list[str] = []
+    else:
+        package_ids = validate_rimworld_mods_list(data)
+
     version: str | None = None
-    known_expansions: list[str] = []
-    mods_config = data.get("ModsConfigData", {})
-    if isinstance(mods_config, dict):
-        raw_version = mods_config.get("version")
-        if isinstance(raw_version, str):
-            version = raw_version
-        elif isinstance(raw_version, dict):
-            version = str(value_extractor(raw_version))
-        raw_expansions = mods_config.get("knownExpansions", {})
-        known_expansions = _normalize_package_ids(raw_expansions)
+    raw_version = mods_config.get("version")
+    if isinstance(raw_version, str):
+        version = raw_version
+    elif isinstance(raw_version, dict):
+        version = str(value_extractor(raw_version))
+    known_expansions = _normalize_package_ids(mods_config.get("knownExpansions"))
     return ParsedModList(
         package_ids=package_ids,
         game_version=version,

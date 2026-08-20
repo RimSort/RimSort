@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import compile
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from PySide6.QtCore import QProcess
@@ -7,7 +8,7 @@ from PySide6.QtCore import QProcess
 from app.windows.runner_panel import RunnerPanel
 
 
-def _make_steamcmd_panel(tmp_path: Path, *, system: str = "Windows") -> RunnerPanel:
+def _make_steamcmd_panel(tmp_path: Path, *, system: str = "Windows") -> Any:
     panel = RunnerPanel.__new__(RunnerPanel)
     panel.ansi_escape = compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
     panel.system = system
