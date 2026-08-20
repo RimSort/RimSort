@@ -599,7 +599,7 @@ class RuleEditor(QWidget):
             partial(self._toggle_loadBottom_rule, "User Rules")
         )
         # Setup the window
-        self.setWindowTitle("RimSort - Rule Editor")
+        self.setWindowTitle(self.tr("RimSort - Rule Editor"))
         self.setLayout(layout)
         # Set the window size
         self.resize(900, 600)

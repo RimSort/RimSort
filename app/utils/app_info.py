@@ -132,6 +132,9 @@ class AppInfo:
         self._setup_web_channel_script_file: Path = (
             self._application_folder / "setup_web_channel_script.js"
         )
+        self._setup_steam_recovery_script_file: Path = (
+            self._application_folder / "setup_steam_recovery_script.js"
+        )
 
         # Backup directories
         self._backups_folder: Path = self._app_storage_folder / "backups"
@@ -334,6 +337,11 @@ class AppInfo:
         Get the path to the file where _setup_web_channel_script_file exists
         """
         return self._setup_web_channel_script_file
+
+    @property
+    def setup_steam_recovery_script_file(self) -> Path:
+        """Get the path to the Steam workshop recovery script."""
+        return self._setup_steam_recovery_script_file
 
     @property
     def backups_folder(self) -> Path:

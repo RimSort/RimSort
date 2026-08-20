@@ -83,7 +83,7 @@ class SettingsDialog(QDialog):
     def _make_section_label(
         self, text: str, alignment: Qt.AlignmentFlag | None = None
     ) -> QLabel:
-        label = QLabel(self.tr(text))
+        label = QLabel(text)
         label.setFont(GUIInfo().emphasis_font)
         if alignment is not None:
             label.setAlignment(alignment)
@@ -141,7 +141,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        header_label = self._make_section_label("Game location")
+        header_label = self._make_section_label(self.tr("Game location"))
         header_layout.addWidget(header_label)
 
         self.game_location_open_button = QToolButton()
@@ -170,7 +170,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        header_label = self._make_section_label("Config location")
+        header_label = self._make_section_label(self.tr("Config location"))
         header_layout.addWidget(header_label)
 
         self.config_folder_location_open_button = QToolButton()
@@ -208,7 +208,7 @@ class SettingsDialog(QDialog):
             self._on_steam_integration_toggled
         )
 
-        section_label = self._make_section_label("Steam mods location")
+        section_label = self._make_section_label(self.tr("Steam mods location"))
         header_layout.addWidget(section_label)
 
         self.steam_mods_folder_location_open_button = QToolButton()
@@ -237,7 +237,7 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = self._make_section_label("Local mods location")
+        section_label = self._make_section_label(self.tr("Local mods location"))
         header_layout.addWidget(section_label)
 
         self.local_mods_folder_location_open_button = QToolButton()
@@ -267,7 +267,9 @@ class SettingsDialog(QDialog):
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = self._make_section_label("Instance folder location (optional)")
+        section_label = self._make_section_label(
+            self.tr("Instance folder location (optional)")
+        )
         header_layout.addWidget(section_label)
 
         self.instance_folder_location_choose_button = QToolButton()
@@ -378,7 +380,7 @@ class SettingsDialog(QDialog):
 
     def _do_backup_settings_group(self, tab_layout: QBoxLayout) -> None:
         backup_group_label = self._make_section_label(
-            "Backup Settings", Qt.AlignmentFlag.AlignCenter
+            self.tr("Backup Settings"), Qt.AlignmentFlag.AlignCenter
         )
         tab_layout.addWidget(backup_group_label)
 
@@ -429,7 +431,7 @@ class SettingsDialog(QDialog):
 
     def _do_recent_save_integration_group(self, tab_layout: QBoxLayout) -> None:
         section_label = self._make_section_label(
-            "Integration with recent save", Qt.AlignmentFlag.AlignCenter
+            self.tr("Integration with recent save"), Qt.AlignmentFlag.AlignCenter
         )
         tab_layout.addWidget(section_label)
 
@@ -679,7 +681,9 @@ class SettingsDialog(QDialog):
 
     def _do_aux_db_time_limit_group(self, tab_layout: QBoxLayout) -> None:
         self.aux_db_time_limit_label = self._make_section_label(
-            "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+            self.tr(
+                "Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)"
+            )
         )
         aux_db_tooltip = self.tr("""To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
 After a mod is deleted, this is the time we wait until this mod item is deleted from the Auxiliary Metadata DB.
@@ -720,7 +724,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         # Sort mods group
         _, sort_group_box_layout = self._add_group_box(tab_layout)
 
-        sorting_label = self._make_section_label("Sorting Method")
+        sorting_label = self._make_section_label(self.tr("Sorting Method"))
         sort_group_box_layout.addWidget(sorting_label)
 
         self.sorting_topological_radio = QRadioButton(self.tr("Topologically"))
@@ -744,7 +748,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         # Dependencies group
         _, deps_group_box_layout = self._add_group_box(tab_layout)
 
-        deps_label = self._make_section_label("Dependencies Handling Behavior")
+        deps_label = self._make_section_label(
+            self.tr("Dependencies Handling Behavior")
+        )
         deps_group_box_layout.addWidget(deps_label)
 
         # Use dependencies for sorting checkbox
@@ -781,7 +787,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         _, xml_parsing_group_box_layout = self._add_group_box(tab_layout)
 
         # Prefer versioned About.xml tags over base tags
-        xml_parsing_explanatory_label = self._make_section_label("XML Parsing Behavior")
+        xml_parsing_explanatory_label = self._make_section_label(
+            self.tr("XML Parsing Behavior")
+        )
         xml_parsing_group_box_layout.addWidget(xml_parsing_explanatory_label)
         self.prefer_versioned_about_tags_checkbox = QCheckBox(
             self.tr("Prefer versioned About.xml tags over base tags")
@@ -815,7 +823,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         # Mod list options group
         _, modlist_option_group_box_layout = self._add_group_box(tab_layout)
 
-        modlist_option_label = self._make_section_label("Mod list options")
+        modlist_option_label = self._make_section_label(self.tr("Mod list options"))
         modlist_option_group_box_layout.addWidget(modlist_option_label)
 
         # Rich text rendering checkbox
@@ -920,7 +928,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         inactive_mods_sort_group_box_layout = QVBoxLayout()
         self.inactive_mods_sort_group_box.setLayout(inactive_mods_sort_group_box_layout)
 
-        inactive_mods_sort_label = self._make_section_label("Inactive Mods Sorting")
+        inactive_mods_sort_label = self._make_section_label(
+            self.tr("Inactive Mods Sorting")
+        )
         inactive_mods_sort_group_box_layout.addWidget(inactive_mods_sort_label)
 
         self.save_inactive_mods_sort_state_checkbox = QCheckBox(
@@ -943,7 +953,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         _, group_layout = self._add_group_box(tab_layout)
 
         when_building_database_label = self._make_section_label(
-            "When building the database:"
+            self.tr("When building the database:")
         )
         group_layout.addWidget(when_building_database_label)
 
@@ -1054,7 +1064,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         _, db_expiry_group_layout = self._add_group_box(tab_layout)
 
         database_expiry_label = self._make_section_label(
-            "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
+            self.tr(
+                "Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry."
+            )
         )
         db_expiry_group_layout.addWidget(database_expiry_label)
 
@@ -1075,7 +1087,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         tab_layout = QVBoxLayout(tab)
 
         # === SteamCMD group ===
-        steamcmd_label = self._make_section_label("SteamCMD")
+        steamcmd_label = self._make_section_label(self.tr("SteamCMD"))
         tab_layout.addWidget(steamcmd_label)
 
         _, group_layout = self._add_group_box(tab_layout)
@@ -1109,7 +1121,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = self._make_section_label("SteamCMD installation location")
+        section_label = self._make_section_label(
+            self.tr("SteamCMD installation location")
+        )
         header_layout.addWidget(section_label)
 
         self.steamcmd_install_location_choose_button = QToolButton()
@@ -1144,12 +1158,12 @@ This basically preserves your mod coloring, user notes etc. for this many second
         button_layout.addWidget(self.steamcmd_install_button)
 
         # === todds group ===
-        todds_label = self._make_section_label("todds")
+        todds_label = self._make_section_label(self.tr("todds"))
         tab_layout.addWidget(todds_label)
 
         _, group_layout = self._add_group_box(tab_layout)
 
-        quality_preset_label = self._make_section_label("Quality preset")
+        quality_preset_label = self._make_section_label(self.tr("Quality preset"))
         group_layout.addWidget(quality_preset_label)
 
         self.todds_preset_optimized_radio = QRadioButton(
@@ -1161,7 +1175,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         group_layout.addWidget(self.todds_preset_custom_radio)
 
         custom_command_label = self._make_section_label(
-            "If -p as in path is not specified, path from current active or all mods selection will be used."
+            self.tr(
+                "If -p as in path is not specified, path from current active or all mods selection will be used."
+            )
         )
         group_layout.addWidget(custom_command_label)
 
@@ -1176,7 +1192,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         _, group_layout = self._add_group_box(tab_layout)
 
-        when_optimizing_label = self._make_section_label("When optimizing textures")
+        when_optimizing_label = self._make_section_label(
+            self.tr("When optimizing textures")
+        )
         group_layout.addWidget(when_optimizing_label)
 
         self.todds_active_mods_only_radio = QRadioButton(
@@ -1233,7 +1251,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         header_layout = QHBoxLayout()
         group_layout.addLayout(header_layout)
 
-        section_label = self._make_section_label("Text Editor command location")
+        section_label = self._make_section_label(
+            self.tr("Text Editor command location")
+        )
         header_layout.addWidget(section_label)
 
         self.text_editor_location_choose_button = QToolButton()
@@ -1289,7 +1309,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         tab_layout = QVBoxLayout(tab)
 
         # === Theme settings group ===
-        theme_group_label = self._make_section_label("Theme Settings")
+        theme_group_label = self._make_section_label(self.tr("Theme Settings"))
         tab_layout.addWidget(theme_group_label)
 
         theme_group_box = QGroupBox()
@@ -1326,7 +1346,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         theme_layout.addWidget(self.theme_location_open_button)
 
         # === Font settings group ===
-        font_group_label = self._make_section_label("Font Settings")
+        font_group_label = self._make_section_label(self.tr("Font Settings"))
         tab_layout.addWidget(font_group_label)
 
         _, font_layout = self._add_group_box(tab_layout)
@@ -1373,7 +1393,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         )
 
         # === Language setting group ===
-        language_group_label = self._make_section_label("Language Setting")
+        language_group_label = self._make_section_label(self.tr("Language Setting"))
         tab_layout.addWidget(language_group_label)
 
         language_group_box = QGroupBox()
@@ -1400,7 +1420,8 @@ This basically preserves your mod coloring, user notes etc. for this many second
         _, group_layout = self._add_group_box(tab_layout)
 
         user_note = self._make_section_label(
-            "RimSort restart required for some settings", Qt.AlignmentFlag.AlignCenter
+            self.tr("RimSort restart required for some settings"),
+            Qt.AlignmentFlag.AlignCenter,
         )
         group_layout.addWidget(user_note)
 
@@ -1435,7 +1456,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
             Settings.DEFAULT_WIDTH,
             Settings.DEFAULT_HEIGHT,
         )
-        main_window_title_label = self._make_section_label("Main Window Launch State")
+        main_window_title_label = self._make_section_label(
+            self.tr("Main Window Launch State")
+        )
         group_layout.addWidget(main_window_title_label)
         group_layout.addWidget(self.main_window_group)
 
@@ -1457,14 +1480,14 @@ This basically preserves your mod coloring, user notes etc. for this many second
             Settings.DEFAULT_HEIGHT,
         )
         browser_window_title_label = self._make_section_label(
-            "Browser Window Launch State"
+            self.tr("Browser Window Launch State")
         )
         group_layout.addWidget(browser_window_title_label)
         group_layout.addWidget(self.browser_window_group)
 
         # Settings Window (modal dialog — only custom sizing)
         settings_window_title_label = self._make_section_label(
-            "Settings Window Launch State"
+            self.tr("Settings Window Launch State")
         )
         group_layout.addWidget(settings_window_title_label)
 
@@ -1479,7 +1502,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.settings_custom_width_spinbox.setValue(Settings.DEFAULT_WIDTH)
         self.settings_custom_width_spinbox.setSuffix(" px")
         self.settings_custom_width_spinbox.setFixedWidth(100)
-        custom_width_label = self._make_section_label("Custom Width:")
+        custom_width_label = self._make_section_label(self.tr("Custom Width:"))
         settings_window_layout.addWidget(custom_width_label)
         settings_window_layout.addWidget(self.settings_custom_width_spinbox)
 
@@ -1490,7 +1513,7 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.settings_custom_height_spinbox.setValue(Settings.DEFAULT_HEIGHT)
         self.settings_custom_height_spinbox.setSuffix(" px")
         self.settings_custom_height_spinbox.setFixedWidth(100)
-        custom_height_label = self._make_section_label("Custom Height:")
+        custom_height_label = self._make_section_label(self.tr("Custom Height:"))
         settings_window_layout.addWidget(custom_height_label)
         settings_window_layout.addWidget(self.settings_custom_height_spinbox)
 
@@ -1559,7 +1582,8 @@ This basically preserves your mod coloring, user notes etc. for this many second
         _, group_layout = self._add_group_box(tab_layout)
 
         user_note = self._make_section_label(
-            "RimSort restart required for some settings", Qt.AlignmentFlag.AlignCenter
+            self.tr("RimSort restart required for some settings"),
+            Qt.AlignmentFlag.AlignCenter,
         )
         group_layout.addWidget(user_note)
 

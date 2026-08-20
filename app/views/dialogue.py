@@ -753,7 +753,7 @@ class SettingsFailureDialog(QDialog):
         super().__init__()
 
         # Set up the message box
-        self.setWindowTitle("Unable to parse settings file!")
+        self.setWindowTitle(self.tr("Unable to parse settings file!"))
         self.setModal(True)
         self.setObjectName("dialogue")
 
