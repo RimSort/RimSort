@@ -3,6 +3,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QWheelEvent
 from pytestqt.qtbot import QtBot
 
 from app.ai.chat_store import ChatStore
@@ -260,6 +262,62 @@ class TestModListToggle:
         with patch("app.windows.ai_assistant_panel.open_url_browser") as mock_open:
             panel._toggle_mod_link("https://example.com/not-a-mod")
         mock_open.assert_called_once_with("https://example.com/not-a-mod")
+
+
+class TestBubbleSizing:
+    def test_bubble_height_covers_document_height(
+        self, panel: AiAssistantPanel
+    ) -> None:
+        bubble, _width = panel._make_bubble("assistant", "Line of text. " * 60)
+
+        assert bubble.height() >= bubble.document().size().height()
+
+    def test_short_message_bubble_is_narrower_than_max_width(
+        self, panel: AiAssistantPanel
+    ) -> None:
+        bubble, width = panel._make_bubble("assistant", "hi")
+
+        assert panel._BUBBLE_MIN_WIDTH <= width < panel._BUBBLE_MAX_WIDTH
+        assert bubble.width() == width
+
+    def test_long_message_bubble_uses_max_width(
+        self, panel: AiAssistantPanel
+    ) -> None:
+        _bubble, width = panel._make_bubble("assistant", "word " * 200)
+
+        assert width == panel._BUBBLE_MAX_WIDTH
+
+    def test_mod_link_button_inherits_bubble_width(
+        self, panel: AiAssistantPanel
+    ) -> None:
+        bubble = panel._add_bubble(
+            "assistant",
+            "hi",
+            mod_links=[("Cool Mod", "123", "https://example.com")],
+        )
+
+        bubble_width = bubble.property("bubble_width")
+        buttons = panel._mod_buttons["123"]
+        assert buttons
+        assert buttons[0].minimumWidth() == bubble_width
+        assert buttons[0].maximumWidth() == bubble_width
+
+    def test_wheel_event_on_bubble_is_swallowed(
+        self, panel: AiAssistantPanel
+    ) -> None:
+        bubble, _width = panel._make_bubble("assistant", "hi")
+        event = QWheelEvent(
+            QPointF(0, 0),
+            QPointF(0, 0),
+            QPoint(0, 0),
+            QPoint(0, 120),
+            Qt.MouseButton.NoButton,
+            Qt.KeyboardModifier.NoModifier,
+            Qt.ScrollPhase.NoScrollPhase,
+            False,
+        )
+
+        assert panel.eventFilter(bubble, event) is True
 
 
 class TestCompatibilityCheck:

@@ -990,13 +990,20 @@ class MainContent(QObject):
                 self.metadata_controller, active_mods
             )
             if missing_deps:
+                steam_client_integration_enabled = self.settings.instances[
+                    self.settings.current_instance
+                ].steam_client_integration
                 dialog = MissingDependenciesDialog(
-                    metadata_controller=self.metadata_controller
+                    metadata_controller=self.metadata_controller,
+                    steam_client_integration_enabled=steam_client_integration_enabled,
                 )
                 self.window_manager.register(dialog)
                 dialog.download_requested.connect(self._download_single_workshop_mod)
                 dialog.download_selected_requested.connect(
                     self._download_selected_workshop_mods
+                )
+                dialog.download_selected_steam_requested.connect(
+                    self._download_selected_workshop_mods_via_steam
                 )
                 selected_deps = dialog.show_dialog(
                     deps_summary, missing_deps, dep_resolve
@@ -2141,6 +2148,12 @@ class MainContent(QObject):
             self._do_setup_steamcmd()
         if self.steamcmd_wrapper.setup:
             self._do_download_mods_with_steamcmd(publishedfileids)
+
+    def _download_selected_workshop_mods_via_steam(
+        self, publishedfileids: list[str]
+    ) -> None:
+        """Subscribe to a batch of mods immediately via the Steam client."""
+        self._do_steamworks_api_call_animated(["subscribe", publishedfileids])
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         logger.debug(

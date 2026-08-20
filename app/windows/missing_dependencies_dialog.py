@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 
 from app.controllers.metadata_controller import MetadataController
 from app.services.dependency_resolver import DepResolveResult
+from app.utils.button_factory import ButtonFactory
 from app.utils.event_bus import EventBus
 from app.utils.steam.workshop_urls import build_workshop_text_search_url
 
@@ -33,11 +34,13 @@ class MissingDependenciesDialog(QDialog):
 
     download_requested = Signal(str)
     download_selected_requested = Signal(list)
+    download_selected_steam_requested = Signal(list)
 
     def __init__(
         self,
         metadata_controller: MetadataController,
         parent: QWidget | None = None,
+        steam_client_integration_enabled: bool = False,
     ) -> None:
         """
         Initialize the MissingDependenciesDialog.
@@ -45,6 +48,7 @@ class MissingDependenciesDialog(QDialog):
         super().__init__(parent)
         self.setObjectName("missingDependenciesDialog")
         self.metadata_controller = metadata_controller
+        self.steam_client_integration_enabled = steam_client_integration_enabled
         self.selected_mods: set[str] = set()
         self.checkboxes: dict[str, QCheckBox] = {}
         self._dep_resolve: dict[str, DepResolveResult] = {}
@@ -78,17 +82,27 @@ class MissingDependenciesDialog(QDialog):
 
         button_layout = QHBoxLayout()
 
-        download_selected_button = QPushButton(self.tr("Download Selected"))
-        download_selected_button.setObjectName("dangerButton")
-        download_selected_button.clicked.connect(self._download_selected)
-        button_layout.addWidget(download_selected_button)
-
         select_all_button = QPushButton(self.tr("Select All"))
         select_all_button.setObjectName("primaryButton")
         select_all_button.clicked.connect(self.select_all)
         button_layout.addWidget(select_all_button)
 
         button_layout.addStretch()
+
+        download_menu_items = [
+            (self.tr("Download with SteamCMD"), self._download_selected_steamcmd),
+        ]
+        if self.steam_client_integration_enabled:
+            download_menu_items.append(
+                (
+                    self.tr("Download with Steam client"),
+                    self._download_selected_steam,
+                )
+            )
+        download_selected_button = ButtonFactory(self).create_dropdown_button(
+            self.tr("Download Selected"), "dangerButton", download_menu_items
+        )
+        button_layout.addWidget(download_selected_button)
 
         add_button = QPushButton(self.tr("Add Selected && Sort"))
         add_button.setObjectName("actionButton")
@@ -392,19 +406,28 @@ class MissingDependenciesDialog(QDialog):
         else:
             self.selected_mods.discard(mod_id)
 
-    def _download_selected(self) -> None:
+    def _selected_pfids(self) -> list[str]:
         """
-        Emit download_selected_requested with the workshop IDs of all
-        currently checked "download" dependencies that have a resolved
-        publishedfileid.
+        Return the workshop IDs of all currently checked "download"
+        dependencies that have a resolved publishedfileid.
         """
-        pfids = [
+        return [
             str(self._dep_resolve[mod_id].workshop_id)
             for mod_id in self.selected_mods
             if mod_id in self._dep_resolve and self._dep_resolve[mod_id].workshop_id
         ]
+
+    def _download_selected_steamcmd(self) -> None:
+        """Emit download_selected_requested (SteamCMD) for selected pfids."""
+        pfids = self._selected_pfids()
         if pfids:
             self.download_selected_requested.emit(pfids)
+
+    def _download_selected_steam(self) -> None:
+        """Emit download_selected_steam_requested (Steam client) for selected pfids."""
+        pfids = self._selected_pfids()
+        if pfids:
+            self.download_selected_steam_requested.emit(pfids)
 
     def get_selected_mods(self) -> set[str]:
         """
