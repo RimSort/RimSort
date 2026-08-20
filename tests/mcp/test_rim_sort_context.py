@@ -100,6 +100,16 @@ def test_get_instance_summary(patch_app_info, mcp_instance_layout) -> None:
     assert summary["active_mod_count"] == 2
     assert summary["game_version"] == "1.5.4409 rev1120"
     assert summary["game_folder"] == str(mcp_instance_layout["game"])
+    assert summary["steam_apikey_configured"] is False
+    assert summary["steam_apikey_length"] == 0
+
+
+def test_get_instance_summary_steam_key_override() -> None:
+    summary = rim_sort_context.get_instance_summary(
+        steam_apikey_override="abcd1234abcd1234abcd1234abcd1234"
+    )
+    assert summary["steam_apikey_configured"] is True
+    assert summary["steam_apikey_length"] == 32
 
 
 def test_read_log_rimsort(patch_app_info) -> None:
@@ -145,3 +155,99 @@ def test_search_workshop_mods_with_api_key(
     assert result["count"] == 1
     assert result["matches"][0]["title"] == "Test Mod"
     assert result["source"] == "steam_api"
+
+
+def test_find_russian_localizations_validates_candidates(
+    patch_app_info,
+) -> None:
+    fake_result = {
+        "mods_needing_localization": [{"package_id": "x.y", "name": "X Y"}],
+        "skipped_already_localized": [],
+        "suggestions": [
+            {
+                "target_package_id": "x.y",
+                "target_name": "X Y",
+                "candidates": [
+                    {
+                        "publishedfileid": "111",
+                        "title": "X Y Russian",
+                        "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=111",
+                        "score": 2.0,
+                    },
+                    {
+                        "publishedfileid": "999",
+                        "title": "Fake",
+                        "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=999",
+                        "score": 1.0,
+                    },
+                ],
+                "recommended": {"publishedfileid": "111", "title": "X Y Russian"},
+            }
+        ],
+        "errors": [],
+        "source": "steam_api",
+    }
+    with (
+        patch(
+            "app.mcp.rim_sort_context.find_russian_localizations_for_active_mods",
+            return_value=fake_result,
+        ),
+        patch(
+            "app.mcp.rim_sort_context.validate_publishedfileids",
+            return_value={"valid": ["111"], "invalid": ["999"], "valid_details": []},
+        ),
+    ):
+        result = rim_sort_context.find_russian_localizations_for_active_mods_tool(
+            steam_apikey_override="test-key"
+        )
+
+    assert len(result["suggestions"]) == 1
+    assert len(result["suggestions"][0]["candidates"]) == 1
+    assert result["suggestions"][0]["candidates"][0]["publishedfileid"] == "111"
+    assert result["suggestions"][0]["recommended"]["publishedfileid"] == "111"
+    assert result["validation"]["removed_invalid_candidates"] == 1
+
+
+def test_find_russian_localizations_keeps_metadata_only_candidates(
+    patch_app_info,
+) -> None:
+    fake_result = {
+        "mods_needing_localization": [{"package_id": "x.y", "name": "X Y"}],
+        "skipped_already_localized": [],
+        "suggestions": [
+            {
+                "target_package_id": "x.y",
+                "target_name": "X Y",
+                "candidates": [
+                    {
+                        "publishedfileid": "555",
+                        "title": "X Y Russian",
+                        "url": "https://steamcommunity.com/sharedfiles/filedetails/?id=555",
+                        "score": 2.0,
+                    }
+                ],
+                "recommended": {"publishedfileid": "555", "title": "X Y Russian"},
+            }
+        ],
+        "errors": [],
+        "source": "steam_api",
+    }
+    metadata = [{"publishedfileid": "555", "title": "X Y Russian"}]
+    with (
+        patch(
+            "app.mcp.rim_sort_context.find_russian_localizations_for_active_mods",
+            return_value=fake_result,
+        ),
+        patch(
+            "app.utils.steam.workshop_validate.ISteamRemoteStorage_GetPublishedFileDetails",
+            return_value=(metadata, [], []),
+        ),
+    ):
+        result = rim_sort_context.find_russian_localizations_for_active_mods_tool(
+            steam_apikey_override="test-key"
+        )
+
+    assert len(result["suggestions"]) == 1
+    assert result["suggestions"][0]["candidates"][0]["publishedfileid"] == "555"
+    assert result["suggestions"][0]["recommended"]["publishedfileid"] == "555"
+    assert "validation" not in result

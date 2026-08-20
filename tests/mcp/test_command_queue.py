@@ -36,9 +36,17 @@ def test_gui_not_running_blocks_queue_tools(queue_storage: Path) -> None:
 def test_queue_download_when_gui_alive(queue_storage: Path) -> None:
     alive = queue_storage / command_queue.GUI_ALIVE_NAME
     alive.write_text(str(__import__("os").getpid()), encoding="utf-8")
-    result = tools.call_tool(
-        "queue_download", {"publishedfileids": ["12345", "67890"]}
-    )
+    with patch(
+        "app.mcp.tools.validate_publishedfileids",
+        return_value={
+            "valid": ["12345", "67890"],
+            "invalid": [],
+            "valid_details": [],
+        },
+    ):
+        result = tools.call_tool(
+            "queue_download", {"publishedfileids": ["12345", "67890"]}
+        )
     assert result["ok"] is True
     assert result["count"] == 2
     lines = (queue_storage / command_queue.COMMANDS_NAME).read_text(encoding="utf-8")

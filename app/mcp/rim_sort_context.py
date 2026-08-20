@@ -5,13 +5,16 @@ from __future__ import annotations
 import json
 import os
 from collections import deque
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+from app.ai.tools.localization_finder import find_russian_localizations_for_active_mods
 from app.utils.app_info import AppInfo
 from app.utils.schema import validate_rimworld_mods_list
 from app.utils.steam.workshop_search import search_workshop_by_text
+from app.utils.steam.workshop_validate import validate_publishedfileids
 from app.utils.xml import xml_path_to_json
 
 DESCRIPTION_MAX_LEN = 2000
@@ -23,6 +26,45 @@ def _load_settings() -> dict[str, Any]:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _resolve_steam_apikey(steam_apikey_override: str | None = None) -> str:
+    if steam_apikey_override is not None:
+        return str(steam_apikey_override).strip()
+    settings = _load_settings()
+    return str(settings.get("steam_apikey", "") or "").strip()
+
+
+def _steam_apikey_status(steam_apikey_override: str | None = None) -> tuple[bool, int]:
+    key = _resolve_steam_apikey(steam_apikey_override)
+    return bool(key), len(key)
+
+
+def _installed_mods_by_package_id(
+    instance_name: str | None = None,
+) -> dict[str, dict[str, Any]]:
+    by_pid: dict[str, dict[str, Any]] = {}
+    for pid, mod_path in _iter_mod_paths(instance_name):
+        info = _parse_about_path(mod_path)
+        if info:
+            by_pid[pid.lower()] = info
+    return by_pid
+
+
+def _active_mod_entries(instance_name: str | None = None) -> list[dict[str, str]]:
+    entries: list[dict[str, str]] = []
+    for package_id in list_active_package_ids(instance_name):
+        info = describe_mod(package_id, instance_name)
+        if info is None:
+            entries.append({"package_id": package_id, "name": package_id})
+        else:
+            entries.append(
+                {
+                    "package_id": info["package_id"],
+                    "name": info.get("name", package_id),
+                }
+            )
+    return entries
 
 
 def get_instance_config(instance_name: str | None = None) -> dict[str, Any]:
@@ -213,7 +255,10 @@ def search_installed_mods(
 
 
 def search_workshop_mods(
-    query: str, limit: int = 20, instance_name: str | None = None
+    query: str,
+    limit: int = 20,
+    instance_name: str | None = None,
+    steam_apikey_override: str | None = None,
 ) -> dict[str, Any]:
     """Search Steam Workshop by text via Web API (requires steam_apikey in settings)."""
     q = query.strip()
@@ -221,8 +266,7 @@ def search_workshop_mods(
         return {"query": query, "matches": [], "error": "query is required"}
 
     limit = max(1, min(int(limit), 50))
-    settings = _load_settings()
-    api_key = str(settings.get("steam_apikey", "") or "").strip()
+    api_key = _resolve_steam_apikey(steam_apikey_override)
     if not api_key:
         return {
             "query": q,
@@ -241,8 +285,91 @@ def search_workshop_mods(
             "count": len(matches),
             "source": "steam_api",
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         return {"query": q, "matches": [], "error": str(exc)}
+
+
+def find_russian_localizations_for_active_mods_tool(
+    instance_name: str | None = None,
+    limit_per_mod: int = 5,
+    package_ids: list[str] | None = None,
+    steam_apikey_override: str | None = None,
+    on_progress: Callable[[int, int, str], None] | None = None,
+) -> dict[str, Any]:
+    api_key = _resolve_steam_apikey(steam_apikey_override)
+    active_mods = _active_mod_entries(instance_name)
+    installed = _installed_mods_by_package_id(instance_name)
+    result = find_russian_localizations_for_active_mods(
+        active_mods,
+        installed,
+        api_key,
+        limit_per_mod=limit_per_mod,
+        package_ids=package_ids,
+        on_progress=on_progress,
+    )
+    suggestions = result.get("suggestions", [])
+    if not isinstance(suggestions, list) or not suggestions:
+        return result
+
+    candidate_ids: list[str] = []
+    for entry in suggestions:
+        if not isinstance(entry, dict):
+            continue
+        for cand in entry.get("candidates", []):
+            if not isinstance(cand, dict):
+                continue
+            pfid = str(cand.get("publishedfileid", "")).strip()
+            if pfid:
+                candidate_ids.append(pfid)
+
+    if not candidate_ids:
+        return result
+
+    validated = validate_publishedfileids(candidate_ids)
+    valid_ids = set(validated.get("valid", []))
+    if not valid_ids:
+        result.setdefault("errors", []).append(
+            "No valid RimWorld Workshop IDs remained after validation."
+        )
+        result["suggestions"] = []
+        return result
+
+    removed_count = 0
+    for entry in suggestions:
+        if not isinstance(entry, dict):
+            continue
+        filtered: list[dict[str, Any]] = []
+        for cand in entry.get("candidates", []):
+            if not isinstance(cand, dict):
+                continue
+            pfid = str(cand.get("publishedfileid", "")).strip()
+            if pfid in valid_ids:
+                filtered.append(cand)
+            else:
+                removed_count += 1
+        entry["candidates"] = filtered
+        entry.pop("recommended", None)
+        if filtered:
+            best = filtered[0]
+            entry["recommended"] = {
+                "publishedfileid": best.get("publishedfileid", ""),
+                "title": best.get("title", ""),
+                "url": best.get("url", ""),
+                "score": best.get("score", 0),
+            }
+
+    result["suggestions"] = [
+        entry
+        for entry in suggestions
+        if isinstance(entry, dict) and entry.get("candidates")
+    ]
+    if removed_count:
+        result["validation"] = {
+            "removed_invalid_candidates": removed_count,
+            "valid_candidate_count": len(valid_ids),
+            "invalid_ids": validated.get("invalid", []),
+        }
+    return result
 
 
 def list_missing_deps(instance_name: str | None = None) -> dict[str, Any]:
@@ -280,12 +407,16 @@ def _read_game_version(game_folder: str) -> str | None:
         return None
 
 
-def get_instance_summary(instance_name: str | None = None) -> dict[str, Any]:
+def get_instance_summary(
+    instance_name: str | None = None,
+    steam_apikey_override: str | None = None,
+) -> dict[str, Any]:
     name = _current_instance_name(instance_name)
     inst = get_instance_config(instance_name)
     installed = list_installed_mods(instance_name)
     active = list_active_package_ids(instance_name)
     game_folder = str(inst.get("game_folder", "") or "")
+    configured, key_len = _steam_apikey_status(steam_apikey_override)
     return {
         "current_instance": name,
         "game_folder": game_folder,
@@ -295,6 +426,8 @@ def get_instance_summary(instance_name: str | None = None) -> dict[str, Any]:
         "game_version": _read_game_version(game_folder),
         "installed_mod_count": len(installed),
         "active_mod_count": len(active),
+        "steam_apikey_configured": configured,
+        "steam_apikey_length": key_len,
     }
 
 
