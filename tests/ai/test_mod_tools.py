@@ -47,6 +47,26 @@ class TestModToolExecutor:
         result = executor("unknown_tool", {})
         assert "error" in result
 
+    def test_steam_apikey_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        captured: dict[str, str | None] = {}
+
+        def fake_search(
+            query: str,
+            limit: int = 20,
+            instance_name: str | None = None,
+            steam_apikey_override: str | None = None,
+        ) -> dict:
+            captured["override"] = steam_apikey_override
+            return {"query": query, "matches": [], "count": 0, "source": "steam_api"}
+
+        monkeypatch.setattr(
+            "app.mcp.tools.rim_sort_context.search_workshop_mods",
+            fake_search,
+        )
+        executor = ModToolExecutor(steam_apikey_override="live-key")
+        executor("search_workshop_mods", {"query": "test"})
+        assert captured["override"] == "live-key"
+
     def test_shared_call_tool_describe(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             "app.mcp.tools.rim_sort_context.describe_mod",

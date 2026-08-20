@@ -12,7 +12,8 @@ from app.utils import http
 from app.ai.provider_base import AIProvider
 
 ToolExecutor = Callable[[str, dict[str, Any]], dict[str, Any]]
-MAX_TOOL_ROUNDS = 8
+OnToolCall = Callable[[str, dict[str, Any], dict[str, Any]], None]
+MAX_TOOL_ROUNDS = 16
 
 
 class GeminiProvider(AIProvider):
@@ -139,6 +140,7 @@ class GeminiProvider(AIProvider):
         *,
         tools: list[dict[str, Any]] | None = None,
         tool_executor: ToolExecutor | None = None,
+        on_tool_call: OnToolCall | None = None,
     ) -> str:
         if not self.api_key:
             raise ValueError("Gemini API key is not configured")
@@ -168,6 +170,8 @@ class GeminiProvider(AIProvider):
                     args = {}
                 logger.debug(f"Gemini tool call: {name}({args})")
                 result = tool_executor(name, args)
+                if on_tool_call is not None:
+                    on_tool_call(name, args, result)
                 response_parts.append(
                     {
                         "functionResponse": {

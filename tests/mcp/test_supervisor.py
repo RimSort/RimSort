@@ -30,7 +30,11 @@ def test_dispatch_tools_list() -> None:
     assert "list_active_mods" in names
     assert "list_installed_mods" in names
     assert "describe_mod" in names
+    assert "search_workshop_mods" in names
+    assert "search_steam_workshop" in names
+    assert "validate_workshop_ids" in names
     assert "queue_sort_mods" in names
+    assert len(names) >= 15
 
 
 def test_dispatch_notification_has_no_reply() -> None:

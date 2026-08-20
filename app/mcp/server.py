@@ -32,7 +32,7 @@ def dispatch(msg: dict[str, Any]) -> dict[str, Any] | None:
             "result": {
                 "protocolVersion": client_version or PROTOCOL_VERSION,
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "rimsort-mcp", "version": "1.0.0"},
+                    "serverInfo": {"name": "rimsort-mcp", "version": "1.2.0"},
             },
         }
 
