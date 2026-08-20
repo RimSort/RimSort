@@ -101,7 +101,7 @@ class AppearanceTabController(BaseTabController):
         if browser_state == "maximized":
             self.dialog.browser_launch_maximized_radio.setChecked(True)
             self.dialog.disable_browser_custom_size_spinboxes()
-        if browser_state == "normal":
+        elif browser_state == "normal":
             self.dialog.browser_launch_normal_radio.setChecked(True)
             self.dialog.disable_browser_custom_size_spinboxes()
         elif browser_state == "custom":

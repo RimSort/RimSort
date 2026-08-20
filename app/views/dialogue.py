@@ -816,7 +816,7 @@ class SettingsFailureDialog(QDialog):
             generic.platform_specific_open(AppInfo().app_storage_folder)
 
         def _reset_settings_file() -> None:
-            EventBus().reset_settings_file.emit
+            EventBus().reset_settings_file.emit()
             self.accept()
 
         self.open_settings_file_btn.clicked.connect(lambda: _open_settings_file())
