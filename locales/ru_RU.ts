@@ -42,49 +42,85 @@
 <context>
     <name>AiAssistantPanel</name>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="75"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="131"/>
         <source>AI Assistant</source>
         <translation>AI-ассистент</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="83"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="139"/>
         <source>Provider:</source>
         <translation>Провайдер:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="87"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="143"/>
+        <source>Model:</source>
+        <translation>Модель:</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="158"/>
         <source>API key:</source>
         <translation>Ключ API:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="95"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="166"/>
         <source>Proxy:</source>
         <translation>Прокси:</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="98"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="169"/>
         <source>host:port, user:pass@host:port, login:pass:host:port</source>
         <translation>host:port, user:pass@host:port, login:pass:host:port</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="112"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="185"/>
+        <source>Clear chat</source>
+        <translation>Очистить чат</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="191"/>
         <source>Send</source>
         <translation>Отправить</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="119"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="198"/>
         <source>Assistant</source>
         <translation>Ассистент</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="120"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="199"/>
         <source>User</source>
         <translation>Пользователь</translation>
     </message>
     <message>
-        <location filename="../app/windows/ai_assistant_panel.py" line="137"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="212"/>
+        <source>Tool: {call}</source>
+        <translation>Инструмент: {call}</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="222"/>
+        <location filename="../app/windows/ai_assistant_panel.py" line="263"/>
+        <source>{current}/{total}: {message}</source>
+        <translation>{current}/{total}: {message}</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="229"/>
         <source>Loading{dots}</source>
         <translation>Загрузка{dots}</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="238"/>
+        <source>Loading...</source>
+        <translation>Загрузка...</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="401"/>
+        <source>Model quota exceeded</source>
+        <translation>Лимит модели исчерпан</translation>
+    </message>
+    <message>
+        <location filename="../app/windows/ai_assistant_panel.py" line="403"/>
+        <source>Switch to {name}</source>
+        <translation>Переключить на {name}</translation>
     </message>
 </context>
 <context>

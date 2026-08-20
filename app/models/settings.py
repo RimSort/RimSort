@@ -228,6 +228,18 @@ class Settings(QObject):
         self.github_username: str = ""
         self.github_token: str = ""
 
+        # MCP (local HTTP subprocess; same binary when compiled)
+        self.mcp_server_enabled: bool = False
+        self.mcp_server_port: int = 17342
+        self.mcp_server_token: str = ""
+
+        # AI Assistant
+        self.ai_assistant_enabled: bool = False
+        self.ai_provider: str = "gemini"
+        self.ai_api_key: str = ""
+        self.ai_proxy: str = ""
+        self.ai_model: str = "gemini-3.5-flash-lite"
+
         # GitHub Mod Updates
         self.github_update_check_enabled: bool = True
         self.github_update_check_interval_hours: int = 24

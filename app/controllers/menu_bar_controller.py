@@ -18,12 +18,14 @@ class MenuBarController(QObject):
         view: MenuBar,
         settings: Settings,
         show_settings_dialog: Callable[[], None],
+        open_ai_assistant: Callable[[], None] | None = None,
     ) -> None:
         super().__init__()
 
         self.menu_bar = view
         self.settings = settings
         self._show_settings_dialog = show_settings_dialog
+        self._open_ai_assistant = open_ai_assistant
 
         # Application menu
         instance = QApplication.instance()
@@ -190,6 +192,10 @@ class MenuBarController(QObject):
         self.menu_bar.github_action.triggered.connect(
             self._on_menu_bar_github_triggered
         )
+        if self._open_ai_assistant is not None:
+            self.menu_bar.ai_assistant_action.triggered.connect(
+                self._open_ai_assistant
+            )
 
         # External signals
         EventBus().refresh_started.connect(self._on_refresh_started)
