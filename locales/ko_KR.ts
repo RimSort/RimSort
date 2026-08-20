@@ -600,8 +600,39 @@ When unchecked, search all file types with standard search.</source>
         <translation>작업 결과를 우클릭하세요</translation>
     </message>
     <message>
+        <source>File Search</source>
+        <translation>파일 검색</translation>
+    </message>
+    <message>
         <source>Right-click for actions</source>
         <translation>작업을 우클릭하세요</translation>
+    </message>
+</context>
+<context>
+    <name>FilterPanel</name>
+    <message>
+        <source>Mod Source</source>
+        <translation>모드 소스</translation>
+    </message>
+    <message>
+        <source>Mod Type</source>
+        <translation>모드 유형</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>태그</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>모두 선택</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>없음</translation>
+    </message>
+    <message>
+        <source>Clear All</source>
+        <translation>모두 지우기</translation>
     </message>
 </context>
 <context>
@@ -1151,6 +1182,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>파일 업로드에 실패했습니다.</translation>
     </message>
     <message>
+        <source>Import failed</source>
+        <translation>가져오기 실패</translation>
+    </message>
+    <message>
+        <source>Could not read the selected mod list file.</source>
+        <translation>선택한 모드 목록 파일을 읽을 수 없습니다.</translation>
+    </message>
+    <message>
         <source>Could not save active mods</source>
         <translation>활성화된 모드를 저장할 수 없었습니다</translation>
     </message>
@@ -1273,6 +1312,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Please add mods to list before attempting to download.</source>
         <translation>다운로드를 시도하기 전에 모드를 목록에 추가해 주세요.</translation>
+    </message>
+    <message>
+        <source>RimSort - SteamCMD downloader</source>
+        <translation>RimSort - SteamCMD 다운로더</translation>
     </message>
     <message>
         <source>SteamCMD not found</source>
@@ -2599,6 +2642,14 @@ Manage mods installed from GitHub releases.</source>
         <source>Current: {current_instance}</source>
         <translation>현재: {current_instance}</translation>
     </message>
+    <message>
+        <source>Verify Game Files</source>
+        <translation>게임 파일 확인</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to verify RimWorld's game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
+        <translation>Steam을 통해 RimWorld의 게임 파일을 확인하시겠습니까?&lt;br&gt;&lt;br&gt;이 프로세스는 일단 시작되면 취소할 수 없습니다.</translation>
+    </message>
 </context>
 <context>
     <name>MissingDependenciesDialog</name>
@@ -2643,6 +2694,18 @@ Select which missing dependencies to add to your active mods list.</source>
     <message>
         <source>Needs to be downloaded - requires SteamCMD</source>
         <translation>다운로드 필요 - SteamCMD 필요</translation>
+    </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation>공개 워크숍</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>다운로드</translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation>워크샵 ID를 찾을 수 없습니다. 워크샵을 열어 수동으로 찾으세요.</translation>
     </message>
     <message>
         <source>
@@ -3960,6 +4023,21 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
+    <name>RimSort</name>
+    <message>
+        <source>RimSort Already Running</source>
+        <translation>RimSort가 이미 실행 중입니다.</translation>
+    </message>
+    <message>
+        <source>Another instance of RimSort is already running.</source>
+        <translation>RimSort의 다른 인스턴스가 이미 실행 중입니다.</translation>
+    </message>
+    <message>
+        <source>Please close the existing instance before starting a new one.</source>
+        <translation>새 인스턴스를 시작하기 전에 기존 인스턴스를 닫으세요.</translation>
+    </message>
+</context>
+<context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
@@ -4024,6 +4102,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Search mods by name</source>
         <translation>이름으로 모드 검색</translation>
+    </message>
+    <message>
+        <source>RimSort - Rule Editor</source>
+        <translation>RimSort - 규칙 편집기</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
@@ -4398,8 +4480,40 @@ Alternative Dependencies:</source>
         <translation>우선순위</translation>
     </message>
     <message>
+        <source>Game location</source>
+        <translation>게임 위치</translation>
+    </message>
+    <message>
+        <source>Config location</source>
+        <translation>구성 위치</translation>
+    </message>
+    <message>
+        <source>Steam mods location</source>
+        <translation>Steam 모드 위치</translation>
+    </message>
+    <message>
+        <source>Local mods location</source>
+        <translation>로컬 모드 위치</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>인스턴스 폴더 위치(선택 사항)</translation>
+    </message>
+    <message>
+        <source>Backup Settings</source>
+        <translation>백업 설정</translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation>최근 저장과 통합</translation>
+    </message>
+    <message>
         <source>RimWorld Versions Database</source>
         <translation>RimWorld 버전 데이터베이스</translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation>보조 메타데이터 DB 삭제 시간 제한(초)입니다. (즉시삭제 0, 삭제안함 -1)</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
@@ -4414,6 +4528,14 @@ This basically preserves your mod coloring, user notes etc. for this many second
 (이는 RimSort 외부 삭제에도 적용됩니다.)</translation>
     </message>
     <message>
+        <source>Sorting Method</source>
+        <translation>정렬 방법</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>종속성 처리 동작</translation>
+    </message>
+    <message>
         <source>Use dependency rules for sorting.</source>
         <translation>의존성 규칙을 정렬에 사용합니다.</translation>
     </message>
@@ -4424,6 +4546,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
         <translation>정렬 시 의존성 파일을 다운로드할지 사용자에게 확인합니다.</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML 구문 분석 동작</translation>
     </message>
     <message>
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
@@ -4448,6 +4574,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
 대소문자 구분 파일 시스템(Linux) RimWorld 모딩 사양에 따르면
 올바른 경로는 About/About.xml입니다.
 참조: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
+        <source>Mod list options</source>
+        <translation>모드 목록 옵션</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
@@ -4482,12 +4612,20 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>유효하지 않은 모드를 숨깁니다. 활성화하는 것을 권장하지 않습니다.</translation>
     </message>
     <message>
+        <source>Inactive Mods Sorting</source>
+        <translation>비활성 모드 정렬</translation>
+    </message>
+    <message>
         <source>Save inactive mods sort state</source>
         <translation>비활성 모드 정렬 상태 저장</translation>
     </message>
     <message>
         <source>DB Builder</source>
         <translation>데이터베이스 빌더</translation>
+    </message>
+    <message>
+        <source>When building the database:</source>
+        <translation>데이터베이스를 구축할 때:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4542,6 +4680,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>데이터베이스 빌드</translation>
     </message>
     <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>데이터베이스는 초 단위로 만료됩니다(예: 7일 동안 604800). 만료되지 않는 경우 0입니다.</translation>
+    </message>
+    <message>
         <source>Internal Tools</source>
         <translation>내부 도구</translation>
     </message>
@@ -4557,6 +4699,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>이것은 다운로드 실패나 삭제된 모드의 재출현 등 다운로드 모드 문제를 방지할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>SteamCMD installation location</source>
+        <translation>SteamCMD 설치 위치</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4579,8 +4725,24 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>SteamCMD 설치</translation>
     </message>
     <message>
+        <source>todds</source>
+        <translation>토즈</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>품질 사전 설정</translation>
+    </message>
+    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>최적화 - RimWorld 권장</translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation>경로에 -p가 지정되지 않은 경우 현재 활성 경로 또는 모든 모드 선택이 사용됩니다.</translation>
+    </message>
+    <message>
+        <source>When optimizing textures</source>
+        <translation>텍스처를 최적화할 때</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4601,6 +4763,14 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Automatically run todds before launching the game</source>
         <translation>게임을 실행하기 전에 자동으로 todds를 실행합니다</translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation>텍스트 편집기 명령 위치</translation>
+    </message>
+    <message>
+        <source>Theme Settings</source>
+        <translation>테마 설정</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -4634,6 +4804,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>테마 위치 열기</translation>
     </message>
     <message>
+        <source>Font Settings</source>
+        <translation>글꼴 설정</translation>
+    </message>
+    <message>
         <source>Font Family</source>
         <translation>글꼴 패밀리</translation>
     </message>
@@ -4646,12 +4820,40 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>초기화</translation>
     </message>
     <message>
+        <source>Language Setting</source>
+        <translation>언어 설정</translation>
+    </message>
+    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>언어를 선택하십시오 (변경 사항을 적용하려면 재시작이 필요합니다)</translation>
     </message>
     <message>
+        <source>RimSort restart required for some settings</source>
+        <translation>일부 설정에는 RimSort를 다시 시작해야 합니다.</translation>
+    </message>
+    <message>
         <source>Constrain dialogues to main window monitor</source>
         <translation>대화 상자를 메인 윈도우 모니터로 제한</translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation>기본 창 실행 상태</translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation>브라우저 창 실행 상태</translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation>설정 창 실행 상태</translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation>사용자 정의 너비:</translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation>맞춤 높이:</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -4911,6 +5113,10 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
 <context>
     <name>SettingsFailureDialog</name>
     <message>
+        <source>Unable to parse settings file!</source>
+        <translation>설정 파일을 구문 분석할 수 없습니다!</translation>
+    </message>
+    <message>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
         <translation>RimSort 설정 파일이 손상되었습니다.
@@ -5150,6 +5356,13 @@ Please choose one of the following options to proceed.</source>
     </message>
 </context>
 <context>
+    <name>TaskProgressWindow</name>
+    <message>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5248,6 +5461,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Export Mod List</source>
         <translation>모드 내보내기</translation>
+    </message>
+    <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Expected RimWorld ModsConfig XML or RimSort JSON export.&lt;br&gt;Details: {e}</source>
+        <translation>선택한 파일은 유효한 모드 목록 파일이 아닙니다.&lt;br&gt;RimWorld ModsConfig XML 또는 RimSort JSON 내보내기가 필요합니다.&lt;br&gt;세부정보: {e}</translation>
     </message>
     <message>
         <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
@@ -5556,6 +5773,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
         <translation>경고: 이 작업은 선택한 파일을 영구적으로 삭제합니다!</translation>
+    </message>
+    <message>
+        <source>Troubleshooting</source>
+        <translation>문제 해결</translation>
     </message>
     <message>
         <source>Export List</source>
