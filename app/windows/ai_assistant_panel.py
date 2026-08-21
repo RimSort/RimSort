@@ -12,6 +12,7 @@ from loguru import logger
 from PySide6.QtCore import QEvent, QPoint, Qt, QThread, QTimer, QUrl, Signal
 from PySide6.QtGui import QCloseEvent, QColor, QFontMetrics, QPalette
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QFrame,
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QTextBrowser,
+    QToolTip,
     QVBoxLayout,
     QWidget,
 )
@@ -406,6 +408,8 @@ class AiAssistantPanel(QDialog):
         self._trace_rows: list[QWidget] = []
         self._mod_titles: dict[str, str] = {}
         self._mod_buttons: dict[str, list[QPushButton]] = {}
+        self._mod_tooltip_cache: dict[str, str] = {}
+        self._tooltip_fetch_pending: set[str] = set()
         self._progress_current = 0
         self._progress_total = 0
         self._progress_message = ""
@@ -529,10 +533,27 @@ class AiAssistantPanel(QDialog):
                 self._recall_newer_message()
                 return True
         if isinstance(watched, QTextBrowser) and event.type() == QEvent.Type.Wheel:
-            # Bubbles are sized to their content; block wheel scroll so it
-            # doesn't silently pan text behind the (hidden) scrollbar.
+            # Bubbles are sized to their content and have no internal
+            # scrollbar; forward the wheel event to the chat scroll area
+            # instead of letting the browser swallow it.
+            QApplication.sendEvent(self.history_scroll, event)
             return True
+        if isinstance(watched, QTextBrowser) and event.type() == QEvent.Type.ToolTip:
+            return self._handle_bubble_tooltip(watched, event)
         return super().eventFilter(watched, event)
+
+    def _handle_bubble_tooltip(self, browser: QTextBrowser, event: Any) -> bool:
+        anchor = browser.anchorAt(event.pos())
+        pfid = parse_publishedfileid_from_url(anchor) if anchor else None
+        if not pfid:
+            QToolTip.hideText()
+            return False
+        tooltip_html = self._mod_tooltip_cache.get(pfid)
+        if tooltip_html is None:
+            self._queue_mod_tooltip_fetch(pfid)
+            tooltip_html = html.escape(self._display_mod_label(pfid))
+        QToolTip.showText(event.globalPos(), tooltip_html, browser)
+        return True
 
     def _recall_older_message(self) -> None:
         """Up arrow: step to the previous (older) sent message."""
@@ -794,6 +815,13 @@ class AiAssistantPanel(QDialog):
                 item = row_layout.takeAt(0)
                 widget = item.widget() if item else None
                 if widget is not None:
+                    button_pfid = widget.property("mod_pfid")
+                    if button_pfid:
+                        buttons = self._mod_buttons.get(button_pfid)
+                        if buttons and widget in buttons:
+                            buttons.remove(widget)
+                            if not buttons:
+                                del self._mod_buttons[button_pfid]
                     widget.deleteLater()
             shown = state["shown"] or _MOD_BUTTON_PAGE_SIZE
             shown = min(shown, len(links))
@@ -830,9 +858,16 @@ class AiAssistantPanel(QDialog):
 
     def _on_mod_added(self, pfid: str) -> None:
         self._refresh_mod_buttons_style()
-        api_key = self.settings.steam_apikey.strip()
-        if not api_key:
+        self._queue_mod_tooltip_fetch(pfid)
+
+    def _on_mod_removed(self, _pfid: str) -> None:
+        self._refresh_mod_buttons_style()
+
+    def _queue_mod_tooltip_fetch(self, pfid: str) -> None:
+        if pfid in self._tooltip_fetch_pending or pfid in self._mod_tooltip_cache:
             return
+        self._tooltip_fetch_pending.add(pfid)
+        api_key = self.settings.steam_apikey.strip()
         cache_dir = Path(AppInfo().app_storage_folder) / "ai_mod_thumb_cache"
         worker = _ModDetailsWorker(pfid, api_key, cache_dir)
         worker.finished_ok.connect(self._on_mod_details_ready)
@@ -840,11 +875,11 @@ class AiAssistantPanel(QDialog):
         self._detail_workers.append(worker)
         worker.start()
 
-    def _on_mod_removed(self, _pfid: str) -> None:
-        self._refresh_mod_buttons_style()
-
     def _on_mod_details_ready(self, pfid: str, tooltip_html: str) -> None:
-        self._download_list.set_item_tooltip(pfid, tooltip_html)
+        self._tooltip_fetch_pending.discard(pfid)
+        self._mod_tooltip_cache[pfid] = tooltip_html
+        if self._download_list.has_mod(pfid):
+            self._download_list.set_item_tooltip(pfid, tooltip_html)
 
     def _format_message_html(self, msg: dict[str, str]) -> str:
         return _linkify(html.escape(msg["content"])).replace("\n", "<br>")
