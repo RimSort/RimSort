@@ -12,7 +12,7 @@ class TestBuildPastePayload:
     """Tests for the internal encryption + payload construction."""
 
     def test_returns_dict_with_required_keys(self) -> None:
-        payload, paste_url_key = _build_paste_payload("hello world")
+        payload, _paste_url_key = _build_paste_payload("hello world")
         assert "v" in payload
         assert payload["v"] == 2
         assert "adata" in payload

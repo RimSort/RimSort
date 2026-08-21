@@ -89,17 +89,19 @@ class ToddsController:
         active_mod_paths: list[str] | None = None,
     ) -> bool:
         """
-        Run todds texture optimization.
+        # jscpd:ignore-start
+                Run todds texture optimization.
 
-        :param runner: Process runner that satisfies the ToddsRunner protocol.
-        :param active_mod_paths: Paths of active mods (used when
-            todds_active_mods_target is True).
-        :return: True if todds was executed (paths found), False otherwise.
+                :param runner: Process runner that satisfies the ToddsRunner protocol.
+                :param active_mod_paths: Paths of active mods (used when
+                    todds_active_mods_target is True).
+                :return: True if todds was executed (paths found), False otherwise.
         """
         settings = self.settings
 
         todds_interface = ToddsInterface(
             preset=settings.todds_preset,
+            # jscpd:ignore-end
             dry_run=settings.todds_dry_run,
             overwrite=settings.todds_overwrite,
             custom_command=settings.todds_custom_command,

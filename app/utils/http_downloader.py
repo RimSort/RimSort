@@ -9,11 +9,11 @@ import json
 import shutil
 import tempfile
 import zipfile
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum, auto
 from pathlib import Path
-from typing import Callable
 
 import requests
 from loguru import logger
@@ -69,7 +69,7 @@ class HttpDatabaseDownloader:
         :param last_modified: Last-Modified header value from the server response
         """
         cache_data: dict[str, str] = {
-            "downloaded_at": datetime.now(timezone.utc).isoformat(),
+            "downloaded_at": datetime.now(UTC).isoformat(),
         }
         if etag:
             cache_data["etag"] = etag
@@ -183,7 +183,7 @@ class HttpDatabaseDownloader:
             total_size = int(total_size_str) if total_size_str else None
 
             target_dir.mkdir(parents=True, exist_ok=True)
-            temp_fd = tempfile.NamedTemporaryFile(
+            temp_fd = tempfile.NamedTemporaryFile(  # noqa: SIM115
                 dir=str(target_dir), suffix=".zip", delete=False
             )
             temp_path = Path(temp_fd.name)

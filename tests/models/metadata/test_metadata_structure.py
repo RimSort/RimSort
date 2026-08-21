@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-import app.models.metadata.metadata_structure as metadata_structure
+from app.models.metadata import metadata_structure
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     ListedMod,

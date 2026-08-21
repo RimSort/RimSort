@@ -15,7 +15,7 @@ Displays all workshop items found in SteamCMD and Steam ACF data with features i
 from __future__ import annotations
 
 import time
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from loguru import logger
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt, QTimer
@@ -56,7 +56,7 @@ class AcfLogReader(BaseModsPanel):
     """
 
     # Columns to search in the search bar
-    SEARCHABLE_COLUMNS = [
+    SEARCHABLE_COLUMNS = [  # noqa: RUF012
         ColumnIndex.NAME.value,
         ColumnIndex.AUTHOR.value,
         ColumnIndex.PACKAGE_ID.value,
@@ -255,7 +255,7 @@ class AcfLogReader(BaseModsPanel):
 
                 all_rows.append(base_items)
                 row_metadata.append((path, workshop_url))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to prepare ACF entry {pfid}: {e}", exc_info=True)
                 continue
 
@@ -467,7 +467,7 @@ class AcfLogReader(BaseModsPanel):
             )
             logger.debug(f"Found {len(workshop_items)} items in Workshop ACF")
             for pfid, item_data in workshop_items.items():
-                if pfid not in seen_pfids:
+                if pfid not in seen_pfids:  # noqa: SIM102
                     if isinstance(item_data, dict):
                         timeupdated = item_data.get("timeupdated")
                         try:
@@ -650,7 +650,7 @@ class ActiveModDelegate(QStyledItemDelegate):
     For non-active mods, delegates to default painting.
     """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """
         Initialize the delegate.
 
@@ -658,7 +658,7 @@ class ActiveModDelegate(QStyledItemDelegate):
             parent: Parent AcfLogReader widget for accessing active_pfids set.
         """
         super().__init__(parent)
-        self.acf_log_reader: Optional[AcfLogReader] = cast("AcfLogReader", parent)
+        self.acf_log_reader: AcfLogReader | None = cast("AcfLogReader", parent)
 
     def paint(
         self,

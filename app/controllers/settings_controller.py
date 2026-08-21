@@ -154,7 +154,7 @@ class SettingsController(QObject):
         except JSONDecodeError:
             logger.error("Unable to parse settings file")
             show_settings_error()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to load settings: {e}")
             show_settings_error()
 

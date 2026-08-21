@@ -1,5 +1,4 @@
 import os
-from typing import Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,7 +12,7 @@ from app.views.menu_bar import MenuBar
 @pytest.fixture
 def menu_bar_instance(
     mock_settings_controller: MagicMock,
-    qapp: Union[QApplication, QCoreApplication],
+    qapp: QApplication | QCoreApplication,
 ) -> MenuBar:
     """Create a MenuBar instance for testing."""
     QObject.__setattr__(
@@ -30,7 +29,7 @@ class TestMenuBarUpdateMenuCreation:
     def test_update_menu_shown_when_env_var_not_set(
         self,
         mock_settings_controller: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
+        qapp: QApplication | QCoreApplication,
     ) -> None:
         """Test that Update menu is created when RIMSORT_DISABLE_UPDATER is not set."""
         # Ensure environment variable is not set
@@ -55,7 +54,7 @@ class TestMenuBarUpdateMenuCreation:
     def test_update_menu_hidden_when_env_var_set(
         self,
         mock_settings_controller: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
+        qapp: QApplication | QCoreApplication,
     ) -> None:
         """Test that Update menu is not created when RIMSORT_DISABLE_UPDATER is set."""
         # Set the environment variable
@@ -81,7 +80,7 @@ class TestMenuBarControllerWithDisabledUpdater:
     def test_controller_initialization_with_env_var_set(
         self,
         mock_settings_controller: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
+        qapp: QApplication | QCoreApplication,
     ) -> None:
         """Test that MenuBarController initializes correctly when actions are None."""
         # Set the environment variable
@@ -101,7 +100,7 @@ class TestMenuBarControllerWithDisabledUpdater:
     def test_controller_initialization_without_env_var(
         self,
         mock_settings_controller: MagicMock,
-        qapp: Union[QApplication, QCoreApplication],
+        qapp: QApplication | QCoreApplication,
     ) -> None:
         """Test that MenuBarController initializes correctly when actions exist."""
         # Ensure environment variable is not set

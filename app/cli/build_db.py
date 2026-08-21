@@ -8,7 +8,6 @@ enabling use in scripts and containers without GUI dependencies.
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -46,7 +45,7 @@ from app.utils.db_builder_core import DBBuilderCore
     help="Suppress progress output (errors still shown).",
 )
 def build_db(
-    api_key: Optional[str],
+    api_key: str | None,
     output: Path,
     dlc_data: bool,
     update: bool,
@@ -95,7 +94,7 @@ def build_db(
                     api_key = settings.get("steam_apikey")
                     if api_key and not quiet:
                         click.echo("Using Steam API key from settings.json", err=True)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 if not quiet:
                     click.echo(
                         f"Warning: Could not read settings.json: {e}",
@@ -194,7 +193,7 @@ def build_db(
     except KeyboardInterrupt:
         click.echo("\n\nInterrupted by user.", err=True)
         sys.exit(2)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         click.secho(
             f"✗ Error: {e}",
             fg="red",

@@ -26,9 +26,9 @@ def _make_steamcmd_panel(tmp_path: Path, *, system: str = "Windows") -> Any:
     panel._steamcmd_log_timer = None
     panel._steamcmd_log_offset = 0
     panel._steamcmd_log_partial = ""
-    setattr(panel, "_is_process_running", lambda name: name == "steamcmd")
-    setattr(panel, "_handle_steamcmd_output", lambda line: False)
-    setattr(panel, "_handle_query_output", lambda line: False)
+    panel._is_process_running = lambda name: name == "steamcmd"  # type: ignore[method-assign, assignment]
+    panel._handle_steamcmd_output = lambda line: False  # type: ignore[method-assign]
+    panel._handle_query_output = lambda line: False  # type: ignore[method-assign]
     return panel
 
 
@@ -47,9 +47,9 @@ class TestRunnerPanelSteamcmdLogging:
         panel.progress_bar = MagicMock()
         panel.progress_bar.value.return_value = 0
 
-        setattr(panel, "_is_process_running", lambda name: name == "steamcmd")
-        setattr(panel, "_handle_steamcmd_output", lambda line: False)
-        setattr(panel, "_handle_query_output", lambda line: False)
+        panel._is_process_running = lambda name: name == "steamcmd"  # type: ignore[method-assign, assignment]
+        panel._handle_steamcmd_output = lambda line: False  # type: ignore[method-assign]
+        panel._handle_query_output = lambda line: False  # type: ignore[method-assign]
 
         panel.message("  Downloading item 123...  ")
 
@@ -63,7 +63,7 @@ class TestRunnerPanelSteamcmdLogTail:
 
         panel = _make_steamcmd_panel(tmp_path)
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel._poll_steamcmd_log()
 
@@ -86,7 +86,7 @@ class TestRunnerPanelSteamcmdLogTail:
 
         panel = _make_steamcmd_panel(tmp_path)
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel._poll_steamcmd_log()
         assert messages == []
@@ -105,7 +105,7 @@ class TestRunnerPanelSteamcmdLogTail:
 
         panel = _make_steamcmd_panel(tmp_path)
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel._poll_steamcmd_log()
         assert messages == []
@@ -118,7 +118,7 @@ class TestRunnerPanelSteamcmdLogTail:
         panel = _make_steamcmd_panel(tmp_path)
         panel._steamcmd_console_log_path = str(tmp_path / "missing_log.txt")
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel._poll_steamcmd_log()
         assert messages == []
@@ -130,7 +130,7 @@ class TestRunnerPanelSteamcmdLogTail:
         panel._steamcmd_console_log_path = str(tmp_path / "missing_log.txt")
         panel._steamcmd_log_partial = "leftover bytes"
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel._poll_steamcmd_log(final=True)
         assert messages == ["leftover bytes"]
@@ -152,7 +152,7 @@ class TestRunnerPanelSteamcmdLogTail:
 
         panel = _make_steamcmd_panel(tmp_path)
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel._start_steamcmd_log_tail()
         panel._stop_steamcmd_log_tail(flush=False)
@@ -179,7 +179,7 @@ class TestRunnerPanelSteamcmdLogTail:
         panel.restart_process_button = MagicMock()
         panel.kill_process_button = MagicMock()
         panel.progress_bar = MagicMock()
-        setattr(panel, "message", MagicMock())
+        panel.message = MagicMock()  # type: ignore[method-assign]
         panel._steamcmd_console_log_path = str(tmp_path / "console_log.txt")
         panel._steamcmd_log_timer = None
         panel._steamcmd_log_offset = 0
@@ -208,7 +208,7 @@ class TestRunnerPanelSteamcmdLogTail:
         panel.windowTitle = MagicMock(return_value="SteamCMD Downloader")
         panel._handle_steamcmd_completion = MagicMock()
         panel.process_complete = MagicMock()
-        setattr(panel, "message", MagicMock())
+        panel.message = MagicMock()
         panel.process.terminate = MagicMock()
 
         panel._start_steamcmd_log_tail()
@@ -252,7 +252,7 @@ class TestRunnerPanelSteamcmdLogTail:
     ) -> None:
         panel = _make_steamcmd_panel(tmp_path, system="Windows")
         panel.process.readAll = MagicMock()
-        setattr(panel, "message", MagicMock())
+        panel.message = MagicMock()
 
         panel.handle_output()
 
@@ -267,7 +267,7 @@ class TestRunnerPanelSteamcmdLogTail:
             data=MagicMock(return_value=b"line one\nline two\n")
         )
         messages: list[str] = []
-        setattr(panel, "message", lambda line: messages.append(line))
+        panel.message = lambda line: messages.append(line)
 
         panel.handle_output()
 

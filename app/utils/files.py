@@ -38,7 +38,7 @@ def subfolder_contains_candidate_path(
         subfolder_paths.extend(
             [subfolder / folder for folder in subfolder.iterdir() if folder.is_dir()]
         )
-    except Exception:
+    except Exception:  # noqa: BLE001
         # Could not list subdirectories, return False
         return False
 
@@ -88,7 +88,7 @@ def cleanup_old_backups(backup_dir: Path, keep: int) -> None:
             for old_backup in backups[keep:]:
                 logger.info(f"Deleting old backup: {old_backup}")
                 os.remove(old_backup)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"An error occurred during backup cleanup: {e}")
 
 
@@ -126,7 +126,7 @@ def create_saves_backup(
         backup_dir.mkdir(exist_ok=True)
         logger.info(f"Backup directory is: {backup_dir.resolve()}")
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # noqa: DTZ005
         backup_filename = f"Saves_{timestamp}.zip"
         backup_archive_path = backup_dir / backup_filename
 
@@ -147,7 +147,7 @@ def create_saves_backup(
 
         return str(backup_archive_path)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"An error occurred during save backup: {e}")
         return None
 
@@ -159,7 +159,7 @@ def create_backup_in_thread(settings: Settings) -> None:
     if not settings.backup_saves_on_launch:
         return
 
-    today = datetime.date.today().isoformat()
+    today = datetime.date.today().isoformat()  # noqa: DTZ011
     if settings.last_backup_date == today:
         logger.info(f"A backup has already been created today ({today}). Skipping.")
         return

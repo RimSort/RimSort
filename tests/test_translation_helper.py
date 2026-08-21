@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -140,7 +140,7 @@ class TestTranslationConfig:
 
     def test_translation_config_from_dict(self) -> None:
         """Test TranslationConfig.from_dict creates config from dictionary."""
-        config_dict: Dict[str, Any] = {
+        config_dict: dict[str, Any] = {
             "retry": {"max_retries": 5, "initial_delay": 0.5},
             "timeout": {"deepl_timeout": 20.0},
             "max_concurrent_requests": 10,
@@ -224,7 +224,7 @@ class TestValidateLanguageCode:
 
     def test_valid_language_codes(self) -> None:
         """Test validation accepts valid language codes."""
-        for lang in LANG_MAP.keys():
+        for lang in LANG_MAP:
             result = validate_language_code(lang)
             assert result == lang
 
@@ -533,7 +533,7 @@ class TestAutoTranslateFile:
     """Tests for auto_translate_file function."""
 
     @pytest.fixture
-    def mock_filesystem(self, mocker: Any) -> Dict[str, Any]:
+    def mock_filesystem(self, mocker: Any) -> dict[str, Any]:
         """Fixture to mock filesystem operations."""
         mock_exists = mocker.patch("pathlib.Path.exists", return_value=True)
         mock_is_dir = mocker.patch("pathlib.Path.is_dir", return_value=False)
@@ -546,7 +546,7 @@ class TestAutoTranslateFile:
         mock_mkdir = mocker.patch("pathlib.Path.mkdir", return_value=None)
 
         # Mock open for reading/writing file content
-        file_content: Dict[str, Any] = {}  # Stores content of mocked files
+        file_content: dict[str, Any] = {}  # Stores content of mocked files
 
         def mock_open_func(
             file_path: Any, mode: str = "r", encoding: str = "utf-8"
@@ -578,7 +578,7 @@ class TestAutoTranslateFile:
         }
 
     @pytest.fixture
-    def mock_xml_parsing(self, mocker: Any) -> Dict[str, Any]:
+    def mock_xml_parsing(self, mocker: Any) -> dict[str, Any]:
         """Fixture to mock lxml.etree operations."""
         mock_tree = mocker.Mock()
         mock_root = mocker.Mock()
@@ -626,8 +626,8 @@ class TestAutoTranslateFile:
     async def test_auto_translate_file_success(
         self,
         mocker: Any,
-        mock_filesystem: Dict[str, Any],
-        mock_xml_parsing: Dict[str, Any],
+        mock_filesystem: dict[str, Any],
+        mock_xml_parsing: dict[str, Any],
         mock_translation_service: Any,
         mock_find_unfinished: list[Any],
     ) -> None:
@@ -683,8 +683,8 @@ class TestAutoTranslateFile:
     async def test_auto_translate_file_dry_run(
         self,
         mocker: Any,
-        mock_filesystem: Dict[str, Any],
-        mock_xml_parsing: Dict[str, Any],
+        mock_filesystem: dict[str, Any],
+        mock_xml_parsing: dict[str, Any],
         mock_translation_service: Any,
         mock_find_unfinished: list[Any],
         capsys: Any,  # To capture print output
@@ -727,11 +727,12 @@ class TestAutoTranslateFile:
     async def test_auto_translate_file_failure_no_continue(
         self,
         mocker: Any,
-        mock_filesystem: Dict[str, Any],
-        mock_xml_parsing: Dict[str, Any],
+        mock_filesystem: dict[str, Any],
+        mock_xml_parsing: dict[str, Any],
         mock_translation_service: Any,
         mock_find_unfinished: list[Any],
     ) -> None:
+        # jscpd:ignore-start
         """Test auto-translation aborts and restores backup on failure when continue_on_failure is False."""
         # Arrange
         mock_find_unfinished.extend(
@@ -750,6 +751,7 @@ class TestAutoTranslateFile:
             Exception("Translation service error"),
         ]
         mocker.patch("asyncio.sleep")
+        # jscpd:ignore-end
 
         # Set continue_on_failure to False
         original_config = get_translation_config()
@@ -784,8 +786,8 @@ class TestAutoTranslateFile:
     async def test_auto_translate_file_failure_with_continue(
         self,
         mocker: Any,
-        mock_filesystem: Dict[str, Any],
-        mock_xml_parsing: Dict[str, Any],
+        mock_filesystem: dict[str, Any],
+        mock_xml_parsing: dict[str, Any],
         mock_translation_service: Any,
         mock_find_unfinished: list[Any],
     ) -> None:
@@ -847,8 +849,8 @@ class TestAutoTranslateFile:
     async def test_auto_translate_file_unexpected_exception(
         self,
         mocker: Any,
-        mock_filesystem: Dict[str, Any],
-        mock_xml_parsing: Dict[str, Any],
+        mock_filesystem: dict[str, Any],
+        mock_xml_parsing: dict[str, Any],
         mock_translation_service: Any,
         mock_find_unfinished: list[Any],
     ) -> None:
@@ -884,8 +886,8 @@ class TestAutoTranslateFile:
     async def test_auto_translate_file_no_unfinished_translations(
         self,
         mocker: Any,
-        mock_filesystem: Dict[str, Any],
-        mock_xml_parsing: Dict[str, Any],
+        mock_filesystem: dict[str, Any],
+        mock_xml_parsing: dict[str, Any],
         mock_translation_service: Any,
         mock_find_unfinished: list[Any],
     ) -> None:
@@ -1084,7 +1086,7 @@ class TestProcessLanguage:
     """Tests for process_language function."""
 
     @pytest.fixture
-    def mock_filesystem(self, mocker: Any) -> Dict[str, Any]:
+    def mock_filesystem(self, mocker: Any) -> dict[str, Any]:
         """Fixture to mock filesystem operations."""
         mock_exists = mocker.patch("pathlib.Path.exists", return_value=True)
         mock_glob = mocker.patch(
@@ -1094,7 +1096,7 @@ class TestProcessLanguage:
 
     @pytest.mark.asyncio
     async def test_process_language_success(
-        self, mocker: Any, mock_filesystem: Dict[str, Any]
+        self, mocker: Any, mock_filesystem: dict[str, Any]
     ) -> None:
         """Test successful language processing."""
         mock_auto_translate = mocker.patch(

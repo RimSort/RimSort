@@ -109,8 +109,7 @@ class StartupImpactReport:
 def normalize_package_id(package_id: str) -> str:
     """Lowercase a packageId and strip the Steam copy disambiguation suffix."""
     normalized = package_id.lower()
-    if normalized.endswith("_steam"):
-        normalized = normalized[: -len("_steam")]
+    normalized = normalized.removesuffix("_steam")
     return normalized
 
 

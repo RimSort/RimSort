@@ -20,7 +20,6 @@ def cli() -> None:
     Global flags (processed before CLI):
       --disable-updater    Disable automatic update checks (same as RIMSORT_DISABLE_UPDATER env var)
     """
-    pass
 
 
 # Register subcommands

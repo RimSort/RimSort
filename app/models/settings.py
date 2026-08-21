@@ -390,7 +390,7 @@ class Settings(QObject):
                                 ignore_errors=False,
                                 onerror=handle_remove_read_only,
                             )
-                        except Exception as e:
+                        except Exception as e:  # noqa: BLE001
                             logger.error(
                                 f"Failed to migrate SteamCMD install path. Error: {e}"
                             )
@@ -475,7 +475,7 @@ class Settings(QObject):
         if dlg.exec_is_positive():
             try:
                 self.recover_backup(use_old_backup=use_old_backup)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to recover settings from backup: {e}")
                 InformationBox(
                     title=self.tr("Settings Recovery Failed"),
@@ -499,7 +499,7 @@ class Settings(QObject):
                 copy2(self._settings_file, backup_path)
                 return True
             return False
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to update settings backup: {e}")
             return False
 
@@ -526,7 +526,7 @@ class Settings(QObject):
 
             return True
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to recover settings from backup: {e}")
             return False
 

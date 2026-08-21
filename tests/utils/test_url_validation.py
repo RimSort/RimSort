@@ -1,4 +1,4 @@
-import unittest.mock as mock
+from unittest import mock
 
 from app.utils.rentry.wrapper import RentryImport
 

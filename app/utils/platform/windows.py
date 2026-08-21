@@ -1,9 +1,10 @@
 import ctypes
 import sys
 from collections import namedtuple
+from collections.abc import Generator
 from ctypes import wintypes
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from loguru import logger
 

@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from loguru import logger
 from sqlalchemy import create_engine, text
@@ -18,7 +19,7 @@ class MetadataDbController:
         try:
             if db_path.parent:
                 db_path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.exception(
                 f"Failed to ensure database directory exists for {db_path}: {e}"
             )
@@ -30,7 +31,7 @@ class MetadataDbController:
 class AuxMetadataController(MetadataDbController):
     _instances: dict[
         Path, "AuxMetadataController"
-    ] = {}  # db_path : AuxMetadataController
+    ] = {}  # db_path : AuxMetadataController  # noqa: RUF012
 
     def __init__(self, db_path: Path) -> None:
         super().__init__(db_path)
@@ -141,7 +142,7 @@ class AuxMetadataController(MetadataDbController):
         except Exception as e:
             session.rollback()
             logger.exception(f"Failed to update aux metadata entry: {e}")
-            raise e
+            raise
 
         return entry
 
@@ -202,7 +203,7 @@ class AuxMetadataController(MetadataDbController):
             except Exception as e:
                 session.rollback()
                 logger.exception(f"Failed to create new aux metadata entry: {e}")
-                raise e
+                raise
 
         return entry
 
@@ -292,7 +293,7 @@ class AuxMetadataController(MetadataDbController):
 
         try:
             acf_data = acf_to_dict(str(acf_path))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error reading .acf file at {acf_path}: {e}")
             return
 

@@ -107,8 +107,13 @@ markdownlint-fix:
     npx markdownlint-cli2@latest --fix
 
 # Automatically fix shell script formatting issues (shfmt)
+[unix]
 shfmt-fix:
-    fd -e sh --exclude .venv --exclude submodules -x shfmt -w {}
+    fd -e sh --exclude .venv --exclude submodules -X shfmt -w
+
+[windows]
+shfmt-fix:
+    $env:PATH = "$env:PATH;$env:LOCALAPPDATA\RimSortTools"; fd -e sh --exclude .venv --exclude submodules -X shfmt -w
 
 # Run copy/paste detection (jscpd) using the project's .jscpd.json config
 jscpd:

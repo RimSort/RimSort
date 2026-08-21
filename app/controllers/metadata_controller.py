@@ -127,7 +127,7 @@ class MetadataController(QObject):
                     entry = self.metadata_db_controller.get_or_create(session, path)
                     entry.type = str(mod_data.mod_type)
                     entry.published_file_id = mod_data.published_file_id
-                except Exception:
+                except Exception:  # noqa: BLE001
                     session.rollback()
                     logger.exception(f"Failed to update aux metadata for mod at {path}")
 
@@ -595,9 +595,7 @@ class MetadataController(QObject):
         logger.debug(f"Generated active mods with {len(active_mod_paths)} mods")
 
         logger.info("Generating inactive mod list")
-        inactive_mod_paths = [
-            path for path in all_mods.keys() if path not in active_mod_paths
-        ]
+        inactive_mod_paths = [path for path in all_mods if path not in active_mod_paths]
         logger.info(f"# active mods: {len(active_mod_paths)}")
         logger.info(f"# inactive mods: {len(inactive_mod_paths)}")
         logger.info(f"# duplicate mods: {len(duplicate_mods)}")

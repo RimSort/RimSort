@@ -1,6 +1,6 @@
 import json
-from datetime import datetime, timedelta, timezone
-from typing import Generator
+from collections.abc import Generator
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine
@@ -64,7 +64,7 @@ def _seed_and_check(
         GitHubReleaseCache(
             owner_repo=owner_repo,
             releases_json=json.dumps(releases),
-            last_checked=datetime.now(tz=timezone.utc),
+            last_checked=datetime.now(tz=UTC),
         )
     )
     session.commit()
@@ -79,7 +79,7 @@ def _seed_and_check(
 
 class TestCheckForUpdates:
     def test_update_available(self, db_session: Session) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         updates = _seed_and_check(
             db_session,
             "author/Mod",
@@ -96,7 +96,7 @@ class TestCheckForUpdates:
         assert updates[0].latest_version == "v2.0.0"
 
     def test_no_update_when_current(self, db_session: Session) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         updates = _seed_and_check(
             db_session,
             "author/Mod",
@@ -107,7 +107,7 @@ class TestCheckForUpdates:
         assert len(updates) == 0
 
     def test_head_mod_detects_new_releases(self, db_session: Session) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         updates = _seed_and_check(
             db_session,
             "author/Mod",

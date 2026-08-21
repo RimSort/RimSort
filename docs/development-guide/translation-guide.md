@@ -361,7 +361,7 @@ Before starting translation work, you need to prepare the following:
    ```python
    language_map = {
        "en_US": "English",
-       "es_ES": "Español", 
+       "es_ES": "Español",
        "fr_FR": "Français",
        "de_DE": "Deutsch",
        "zh_CN": "简体中文",

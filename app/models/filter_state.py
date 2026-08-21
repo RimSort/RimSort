@@ -45,9 +45,7 @@ class FilterState:
             return True
         if self.mod_type != "all":
             return True
-        if self.tags or self.include_no_tags:
-            return True
-        return False
+        return bool(self.tags or self.include_no_tags)
 
     def active_category_count(self) -> int:
         """

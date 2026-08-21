@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Optional
 
 from PySide6.QtCore import QMargins
 from PySide6.QtGui import (
@@ -22,7 +21,7 @@ class GUIInfo:
 
     _instance: "None | GUIInfo" = None
 
-    def __new__(cls) -> "GUIInfo":
+    def __new__(cls) -> "GUIInfo":  # noqa: PYI034
         """
         Ensure only one instance of GUIInfo is created (Singleton pattern).
 
@@ -30,7 +29,7 @@ class GUIInfo:
             GUIInfo: The single instance of the GUIInfo class.
         """
         if not cls._instance:
-            cls._instance = super(GUIInfo, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
@@ -143,8 +142,8 @@ def show_dialogue_conditional(
     title: str,
     text: str,
     icon: str = "question",
-    buttons: Optional[List[str]] = None,
-    default_button: Optional[str] = None,
+    buttons: list[str] | None = None,
+    default_button: str | None = None,
 ) -> bool:
     """Show a dialog with Yes/No buttons and return True if Yes was clicked"""
     msg_box = QMessageBox()
@@ -187,7 +186,7 @@ def show_dialogue_file(
     file_type: str = "File",
     file_filter: str = "",
     is_save: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """Show a file dialog and return the selected path"""
     dialog = QFileDialog()
     dialog.setWindowTitle(title)

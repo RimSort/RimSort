@@ -1099,11 +1099,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.tr("Automatically clear depot cache")
         )
         self.steamcmd_auto_clear_depot_cache_checkbox.setToolTip(
-            (
-                self.tr(
-                    "Automatically clear the depot cache before downloading mods through SteamCMD.\n"
-                    "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating."
-                )
+            self.tr(
+                "Automatically clear the depot cache before downloading mods through SteamCMD.\n"
+                "This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating."
             )
         )
         group_layout.addWidget(self.steamcmd_auto_clear_depot_cache_checkbox)

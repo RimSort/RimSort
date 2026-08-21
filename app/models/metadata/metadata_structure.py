@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import functools
 import os
-from collections.abc import Mapping, MutableSet
+from collections.abc import Iterable, Iterator, Mapping, MutableSet
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import AbstractSet, Any, Iterable, Iterator, Literal
+from typing import AbstractSet, Any, Literal, Self  # noqa: UP035
 from uuid import uuid4
 
 import msgspec
@@ -70,7 +70,7 @@ class CaseInsensitiveStr(str):
     Wraps a package Id. Forces the package ID to be case insensitive. Stores it internally as lowercase.
     """
 
-    def __new__(cls, pid: str) -> "CaseInsensitiveStr":
+    def __new__(cls, pid: str) -> Self:
         return super().__new__(cls, pid.lower())
 
 
@@ -110,21 +110,19 @@ class CaseInsensitiveSet(MutableSet[CaseInsensitiveStr]):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __or__(self, other: AbstractSet[Any]) -> "CaseInsensitiveSet":
+    def __or__(self, other: AbstractSet[Any]) -> CaseInsensitiveSet:
         return CaseInsensitiveSet(self._data | {CaseInsensitiveStr(i) for i in other})
 
-    def __ror__(self, other: AbstractSet[Any]) -> "CaseInsensitiveSet":
+    def __ror__(self, other: AbstractSet[Any]) -> CaseInsensitiveSet:
         return self.__or__(other)
 
     def __hash__(self) -> int:
         return hash(self._data)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, AbstractSet):
             # Check empty state
-            if not self._data and not other:
-                return True
-            return False
+            return bool(not self._data and not other)
 
         if isinstance(other, CaseInsensitiveSet):
             return self._data == other._data
@@ -264,7 +262,7 @@ class BaseMod:
 
 @dataclass
 class PackageIdMod:
-    package_id: CaseInsensitiveStr = CaseInsensitiveStr("invalid.mod")
+    package_id: CaseInsensitiveStr = CaseInsensitiveStr("invalid.mod")  # noqa: RUF009
 
 
 @dataclass
@@ -365,7 +363,7 @@ class ListedMod(BaseMod):
         return self._uuid
 
     @functools.cached_property
-    def published_file_id(
+    def published_file_id(  # noqa: PLR0206
         self, expected_sub_path: Path = Path("About/PublishedFileId.txt")
     ) -> str | None:
         """Return the published file id as a string, or None if absent."""
@@ -747,6 +745,7 @@ class ModReplacement:
         self.source = source
 
 
+# jscpd:ignore-start
 @dataclass
 class WorkshopUpdateResult:
     """Result of a workshop mod update check.
@@ -763,3 +762,6 @@ class WorkshopUpdateResult:
     mods_updated: int
     failed_pfids: list[str]
     errors: list[str]
+
+
+# jscpd:ignore-end

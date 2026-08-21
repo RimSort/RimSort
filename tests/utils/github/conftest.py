@@ -1,6 +1,6 @@
 """Shared fixtures for GitHub utility tests."""
 
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 from sqlalchemy import create_engine

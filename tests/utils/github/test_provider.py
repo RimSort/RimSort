@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -63,7 +63,7 @@ class TestReleaseInfo:
         release = ReleaseInfo(
             tag="v1.0.0",
             name="Release 1.0",
-            published_at=datetime.now(tz=timezone.utc),
+            published_at=datetime.now(tz=UTC),
             prerelease=False,
             assets=assets,
             body="Release notes here",
@@ -88,7 +88,7 @@ class TestReleaseInfo:
         release = ReleaseInfo(
             tag="v1.0.0",
             name="Release 1.0",
-            published_at=datetime.now(tz=timezone.utc),
+            published_at=datetime.now(tz=UTC),
             prerelease=False,
             assets=assets,
             body="",
@@ -105,7 +105,7 @@ class TestGitHubRateLimitError:
 
 class TestGitHubProvider:
     def test_get_releases_uses_cache_when_fresh(self, cache_session: Session) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         cached = GitHubReleaseCache(
             owner_repo="author/Mod",
             releases_json=json.dumps(
@@ -132,7 +132,7 @@ class TestGitHubProvider:
         assert releases[0].tag == "v1.0.0"
 
     def test_get_latest_stable_release(self, cache_session: Session) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         releases_data = [
             {
                 "tag": "v2.0.0-beta",
@@ -170,7 +170,7 @@ class TestGitHubProvider:
         assert result is None
 
     def test_get_latest_stable_release_all_prereleases(self) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         releases = [
             ReleaseInfo(
                 tag="v2.0.0-beta",
@@ -206,7 +206,7 @@ def _make_mock_release(
     rel = MagicMock()
     rel.tag_name = tag
     rel.name = name or tag
-    rel.published_at = published_at or datetime.now(tz=timezone.utc)
+    rel.published_at = published_at or datetime.now(tz=UTC)
     rel.prerelease = prerelease
     rel.draft = draft
     rel.body = body
@@ -221,7 +221,7 @@ class TestFetchReleasesFromApi:
     def test_successful_fetch_returns_releases(
         self, mock_github_cls: MagicMock
     ) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         mock_asset = _make_mock_asset("Mod.zip", "https://github.com/dl/Mod.zip")
         mock_release = _make_mock_release(
             tag="v1.0.0",
@@ -247,7 +247,7 @@ class TestFetchReleasesFromApi:
     def test_successful_fetch_updates_cache(
         self, mock_github_cls: MagicMock, cache_session: Session
     ) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         mock_release = _make_mock_release(tag="v1.0.0", published_at=now)
         mock_repo = MagicMock()
         mock_repo.get_releases.return_value = [mock_release]
@@ -308,7 +308,7 @@ class TestFetchReleasesFromApi:
 
     @patch("app.utils.github.provider.Github")
     def test_naive_datetime_gets_utc_timezone(self, mock_github_cls: MagicMock) -> None:
-        naive_dt = datetime(2024, 1, 1, 12, 0, 0)
+        naive_dt = datetime(2024, 1, 1, 12, 0, 0)  # noqa: DTZ001
         mock_release = _make_mock_release(tag="v1.0.0", published_at=naive_dt)
         mock_repo = MagicMock()
         mock_repo.get_releases.return_value = [mock_release]
@@ -318,7 +318,7 @@ class TestFetchReleasesFromApi:
         releases = provider.get_releases("author/Mod", force_refresh=True)
 
         assert releases[0].published_at.tzinfo is not None
-        assert releases[0].published_at.tzinfo == timezone.utc
+        assert releases[0].published_at.tzinfo == UTC
 
     @patch("app.utils.github.provider.Github")
     def test_release_with_none_name_uses_tag(self, mock_github_cls: MagicMock) -> None:

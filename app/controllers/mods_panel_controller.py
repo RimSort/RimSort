@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import partial
 
 from loguru import logger
@@ -257,7 +257,8 @@ class ModsPanelController(QObject):
     def _change_visibility_of_new_mods(self) -> None:
         """When on, shows only active mods that are not in the latest save file.
 
-        When off, shows all mods. Respects other active filters.
+        # jscpd:ignore-start
+                When off, shows all mods. Respects other active filters.
         """
 
         # If the other labels are active, disable them
@@ -266,6 +267,7 @@ class ModsPanelController(QObject):
         if self.errors_label_active:
             self.mods_panel.errors_text.clicked.emit()
         if self.updated_label_active:
+            # jscpd:ignore-end
             self.mods_panel.updated_text.clicked.emit()
 
         self.news_label_active = not self.news_label_active
@@ -363,7 +365,7 @@ class ModsPanelController(QObject):
             self.settings.aux_db_path
         )
         with aux_metadata_controller.Session() as aux_metadata_session:
-            limit = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
+            limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
                 seconds=time_limit
             )
             stmt = (

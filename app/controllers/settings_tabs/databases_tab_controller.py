@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from PySide6.QtWidgets import QApplication
 
@@ -18,14 +18,14 @@ class DatabaseSourceGroup:
     that are enabled/disabled based on the active source.
     """
 
-    _SOURCE_VALUES = {
+    _SOURCE_VALUES = {  # noqa: RUF012
         "none": "None",
         "github": "Configured git repository",
         "url": "Configured URL",
         "local_file": "Configured file path",
     }
 
-    _ALL_WIDGETS = [
+    _ALL_WIDGETS = [  # noqa: RUF012
         "github_url",
         "github_download_button",
         "url_input",
@@ -34,7 +34,7 @@ class DatabaseSourceGroup:
         "local_file_choose_button",
     ]
 
-    _ENABLED_WIDGETS = {
+    _ENABLED_WIDGETS = {  # noqa: RUF012
         "none": [],
         "github": ["github_url", "github_download_button"],
         "url": ["url_input", "url_download_button"],
