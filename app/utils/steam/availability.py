@@ -5,7 +5,6 @@ import sys
 from collections.abc import Callable, MutableMapping
 from pathlib import Path
 from time import sleep
-from typing import Optional
 
 from loguru import logger
 
@@ -16,8 +15,8 @@ from app.utils.generic import show_no_steam_warning, show_snap_steam_warning
 # You can automatically ensure this is done by utilizing distribute.py
 try:
     if "__compiled__" not in globals():
-        sys.path.append(str((Path.cwd() / "submodules" / "SteamworksPy")))
-except Exception:
+        sys.path.append(str(Path.cwd() / "submodules" / "SteamworksPy"))
+except Exception:  # noqa: BLE001, S110
     pass
 
 SLEEP_TIME = 15
@@ -27,7 +26,7 @@ SNAP_STEAM_PATH = (
 )
 
 
-def _find_steam_executable() -> Optional[Path]:
+def _find_steam_executable() -> Path | None:
     """
     Find the Steam executable path based on the current platform.
 
@@ -98,7 +97,7 @@ def _is_steam_running() -> bool:
                 sleep(2)
 
         return False
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Error checking if Steam is running: {e}")
         return False
 
@@ -221,7 +220,7 @@ def _launch_steam(
                 # Give Steam a bit more time to fully initialize
                 sleep(SLEEP_TIME)
                 return True
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 error_msg = f"{e.__class__.__name__}: {e}"
                 logger.debug(
                     f"Steam API not ready yet (attempt {attempt + 1}/{MAX_ATTEMPTS}): {error_msg}"
@@ -244,7 +243,7 @@ def _launch_steam(
             status_callback(msg)
         return False
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Error launching Steam: {e}")
         return False
 

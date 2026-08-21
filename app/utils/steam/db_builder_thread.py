@@ -23,8 +23,10 @@ class SteamDatabaseBuilder(QThread):
         output_database_path: str = "",
         get_appid_deps: bool = False,
         update: bool = False,
-        mods: dict[str, Any] = {},
+        mods: dict[str, Any] | None = None,
     ):
+        if mods is None:
+            mods = {}
         QThread.__init__(self)
 
         # For backwards compatibility with GUI code that uses these attributes

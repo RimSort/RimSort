@@ -25,12 +25,12 @@ class AppInfo:
 
     _instance: "None | AppInfo" = None
 
-    def __new__(cls) -> "AppInfo":
+    def __new__(cls) -> "AppInfo":  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `AppInfo` class.
         """
         if not cls._instance:
-            cls._instance = super(AppInfo, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     @staticmethod

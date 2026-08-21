@@ -294,7 +294,7 @@ class FilterPanel(QFrame):
 
     filters_changed = Signal()
 
-    SOURCE_LABELS: dict[str, str] = {
+    SOURCE_LABELS: dict[str, str] = {  # noqa: RUF012
         "workshop": "Workshop",
         "local": "Local",
         "expansion": "Expansion",
@@ -302,13 +302,13 @@ class FilterPanel(QFrame):
         "git_repo": "Git",
     }
 
-    TYPE_LABELS: dict[str, str] = {
+    TYPE_LABELS: dict[str, str] = {  # noqa: RUF012
         "all": "All",
         "csharp": "C# Mods",
         "xml": "XML-only",
     }
 
-    TAG_MATCH_MODE_LABELS: dict[str, str] = {
+    TAG_MATCH_MODE_LABELS: dict[str, str] = {  # noqa: RUF012
         "or": "Any",
         "and": "All",
     }

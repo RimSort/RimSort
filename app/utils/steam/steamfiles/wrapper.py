@@ -1,9 +1,9 @@
-from typing import Any, Dict
+from typing import Any
 
 from steamfiles import acf
 
 
-def acf_to_dict(path: str) -> Dict[str, Any]:
+def acf_to_dict(path: str) -> dict[str, Any]:
     """
     Uses steamfiles module to load a Steam client .acf file to a Dict
     Example: "$STEAM_INSTALL/steamapps/workshop/appworkshop_294100.acfappworkshop_294100.acf"
@@ -15,7 +15,7 @@ def acf_to_dict(path: str) -> Dict[str, Any]:
         return acf.loads(str(f.read(), encoding="utf=8"))
 
 
-def dict_to_acf(data: Dict[str, Any], path: str) -> None:
+def dict_to_acf(data: dict[str, Any], path: str) -> None:
     """
     Uses steamfiles module to dump a dict of data to a Steam client .acf file in a SteamCMD/Steam format
     """

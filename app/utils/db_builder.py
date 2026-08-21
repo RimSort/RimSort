@@ -8,7 +8,6 @@ from PySide6.QtCore import QEventLoop, QObject, Slot
 from PySide6.QtWidgets import QMessageBox
 
 import app.utils.constants as app_constants
-import app.views.dialogue as dialogue
 from app.controllers.metadata_controller import MetadataController
 from app.models.metadata.metadata_structure import ModType
 from app.models.settings import Settings
@@ -17,6 +16,7 @@ from app.utils.dict_utils import recursively_update_dict
 from app.utils.event_bus import EventBus
 from app.utils.json_utils import atomic_json_dump
 from app.utils.steam.db_builder_thread import SteamDatabaseBuilder
+from app.views import dialogue
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -37,9 +37,9 @@ class DatabaseBuilder(QObject):
     # RimWorld Workshop appid
     RIMWORLD_APPID = 294100
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "DatabaseBuilder":
+    def __new__(cls, *args: Any, **kwargs: Any) -> "DatabaseBuilder":  # noqa: PYI034
         if cls._instance is None:
-            cls._instance = super(DatabaseBuilder, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, settings: Settings) -> None:
@@ -50,7 +50,7 @@ class DatabaseBuilder(QObject):
             settings: The settings model for the application.
         """
         if not hasattr(self, "initialized"):
-            super(DatabaseBuilder, self).__init__()
+            super().__init__()
             logger.info("Initializing DatabaseBuilder")
 
             self.settings = settings
@@ -60,7 +60,7 @@ class DatabaseBuilder(QObject):
             logger.info("Finished DatabaseBuilder initialization")
             self.initialized = True
 
-    def _get_output_path(self, caption: str = "Designate output path") -> Optional[str]:
+    def _get_output_path(self, caption: str = "Designate output path") -> str | None:
         """
         Prompt user to select output file path and ensure .json extension.
 
@@ -84,7 +84,7 @@ class DatabaseBuilder(QObject):
             return output_path
         return None
 
-    def _load_json_database(self, file_path: Optional[str]) -> Optional[dict[str, Any]]:
+    def _load_json_database(self, file_path: str | None) -> dict[str, Any] | None:
         """
         Load and parse a JSON database file.
 
@@ -101,7 +101,7 @@ class DatabaseBuilder(QObject):
             with open(file_path, encoding="utf-8") as f:
                 logger.debug(f"Reading database from {file_path}")
                 return json.load(f)
-        except (json.JSONDecodeError, IOError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load database: {e}")
             return None
 
@@ -270,7 +270,7 @@ class DatabaseBuilder(QObject):
                     ]
                 )
 
-    def _select_and_load_database(self, caption: str) -> Optional[dict[str, Any]]:
+    def _select_and_load_database(self, caption: str) -> dict[str, Any] | None:
         """
         Prompt user to select and load a database file.
 

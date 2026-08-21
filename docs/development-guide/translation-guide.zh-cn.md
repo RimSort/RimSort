@@ -340,7 +340,7 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
    ```python
    language_map = {
        "en_US": "English",
-       "es_ES": "Español", 
+       "es_ES": "Español",
        "fr_FR": "Français",
        "de_DE": "Deutsch",
        "zh_CN": "简体中文",

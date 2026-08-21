@@ -1,5 +1,5 @@
 import sys
-from typing import Generator
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -69,7 +69,7 @@ class TestBinaryChoiceDialog:
 
                 dialog = BinaryChoiceDialog(**dialog_args)  # type: ignore
             except ValueError:
-                if positive_btn is not None and negative_btn is not None:
+                if positive_btn is not None and negative_btn is not None:  # noqa: SIM102
                     if positive_btn == negative_btn:
                         # Correct error
                         return None

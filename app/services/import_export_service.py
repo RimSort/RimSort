@@ -84,7 +84,7 @@ class ImportExportService:
 
             seen.add(package_id)
 
-            if duplicate_mods and package_id in duplicate_mods:
+            if duplicate_mods and package_id in duplicate_mods:  # noqa: SIM102
                 if mod.mod_type == ModType.STEAM_WORKSHOP:
                     data.active_mods.append(package_id + "_steam")
                     continue

@@ -227,7 +227,7 @@ class TestUIInteractions:
         troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
     ) -> None:
         """Test that apply button does nothing if cancelled."""
-        controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
+        controller, game_dir, _config_dir, steam_mods_dir = troubleshooting_controller
 
         (game_dir / "test.txt").write_text("test")
         test_mod = steam_mods_dir / "123456789"
@@ -252,7 +252,7 @@ class TestSteamUtilities:
         troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
     ) -> None:
         """Test Steam clear cache button behavior."""
-        controller, _, _, steam_mods_dir = troubleshooting_controller
+        controller, _, _, _steam_mods_dir = troubleshooting_controller
 
         steam_path = Path("C:/Program Files (x86)/Steam")
         with (
@@ -282,7 +282,7 @@ class TestSteamUtilities:
         with (
             patch(
                 "pathlib.Path.exists",
-                side_effect=lambda p: False if str(p).endswith("downloading") else True,
+                side_effect=lambda p: not str(p).endswith("downloading"),
             ),
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional"

@@ -1,8 +1,7 @@
 import re
-import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 from shutil import copy2, rmtree
-from typing import List, Optional
+from xml.etree import ElementTree
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
@@ -64,19 +63,19 @@ class TroubleshootingController:
         )
 
     @property
-    def game_location(self) -> Optional[str]:
+    def game_location(self) -> str | None:
         return self.settings.instances[self.settings.current_instance].game_folder
 
     @property
-    def config_location(self) -> Optional[str]:
+    def config_location(self) -> str | None:
         return self.settings.instances[self.settings.current_instance].config_folder
 
     @property
-    def steam_mods_location(self) -> Optional[str]:
+    def steam_mods_location(self) -> str | None:
         return self.settings.instances[self.settings.current_instance].workshop_folder
 
     def _delete_files_in_directory(
-        self, directory: Path, exclude: Optional[List[str]] = None
+        self, directory: Path, exclude: list[str] | None = None
     ) -> None:
         """Helper method to delete files and folders in a directory, excluding specified names."""
         if exclude is None:
@@ -89,7 +88,7 @@ class TroubleshootingController:
                     item.unlink()
                 elif item.is_dir():
                     rmtree(item)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to delete {item}: {e}")
                 self.show_failed_warning(item, e)
 
@@ -99,7 +98,7 @@ class TroubleshootingController:
         if not self.steam_mods_location:
             logger.warning("Steam user Check failed, skipping deleteing game files.")
             self.show_steam_user_warning()
-            return None
+            return
 
         # Check if game location is set
         if not self.game_location:
@@ -115,7 +114,7 @@ class TroubleshootingController:
             temp_mods = game_dir / "Mods_temp"
             try:
                 mods_dir.rename(temp_mods)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 item = temp_mods
                 logger.error(f"Failed to rename {item} folder: {e}")
                 self.show_failed_warning(item, e)
@@ -129,7 +128,7 @@ class TroubleshootingController:
         if temp_mods.exists():
             try:
                 temp_mods.rename(mods_dir)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 item = temp_mods
                 logger.error(f"Failed to restore {item} folder: {e}")
                 self.show_failed_warning(item, e)
@@ -146,7 +145,7 @@ class TroubleshootingController:
                     "Process complete, wait for steam to complete further process.",
                 ),
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to launch Steam installation: {e}")
             show_dialogue_conditional(
                 title=self.translate(
@@ -164,7 +163,7 @@ class TroubleshootingController:
         if not self.steam_mods_location:
             logger.warning("Steam mods location not set, skipping deleting steam mods.")
             self.show_steam_user_warning()
-            return None
+            return
 
         steam_mods_dir = Path(self.steam_mods_location)
         if not steam_mods_dir.exists():
@@ -202,7 +201,7 @@ class TroubleshootingController:
                     f"steam://workshop_download_item/294100/{mod_id}"
                 )
                 logger.info(f"opening: steam://workshop_download_item/294100/{mod_id}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to trigger Steam workshop redownload: {e}")
             show_dialogue_conditional(
                 title=self.translate(
@@ -237,7 +236,7 @@ class TroubleshootingController:
                     item.unlink()
                     deleted_any = True
                     logger.info(f"Deleted {item} successfully.")
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"Failed to delete config file {item}: {e}")
                     self.show_failed_warning(item, e)
 
@@ -288,7 +287,7 @@ class TroubleshootingController:
                             "TroubleshootingController", "Deleted {item} successfully."
                         ).format(item=item),
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"Failed to delete game config file {item}: {e}")
                     self.show_failed_warning(item, e)
 
@@ -353,7 +352,7 @@ class TroubleshootingController:
             try:
                 rmtree(mods_dir)
                 mods_dir.mkdir()  # recreate empty Mods folder
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 item = mods_dir
                 logger.error(f"Failed to clear {item} folder: {e}")
                 self.show_failed_warning(item, e)
@@ -391,7 +390,7 @@ class TroubleshootingController:
                         "Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.",
                     ),
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to reset ModsConfig.xml: {e}")
                 show_dialogue_conditional(
                     title=self.translate("TroubleshootingController", "Error"),
@@ -492,7 +491,7 @@ class TroubleshootingController:
             }
 
             atomic_json_dump(export_data, save_path, indent=2)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to export mod list: {e}")
             show_warning(
                 title=self.translate("TroubleshootingController", "Error"),
@@ -564,7 +563,7 @@ class TroubleshootingController:
                     "Details: {e}",
                 ).format(e=str(e)),
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to import mod list: {e}")
             show_dialogue_conditional(
                 self.translate("TroubleshootingController", "Error"),
@@ -577,7 +576,7 @@ class TroubleshootingController:
                 ).format(e=str(e)),
             )
 
-    def _get_steam_root_from_workshop(self) -> Optional[Path]:
+    def _get_steam_root_from_workshop(self) -> Path | None:
         """Get Steam root directory from configured workshop folder path."""
         if not self.steam_mods_location:
             logger.warning("Steam mods location not set, skipping getting steam root.")
@@ -597,7 +596,7 @@ class TroubleshootingController:
                     steam_root = steam_root.parent
                 if steam_root.name.lower() == "steam":
                     return steam_root
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             item = workshop_path
             logger.error(f"Failed to get steam root from {item} : {e}")
             self.show_failed_warning(item, e)
@@ -621,7 +620,7 @@ class TroubleshootingController:
                     break
 
         if not steam_path:
-            raise Exception(f"Steam installation not found: {steam_path}")
+            raise Exception(f"Steam installation not found: {steam_path}")  # noqa: TRY002
 
         return steam_path
 
@@ -657,7 +656,7 @@ class TroubleshootingController:
                     buttons=["Ok"],
                 )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to clear Steam cache: {e}")
             show_dialogue_conditional(
                 title=self.translate("TroubleshootingController", "Cache Clear Failed"),
@@ -674,7 +673,7 @@ class TroubleshootingController:
         steam_path = self._find_steam_path()
         library_file = steam_path / "steamapps" / "libraryfolders.vdf"
         if not library_file.exists():
-            raise Exception(f"Steam library file not found: {library_file}")
+            raise Exception(f"Steam library file not found: {library_file}")  # noqa: TRY002
         return library_file
 
     def _on_steam_repair_library_clicked(self) -> None:
@@ -724,7 +723,7 @@ class TroubleshootingController:
                 icon="info",
             )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to repair Steam library: {e}")
             show_dialogue_conditional(
                 title=self.translate(
@@ -797,7 +796,7 @@ class TroubleshootingController:
                         "No orphaned workshop entries were found. The ACF file is clean.",
                     ),
                 )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to clean orphaned workshop items: {e}")
             show_warning(
                 title=self.translate("TroubleshootingController", "Cleanup Failed"),

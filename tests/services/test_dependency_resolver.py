@@ -92,6 +92,7 @@ class TestResolveDependencyWorkshopId:
         assert result.workshop_id == "999"
         assert result.source == "steam_db"
 
+    # jscpd:ignore-start
     def test_about_xml_match(self, tmp_path: Path) -> None:
         parent_path = tmp_path / "parent"
         about_dir = parent_path / "About"
@@ -101,6 +102,7 @@ class TestResolveDependencyWorkshopId:
   <modDependencies>
     <li>
       <packageId>author.fromabout</packageId>
+# jscpd:ignore-end
       <steamWorkshopUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=55555</steamWorkshopUrl>
     </li>
   </modDependencies>

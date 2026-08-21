@@ -88,12 +88,15 @@ exclude = ['venv', '.venv', 'submodules']
 module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot', 'zstandard']
 ignore_missing_imports = true
 
-[tool.ruff]
-# Defaults to Black like
-line-length = 88
-indent-width = 4
-lint.extend-select = ["I"]
-exclude = ["submodules"]
+ [tool.ruff]
+ # Defaults to Black like
+ line-length = 88
+ indent-width = 4
+ lint.extend-select = ["I"]
+ # E402 (import not at top of file) is intentionally allowed: several standalone
+ # test scripts do sys.path.insert(...) before importing app.* for direct runs.
+ lint.extend-ignore = ["E402"]
+ exclude = ["submodules"]
 
 [tool.ruff.format]
 quote-style = "double"

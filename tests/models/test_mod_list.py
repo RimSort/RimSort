@@ -498,7 +498,7 @@ class TestFromModsConfig:
             }
         )
         config = _config("1.5", ["author.mod_steam"])
-        mod_list, missing = ModList.from_mods_config(config, mc)
+        mod_list, _missing = ModList.from_mods_config(config, mc)
         assert len(mod_list) == 1
         assert mod_list[0].path == "/workshop/mymod"
         assert mod_list[0].config_id == "author.mod_steam"
@@ -511,7 +511,7 @@ class TestFromModsConfig:
             }
         )
         config = _config("1.5", ["ludeon.rimworld"])
-        mod_list, missing = ModList.from_mods_config(config, mc)
+        mod_list, _missing = ModList.from_mods_config(config, mc)
         assert mod_list[0].path == "/game/Data/Core"
 
     def test_no_suffix_fallback_to_local(self) -> None:
@@ -522,7 +522,7 @@ class TestFromModsConfig:
             }
         )
         config = _config("1.5", ["author.mod"])
-        mod_list, missing = ModList.from_mods_config(config, mc)
+        mod_list, _missing = ModList.from_mods_config(config, mc)
         assert mod_list[0].path == "/local/mymod"
 
     def test_no_suffix_prefers_git_over_workshop(self) -> None:
@@ -540,7 +540,7 @@ class TestFromModsConfig:
             }
         )
         config = _config("1.5", ["author.mod"])
-        mod_list, missing = ModList.from_mods_config(config, mc)
+        mod_list, _missing = ModList.from_mods_config(config, mc)
         assert mod_list[0].path == "/local/mymod"
 
     def test_preserves_order(self) -> None:

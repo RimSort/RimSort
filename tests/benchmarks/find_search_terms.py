@@ -2,7 +2,6 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
-from typing import Optional, Tuple
 from xml.etree.ElementTree import ParseError
 
 
@@ -41,8 +40,8 @@ def extract_text_from_xml(file_path: str) -> list[str]:
 
 
 def analyze_terms(
-    mods_path: str, sample_size: Optional[int] = 100
-) -> Tuple[dict[str, int], list[str], list[str]]:
+    mods_path: str, sample_size: int | None = 100
+) -> tuple[dict[str, int], list[str], list[str]]:
     """analyze xml files to find common and rare terms"""
     # get list of xml files
     xml_files = find_xml_files(mods_path)

@@ -14,7 +14,7 @@ from __future__ import annotations
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import Qt
@@ -69,7 +69,7 @@ def export_to_csv(panel: BaseModsPanel) -> None:
             EXPORT_FILESYSTEM_ERROR.format(e=str(e)),
             "Export File System Error",
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         _handle_csv_export_error(
             panel,
             EXPORT_UNKNOWN_ERROR,
@@ -78,7 +78,7 @@ def export_to_csv(panel: BaseModsPanel) -> None:
         )
 
 
-def _prepare_csv_export(panel: BaseModsPanel) -> Optional[str]:
+def _prepare_csv_export(panel: BaseModsPanel) -> str | None:
     """
     Prepare CSV export by prompting user for file path and validating it.
 
@@ -101,7 +101,7 @@ def _prepare_csv_export(panel: BaseModsPanel) -> Optional[str]:
     file_path = show_dialogue_file(
         mode="save",
         caption="Export to CSV",
-        _dir=f"workshop_items_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        _dir=f"workshop_items_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",  # noqa: DTZ005
         _filter="CSV Files (*.csv)",
     )
     if not file_path:
@@ -118,9 +118,9 @@ def _prepare_csv_export(panel: BaseModsPanel) -> Optional[str]:
     try:
         with open(file_path, "w", newline="", encoding="utf-8"):
             pass  # Just test file opening, don't write anything
-    except PermissionError:
+    except PermissionError:  # noqa: TRY203
         raise
-    except OSError:
+    except OSError:  # noqa: TRY203
         raise
 
     return file_path
@@ -184,21 +184,16 @@ def _write_csv_metadata(panel: BaseModsPanel, writer: Any) -> None:
     model = _get_table_model(panel)
 
     writer.writerow(["RimSort Workshop Items Export"])
-    writer.writerow([f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
+    writer.writerow([f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])  # noqa: DTZ005
     writer.writerow([f"Total Items: {model.rowCount()}"])
 
     # Add SteamCMD ACF path if available (AcfLogReader has this)
     acf_path = None
-    if hasattr(panel, "metadata_controller") and hasattr(
-        panel.metadata_controller, "steamcmd_wrapper"
-    ):
-        acf_path = getattr(
-            panel.metadata_controller.steamcmd_wrapper,
-            "steamcmd_appworkshop_acf_path",
-            None,
-        )
-    elif hasattr(panel, "metadata_controller") and hasattr(
-        panel.metadata_controller, "steamcmd_wrapper"
+    if (
+        hasattr(panel, "metadata_controller")
+        and hasattr(panel.metadata_controller, "steamcmd_wrapper")
+        or hasattr(panel, "metadata_controller")
+        and hasattr(panel.metadata_controller, "steamcmd_wrapper")
     ):
         acf_path = getattr(
             panel.metadata_controller.steamcmd_wrapper,
@@ -264,7 +259,7 @@ def _handle_csv_export_error(
     panel: BaseModsPanel,
     message: str,
     title: str,
-    details: Optional[str] = None,
+    details: str | None = None,
 ) -> None:
     """
     Handle CSV export errors with logging and user notification.

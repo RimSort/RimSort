@@ -1,5 +1,5 @@
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -96,7 +96,7 @@ def test_tags(temp_db: AuxMetadataController) -> None:
         # Ensure unique constraint is enforced
         try:
             session.commit()
-        except Exception:
+        except Exception:  # noqa: BLE001
             session.rollback()
         else:
             assert False

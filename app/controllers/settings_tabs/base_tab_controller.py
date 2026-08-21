@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from app.models.settings import Settings
 from app.views.settings_dialog import SettingsDialog
@@ -18,8 +18,8 @@ class BaseTabController(ABC):
         self,
         settings: Settings,
         dialog: SettingsDialog,
-        last_file_dialog_path: Optional[str] = None,
-        on_path_selected: Optional[Callable[[str], None]] = None,
+        last_file_dialog_path: str | None = None,
+        on_path_selected: Callable[[str], None] | None = None,
     ) -> None:
         self.settings = settings
         self.dialog = dialog

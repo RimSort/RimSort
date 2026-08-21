@@ -1,4 +1,5 @@
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 
 def recursively_update_dict(
@@ -41,5 +42,4 @@ def recursively_update_dict(
     for key in keys_to_delete:
         del a_dict[key]
     for key in purge_keys:
-        if key in a_dict:
-            del a_dict[key]
+        a_dict.pop(key, None)

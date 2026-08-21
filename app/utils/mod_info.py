@@ -207,7 +207,7 @@ class ModInfo:
         """Parse mod name from metadata with fallbacks."""
         try:
             return metadata.get("name", metadata.get("steamName", ""))
-        except Exception:
+        except Exception:  # noqa: BLE001
             return UNKNOWN
 
     @staticmethod
@@ -220,7 +220,7 @@ class ModInfo:
             elif isinstance(authors, str):
                 return authors
             return UNKNOWN
-        except Exception:
+        except Exception:  # noqa: BLE001
             return UNKNOWN
 
     @staticmethod

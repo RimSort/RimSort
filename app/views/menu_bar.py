@@ -1,7 +1,7 @@
 import os
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Callable
 
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence

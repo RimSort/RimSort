@@ -1,8 +1,8 @@
 import gzip
 import os
-import xml.dom.minidom as minidom
 import xml.etree.ElementTree as ET
 from typing import Any
+from xml.dom import minidom
 
 import zstandard as zstd
 from bs4 import BeautifulSoup
@@ -102,7 +102,7 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
             tree = ET.parse(f)
             root = tree.getroot()
             data = etree_to_dict(root)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         # If ET parsing fails, attempt parsing with BeautifulSoup
         logger.debug(f"Error parsing XML file with xml.etree.ElementTree: {e}")
         logger.debug("Trying to parse with BeautifulSoup as a fallback")
@@ -117,7 +117,7 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
                     empty_tag.extract()
                 # Convert the BeautifulSoup object to a dictionary
                 data = bs4_to_dict(soup)
-        except Exception as e2:
+        except Exception as e2:  # noqa: BLE001
             logger.debug(f"Error parsing XML file with BeautifulSoup: {e2}")
             logger.error(f"Error parsing XML file: {path}")
             return data
@@ -147,7 +147,7 @@ def json_to_xml_write(
             f.write(reparsed.toprettyxml(indent="  ", encoding=None))
     except Exception as e:
         if raise_errs:
-            raise e
+            raise
         logger.error(f"Error writing XML file: {e}")
         return
 
@@ -191,7 +191,7 @@ def extract_xml_package_ids(path: str) -> set[str]:
 
         return package_ids
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error running XML package id extraction: {e}")
         return set()
 
@@ -237,7 +237,7 @@ def fast_rimworld_xml_save_validation(path: str) -> bool:
                     return False
 
                 elem.clear()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error running RimWorld XML save validation: {e}")
         return False
 
@@ -254,7 +254,7 @@ def using_gzip(fp: str) -> bool:
     try:
         with open(fp, "rb") as f:
             return f.read(2) == b"\x1f\x8b"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed checking if save file is using gzip: {e}")
         return False
 
@@ -269,7 +269,7 @@ def using_zstd(fp: str) -> bool:
     try:
         with open(fp, "rb") as f:
             return f.read(4) == b"\x28\xb5\x2f\xfd"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed checking if save file is using zstd: {e}")
         return False
 

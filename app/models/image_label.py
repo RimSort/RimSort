@@ -11,7 +11,7 @@ class ImageLabel(QLabel):
 
     def __init__(self) -> None:
         """Initialize QLabel normally."""
-        super(ImageLabel, self).__init__()
+        super().__init__()
         self._original_pixmap: QPixmap | None = None
 
     def setPixmap(self, pixmap: QPixmap | QImage) -> None:
@@ -52,5 +52,5 @@ class ImageLabel(QLabel):
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
-            super(ImageLabel, self).setPixmap(scaled_pixmap)
+            super().setPixmap(scaled_pixmap)
         return super().resizeEvent(event)

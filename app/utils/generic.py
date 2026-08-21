@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 import webbrowser
+from collections.abc import Callable, Generator
 from datetime import datetime
 from errno import EACCES
 from io import TextIOWrapper
@@ -11,7 +12,7 @@ from pathlib import Path
 from re import search, sub
 from stat import S_IRWXG, S_IRWXO, S_IRWXU
 from time import localtime, strftime
-from typing import Any, Callable, Generator
+from typing import Any
 
 import requests
 import vdf  # type: ignore
@@ -19,10 +20,10 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
-import app.views.dialogue as dialogue
 from app.utils import http
 from app.utils.launch_command_parser import parse_launch_command
 from app.utils.platform.windows import scanpath_win32
+from app.views import dialogue
 
 translate = QCoreApplication.translate
 
@@ -47,7 +48,7 @@ def copy_to_clipboard_safely(text: str) -> None:
     try:
         clipboard = QApplication.clipboard()
         clipboard.setText(text)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to copy to clipboard: {e}")
         dialogue.show_fatal_error(
             title=translate("copy_to_clipboard_safely", "Failed to copy to clipboard."),
@@ -136,7 +137,7 @@ def delete_files_with_condition(
     for root, dirs, files in os.walk(directory):
         for file in files:
             if condition(file):
-                file_path = str((Path(root) / file))
+                file_path = str(Path(root) / file)
                 try:
                     os.remove(file_path)
                 except OSError as e:
@@ -146,7 +147,7 @@ def delete_files_with_condition(
 
     for root, dirs, _ in os.walk(directory, topdown=False):
         for _dir in dirs:
-            dir_path = str((Path(root) / _dir))
+            dir_path = str(Path(root) / _dir)
             if not os.listdir(dir_path):
                 shutil.rmtree(
                     dir_path,
@@ -203,20 +204,23 @@ def directories(mods_path: Path | str) -> list[str]:
 def attempt_chmod(
     func: Callable[[str], Any], path: str, excinfo: BaseException
 ) -> bool:
-    if excinfo is not None and isinstance(excinfo, OSError):
-        if (
+    if (
+        excinfo is not None
+        and isinstance(excinfo, OSError)
+        and (
             func in (os.rmdir, os.remove, os.unlink, os.listdir)
             and excinfo.errno == EACCES
-        ):
-            os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
-            try:
-                func(path)
-                return True
-            except Exception as e:
-                logger.warning(
-                    f"attempt_chmod for {func.__name__} double failure at {path}: {e}"
-                )
-                return False
+        )
+    ):
+        os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
+        try:
+            func(path)
+            return True
+        except Exception as e:  # noqa: BLE001
+            logger.warning(
+                f"attempt_chmod for {func.__name__} double failure at {path}: {e}"
+            )
+            return False
 
     return False
 
@@ -234,7 +238,7 @@ def handle_remove_read_only(
             os.chmod(path, S_IRWXU | S_IRWXG | S_IRWXO)  # 0777
             func(path)
         else:
-            raise
+            raise  # noqa: PLE0704
 
 
 def get_executable_path(game_install_path: Path) -> str | None:
@@ -497,7 +501,7 @@ def platform_specific_open(path: str | Path) -> None:
                 # Try to open with notepad as fallback
                 try:
                     subprocess.Popen(["notepad.exe", path])
-                except Exception as notepad_error:
+                except Exception as notepad_error:  # noqa: BLE001
                     logger.error(f"Failed to open with notepad: {notepad_error}")
                     dialogue.show_warning(
                         title="Failed to open file",
@@ -673,7 +677,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
         if not library_folders:
             return ""
         # Find 294100 (RimWorld)
-        for _, folder in library_folders.items():
+        for folder in library_folders.values():
             if "294100" in folder.get("apps", {}):
                 rimworld_path = folder.get("path", "")
                 break
@@ -690,7 +694,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
         try:
             with open(steam_folder / primary_library, "r") as f:
                 rimworld_path = __load_data(f)
-        except Exception:
+        except Exception:  # noqa: BLE001
             logger.warning(f"Failed to parse {primary_library}", exc_info=True)
             return rimworld_path
     elif os.path.exists(steam_folder / backup_library):
@@ -698,7 +702,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
         try:
             with open(steam_folder / backup_library, "r") as f:
                 rimworld_path = __load_data(f)
-        except Exception:
+        except Exception:  # noqa: BLE001
             logger.warning(f"Failed to parse {backup_library}", exc_info=True)
             return rimworld_path
     else:
@@ -772,8 +776,8 @@ def get_relative_time(timestamp: int) -> str:
         str: Human-readable relative time string, or "Invalid timestamp" if conversion fails.
     """
     try:
-        dt = datetime.fromtimestamp(timestamp)
-        now = datetime.now()
+        dt = datetime.fromtimestamp(timestamp)  # noqa: DTZ006
+        now = datetime.now()  # noqa: DTZ005
         delta = now - dt
 
         if delta.days > 365:

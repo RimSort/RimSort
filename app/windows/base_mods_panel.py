@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Any, Callable, Sequence, TypeVar
+from typing import Any, TypeVar
 
 from loguru import logger
 from PySide6.QtCore import QEvent, QObject, Qt
@@ -247,11 +248,11 @@ class BaseModsPanel(QWidget):
 
     def _setup_table(self, additional_columns: Sequence[HeaderColumn]) -> None:
         """Set up the table configuration."""
-        pass  # Table setup is already done in _setup_ui
+        # Table setup is already done in _setup_ui
 
     def _setup_buttons(self) -> None:
         """Set up buttons if needed."""
-        pass  # Buttons are set up in _setup_ui
+        # Buttons are set up in _setup_ui
 
     def _initialize_components(self) -> None:
         """Initialize core components."""
@@ -569,7 +570,7 @@ class BaseModsPanel(QWidget):
                     if mod_path and os.path.exists(mod_path):
                         try:
                             shutil.rmtree(mod_path)
-                        except Exception as e:
+                        except Exception as e:  # noqa: BLE001
                             logger.error(
                                 f"Error deleting mod directory {mod_path}: {e}"
                             )
@@ -842,7 +843,7 @@ class BaseModsPanel(QWidget):
                 return None
 
             return name_item.data(Qt.ItemDataRole.UserRole)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Error accessing key from row {row}: {e}")
             return None
 
@@ -882,7 +883,7 @@ class BaseModsPanel(QWidget):
                             if isinstance(mod, AboutXmlMod):
                                 compat["packageid"] = str(mod.package_id)
                             selected_mods.append(compat)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Error getting selected mod metadata: {e}")
         return selected_mods
 
@@ -957,7 +958,7 @@ class BaseModsPanel(QWidget):
 
     def _add_mod_row(
         self,
-        mod_info: "ModInfo",
+        mod_info: ModInfo,
         additional_items: list[QStandardItem] | None = None,
         default_checkbox_state: bool = False,
     ) -> None:

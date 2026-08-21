@@ -1,7 +1,8 @@
 import os
+from collections.abc import Sequence
 from platform import system
 from re import compile, search
-from typing import TYPE_CHECKING, Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -44,8 +45,8 @@ class RunnerPanel(QWidget):
     def __init__(
         self,
         todds_dry_run_support: bool = False,
-        steamcmd_download_tracking: Optional[list[str]] = None,
-        steam_db: Optional[dict[str, Any]] = None,
+        steamcmd_download_tracking: list[str] | None = None,
+        steam_db: dict[str, Any] | None = None,
         auto_close_on_complete: bool = False,
     ):
         """
@@ -76,18 +77,18 @@ class RunnerPanel(QWidget):
         self.process_last_output = ""
         self.process_last_command = ""
         self.process_last_args: Sequence[str] = []
-        self.steamcmd_current_pfid: Optional[str] = None
+        self.steamcmd_current_pfid: str | None = None
         self.login_error = False
         self.redownloading = False
 
         # Batch-download state (populated by SteamcmdInterface.download_mods)
         self._pending_steamcmd_batches: list[list[str]] = []
         self._steamcmd_executable: str = ""
-        self._steamcmd_wrapper: Optional["SteamcmdInterface"] = None
+        self._steamcmd_wrapper: SteamcmdInterface | None = None
         self._steamcmd_batch_index: int = 1  # 1-based; first batch already sent
 
         # SteamCMD console_log.txt tail (live logs on Windows)
-        self._steamcmd_log_timer: Optional[QTimer] = None
+        self._steamcmd_log_timer: QTimer | None = None
         self._steamcmd_log_offset: int = 0
         self._steamcmd_log_partial: str = ""
         self._steamcmd_console_log_path: str = ""
@@ -254,7 +255,7 @@ class RunnerPanel(QWidget):
             if self._is_process_running("steamcmd"):
                 self._stop_steamcmd_log_tail()
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error killing process: {e}")
             # Try direct kill as fallback
             self.process.kill()
@@ -298,10 +299,10 @@ class RunnerPanel(QWidget):
                 with open(file_path, "w", encoding="utf-8") as outfile:
                     outfile.write(self.text.toPlainText())
                 logger.info("Output successfully saved")
-            except IOError as e:
+            except OSError as e:
                 logger.error(f"Error writing to file: {e}")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Unexpected error in save operation: {e}")
 
     def change_progress_bar_color(self, state: str) -> None:
@@ -313,7 +314,7 @@ class RunnerPanel(QWidget):
         self,
         command: str,
         args: Sequence[str],
-        progress_bar: Optional[int] = None,
+        progress_bar: int | None = None,
     ) -> None:
         """
         Execute the given command in a new terminal-like GUI
@@ -345,10 +346,9 @@ class RunnerPanel(QWidget):
         if progress_bar is not None:
             self.progress_bar.show()
             self.progress_bar.setValue(0)
-            if progress_bar > 0:
-                if "steamcmd" in command:
-                    self.progress_bar.setRange(0, progress_bar)
-                    self.progress_bar.setFormat("%v/%m")
+            if progress_bar > 0 and "steamcmd" in command:
+                self.progress_bar.setRange(0, progress_bar)
+                self.progress_bar.setFormat("%v/%m")
 
         # Display command being executed (unless in dry run mode)
         if not self.todds_dry_run_support:
@@ -584,7 +584,7 @@ class RunnerPanel(QWidget):
             line,
         )
         if match:
-            operation, pagination, start, end = match.groups()
+            _operation, _pagination, start, end = match.groups()
             self.progress_bar.setRange(0, int(end))
             self.progress_bar.setValue(int(start))
             return True
@@ -747,7 +747,7 @@ class RunnerPanel(QWidget):
                         mod_title = mod_metadata.get("title")
                         if mod_title:
                             pfids_to_name[mod_metadata["publishedfileid"]] = mod_title
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Error fetching mod details from Steam API: {e}")
 
         return pfids_to_name

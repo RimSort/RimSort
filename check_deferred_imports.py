@@ -22,8 +22,14 @@ ALLOWED: set[str] = {
     "app/utils/github/installer.py: from app.utils import http",
     "app/utils/github/installer.py: from app.utils import git_utils",
     "app/utils/github/installer.py: from app.utils.git_utils import GitOperationConfig",
+    # Genuine circular / heavy import: pygit2 is heavy and kept out of module scope
+    "app/utils/github/installer.py: from app.utils.pygit2_loader import pygit2",
+    # Genuine circular: generic → privatebin → app_info chain; keep deferred
+    "app/utils/generic.py: from app.utils.privatebin import upload_to_privatebin",
     # Window import is heavy; TYPE_CHECKING also covers the type
     "app/controllers/main_content_controller.py: from app.windows.github_mods_panel import GitHubModsPanel",
+    # View dialog import is deferred to avoid a circular import chain
+    "app/controllers/main_content_controller.py: from app.views.download_rimworld_dialog import DownloadRimWorldDialog",
     # Genuine circular: settings_dialog ↔ language_controller
     "app/views/settings_dialog.py: from app.controllers.language_controller import LanguageController",
     # Platform-guarded: find_steam_folder only defined on win32
@@ -41,7 +47,7 @@ def _normalise(line: str) -> str:
 def _import_key(file_rel: str, node: ast.AST) -> str | None:
     if isinstance(node, ast.Import):
         names = [a.name for a in node.names]
-        app_names = [n for n in names if n.startswith("app") or n.startswith("app.")]
+        app_names = [n for n in names if n.startswith(("app", "app."))]
         if not app_names:
             return None
         return f"{file_rel}: import {', '.join(sorted(app_names))}"
@@ -86,7 +92,7 @@ def main() -> int:
         try:
             errors = check_file(path)
             all_errors.extend(errors)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"Error scanning {path}: {exc}", file=sys.stderr)
             return 1
 

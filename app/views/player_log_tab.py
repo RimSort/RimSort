@@ -2,9 +2,9 @@ import gc
 import os
 import re
 from collections import deque
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Deque, List, Optional, Tuple
 
 from loguru import logger
 from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QTimer, Signal
@@ -95,7 +95,7 @@ class LogPatternManager:
     )
 
     @classmethod
-    def get_highlight_patterns(cls) -> List[Tuple[re.Pattern[str], str]]:
+    def get_highlight_patterns(cls) -> list[tuple[re.Pattern[str], str]]:
         """Get all patterns for syntax highlighting with their priority order."""
         return [
             (cls.TIMESTAMP_PATTERN, "timestamp"),
@@ -111,7 +111,7 @@ class LogPatternManager:
         ]
 
     @classmethod
-    def get_filter_pattern(cls, filter_name: str) -> Optional[re.Pattern[str]]:
+    def get_filter_pattern(cls, filter_name: str) -> re.Pattern[str] | None:
         """Get pattern for specific filter type."""
         patterns = {
             "info": cls.INFO_FILTER_PATTERN,
@@ -128,7 +128,7 @@ class LogContentStorage:
     """Memory-efficient storage for log content using chunked storage."""
 
     def __init__(self, max_chunk_size: int = 1024 * 1024):  # 1MB chunks by default
-        self.chunks: Deque[str] = deque()
+        self.chunks: deque[str] = deque()
         self.max_chunk_size = max_chunk_size
         self.total_size = 0
         self.line_count = 0
@@ -140,7 +140,7 @@ class LogContentStorage:
 
         # Use a list to collect lines for more efficient string building
         lines = content.splitlines(keepends=True)
-        current_chunk_lines: List[str] = []
+        current_chunk_lines: list[str] = []
         current_chunk_size = 0
 
         for line in lines:
@@ -190,9 +190,7 @@ class LogContentStorage:
         """Get the full content as a string (use sparingly)."""
         return "".join(self.chunks)
 
-    def get_lines(
-        self, start_line: int = 0, end_line: Optional[int] = None
-    ) -> List[str]:
+    def get_lines(self, start_line: int = 0, end_line: int | None = None) -> list[str]:
         """Get specific lines efficiently without loading entire content."""
         lines = []
         current_line = 0
@@ -231,8 +229,8 @@ class LogHighlighter(QSyntaxHighlighter):
         self.search_format = QTextCharFormat()
         self.search_format.setBackground(QColor("#005500"))
 
-        self.search_term: Optional[str] = None
-        self._search_regex: Optional[re.Pattern[str]] = None  # Cache compiled regex
+        self.search_term: str | None = None
+        self._search_regex: re.Pattern[str] | None = None  # Cache compiled regex
 
         # Define patterns with priority (higher index = higher priority)
         # Use patterns from LogPatternManager for consistency
@@ -254,7 +252,7 @@ class LogHighlighter(QSyntaxHighlighter):
         self.search_format.setBackground(color)
         self.rehighlight()
 
-    def set_search_term(self, term: Optional[str]) -> None:
+    def set_search_term(self, term: str | None) -> None:
         """Set the current search term and compile regex for highlighting."""
         self.search_term = term
         if term:
@@ -280,7 +278,7 @@ class LogHighlighter(QSyntaxHighlighter):
                 for match in self._search_regex.finditer(text):
                     start, end = match.span()
                     self.setFormat(start, end - start, self.search_format)
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
         # Apply other patterns
         for pattern, fmt in self.patterns:
@@ -290,7 +288,7 @@ class LogHighlighter(QSyntaxHighlighter):
 
 
 class PlayerLogTab(QWidget):
-    matches: List[QTextCursor]
+    matches: list[QTextCursor]
     last_log_size: int
     total_lines_label: QPushButton
     info_label: QPushButton
@@ -319,7 +317,7 @@ class PlayerLogTab(QWidget):
     def __init__(self, settings: Settings) -> None:
         super().__init__()
         self.settings = settings
-        self.player_log_path: Optional[Path] = None
+        self.player_log_path: Path | None = None
         self.log_storage = LogContentStorage()  # Use new memory-efficient storage
         self.current_log_content: str = ""
         self.filtered_content: str = ""
@@ -337,8 +335,8 @@ class PlayerLogTab(QWidget):
         self.current_match_index: int = -1
         self.matches = []
         self.last_log_size: int = 0
-        self._last_nav_pattern: Optional[str] = None
-        self._pattern_matches_cache: dict[str, List[QTextCursor]] = {}
+        self._last_nav_pattern: str | None = None
+        self._pattern_matches_cache: dict[str, list[QTextCursor]] = {}
         self._pattern_regex_cache: dict[str, QRegularExpression] = {}
 
         self.bookmarked_lines: set[int] = set()  # Store line numbers of bookmarks
@@ -357,7 +355,7 @@ class PlayerLogTab(QWidget):
         # Delay loading the log by 5 seconds after initialization
         QTimer.singleShot(5000, self._delayed_load_log)
 
-    def _collapse_repeated_lines(self, lines: List[str]) -> List[str]:
+    def _collapse_repeated_lines(self, lines: list[str]) -> list[str]:
         """Collapse consecutive repeated lines into a single line with a count."""
         if not lines:
             return []
@@ -427,14 +425,14 @@ class PlayerLogTab(QWidget):
         self.log_display.setTextCursor(cursor)
         self.log_display.ensureCursorVisible()
 
-    def _get_player_log_path(self) -> Optional[Path]:
+    def _get_player_log_path(self) -> Path | None:
         try:
             current_instance: str = self.settings.current_instance
             config_folder: str = self.settings.instances[current_instance].config_folder
             player_log_path: Path = Path(config_folder).parent / "Player.log"
             if player_log_path.exists():
                 return player_log_path
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
         return None
 
@@ -916,8 +914,8 @@ class PlayerLogTab(QWidget):
             self._update_file_info()
             self._update_statistics()
             self.apply_filter(new_content)
-        except Exception as e:
-            logger.error(f"Error reading appended log content: {str(e)}")
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"Error reading appended log content: {e!s}")
             self._file_change_debounce_timer.start()  # Restart the debounce timer on error
 
     file_changed_signal = Signal()
@@ -949,7 +947,7 @@ class PlayerLogTab(QWidget):
                 self.real_time_monitor_checkbox.setChecked(False)
                 return
             # Stop existing observer if any before creating a new one
-            if hasattr(self, "_observer") and self._observer is not None:
+            if hasattr(self, "_observer") and self._observer is not None:  # noqa: SIM102
                 if self._observer.is_alive():
                     logger.debug("Stopping existing observer before starting new one.")
                     self._observer.stop()
@@ -964,7 +962,7 @@ class PlayerLogTab(QWidget):
                 logger.info(
                     f"Started real-time monitoring of Player.log at {self.player_log_path}"
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to start observer: {e}")
                 show_warning(f"Failed to start real-time monitoring: {e}")
                 self.real_time_monitor_checkbox.setChecked(False)
@@ -1058,7 +1056,7 @@ class PlayerLogTab(QWidget):
             logger.info(
                 "Loaded player log file in chunks using memory-efficient storage."
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to load player log file: {e}")
             self.progress_bar.hide()
             self.enable_options()
@@ -1105,7 +1103,7 @@ class PlayerLogTab(QWidget):
                 return f"{size:.1f} PB"
 
             size_str = format_size(size_bytes)
-            modified_str = datetime.fromtimestamp(modified_time).strftime(
+            modified_str = datetime.fromtimestamp(modified_time).strftime(  # noqa: DTZ006
                 "%Y-%m-%d %H:%M:%S"
             )
 
@@ -1118,7 +1116,7 @@ class PlayerLogTab(QWidget):
             self.last_modified_label.setText(
                 self.tr("Modified: {modified_str}").format(modified_str=modified_str)
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Failed to update file info: {e}")
 
     def _update_match_count(self) -> None:
@@ -1189,7 +1187,7 @@ class PlayerLogTab(QWidget):
             )
         return self._pattern_regex_cache[pattern]
 
-    def _get_cached_matches(self, pattern: str) -> List[QTextCursor]:
+    def _get_cached_matches(self, pattern: str) -> list[QTextCursor]:
         """Get cached matches for a pattern or find and cache them."""
         if pattern not in self._pattern_matches_cache:
             regex = self._get_cached_regex(pattern)
@@ -1212,7 +1210,7 @@ class PlayerLogTab(QWidget):
 
         return self._pattern_matches_cache[pattern]
 
-    def _clear_pattern_cache(self, pattern: Optional[str] = None) -> None:
+    def _clear_pattern_cache(self, pattern: str | None = None) -> None:
         """Clear cached matches for a specific pattern or all patterns."""
         if pattern:
             self._pattern_matches_cache.pop(pattern, None)
@@ -1250,7 +1248,7 @@ class PlayerLogTab(QWidget):
                 # Update visual feedback
                 self._update_navigation_feedback(pattern, len(matches))
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error in goto_previous_pattern: {e}")
             self._clear_pattern_cache(pattern)
 
@@ -1282,7 +1280,7 @@ class PlayerLogTab(QWidget):
                 # Update visual feedback
                 self._update_navigation_feedback(pattern, len(matches))
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error in goto_next_pattern: {e}")
             self._clear_pattern_cache(pattern)
 
@@ -1359,7 +1357,7 @@ class PlayerLogTab(QWidget):
                     title=self.tr("Log loaded successfully from URL"),
                     text=f"{url}",
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 show_warning(
                     title=self.tr("Failed to load log from URL"),
                     text=self.tr("Failed due to error: {error}").format(error=e),
@@ -1379,7 +1377,7 @@ class PlayerLogTab(QWidget):
                 show_information(f"Log exported to {file_path}")
             except OSError as e:
                 show_warning(f"Failed to export log: {e.strerror}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 show_warning(f"Failed to export log: {type(e).__name__}: {e}")
 
     def show_context_menu(self, pos: QPoint) -> None:
@@ -1494,36 +1492,28 @@ class PlayerLogTab(QWidget):
         for line in lines:
             if mod_filter and mod_filter.lower() not in line.lower():
                 continue
-            if filter_text == self.tr("All Entries"):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("Infos Only") and self._info_pattern.search(
-                line
-            ):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("Keybinds Only") and keybind_pattern.search(
-                line
-            ):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("Mod Issues") and mod_issue_pattern.search(
-                line
-            ):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("Warnings Only") and warning_pattern.search(
-                line
-            ):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("Errors Only") and error_pattern.search(line):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("Exceptions Only") and exception_pattern.search(
-                line
-            ):
-                filtered_lines.append(line)
-            elif filter_text == self.tr("All Issues") and (
-                keybind_pattern.search(line)
-                or mod_issue_pattern.search(line)
-                or warning_pattern.search(line)
-                or error_pattern.search(line)
-                or exception_pattern.search(line)
+            if (
+                filter_text == self.tr("All Entries")
+                or filter_text == self.tr("Infos Only")
+                and self._info_pattern.search(line)
+                or filter_text == self.tr("Keybinds Only")
+                and keybind_pattern.search(line)
+                or filter_text == self.tr("Mod Issues")
+                and mod_issue_pattern.search(line)
+                or filter_text == self.tr("Warnings Only")
+                and warning_pattern.search(line)
+                or filter_text == self.tr("Errors Only")
+                and error_pattern.search(line)
+                or filter_text == self.tr("Exceptions Only")
+                and exception_pattern.search(line)
+                or filter_text == self.tr("All Issues")
+                and (
+                    keybind_pattern.search(line)
+                    or mod_issue_pattern.search(line)
+                    or warning_pattern.search(line)
+                    or error_pattern.search(line)
+                    or exception_pattern.search(line)
+                )
             ):
                 filtered_lines.append(line)
         # Collapse repeated lines before displaying
@@ -1539,7 +1529,7 @@ class PlayerLogTab(QWidget):
             chunk = self.filtered_content[i : i + chunk_size]
             self.log_display.append(chunk)
             scroll_bar.setValue(old_value)
-            chunk_cnt += 1
+            chunk_cnt += 1  # noqa: SIM113
             progress = (chunk_cnt / total_chunks) * 100
             self.progress_bar.setValue(int(progress))
             QApplication.processEvents()

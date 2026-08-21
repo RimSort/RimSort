@@ -90,7 +90,7 @@ def _rotate_session_logs(log_dir: Path, base_name: str) -> None:
             )
 
 
-def _formatter(record: "loguru_module.Record") -> str:
+def _formatter(record: loguru_module.Record) -> str:
     """Custom formatter for loguru logger with obfuscation and exception support."""
     format_string = "[{level}][{time:YYYY-MM-DD HH:mm:ss}][{process.id}][{thread.name}][{module}][{function}][{line}] : "
     record["extra"]["obfuscated_message"] = _obfuscate_message(record["message"])

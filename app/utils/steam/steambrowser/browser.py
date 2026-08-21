@@ -517,7 +517,7 @@ class SteamBrowser(QWidget):
                 ),
                 information=f"Url: {page_url}",
             )
-            return None
+            return
         self.current_url = page_url
         # Handle collection vs individual mod
         if "collectionItemDetails" not in self.current_html:
@@ -674,7 +674,7 @@ class SteamBrowser(QWidget):
             logger.debug(
                 f"Tried to add duplicate PFID to downloader list: {publishedfileid}"
             )
-            if publishedfileid not in self.downloader_list_dupe_tracking.keys():
+            if publishedfileid not in self.downloader_list_dupe_tracking:
                 if not title:
                     self.downloader_list_dupe_tracking[publishedfileid] = page_title
                 else:
@@ -915,7 +915,7 @@ class SteamBrowser(QWidget):
                 self.web_view.page().runJavaScript(
                     setup_web_channel_script, 0, lambda result: None
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 logger.error(f"Failed to inject workshop badge script: {exc}")
 
             if is_item_page or is_collection_page:
@@ -1077,7 +1077,7 @@ class SteamBrowser(QWidget):
         """Get list of mod IDs added to the download list"""
         added_mods = []
         for modId in self.downloader_list_mods_tracking:
-            added_mods.append(modId)
+            added_mods.append(modId)  # noqa: PERF402
 
         return added_mods
 
@@ -1124,7 +1124,7 @@ class SteamBrowser(QWidget):
                 self.web_view.loadProgress.disconnect()
                 self.web_view.loadFinished.disconnect()
                 self.web_view.urlChanged.disconnect()
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
 
             # Clean up page

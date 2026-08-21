@@ -130,7 +130,7 @@ def parse_mod_list_file(path: str | Path) -> ParsedModList:
             raise ModListFormatError("JSON mod list must be an object")
         return _parse_json_mod_list(data)
 
-    if preview.startswith("<?xml") or preview.startswith("<"):
+    if preview.startswith(("<?xml", "<")):
         try:
             data = xml_path_to_json(str(file_path))
         except Exception as exc:

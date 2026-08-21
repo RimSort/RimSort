@@ -1,7 +1,5 @@
 """Task progress window for downloads, extractions, and other long-running operations."""
 
-from typing import Optional
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QProgressBar, QPushButton, QVBoxLayout, QWidget
 
@@ -51,7 +49,7 @@ class TaskProgressWindow(QWidget):
         layout.setContentsMargins(15, 15, 15, 15)
 
         # Optional status message label
-        self.message_label: Optional[QLabel] = None
+        self.message_label: QLabel | None = None
         if show_message:
             self.message_label = QLabel("")
             self.message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)

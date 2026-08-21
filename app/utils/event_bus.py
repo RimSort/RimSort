@@ -140,7 +140,7 @@ class EventBus(QObject):
     do_toggle_translation_status = Signal(bool)
     do_auto_add_translations = Signal()
 
-    def __new__(cls) -> "EventBus":
+    def __new__(cls) -> "EventBus":  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
 
@@ -148,7 +148,7 @@ class EventBus(QObject):
             EventBus: The singleton instance of the `EventBus` class.
         """
         if cls._instance is None:
-            cls._instance = super(EventBus, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:

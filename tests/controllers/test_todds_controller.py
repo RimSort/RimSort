@@ -76,7 +76,7 @@ class TestGenerateToddsTxt:
             settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
-        path, count = tc.generate_todds_txt()
+        _path, count = tc.generate_todds_txt()
         assert count == 0
 
     def test_active_mods_mode_writes_mod_paths(
@@ -89,7 +89,7 @@ class TestGenerateToddsTxt:
             settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
-        path, count = tc.generate_todds_txt(
+        _path, count = tc.generate_todds_txt(
             active_mod_paths=[settings_controller._test_mod_dir]
         )
         assert count == 1
@@ -104,7 +104,7 @@ class TestGenerateToddsTxt:
             settings=settings_controller.settings,
             metadata_controller=metadata_controller,
         )
-        path, count = tc.generate_todds_txt(
+        _path, count = tc.generate_todds_txt(
             active_mod_paths=[
                 "__divider__test123",
                 settings_controller._test_mod_dir,
