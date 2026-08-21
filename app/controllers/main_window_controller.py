@@ -73,14 +73,23 @@ class MainWindowController(QObject):
             self.metadata_controller, active_mods
         )
 
+        settings = self.main_window.main_content_panel.settings
+        steam_client_integration_enabled = settings.instances[
+            settings.current_instance
+        ].steam_client_integration
         dialog = MissingDependenciesDialog(
-            metadata_controller=self.metadata_controller, parent=self.main_window
+            metadata_controller=self.metadata_controller,
+            parent=self.main_window,
+            steam_client_integration_enabled=steam_client_integration_enabled,
         )
         dialog.download_requested.connect(
             self.main_window.main_content_panel._download_single_workshop_mod
         )
         dialog.download_selected_requested.connect(
             self.main_window.main_content_panel._download_selected_workshop_mods
+        )
+        dialog.download_selected_steam_requested.connect(
+            self.main_window.main_content_panel._download_selected_workshop_mods_via_steam
         )
         selected_deps = dialog.show_dialog(deps_summary, missing_deps, dep_resolve)
 

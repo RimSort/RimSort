@@ -364,6 +364,7 @@ def _extract_mod_links(content: str) -> list[tuple[str, str, str]]:
 class AiAssistantPanel(QDialog):
     _LOADING_INTERVAL_MS = 400
     _BUBBLE_MAX_WIDTH = 420
+    _BUBBLE_MIN_WIDTH = 120
     _BUBBLE_HORIZONTAL_PADDING = 20
     _BUBBLE_VERTICAL_PADDING = 12
     _USER_BUBBLE_STYLE = (
@@ -527,6 +528,10 @@ class AiAssistantPanel(QDialog):
             if key == Qt.Key.Key_Down:
                 self._recall_newer_message()
                 return True
+        if isinstance(watched, QTextBrowser) and event.type() == QEvent.Type.Wheel:
+            # Bubbles are sized to their content; block wheel scroll so it
+            # doesn't silently pan text behind the (hidden) scrollbar.
+            return True
         return super().eventFilter(watched, event)
 
     def _recall_older_message(self) -> None:
@@ -571,16 +576,33 @@ class AiAssistantPanel(QDialog):
             else self._ASSISTANT_SELECTION_COLORS
         )
 
-    def _set_bubble_html(self, bubble: QTextBrowser, html_text: str) -> None:
-        bubble.setHtml(html_text)
+    def _resize_bubble(self, bubble: QTextBrowser) -> int:
+        """Recompute bubble width/height from its document; return the width."""
         doc = bubble.document()
-        doc.setDocumentMargin(0)
-        content_width = self._BUBBLE_MAX_WIDTH - self._BUBBLE_HORIZONTAL_PADDING
+        content_width_max = self._BUBBLE_MAX_WIDTH - self._BUBBLE_HORIZONTAL_PADDING
+        content_width_min = self._BUBBLE_MIN_WIDTH - self._BUBBLE_HORIZONTAL_PADDING
+        doc.setTextWidth(content_width_max)
+        ideal_width = math.ceil(doc.idealWidth())
+        content_width = max(content_width_min, min(content_width_max, ideal_width))
         doc.setTextWidth(content_width)
         doc_height = math.ceil(doc.size().height())
+        bubble_width = content_width + self._BUBBLE_HORIZONTAL_PADDING
+        bubble.setFixedWidth(bubble_width)
         bubble.setFixedHeight(doc_height + self._BUBBLE_VERTICAL_PADDING + 4)
+        bubble.setProperty("bubble_width", bubble_width)
+        return bubble_width
 
-    def _make_bubble(self, role: str, html_text: str) -> QTextBrowser:
+    def _set_bubble_html(self, bubble: QTextBrowser, html_text: str) -> int:
+        bubble.setHtml(html_text)
+        bubble.document().setDocumentMargin(0)
+        width = self._resize_bubble(bubble)
+        # Recompute after the event loop settles the layout, which fixes
+        # clipping that setTextWidth's own layout pass sometimes misses on
+        # long paragraphs.
+        QTimer.singleShot(0, lambda: self._resize_bubble(bubble))
+        return width
+
+    def _make_bubble(self, role: str, html_text: str) -> tuple[QTextBrowser, int]:
         browser = QTextBrowser()
         browser.setFrameShape(QFrame.Shape.NoFrame)
         browser.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -590,7 +612,6 @@ class AiAssistantPanel(QDialog):
             Qt.TextInteractionFlag.TextSelectableByMouse
             | Qt.TextInteractionFlag.LinksAccessibleByMouse
         )
-        browser.setMaximumWidth(self._BUBBLE_MAX_WIDTH)
         browser.setStyleSheet(
             self._bubble_style(role) + " QTextBrowser { border: none; }"
         )
@@ -604,8 +625,9 @@ class AiAssistantPanel(QDialog):
         browser.customContextMenuRequested.connect(
             partial(self._on_bubble_context_menu, browser)
         )
-        self._set_bubble_html(browser, html_text)
-        return browser
+        browser.installEventFilter(self)
+        width = self._set_bubble_html(browser, html_text)
+        return browser, width
 
     def _on_bubble_link_clicked(self, url: QUrl) -> None:
         self._toggle_mod_link(url.toString())
@@ -654,7 +676,7 @@ class AiAssistantPanel(QDialog):
         timestamp: str = "",
         mod_links: list[tuple[str, str, str]] | None = None,
     ) -> QTextBrowser:
-        bubble = self._make_bubble(role, html_text)
+        bubble, bubble_width = self._make_bubble(role, html_text)
         timestamp_label = self._make_timestamp_label(timestamp) if timestamp else None
         row = QWidget()
         row_layout = QHBoxLayout(row)
@@ -673,7 +695,7 @@ class AiAssistantPanel(QDialog):
         if mod_links:
             for label, pfid, _url in mod_links:
                 self._register_mod_link(pfid, label)
-            buttons_row = self._make_mod_link_buttons_row(mod_links)
+            buttons_row = self._make_mod_link_buttons_row(mod_links, bubble_width)
             self._history_layout.insertWidget(
                 self._history_layout.count() - 1, buttons_row
             )
@@ -696,12 +718,21 @@ class AiAssistantPanel(QDialog):
             return pfid
         return title
 
-    def _elided_mod_label(self, pfid: str, *, button: QPushButton | None = None) -> str:
+    def _elided_mod_label(
+        self,
+        pfid: str,
+        *,
+        button: QPushButton | None = None,
+        width: int | None = None,
+    ) -> str:
         label = self._display_mod_label(pfid)
         font = button.font() if button is not None else self.font()
         metrics = QFontMetrics(font)
         prefix_width = metrics.horizontalAdvance("+ ")
-        max_width = self._BUBBLE_MAX_WIDTH - prefix_width - 16
+        if width is None:
+            stored = button.property("bubble_width") if button is not None else None
+            width = stored if isinstance(stored, int) else self._BUBBLE_MAX_WIDTH
+        max_width = width - prefix_width - 16
         return metrics.elidedText(label, Qt.TextElideMode.ElideRight, max_width)
 
     def _queue_mod_title_fetch(self, pfid: str) -> None:
@@ -723,13 +754,16 @@ class AiAssistantPanel(QDialog):
         if self._download_list.has_mod(pfid):
             self._download_list.set_item_title(pfid, title)
 
-    def _make_mod_toggle_button(self, pfid: str) -> QPushButton:
+    def _make_mod_toggle_button(self, pfid: str, width: int) -> QPushButton:
         added = self._download_list.has_mod(pfid)
-        button = QPushButton(("✓ " if added else "+ ") + self._elided_mod_label(pfid))
+        button = QPushButton(
+            ("✓ " if added else "+ ") + self._elided_mod_label(pfid, width=width)
+        )
         button.setProperty("mod_pfid", pfid)
+        button.setProperty("bubble_width", width)
         button.setFlat(True)
-        button.setMinimumWidth(self._BUBBLE_MAX_WIDTH)
-        button.setMaximumWidth(self._BUBBLE_MAX_WIDTH)
+        button.setMinimumWidth(width)
+        button.setMaximumWidth(width)
         button.clicked.connect(partial(self._toggle_mod_link_by_pfid, pfid))
         self._mod_buttons.setdefault(pfid, []).append(button)
         return button
@@ -740,11 +774,19 @@ class AiAssistantPanel(QDialog):
         else:
             self._download_list.add_mod(pfid, title=self._display_mod_label(pfid))
 
-    def _make_mod_link_buttons_row(self, links: list[tuple[str, str, str]]) -> QWidget:
-        row = QWidget()
-        row_layout = QVBoxLayout(row)
+    def _make_mod_link_buttons_row(
+        self, links: list[tuple[str, str, str]], bubble_width: int
+    ) -> QWidget:
+        outer = QWidget()
+        outer_layout = QHBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        column = QWidget()
+        column.setFixedWidth(bubble_width)
+        row_layout = QVBoxLayout(column)
         row_layout.setContentsMargins(0, 2, 0, 6)
         row_layout.setSpacing(4)
+        outer_layout.addWidget(column)
+        outer_layout.addStretch()
         state = {"shown": 0}
 
         def render_page() -> None:
@@ -756,20 +798,20 @@ class AiAssistantPanel(QDialog):
             shown = state["shown"] or _MOD_BUTTON_PAGE_SIZE
             shown = min(shown, len(links))
             for _label, pfid, _url in links[:shown]:
-                row_layout.addWidget(self._make_mod_toggle_button(pfid))
+                row_layout.addWidget(self._make_mod_toggle_button(pfid, bubble_width))
             state["shown"] = shown
             if shown < len(links):
                 more_button = QPushButton(f"▼ {self.tr('More')} ({len(links) - shown})")
                 more_button.setFlat(True)
-                more_button.setMinimumWidth(self._BUBBLE_MAX_WIDTH)
-                more_button.setMaximumWidth(self._BUBBLE_MAX_WIDTH)
+                more_button.setMinimumWidth(bubble_width)
+                more_button.setMaximumWidth(bubble_width)
                 more_button.clicked.connect(
                     lambda: self._grow_mod_button_page(state, render_page)
                 )
                 row_layout.addWidget(more_button)
 
         render_page()
-        return row
+        return outer
 
     def _grow_mod_button_page(
         self, state: dict[str, int], render_page: Callable[[], None]
