@@ -12,6 +12,7 @@
         - "../update.sh"
         - "../update.bat"
         - "../setup_web_channel_script.js"
+        - "../setup_steam_recovery_script.js"
 
   dlls:
     - from_filenames:
