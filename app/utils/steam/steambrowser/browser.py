@@ -749,8 +749,13 @@ class SteamBrowser(QWidget):
 
     def _inject_steam_recovery_script(self) -> None:
         recovery_path = Path(AppInfo().setup_steam_recovery_script_file)
+        try:
+            source_code = recovery_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            logger.error(f"Failed to read Steam recovery script: {exc}")
+            return
         script = QWebEngineScript()
-        script.setSourceCode(recovery_path.read_text(encoding="utf-8"))
+        script.setSourceCode(source_code)
         script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation)
         script.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld)
         script.setRunsOnSubFrames(True)
