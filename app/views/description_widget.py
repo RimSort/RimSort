@@ -79,7 +79,7 @@ class DescriptionWidget(QTextBrowser):
         html_text = unity_text
 
         # If any tags of mapping type2 are found, set white-space to pre-wrap
-        for unity_tag, _ in tag_mapping_type1.items():
+        for unity_tag in tag_mapping_type1:
             if re.search(unity_tag, unity_text):
                 white_space = "normal"
                 # Convert double \n to <br>

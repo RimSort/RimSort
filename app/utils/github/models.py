@@ -40,8 +40,6 @@ class GitHubModEntry(Base):
 class CacheBase(DeclarativeBase):
     """Separate base for the global release cache DB."""
 
-    pass
-
 
 class GitHubReleaseCache(CacheBase):
     """Global table -- lives in app-level storage, shared across instances."""

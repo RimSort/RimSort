@@ -1,4 +1,4 @@
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 from sqlalchemy import create_engine
@@ -65,7 +65,7 @@ class TestGitHubModEntry:
             installed_version="v2.0.0",
         )
         instance_session.add(entry2)
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             instance_session.commit()
 
     def test_head_install(self, instance_session: Session) -> None:

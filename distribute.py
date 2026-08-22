@@ -410,7 +410,7 @@ def get_latest_todds_release() -> None:
         if os.path.exists(todds_executable_path):
             original_stat = os.stat(todds_executable_path)
             os.chmod(todds_executable_path, original_stat.st_mode | S_IEXEC)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Failed to download: {browser_download_url}")
         print(
             "Did the file/url change?\nDoes your environment have access to the Internet?"
@@ -487,7 +487,7 @@ def post_build_fixup_macos_steamworks() -> None:
                     preferred = candidates[0]
                 shutil.copyfile(preferred, generic)
                 print(f"Added SteamworksPy.dylib to bundle: {bundle}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: post_build_fixup_macos_steamworks failed: {e}")
 
 
@@ -510,7 +510,7 @@ def post_build_optimize_macos_bundle() -> None:
                     bundle,
                 ]
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: post_build_optimize_macos_bundle failed: {e}")
 
 
@@ -528,7 +528,7 @@ def handle_request(
 ) -> requests.Response:
     raw = requests.get(url, headers=headers, timeout=15)
     if raw.status_code != 200:
-        raise Exception(
+        raise Exception(  # noqa: TRY002
             f"Failed to get latest release: {raw.status_code}\nResponse: {raw.text}"
         )
     return raw

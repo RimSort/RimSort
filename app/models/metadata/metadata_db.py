@@ -77,9 +77,12 @@ class TagsEntry(Base):
     )
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, TagsEntry) and self.tag == other.tag:
-            return True
-        elif isinstance(other, str) and self.tag == other:
+        if (
+            isinstance(other, TagsEntry)
+            and self.tag == other.tag
+            or isinstance(other, str)
+            and self.tag == other
+        ):
             return True
 
         return super().__eq__(other)

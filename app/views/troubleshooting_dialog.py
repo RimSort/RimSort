@@ -22,7 +22,7 @@ class TroubleshootingDialog(QDialog):
         super().__init__()
 
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setWindowTitle("Troubleshooting")
+        self.setWindowTitle(self.tr("Troubleshooting"))
 
         main_layout = QVBoxLayout()
         main_layout.setSpacing(8)
@@ -126,7 +126,7 @@ class TroubleshootingDialog(QDialog):
 
     def _create_game_recovery_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the game files recovery section"""
-        section_frame, section_layout, content_widget, content_layout = (
+        _section_frame, _section_layout, _content_widget, content_layout = (
             self._setup_section_base(parent_layout, self.tr("Game Files Recovery"))
         )
 
@@ -252,7 +252,7 @@ class TroubleshootingDialog(QDialog):
 
     def _create_mod_configuration_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the mod configuration section"""
-        section_frame, section_layout, content_widget, content_layout = (
+        _section_frame, _section_layout, _content_widget, content_layout = (
             self._setup_section_base(
                 parent_layout, self.tr("Mod Configuration Options")
             )
@@ -368,7 +368,7 @@ class TroubleshootingDialog(QDialog):
 
     def _create_steam_utilities_section(self, parent_layout: QVBoxLayout) -> None:
         """Create the Steam utilities section"""
-        section_frame, section_layout, content_widget, content_layout = (
+        _section_frame, _section_layout, _content_widget, content_layout = (
             self._setup_section_base(parent_layout, self.tr("Steam Utilities"))
         )
 

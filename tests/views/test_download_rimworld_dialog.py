@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -43,7 +43,7 @@ def mock_version_service() -> MagicMock:
 @pytest.fixture
 def dialog(
     mock_version_service: MagicMock,
-    qapp: Union[QApplication, QCoreApplication],
+    qapp: QApplication | QCoreApplication,
 ) -> DownloadRimWorldDialog:
     with patch(
         "app.views.download_rimworld_dialog.VersionDataService",

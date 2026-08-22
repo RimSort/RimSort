@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Union
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QPushButton, QWidget
 
 
 class EventBus(QObject):
@@ -56,6 +56,7 @@ class EventBus(QObject):
     github_version_switch_requested = Signal(str, str)  # mod_path, target_tag
     do_add_zip_mod = Signal()
     do_browse_workshop = Signal()
+    do_browse_workshop_url = Signal(str)
     do_check_for_workshop_updates = Signal()
     do_check_for_git_updates = Signal()
     do_steam_verify_game_files = Signal()
@@ -140,7 +141,7 @@ class EventBus(QObject):
     do_toggle_translation_status = Signal(bool)
     do_auto_add_translations = Signal()
 
-    def __new__(cls) -> "EventBus":
+    def __new__(cls) -> "EventBus":  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
 
@@ -148,7 +149,7 @@ class EventBus(QObject):
             EventBus: The singleton instance of the `EventBus` class.
         """
         if cls._instance is None:
-            cls._instance = super(EventBus, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
@@ -159,3 +160,4 @@ class EventBus(QObject):
             return
         super().__init__()
         self._is_initialized: bool = True
+        self.workshop_restore_target: QWidget | None = None

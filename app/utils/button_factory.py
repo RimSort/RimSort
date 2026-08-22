@@ -4,9 +4,10 @@ Button factory utilities for creating standardized buttons in mod panels.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QAction

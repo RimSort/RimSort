@@ -1,6 +1,6 @@
 import errno
 from pathlib import Path
-from typing import Any, Dict, Union, cast
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,7 +11,7 @@ from app.views.deletion_menu import DeletionResult, ModDeletionMenu
 
 
 @pytest.fixture
-def sample_mod_metadata() -> Dict[str, Any]:
+def sample_mod_metadata() -> dict[str, Any]:
     """Sample mod metadata for testing."""
     return {
         "name": "Test Mod",
@@ -26,14 +26,14 @@ def sample_mod_metadata() -> Dict[str, Any]:
 def deletion_menu(
     mock_settings_controller: MagicMock,
     mock_metadata_controller: MagicMock,
-    qapp: Union[QApplication, QCoreApplication],
+    qapp: QApplication | QCoreApplication,
 ) -> ModDeletionMenu:
     """Create a ModDeletionMenu instance for testing."""
     # The shared fixture defaults aux_db_time_limit to -1; override to enable DB ops.
     QObject.__setattr__(mock_settings_controller.settings, "aux_db_time_limit", 1)
     menu = ModDeletionMenu(
         settings=mock_settings_controller.settings,
-        get_selected_mod_metadata=lambda: [],
+        get_selected_mod_metadata=list,
         metadata_controller=mock_metadata_controller,
         menu_title="Test Menu",
     )
@@ -90,7 +90,7 @@ class TestModDeletionMenu:
             mock_info.assert_called_once()
 
     def test_perform_deletion_operation_with_mods(
-        self, deletion_menu: ModDeletionMenu, sample_mod_metadata: Dict[str, Any]
+        self, deletion_menu: ModDeletionMenu, sample_mod_metadata: dict[str, Any]
     ) -> None:
         """Test deletion operation with selected mods."""
         deletion_menu.get_selected_mod_metadata = lambda: [sample_mod_metadata]
@@ -115,7 +115,7 @@ class TestModDeletionMenu:
     def test_delete_mod_directory_success(
         self,
         deletion_menu: ModDeletionMenu,
-        sample_mod_metadata: Dict[str, Any],
+        sample_mod_metadata: dict[str, Any],
         tmp_path: Path,
     ) -> None:
         """Test successful mod directory deletion."""
@@ -129,7 +129,7 @@ class TestModDeletionMenu:
         assert not test_dir.exists()
 
     def test_delete_mod_directory_not_found(
-        self, deletion_menu: ModDeletionMenu, sample_mod_metadata: Dict[str, Any]
+        self, deletion_menu: ModDeletionMenu, sample_mod_metadata: dict[str, Any]
     ) -> None:
         """Test deletion of non-existent directory."""
         # On Windows, rmtree might succeed for non-existent paths, so we'll mock it
@@ -144,7 +144,7 @@ class TestModDeletionMenu:
     def test_delete_mod_directory_permission_error(
         self,
         deletion_menu: ModDeletionMenu,
-        sample_mod_metadata: Dict[str, Any],
+        sample_mod_metadata: dict[str, Any],
         tmp_path: Path,
     ) -> None:
         """Test deletion with permission error."""
@@ -198,7 +198,7 @@ class TestModDeletionMenu:
             mock_warn.assert_called_once()
 
     def test_handle_steam_action_valid_ids(
-        self, deletion_menu: ModDeletionMenu, sample_mod_metadata: Dict[str, Any]
+        self, deletion_menu: ModDeletionMenu, sample_mod_metadata: dict[str, Any]
     ) -> None:
         """Test Steam action handling with valid IDs."""
         mods = [sample_mod_metadata]
@@ -271,7 +271,7 @@ class TestModDeletionMenu:
         is missing but 'path' is present, the path is used as the uuid.
         """
         mod_path = "/fake/mod/path"
-        mod_metadata: Dict[str, Any] = {"name": "Test Mod", "path": mod_path}
+        mod_metadata: dict[str, Any] = {"name": "Test Mod", "path": mod_path}
 
         # Setup remove_from_uuids list to include the path (since path = uuid)
         deletion_menu.remove_from_uuids = [mod_path]

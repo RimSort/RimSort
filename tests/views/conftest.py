@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import uuid as uuid_module
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -48,7 +48,7 @@ def mock_settings_controller(
     tmp_path: Any,
     mock_app_info: None,
     fresh_event_bus: None,
-    qapp: Union[QApplication, QCoreApplication],
+    qapp: QApplication | QCoreApplication,
 ) -> MagicMock:
     """MagicMock(spec=SettingsController) with a real Settings model."""
     settings = Settings()

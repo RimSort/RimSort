@@ -80,7 +80,7 @@ class LanguageController:
             combox.addItem(display_name, lang_code)
 
     def setup_language_dialog(
-        self, settings_dialog: "SettingsDialog", settings: "Settings"
+        self, settings_dialog: SettingsDialog, settings: Settings
     ) -> None:
         """
         Set up the settings dialog with current settings and connect language change signal.
@@ -99,7 +99,7 @@ class LanguageController:
         )
 
     def _on_language_changed(
-        self, settings_dialog: "SettingsDialog", settings: "Settings"
+        self, settings_dialog: SettingsDialog, settings: Settings
     ) -> None:
         """Handle language change and prompt user to restart."""
         new_language = settings_dialog.language_combobox.currentData()

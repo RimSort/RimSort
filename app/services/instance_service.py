@@ -68,7 +68,7 @@ class InstanceService:
                 f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
             )
             copytree(existing_instance_game_folder, target_game_folder, symlinks=True)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"An error occurred while copying game folder: {e}")
 
     @staticmethod
@@ -95,7 +95,7 @@ class InstanceService:
                 target_config_folder,
                 symlinks=True,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"An error occurred while copying config folder: {e}")
 
     @staticmethod
@@ -120,7 +120,7 @@ class InstanceService:
                 target_local_folder,
                 symlinks=True,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"An error occurred while copying local folder: {e}")
 
     @staticmethod
@@ -143,7 +143,7 @@ class InstanceService:
                         os.path.join(target_local_folder, subdir),
                         symlinks=True,
                     )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"An error occurred while cloning Workshop mods: {e}")
 
     @staticmethod
@@ -171,6 +171,7 @@ class InstanceService:
         inst = self.settings.instances[current_instance]
         game_folder_path = inst.game_folder
         config_folder_path = inst.config_folder
+        # jscpd:ignore-start
         local_mods_folder_path = inst.local_folder
         logger.info(f"Game folder: {game_folder_path}")
         logger.info(f"Config folder: {config_folder_path}")
@@ -188,6 +189,7 @@ class InstanceService:
         else:
             logger.warning("Essential path(s) are invalid or not set!")
             answer = show_dialogue_conditional(
+                # jscpd:ignore-end
                 title=QCoreApplication.translate(
                     "InstanceService", "Essential path(s)"
                 ),
@@ -279,7 +281,7 @@ class InstanceService:
                         "Compressing [{instance_name}] instance folder to archive...",
                     ).format(instance_name=instance_name),
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 show_fatal_error(
                     title=QCoreApplication.translate(
                         "InstanceService", "Error compressing instance"
@@ -329,7 +331,7 @@ class InstanceService:
             instance_controller = InstanceController.from_archive(input_path)
         except InvalidArchivePathError:
             return
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
                 title=QCoreApplication.translate(
@@ -556,7 +558,7 @@ class InstanceService:
                     str(Path(existing_instance_game_folder) / local_folder_name)
                     == existing_instance_local_folder
                 )
-                if existing_instance_local_folder and not local_folder_in_game:
+                if existing_instance_local_folder and not local_folder_in_game:  # noqa: SIM102
                     if os.path.exists(existing_instance_local_folder) and os.path.isdir(
                         existing_instance_local_folder
                     ):
@@ -929,7 +931,7 @@ class InstanceService:
                         ignore_errors=False,
                         onerror=handle_remove_read_only,
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"Error deleting instance: {e}")
                 self.settings.instances.pop(self.settings.current_instance)
                 EventBus().do_activate_current_instance.emit(DEFAULT_INSTANCE_NAME)

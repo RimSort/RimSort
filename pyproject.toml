@@ -10,7 +10,7 @@ dependencies = [
     "base58>=2.1.1",
     "beautifulsoup4==4.15.0",
     "certifi==2026.7.22",
-    "charset-normalizer==3.4.9",
+    "charset-normalizer==3.5.0",
     "click==8.4.2",
     "loguru==0.7.3",
     "lxml==6.1.1",
@@ -18,14 +18,14 @@ dependencies = [
     "natsort==8.4.0",
     "networkx==3.6.1",
     "packaging==26.3",
-    "platformdirs==4.11.2",
+    "platformdirs==4.11.3",
     "psutil==7.2.2",
     "pygit2==1.20.0",
     "pygithub==2.9.1",
     "pyside6==6.11.1",
     "rapidfuzz>=3.14.3",
     "requests==2.34.2",
-    "sqlalchemy==2.0.51",
+    "sqlalchemy==2.0.52",
     "steam==1.4.4",
     "steamfiles",
     "toposort==1.10",
@@ -47,7 +47,7 @@ dev = [
     "pytest-mock>=3.15.1",
     "pytest-qt>=4.5.0",
     "pytest-xvfb>=3.1.1",
-    "ruff>=0.16.2",
+    "ruff>=0.16.3",
     "types-beautifulsoup4>=4.12.0.20250516",
     "types-greenlet>=3.5.0.20260518",
     "types-lxml>=2025.3.30",
@@ -88,12 +88,15 @@ exclude = ['venv', '.venv', 'submodules']
 module = ['steam.*', 'steamfiles.*', 'pytestqt.qtbot', 'zstandard']
 ignore_missing_imports = true
 
-[tool.ruff]
-# Defaults to Black like
-line-length = 88
-indent-width = 4
-lint.extend-select = ["I"]
-exclude = ["submodules"]
+ [tool.ruff]
+ # Defaults to Black like
+ line-length = 88
+ indent-width = 4
+ lint.extend-select = ["I"]
+ # E402 (import not at top of file) is intentionally allowed: several standalone
+ # test scripts do sys.path.insert(...) before importing app.* for direct runs.
+ lint.extend-ignore = ["E402"]
+ exclude = ["submodules"]
 
 [tool.ruff.format]
 quote-style = "double"

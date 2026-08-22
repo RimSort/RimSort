@@ -23,9 +23,9 @@ _project_root = _script_dir.parents[3]
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
-from app.utils.generic import chunks  # noqa: E402
-from app.utils.steam.availability import check_steam_available  # noqa: E402
-from app.utils.steam.steamworks.wrapper import (  # noqa: E402
+from app.utils.generic import chunks
+from app.utils.steam.availability import check_steam_available
+from app.utils.steam.steamworks.wrapper import (
     OPERATION_INTERVAL,
     SteamworksAppDependenciesQuery,
     SteamworksInterface,

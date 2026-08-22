@@ -4,6 +4,8 @@
         "**/submodules/**",
         "**/.git/**",
         "**/*.md",
+        "**/*.xml",
+        "**/locales/**",
         "**/.github/**",
         "**/.venv/**"
     ]

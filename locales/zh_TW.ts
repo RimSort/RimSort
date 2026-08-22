@@ -601,8 +601,39 @@ When unchecked, search all file types with standard search.</source>
         <translation>右鍵單擊結果以進行操作</translation>
     </message>
     <message>
+        <source>File Search</source>
+        <translation>文件搜尋</translation>
+    </message>
+    <message>
         <source>Right-click for actions</source>
         <translation>右鍵單擊以進行操作</translation>
+    </message>
+</context>
+<context>
+    <name>FilterPanel</name>
+    <message>
+        <source>Mod Source</source>
+        <translation>模組來源</translation>
+    </message>
+    <message>
+        <source>Mod Type</source>
+        <translation>模組類型</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>標籤</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>選擇全部</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>沒有任何</translation>
+    </message>
+    <message>
+        <source>Clear All</source>
+        <translation>全部清除</translation>
     </message>
 </context>
 <context>
@@ -650,7 +681,7 @@ Manage mods installed from GitHub releases.</source>
 {mod_list}</source>
         <translation>完全刪除以下模組嗎？此操作無法撤銷。
 
-{mod_列表}</translation>
+ {mod_list}</translation>
     </message>
     <message>
         <source>Deleted {n} mod(s).</source>
@@ -658,7 +689,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>File deletion failed for: {names}</source>
-        <translation>檔案刪除失敗：{name}</translation>
+        <translation>檔案刪除失敗： {names}</translation>
     </message>
     <message>
         <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
@@ -666,7 +697,7 @@ Manage mods installed from GitHub releases.</source>
 {mod_list}</source>
         <translation>將以下 mod 轉換為 git 追蹤？它們將透過 Git Mod Updater 而不是 GitHub 版本進行更新。
 
-{mod_列表}</translation>
+ {mod_list}</translation>
     </message>
     <message>
         <source>Release-based mods will be re-cloned from HEAD, replacing current files.</source>
@@ -682,7 +713,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Failed: {names}</source>
-        <translation>失敗：{名稱}</translation>
+        <translation>失敗： {names}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1028,6 +1059,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>所選的排序算法未實現</translation>
     </message>
     <message>
+        <source>Import failed</source>
+        <translation>導入失敗</translation>
+    </message>
+    <message>
+        <source>Could not read the selected mod list file.</source>
+        <translation>無法讀取選定的模組清單檔案。</translation>
+    </message>
+    <message>
         <source>Failed to export to file</source>
         <translation>無法導出到文件</translation>
     </message>
@@ -1282,6 +1321,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Please add mods to list before attempting to download.</source>
         <translation>請在嘗試下載之前將模組添加到列表中。</translation>
+    </message>
+    <message>
+        <source>RimSort - SteamCMD downloader</source>
+        <translation>RimSort - SteamCMD 下載器</translation>
     </message>
     <message>
         <source>SteamCMD not found</source>
@@ -2618,11 +2661,11 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Verify Game Files</source>
-        <translation type="unfinished">驗證遊戲文件</translation>
+        <translation>驗證遊戲文件</translation>
     </message>
     <message>
         <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
-        <translation type="unfinished"></translation>
+        <translation>您确定要通过 Steam 验证 RimWorld 的游戏文件吗？ &lt;br&gt;&lt;br&gt;此程序一旦開始就無法取消。</translation>
     </message>
 </context>
 <context>
@@ -2668,6 +2711,18 @@ Select which missing dependencies to add to your active mods list.</source>
     <message>
         <source>Needs to be downloaded - requires SteamCMD</source>
         <translation>需要下載 - 需要SteamCMD</translation>
+    </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation>開放工作坊</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>下載</translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation>Workshop ID not found — open Workshop to find manually</translation>
     </message>
     <message>
         <source>
@@ -3987,6 +4042,21 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
+    <name>RimSort</name>
+    <message>
+        <source>RimSort Already Running</source>
+        <translation>RimSort 已運行</translation>
+    </message>
+    <message>
+        <source>Another instance of RimSort is already running.</source>
+        <translation>RimSort 的另一個實例已在執行中。</translation>
+    </message>
+    <message>
+        <source>Please close the existing instance before starting a new one.</source>
+        <translation>請先關閉現有實例，然後再啟動新實例。</translation>
+    </message>
+</context>
+<context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
@@ -4051,6 +4121,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Search mods by name</source>
         <translation>按名稱搜索模組</translation>
+    </message>
+    <message>
+        <source>RimSort - Rule Editor</source>
+        <translation>RimSort - 規則編輯器</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
@@ -4426,8 +4500,40 @@ Alternative Dependencies:</source>
         <translation>按拓撲排序</translation>
     </message>
     <message>
+        <source>Game location</source>
+        <translation>比賽地點</translation>
+    </message>
+    <message>
+        <source>Config location</source>
+        <translation>配置位置</translation>
+    </message>
+    <message>
+        <source>Steam mods location</source>
+        <translation>Steam 模組位置</translation>
+    </message>
+    <message>
+        <source>Local mods location</source>
+        <translation>本地模組位置</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>實例資料夾位置（可選）</translation>
+    </message>
+    <message>
+        <source>Backup Settings</source>
+        <translation>備份設定</translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation>與最近保存的集成</translation>
+    </message>
+    <message>
         <source>RimWorld Versions Database</source>
         <translation>RimWorld 版本資料庫</translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation>輔助元資料資料庫刪除時間限制（以秒為單位）。 （立即刪除0，永不刪除-1）</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
@@ -4442,6 +4548,14 @@ This basically preserves your mod coloring, user notes etc. for this many second
 （這也適用於 RimSort 以外的刪除）</translation>
     </message>
     <message>
+        <source>Sorting Method</source>
+        <translation>排序方式</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>依賴關係處理行為</translation>
+    </message>
+    <message>
         <source>Use dependency rules for sorting.</source>
         <translation>使用依賴規則進行排序</translation>
     </message>
@@ -4452,6 +4566,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
         <translation>在點擊排序時提示用戶下載依賴項</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML 解析行為</translation>
     </message>
     <message>
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
@@ -4476,6 +4594,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
 區分大小寫的檔案系統 (Linux)。根據 RimWorld 改裝規範，
 正確的路徑是 About/About.xml。
 請參閱：https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
+        <source>Mod list options</source>
+        <translation>模組清單選項</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
@@ -4510,12 +4632,20 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>隱藏無效模組，不建議啟用</translation>
     </message>
     <message>
+        <source>Inactive Mods Sorting</source>
+        <translation>不活躍 Mod 排序</translation>
+    </message>
+    <message>
         <source>Save inactive mods sort state</source>
         <translation>保存未啟用模組排序狀態</translation>
     </message>
     <message>
         <source>DB Builder</source>
         <translation>資料庫構建器</translation>
+    </message>
+    <message>
+        <source>When building the database:</source>
+        <translation>建立資料庫時：</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4570,6 +4700,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>構建資料庫</translation>
     </message>
     <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>資料庫過期時間（以秒為單位），例如 604800 表示 7 天。 0 表示沒有過期時間。</translation>
+    </message>
+    <message>
         <source>Internal Tools</source>
         <translation>內部工具</translation>
     </message>
@@ -4586,6 +4720,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>在使用 SteamCMD 下載模組前自動清除倉庫緩存。
 這可能避免在下載模組時出現的一些問題，例如下載失敗以及已刪除模組重新生成的情況。</translation>
+    </message>
+    <message>
+        <source>SteamCMD installation location</source>
+        <translation>SteamCMD安裝位置</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4608,8 +4746,24 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>安裝 SteamCMD</translation>
     </message>
     <message>
+        <source>todds</source>
+        <translation>托茲</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>品質預設</translation>
+    </message>
+    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>優化 - 推薦用於 RimWorld</translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation>如果未指定路徑中的 -p，則將使用目前活動路徑或所有 mods 選擇。</translation>
+    </message>
+    <message>
+        <source>When optimizing textures</source>
+        <translation>優化紋理時</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4632,12 +4786,24 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>啟動遊戲前自動運行 todds</translation>
     </message>
     <message>
+        <source>Text Editor command location</source>
+        <translation>文字編輯器命令位置</translation>
+    </message>
+    <message>
+        <source>Theme Settings</source>
+        <translation>主題設定</translation>
+    </message>
+    <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
         <translation>&quot;啟用主題/樣式表而非系統預設主題&quot;</translation>
     </message>
     <message>
         <source>Open Theme Location</source>
         <translation>開啟主題路徑</translation>
+    </message>
+    <message>
+        <source>Font Settings</source>
+        <translation>字體設定</translation>
     </message>
     <message>
         <source>Font Family</source>
@@ -4652,12 +4818,40 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>重置</translation>
     </message>
     <message>
+        <source>Language Setting</source>
+        <translation>語言設定</translation>
+    </message>
+    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>選擇語言（需要重新啟動以應用更改）</translation>
     </message>
     <message>
+        <source>RimSort restart required for some settings</source>
+        <translation>某些設定需要重新啟動 RimSort</translation>
+    </message>
+    <message>
         <source>Constrain dialogues to main window monitor</source>
         <translation>將對話限製到主窗口監視器</translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation>主視窗啟動狀態</translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation>瀏覽器視窗啟動狀態</translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation>設定視窗啟動狀態</translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation>定制寬度：</translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation>客製化高度：</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -4951,6 +5145,10 @@ Please choose one of the following options to proceed.</source>
 請選擇以下選項之一繼續。</translation>
     </message>
     <message>
+        <source>Unable to parse settings file!</source>
+        <translation>無法解析設定檔！</translation>
+    </message>
+    <message>
         <source>Open Settings Folder</source>
         <translation>開啟設置資料夾</translation>
     </message>
@@ -5180,6 +5378,13 @@ Please choose one of the following options to proceed.</source>
     </message>
 </context>
 <context>
+    <name>TaskProgressWindow</name>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5278,6 +5483,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Export Mod List</source>
         <translation>導出模組列表</translation>
+    </message>
+    <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Expected RimWorld ModsConfig XML or RimSort JSON export.&lt;br&gt;Details: {e}</source>
+        <translation>所選檔案不是有效的 Mod 清單檔案。 &lt;br&gt;預期為 RimWorld ModsConfig XML 或 RimSort JSON 匯出。 &lt;br&gt;詳細資料：{e}</translation>
     </message>
     <message>
         <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
@@ -5585,6 +5794,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
         <translation>警告：這些操作將永久刪除所選文件！</translation>
+    </message>
+    <message>
+        <source>Troubleshooting</source>
+        <translation>故障排除</translation>
     </message>
     <message>
         <source>Export List</source>

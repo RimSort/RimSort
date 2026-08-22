@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -75,7 +75,7 @@ def test_set_clickable(label: ClickablePathLabel) -> None:
 
 
 @pytest.fixture
-def mocked_env(monkeypatch: Any) -> Tuple[MagicMock, MagicMock, MagicMock]:
+def mocked_env(monkeypatch: Any) -> tuple[MagicMock, MagicMock, MagicMock]:
     """Create mocked environment for path-related tests.
 
     Args:
@@ -111,7 +111,7 @@ def mocked_env(monkeypatch: Any) -> Tuple[MagicMock, MagicMock, MagicMock]:
 )
 def test_mouse_press_path_scenarios(
     label: ClickablePathLabel,
-    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    mocked_env: tuple[MagicMock, MagicMock, MagicMock],
     qtbot: Any,
     exists_return: Any,
     is_dir_return: Any,
@@ -167,26 +167,28 @@ def test_mouse_press_path_scenarios(
 
 def test_mouse_press_event_not_left_button(
     label: ClickablePathLabel,
-    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    mocked_env: tuple[MagicMock, MagicMock, MagicMock],
     qtbot: Any,
 ) -> None:
     """Test that right mouse button clicks are ignored.
 
-    Args:
-        label: The ClickablePathLabel instance to test.
-        mocked_env: Tuple of mocked objects (path, open, logger).
-        qtbot: Pytest-Qt bot for widget testing.
+    # jscpd:ignore-start
+        Args:
+            label: The ClickablePathLabel instance to test.
+            mocked_env: Tuple of mocked objects (path, open, logger).
+            qtbot: Pytest-Qt bot for widget testing.
     """
     _, mock_open, _ = mocked_env
     test_path = "/test/path"
     label.setPath(test_path)
+    # jscpd:ignore-end
     qtbot.mouseClick(label, Qt.MouseButton.RightButton)
     mock_open.assert_not_called()
 
 
 def test_mouse_press_event_not_clickable(
     label: ClickablePathLabel,
-    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    mocked_env: tuple[MagicMock, MagicMock, MagicMock],
     qtbot: Any,
 ) -> None:
     """Test that clicks are ignored when label is not clickable.
@@ -206,7 +208,7 @@ def test_mouse_press_event_not_clickable(
 
 def test_mouse_press_event_no_path(
     label: ClickablePathLabel,
-    mocked_env: Tuple[MagicMock, MagicMock, MagicMock],
+    mocked_env: tuple[MagicMock, MagicMock, MagicMock],
     qtbot: Any,
 ) -> None:
     """Test that clicks are ignored when no path is set.

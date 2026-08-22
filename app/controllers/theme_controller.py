@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
@@ -71,7 +71,7 @@ class ThemeController:
             logger.warning(f"Folder does not exist: {folder}")
         return supported_themes
 
-    def load_theme(self, theme_name: str) -> Optional[str]:
+    def load_theme(self, theme_name: str) -> str | None:
         """Load the specified theme.
 
         Args:
@@ -99,7 +99,7 @@ class ThemeController:
                         """
                         # return f.read()
                         return font_style + raw_stylesheet
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"Error loading theme: {e}")
         else:
             logger.error(f"Attempted to load unsupported theme: {theme_name}")
@@ -114,7 +114,7 @@ class ThemeController:
         self.font_family = family
         self.font_size = size
 
-    def get_theme_stylesheet_path(self, theme_name: str) -> Optional[Path]:
+    def get_theme_stylesheet_path(self, theme_name: str) -> Path | None:
         """Returns the path to the stylesheet for the specified theme.
 
         Args:
@@ -206,7 +206,7 @@ class ThemeController:
         combobox.addItems(available_themes)
 
     def setup_theme_dialog(
-        self, settings_dialog: "SettingsDialog", settings: "Settings"
+        self, settings_dialog: SettingsDialog, settings: Settings
     ) -> None:
         """
         Set up the settings dialog with current settings.

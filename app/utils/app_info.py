@@ -25,12 +25,12 @@ class AppInfo:
 
     _instance: "None | AppInfo" = None
 
-    def __new__(cls) -> "AppInfo":
+    def __new__(cls) -> "AppInfo":  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `AppInfo` class.
         """
         if not cls._instance:
-            cls._instance = super(AppInfo, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     @staticmethod
@@ -131,6 +131,9 @@ class AppInfo:
         self._browser_profile_folder: Path = self._app_storage_folder / "browser"
         self._setup_web_channel_script_file: Path = (
             self._application_folder / "setup_web_channel_script.js"
+        )
+        self._setup_steam_recovery_script_file: Path = (
+            self._application_folder / "setup_steam_recovery_script.js"
         )
 
         # Backup directories
@@ -334,6 +337,11 @@ class AppInfo:
         Get the path to the file where _setup_web_channel_script_file exists
         """
         return self._setup_web_channel_script_file
+
+    @property
+    def setup_steam_recovery_script_file(self) -> Path:
+        """Get the path to the Steam workshop recovery script."""
+        return self._setup_steam_recovery_script_file
 
     @property
     def backups_folder(self) -> Path:

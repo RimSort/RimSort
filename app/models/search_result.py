@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from mimetypes import guess_type
 from pathlib import Path
-from typing import Optional, Union
 
 
 @dataclass
@@ -18,9 +17,9 @@ class SearchResult:
     file_size: int = 0
     file_type: str = ""
     visible: bool = True
-    preview: Optional[str] = None
+    preview: str | None = None
     match_count: int = 1
-    last_modified: Optional[datetime] = None
+    last_modified: datetime | None = None
 
     def __post_init__(self) -> None:
         """Initialize additional properties after creation"""
@@ -29,7 +28,7 @@ class SearchResult:
             if not self.file_size:
                 self.file_size = os.path.getsize(self.file_path)
             if not self.last_modified:
-                self.last_modified = datetime.fromtimestamp(
+                self.last_modified = datetime.fromtimestamp(  # noqa: DTZ006
                     os.path.getmtime(self.file_path)
                 )
 
@@ -69,7 +68,7 @@ class SearchResult:
             return self.last_modified.strftime("%Y-%m-%d %H:%M:%S")
         return "Unknown"
 
-    def to_dict(self) -> dict[str, Union[str, int, bool]]:
+    def to_dict(self) -> dict[str, str | int | bool]:
         """Convert the search result to a dictionary for serialization"""
         return {
             "file_path": str(self.file_path),

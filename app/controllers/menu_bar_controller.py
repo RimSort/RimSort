@@ -227,11 +227,9 @@ class MenuBarController(QObject):
         )
         self.menu_bar.instances_submenu.setActiveAction(
             next(
-                (
-                    action
-                    for action in self.menu_bar.instances_submenu.actions()
-                    if action.text() == current_instance
-                )
+                action
+                for action in self.menu_bar.instances_submenu.actions()
+                if action.text() == current_instance
             )
         )
         if initialize:

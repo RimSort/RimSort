@@ -595,7 +595,38 @@ When unchecked, search all file types with standard search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>File Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Right-click for actions</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>FilterPanel</name>
+    <message>
+        <source>Mod Source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear All</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1018,6 +1049,14 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Import failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not read the selected mod list file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Failed to export to file</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1271,6 +1310,10 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Please add mods to list before attempting to download.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort - SteamCMD downloader</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2665,6 +2708,18 @@ All dependencies are satisfied. No missing dependencies found.</source>
         <source>Dependency Manager</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MissingModPropertiesPanel</name>
@@ -3957,6 +4012,21 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
+    <name>RimSort</name>
+    <message>
+        <source>RimSort Already Running</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Another instance of RimSort is already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please close the existing instance before starting a new one.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
@@ -4020,6 +4090,10 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Search mods by name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort - Rule Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4395,7 +4469,39 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Game location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Config location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Steam mods location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Local mods location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>RimWorld Versions Database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4404,6 +4510,14 @@ After a mod is deleted, this is the time we wait until this mod item is deleted 
 This Auxiliary DB contains info for mod colors, toggled warning, user notes etc.
 This basically preserves your mod coloring, user notes etc. for this many seconds after deletion.
 (This applies to deletion outside of RimSort too)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sorting Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4416,6 +4530,10 @@ This basically preserves your mod coloring, user notes etc. for this many second
     </message>
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4434,6 +4552,10 @@ Some mods use incorrect casing (e.g., about/about.xml) which breaks on
 case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
 correct path is About/About.xml.
 See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod list options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4457,11 +4579,19 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Inactive Mods Sorting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Save inactive mods sort state</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>DB Builder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When building the database:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4517,6 +4647,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Internal Tools</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4531,6 +4665,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
     <message>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD installation location</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4554,7 +4692,23 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>todds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Optimized - Recommended for RimWorld</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>When optimizing textures</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4575,6 +4729,14 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Automatically run todds before launching the game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Theme Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4600,6 +4762,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Font Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Font Family</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4612,11 +4778,39 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Language Setting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>RimSort restart required for some settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Constrain dialogues to main window monitor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4877,6 +5071,10 @@ Please choose one of the following options to proceed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Unable to parse settings file!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open Settings Folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5106,6 +5304,13 @@ Please choose one of the following options to proceed.</source>
     </message>
 </context>
 <context>
+    <name>TaskProgressWindow</name>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5201,6 +5406,10 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Export Mod List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Expected RimWorld ModsConfig XML or RimSort JSON export.&lt;br&gt;Details: {e}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5508,6 +5717,10 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Troubleshooting</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

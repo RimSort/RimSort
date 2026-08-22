@@ -600,8 +600,39 @@ When unchecked, search all file types with standard search.</source>
         <translation>アクションの結果を右クリックします</translation>
     </message>
     <message>
+        <source>File Search</source>
+        <translation>ファイル検索</translation>
+    </message>
+    <message>
         <source>Right-click for actions</source>
         <translation>アクションを右クリックします</translation>
+    </message>
+</context>
+<context>
+    <name>FilterPanel</name>
+    <message>
+        <source>Mod Source</source>
+        <translation>Modソース</translation>
+    </message>
+    <message>
+        <source>Mod Type</source>
+        <translation>MODの種類</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>タグ</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>すべて選択</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>なし</translation>
+    </message>
+    <message>
+        <source>Clear All</source>
+        <translation>すべてクリア</translation>
     </message>
 </context>
 <context>
@@ -681,7 +712,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Failed: {names}</source>
-        <translation>失敗しました: {名前}</translation>
+        <translation>失敗しました:  {names}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1151,6 +1182,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>ファイルのアップロードに失敗しました。</translation>
     </message>
     <message>
+        <source>Import failed</source>
+        <translation>インポートに失敗しました</translation>
+    </message>
+    <message>
+        <source>Could not read the selected mod list file.</source>
+        <translation>選択された MOD リスト ファイルを読み取れませんでした。</translation>
+    </message>
+    <message>
         <source>Upload failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1285,6 +1324,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Please add mods to list before attempting to download.</source>
         <translation>ダウンロードを試みる前に、モッドをリストに追加してください。</translation>
+    </message>
+    <message>
+        <source>RimSort - SteamCMD downloader</source>
+        <translation>rimSort - SteamCMD ダウンローダー</translation>
     </message>
     <message>
         <source>SteamCMD not found</source>
@@ -2617,11 +2660,11 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Verify Game Files</source>
-        <translation type="unfinished"></translation>
+        <translation>ゲームファイルの検証</translation>
     </message>
     <message>
         <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam を通じて、RimWorld のゲーム ファイルを確認してもよろしいですか?&lt;br&gt;&lt;br&gt;このプロセスは開始するとキャンセルできません。</translation>
     </message>
 </context>
 <context>
@@ -2667,6 +2710,18 @@ Select which missing dependencies to add to your active mods list.</source>
     <message>
         <source>Needs to be downloaded - requires SteamCMD</source>
         <translation>ダウンロードする必要があります - SteamCMD が必要です</translation>
+    </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation>オープンワークショップ</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>ダウンロード</translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation>ワークショップ ID が見つかりません - ワークショップを開いて手動で見つけます</translation>
     </message>
     <message>
         <source>
@@ -3984,6 +4039,21 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
+    <name>RimSort</name>
+    <message>
+        <source>RimSort Already Running</source>
+        <translation>リムソートはすでに実行中です</translation>
+    </message>
+    <message>
+        <source>Another instance of RimSort is already running.</source>
+        <translation>rimSort の別のインスタンスがすでに実行されています。</translation>
+    </message>
+    <message>
+        <source>Please close the existing instance before starting a new one.</source>
+        <translation>新しいインスタンスを開始する前に、既存のインスタンスを閉じてください。</translation>
+    </message>
+</context>
+<context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
@@ -4048,6 +4118,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Search mods by name</source>
         <translation>名前でMODを検索</translation>
+    </message>
+    <message>
+        <source>RimSort - Rule Editor</source>
+        <translation>リムソート - ルールエディター</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
@@ -4422,8 +4496,40 @@ Alternative Dependencies:</source>
         <translation>トポロジカル</translation>
     </message>
     <message>
+        <source>Game location</source>
+        <translation>ゲームの場所</translation>
+    </message>
+    <message>
+        <source>Config location</source>
+        <translation>構成の場所</translation>
+    </message>
+    <message>
+        <source>Steam mods location</source>
+        <translation>Steam MOD の場所</translation>
+    </message>
+    <message>
+        <source>Local mods location</source>
+        <translation>ローカルMODの場所</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>インスタンスフォルダーの場所 (オプション)</translation>
+    </message>
+    <message>
+        <source>Backup Settings</source>
+        <translation>バックアップ設定</translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation>最近の保存との統合</translation>
+    </message>
+    <message>
         <source>RimWorld Versions Database</source>
         <translation>rimWorld バージョン データベース</translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation>補助メタデータ DB の削除時間制限 (秒単位)。 (すぐに削除 0、絶対に削除しない -1)</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
@@ -4438,6 +4544,14 @@ MOD が削除された後、この MOD アイテムが補助メタデータ DB �
 (これは、RimSort 以外での削除にも当てはまります)</translation>
     </message>
     <message>
+        <source>Sorting Method</source>
+        <translation>選別方法</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>依存関係の処理動作</translation>
+    </message>
+    <message>
         <source>Use dependency rules for sorting.</source>
         <translation>依存関係ルールをソートに使用します。</translation>
     </message>
@@ -4448,6 +4562,10 @@ MOD が削除された後、この MOD アイテムが補助メタデータ DB �
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
         <translation>ソート時に依存関係をダウンロードするかどうかをユーザーに確認する</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML 解析動作</translation>
     </message>
     <message>
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
@@ -4472,6 +4590,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
 大文字と小文字を区別するファイルシステム (Linux)。 rimWorld の改造仕様によれば、
 正しいパスは About/About.xml です。
 参照: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
+        <source>Mod list options</source>
+        <translation>MODリストのオプション</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
@@ -4506,12 +4628,20 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>無効な MOD を非表示にします。有効にすることはお勧めしません</translation>
     </message>
     <message>
+        <source>Inactive Mods Sorting</source>
+        <translation>非アクティブな MOD の並べ替え</translation>
+    </message>
+    <message>
         <source>Save inactive mods sort state</source>
         <translation>非アクティブなMODのソート状態を保存する</translation>
     </message>
     <message>
         <source>DB Builder</source>
         <translation>データベースビルダー</translation>
+    </message>
+    <message>
+        <source>When building the database:</source>
+        <translation>データベースを構築するとき:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4566,6 +4696,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>データベースをビルド</translation>
     </message>
     <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>データベースの有効期限 (秒単位)。たとえば、7 日間の場合は 604800 です。有効期限がない場合は 0。</translation>
+    </message>
+    <message>
         <source>Internal Tools</source>
         <translation>内部ツール</translation>
     </message>
@@ -4581,6 +4715,10 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <source>Automatically clear the depot cache before downloading mods through SteamCMD.
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>これは、ダウンロードの失敗や削除されたモッドの再出現などのダウンロードモッドの問題を防ぐ可能性があります。</translation>
+    </message>
+    <message>
+        <source>SteamCMD installation location</source>
+        <translation>SteamCMD のインストール場所</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4603,8 +4741,24 @@ This may potentially prevent some issues with downloading mods such as download 
         <translation>SteamCMDをインストール</translation>
     </message>
     <message>
+        <source>todds</source>
+        <translation>トッズ</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>品質プリセット</translation>
+    </message>
+    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>最適化 - RimWorldに推奨</translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation>-p as in path が指定されていない場合は、現在アクティブなパスまたはすべての MOD 選択からのパスが使用されます。</translation>
+    </message>
+    <message>
+        <source>When optimizing textures</source>
+        <translation>テクスチャを最適化する場合</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4625,6 +4779,14 @@ This may potentially prevent some issues with downloading mods such as download 
     <message>
         <source>Automatically run todds before launching the game</source>
         <translation>ゲームを起動する前に自動的に todds を実行します</translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation>テキスト エディターのコマンドの場所</translation>
+    </message>
+    <message>
+        <source>Theme Settings</source>
+        <translation>テーマの設定</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -4658,6 +4820,10 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>テーマの場所を開く</translation>
     </message>
     <message>
+        <source>Font Settings</source>
+        <translation>フォント設定</translation>
+    </message>
+    <message>
         <source>Font Family</source>
         <translation>フォントファミリー</translation>
     </message>
@@ -4670,12 +4836,40 @@ Name of folder will be used as name of the theme and any invalid theme will be i
         <translation>リセット</translation>
     </message>
     <message>
+        <source>Language Setting</source>
+        <translation>言語設定</translation>
+    </message>
+    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>言語を選択します（変更を適用するには再起動が必要です）</translation>
     </message>
     <message>
+        <source>RimSort restart required for some settings</source>
+        <translation>一部の設定では、RimSort の再起動が必要です</translation>
+    </message>
+    <message>
         <source>Constrain dialogues to main window monitor</source>
         <translation>ダイアログをメイン ウィンドウ モニターに制限する</translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation>メインウィンドウの起動状態</translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation>ブラウザウィンドウの起動状態</translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation>設定ウィンドウの起動状態</translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation>カスタム幅:</translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation>カスタム高さ:</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -4935,6 +5129,10 @@ E.g., &apos;oels.vehiclemapframework&apos;, alternatives: &apos;oels.vehiclemapf
 <context>
     <name>SettingsFailureDialog</name>
     <message>
+        <source>Unable to parse settings file!</source>
+        <translation>設定ファイルを解析できません!</translation>
+    </message>
+    <message>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
         <translation>RimSortの設定ファイルが破損しています。
@@ -5174,6 +5372,13 @@ Please choose one of the following options to proceed.</source>
     </message>
 </context>
 <context>
+    <name>TaskProgressWindow</name>
+    <message>
+        <source>Cancel</source>
+        <translation>キャンセル</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5272,6 +5477,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Export Mod List</source>
         <translation>モッドのエクスポート</translation>
+    </message>
+    <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Expected RimWorld ModsConfig XML or RimSort JSON export.&lt;br&gt;Details: {e}</source>
+        <translation>選択したファイルは有効な MOD リスト ファイルではありません。&lt;br&gt;RimWorld ModsConfig XML または RimSort JSON エクスポートが必要です。&lt;br&gt;詳細: {e}</translation>
     </message>
     <message>
         <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
@@ -5580,6 +5789,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
         <translation>警告：これらの操作は、選択したファイルを永続的に削除します！</translation>
+    </message>
+    <message>
+        <source>Troubleshooting</source>
+        <translation>トラブルシューティング</translation>
     </message>
     <message>
         <source>Export List</source>

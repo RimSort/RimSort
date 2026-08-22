@@ -111,7 +111,7 @@ class AdvancedTabController(BaseTabController):
         # Auxiliary DB
         try:
             self.settings.aux_db_time_limit = int(self.dialog.aux_db_time_limit.text())
-        except Exception:
+        except Exception:  # noqa: BLE001
             logger.warning("Failed setting Aux DB time limit, falling back to -1")
             self.settings.aux_db_time_limit = -1
         self.settings.enable_aux_db_behavior_editing = (

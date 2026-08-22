@@ -64,7 +64,7 @@ def check_for_updates(
         except GitHubRateLimitError:
             logger.warning(f"Rate limit hit while checking {mod.owner_repo}, skipping")
             continue
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error checking updates for {mod.owner_repo}: {e}")
             continue
 

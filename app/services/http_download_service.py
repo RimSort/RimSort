@@ -67,7 +67,7 @@ class HttpDownloadService(QObject):
                 self._worker.download_finished.disconnect()
                 self._worker.quit()
                 self._worker.wait()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._worker = None
 
@@ -99,7 +99,7 @@ class HttpDownloadService(QObject):
         if self._worker:
             try:
                 self._worker.download_finished.disconnect()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._worker = None
 

@@ -59,28 +59,30 @@ def create_symlink(
     force: bool = False,
 ) -> None:
     """
-    Creates a symlink/junction from src_path to dst_path. The src_path must exist and be a directory (for compatibility with Windows junctions).
+        Creates a symlink/junction from src_path to dst_path. The src_path must exist and be a directory (for compatibility with Windows junctions).
 
-    Symlinks are made on Unix systems using os.symlink, and junctions on Windows using the CreateJunction function from _winapi.
+        Symlinks are made on Unix systems using os.symlink, and junctions on Windows using the CreateJunction function from _winapi.
 
-    Note that this method will not convert relative paths to absolute paths before system calls.
-    If symlink creation on Windows fails, force is true, and src_path is a directory, it will attempt to create a junction instead. Otherwise, SymlinkCreationError will be raised.
+        Note that this method will not convert relative paths to absolute paths before system calls.
+        If symlink creation on Windows fails, force is true, and src_path is a directory, it will attempt to create a junction instead. Otherwise, SymlinkCreationError will be raised.
 
-    This method logs errors, warnings, and debug messages using loguru.
+        This method logs errors, warnings, and debug messages using loguru.
 
-    If the dst_path exists and force is False:
-        - If dst_path is a symlink/junction, it will be unlinked re-created based on method args.
-        - If dst_path is a directory and empty, it will be deleted.
-        - If dst_path is a directory and not empty, SymlinkCreationError will be raised.
-        - If dst_path is a file, SymlinkCreationError will be raised.
-    If the dst_path exists and force is True:
-        - dst_path will be removed (even if it is a non-empty directory) and re-created based on method args, even if it already exists.
+        If the dst_path exists and force is False:
+            - If dst_path is a symlink/junction, it will be unlinked re-created based on method args.
+            - If dst_path is a directory and empty, it will be deleted.
+            - If dst_path is a directory and not empty, SymlinkCreationError will be raised.
+            - If dst_path is a file, SymlinkCreationError will be raised.
+        If the dst_path exists and force is True:
+    # jscpd:ignore-start
+            - dst_path will be removed (even if it is a non-empty directory) and re-created based on method args, even if it already exists.
 
-    :param src_path: The source path/target to create the symlink from. Must be a directory
-    :type src_path: str
-    :param dst_path: The destination path to create the symlink to.
-    :type dst_path: str
-    :param force: Force the creation of the symlink/junction, even if the dst_path exists. Default is False.
+        :param src_path: The source path/target to create the symlink from. Must be a directory
+        :type src_path: str
+        :param dst_path: The destination path to create the symlink to.
+        :type dst_path: str
+        :param force: Force the creation of the symlink/junction, even if the dst_path exists. Default is False.
+    # jscpd:ignore-end
     """
     if not os.path.exists(src_path):
         logger.warning(

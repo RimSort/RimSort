@@ -1,5 +1,6 @@
 import traceback
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -31,7 +32,7 @@ class AnimationLabel(QLabel):
         Prepare the QLabel to have its opacity
         changed through a timed animation.
         """
-        super(AnimationLabel, self).__init__()
+        super().__init__()
         self.effect = QGraphicsOpacityEffect()
         self.effect.setOpacity(0)
         self.setGraphicsEffect(self.effect)
@@ -146,8 +147,8 @@ class WorkThread(QThread):
     def run(self) -> None:
         try:
             self.data = self.target()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.exception = e
-            logger.error(f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}")
+            logger.error(f"{type(e).__name__}: {e!s}\n{traceback.format_exc()}")
         logger.debug("WorkThread completed, returning to main thread")
         self.data_ready.emit(self.data)

@@ -56,7 +56,7 @@ class GitHubInstallWorker(QThread):
                     )
                 else:
                     self.finished.emit(False, "Clone failed", self._target_dir)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"GitHub install failed: {e}")
             self.finished.emit(False, str(e), self._target_dir)
 
@@ -107,7 +107,7 @@ class GitHubVersionSwitchWorker(QThread):
             GitHubInstaller.delete_backup(backup_path)
             self.finished.emit(True, new_version, str(self._mod_path))
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Version switch failed for {self._owner_repo}: {e}")
             if backup_path and backup_path.exists():
                 self.progress.emit("Restoring backup...")
@@ -148,6 +148,6 @@ class GitHubUpdateCheckWorker(QThread):
                 self.finished.emit(updates)
             finally:
                 session.close()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"GitHub update check failed: {e}")
             self.error.emit(str(e))

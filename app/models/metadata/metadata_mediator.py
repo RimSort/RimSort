@@ -238,7 +238,7 @@ class MetadataMediator:
         assert self.game_path is not None
 
         metadata_mutex = QMutex()
-        self._mods_metadata = dict()
+        self._mods_metadata = {}
         parsers = [
             self._ParserWorker(
                 mod_path_batch,
@@ -280,7 +280,7 @@ class MetadataMediator:
                         f"Retrieved game version from Version.txt: {self.game_version}"
                     )
                     return True
-            except Exception:
+            except Exception:  # noqa: BLE001
                 logger.error(
                     f"Unable to parse Version.txt from game folder: {version_file_path}"
                 )
@@ -395,7 +395,7 @@ class MetadataMediator:
                             )
 
                     results[mod.uuid] = mod
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"Error parsing mod at path: {path}")
                     logger.error(e)
 

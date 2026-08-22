@@ -1,7 +1,8 @@
 from collections import defaultdict
+from collections.abc import Generator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Generator, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QCoreApplication
@@ -43,7 +44,7 @@ class ModGroupItem:
 
     mod_id: str
     metadata: dict[str, Any]
-    replacement: Optional[ReplacementInfo] = None
+    replacement: ReplacementInfo | None = None
 
 
 class UseThisInsteadPanel(BaseModsPanel):
@@ -172,7 +173,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
             # Track row indices for selection during population to avoid double iteration
             self._track_row_indices_during_population(groups)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error populating metadata: {e}")
             # Graceful degradation: clear table if error occurs
             self._clear_table_model()
@@ -187,7 +188,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             groups: Dictionary of groups by package ID.
         """
         current_row = 0
-        for package_id, originals in groups.items():
+        for originals in groups.values():
             # Skip header row
             current_row += 1
             # Add original rows to tracking
@@ -467,7 +468,7 @@ class UseThisInsteadPanel(BaseModsPanel):
                 if alt is not None:
                     alternatives[mod] = alt
             return alternatives
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error filtering alternatives: {e}")
             return {}
 
@@ -556,7 +557,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             self._add_mod_row(mod_info)
             if is_original:
                 self._original_rows.add(current_row)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error accessing metadata for mod in group {package_id}: {e}")
 
     def _check_and_get_replacement_local_metadata(
@@ -578,7 +579,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             exists_locally, path = self._check_replacement_exists_locally(pfid)
             local_metadata = self._get_local_metadata_for_replacement(path)
             return exists_locally, path, local_metadata
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(
                 f"Error checking local replacement metadata for pfid {pfid}: {e}"
             )

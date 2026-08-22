@@ -7,7 +7,7 @@ caching results in SQLAlchemy-backed SQLite to respect rate limits.
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
 from github import Github, GithubException
@@ -66,15 +66,14 @@ def parse_github_url(url: str) -> tuple[str, str] | None:
     """
     try:
         parsed = urlparse(url)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
     if parsed.hostname not in ("github.com", "www.github.com"):
         return None
 
     path = parsed.path.strip("/")
-    if path.endswith(".git"):
-        path = path[:-4]
+    path = path.removesuffix(".git")
 
     parts = path.split("/")
     if len(parts) < 2:
@@ -212,9 +211,9 @@ class GitHubProvider:
 
         last_checked: datetime = last_checked_raw
         if last_checked.tzinfo is None:
-            last_checked = last_checked.replace(tzinfo=timezone.utc)
+            last_checked = last_checked.replace(tzinfo=UTC)
 
-        cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=check_interval_hours)
+        cutoff = datetime.now(tz=UTC) - timedelta(hours=check_interval_hours)
         if last_checked < cutoff:
             return None
 
@@ -240,12 +239,12 @@ class GitHubProvider:
                 ]
                 published = rel.published_at
                 if published and published.tzinfo is None:
-                    published = published.replace(tzinfo=timezone.utc)
+                    published = published.replace(tzinfo=UTC)
                 releases.append(
                     ReleaseInfo(
                         tag=rel.tag_name,
                         name=rel.name or rel.tag_name,
-                        published_at=published or datetime.now(tz=timezone.utc),
+                        published_at=published or datetime.now(tz=UTC),
                         prerelease=rel.prerelease,
                         assets=assets,
                         body=rel.body or "",
@@ -277,7 +276,7 @@ class GitHubProvider:
             .filter_by(owner_repo=owner_repo)
             .first()
         )
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         if entry is None:
             entry = GitHubReleaseCache(
                 owner_repo=owner_repo,

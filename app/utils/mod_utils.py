@@ -89,7 +89,7 @@ def is_recently_updated(
     if updated_timestamp is None or updated_timestamp <= 0:
         return False
     if now is None:
-        now = datetime.now().timestamp()
+        now = datetime.now().timestamp()  # noqa: DTZ005
     cutoff = now - threshold_days * 86400
     return updated_timestamp >= cutoff
 
@@ -168,7 +168,7 @@ def _format_timestamp(ts: int) -> str:
     if ts <= 0:
         return "N/A"
     try:
-        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")  # noqa: DTZ006
     except (ValueError, OSError, OverflowError):
         return f"<invalid:{ts}>"
 
@@ -234,7 +234,7 @@ def filter_eligible_mods_for_update(
             timestamp_source = "internal_time_touched"
 
         _, aux_entry = metadata_controller.get_metadata_with_path(path)
-        if aux_entry is not None and aux_entry.acf_time_updated > 0:
+        if aux_entry is not None and aux_entry.acf_time_updated > 0:  # noqa: SIM102
             if internal_time is None or aux_entry.acf_time_updated > internal_time:
                 internal_time = aux_entry.acf_time_updated
                 timestamp_source = "acf_time_updated"

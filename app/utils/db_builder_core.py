@@ -7,8 +7,9 @@ database builder, extracted from the Qt-dependent SteamDatabaseBuilder class.
 
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from app.utils.constants import (
     DB_BUILDER_PRUNE_EXCEPTIONS,
@@ -132,7 +133,7 @@ class DBBuilderCore:
         output_database_path: str,
         get_appid_deps: bool = False,
         update: bool = False,
-        progress_callback: Optional[Callable[[str], None]] = None,
+        progress_callback: Callable[[str], None] | None = None,
     ) -> None:
         self.apikey = apikey
         self.appid = appid

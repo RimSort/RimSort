@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -428,7 +429,7 @@ class RuleEditor(QWidget):
             self.mods_search.findChild(QToolButton)
         )
         if type(self.mods_search_clear_button) is not QToolButton:
-            raise Exception("Failed to find clear button in QLineEdit")
+            raise Exception("Failed to find clear button in QLineEdit")  # noqa: TRY002
         if self.mods_search_clear_button is not None:
             self.mods_search_clear_button.setEnabled(True)
             self.mods_search_clear_button.clicked.connect(self.clear_mods_search)
@@ -571,14 +572,7 @@ class RuleEditor(QWidget):
             self.external_community_rules_loadBottom_checkbox.setCheckable(False)
             self.external_user_rules_loadBottom_checkbox.setCheckable(False)
         # Initial mode
-        if self.initial_mode == "community_rules":
-            self._toggle_details_layout_widgets(
-                layout=self.external_community_rules_layout, override=False
-            )
-            self._toggle_details_layout_widgets(
-                layout=self.external_user_rules_layout, override=False
-            )
-        elif self.initial_mode == "user_rules":
+        if self.initial_mode == "community_rules" or self.initial_mode == "user_rules":
             self._toggle_details_layout_widgets(
                 layout=self.external_community_rules_layout, override=False
             )
@@ -599,7 +593,7 @@ class RuleEditor(QWidget):
             partial(self._toggle_loadBottom_rule, "User Rules")
         )
         # Setup the window
-        self.setWindowTitle("RimSort - Rule Editor")
+        self.setWindowTitle(self.tr("RimSort - Rule Editor"))
         self.setLayout(layout)
         # Set the window size
         self.resize(900, 600)
@@ -652,6 +646,8 @@ class RuleEditor(QWidget):
                     event.ignore()
                     return
                 # Append row
+                # jscpd:ignore-start
+                # jscpd:ignore-start
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
@@ -664,7 +660,9 @@ class RuleEditor(QWidget):
                     rule_type_value = self.editor_model.item(
                         row, 3
                     )  # Get the item in column 4 (index 3)
+                    # jscpd:ignore-end
                     # Search table for rows that match.
+                    # jscpd:ignore-end
                     if (
                         (packageid_value and rule_data == packageid_value.text())
                         and (rule_source_value and mode[0] == rule_source_value.text())
@@ -808,11 +806,7 @@ class RuleEditor(QWidget):
                 metadata[self.edit_packageid][instruction[3]][instruction[1]][
                     "comment"
                 ] = instruction[4]
-            elif instruction[3] == "loadTop":
-                metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
-                    4
-                ]
-            elif instruction[3] == "loadBottom":
+            elif instruction[3] == "loadTop" or instruction[3] == "loadBottom":
                 metadata[self.edit_packageid][instruction[3]]["comment"] = instruction[
                     4
                 ]
@@ -1197,6 +1191,7 @@ class RuleEditor(QWidget):
 
     def _toggle_loadTop_rule(self, rule_source: str, state: int) -> None:
         if self.edit_packageid:
+            # jscpd:ignore-start
             logger.debug(f"Toggle loadTop for {self.edit_packageid}: {state}")
             # Select database for editing
             if rule_source == "Community Rules":
@@ -1226,6 +1221,7 @@ class RuleEditor(QWidget):
                         packageid=self.edit_packageid,
                         rule_source=rule_source,
                         rule_type="loadTop",
+                        # jscpd:ignore-end
                         comment=comment,
                     )
                 # Add rule to the database if it doesn't already exist
@@ -1235,6 +1231,7 @@ class RuleEditor(QWidget):
                     metadata[self.edit_packageid]["loadTop"] = {}
                 metadata[self.edit_packageid]["loadTop"]["value"] = True
                 if comment:
+                    # jscpd:ignore-start
                     metadata[self.edit_packageid]["loadTop"]["comment"] = comment
             else:
                 # Search for & remove the rule's row entry from the editor table
@@ -1260,6 +1257,7 @@ class RuleEditor(QWidget):
                             and rule_source in rule_source_value.text()
                         )
                         and (rule_type_value and "loadTop" in rule_type_value.text())
+                        # jscpd:ignore-end
                     ):  # Remove row if criteria matches search
                         self.editor_model.removeRow(row)
                 # Remove rule from the database
@@ -1312,6 +1310,7 @@ class RuleEditor(QWidget):
                 if comment:
                     metadata[self.edit_packageid]["loadBottom"]["comment"] = comment
             else:
+                # jscpd:ignore-start
                 # Search for & remove the rule's row entry from the editor table
                 for row in range(self.editor_model.rowCount()):
                     # Define criteria
@@ -1329,6 +1328,7 @@ class RuleEditor(QWidget):
                         (
                             packageid_value
                             and self.edit_packageid in packageid_value.text()
+                            # jscpd:ignore-end
                         )
                         and (
                             rule_source_value

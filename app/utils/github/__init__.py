@@ -19,8 +19,8 @@ from app.utils.github.worker import (
 )
 
 __all__ = [
-    "GitHubInstaller",
     "GitHubInstallWorker",
+    "GitHubInstaller",
     "GitHubModEntry",
     "GitHubProvider",
     "GitHubRateLimitError",

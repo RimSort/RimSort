@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Slot
 
@@ -13,7 +13,7 @@ class JavaScriptBridge(QObject):
     """
 
     def __init__(
-        self, browser_instance: "SteamBrowser", parent: Optional[QObject] = None
+        self, browser_instance: "SteamBrowser", parent: QObject | None = None
     ) -> None:
         super().__init__(parent)
         self._browser_instance = browser_instance
@@ -33,3 +33,8 @@ class JavaScriptBridge(QObject):
         Slot callable from JavaScript to remove a mod from the download list.
         """
         self._browser_instance._remove_mod_from_list(mod_id)
+
+    @Slot(str)
+    def on_url_changed(self, url: str) -> None:
+        """Slot callable from JavaScript when Steam updates the URL via History API."""
+        self._browser_instance._sync_location_from_js(url)

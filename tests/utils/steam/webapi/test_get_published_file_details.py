@@ -90,7 +90,7 @@ class TestGetPublishedFileDetailsRetry:
             requests.exceptions.ConnectionError("Connection refused"),
             _make_mock_response(200, VALID_RESPONSE_JSON),
         ]
-        metadata, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(
+        metadata, failed_pfids, _errors = ISteamRemoteStorage_GetPublishedFileDetails(
             PFIDS
         )
         assert len(metadata) == 3
@@ -105,7 +105,7 @@ class TestGetPublishedFileDetailsRetry:
             _make_mock_response(503),
             _make_mock_response(200, VALID_RESPONSE_JSON),
         ]
-        metadata, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(
+        metadata, failed_pfids, _errors = ISteamRemoteStorage_GetPublishedFileDetails(
             PFIDS
         )
         assert len(metadata) == 3
@@ -120,7 +120,7 @@ class TestGetPublishedFileDetailsRetry:
             _make_mock_response(429),
             _make_mock_response(200, VALID_RESPONSE_JSON),
         ]
-        metadata, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(
+        metadata, failed_pfids, _errors = ISteamRemoteStorage_GetPublishedFileDetails(
             PFIDS
         )
         assert len(metadata) == 3
@@ -171,7 +171,7 @@ class TestGetPublishedFileDetailsNonRetryable:
         self, mock_post: MagicMock, mock_sleep: MagicMock
     ) -> None:
         mock_post.return_value = _make_mock_response(400)
-        metadata, failed_pfids, errors = ISteamRemoteStorage_GetPublishedFileDetails(
+        metadata, failed_pfids, _errors = ISteamRemoteStorage_GetPublishedFileDetails(
             PFIDS
         )
         assert metadata == []

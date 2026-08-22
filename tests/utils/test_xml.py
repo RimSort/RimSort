@@ -125,7 +125,7 @@ class TestJsonToXmlWrite:
         assert result == data
 
     def test_write_raises_on_error_when_requested(self, tmp_path: Path) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             json_to_xml_write(
                 {"a": "1", "b": "2"}, str(tmp_path / "out.xml"), raise_errs=True
             )

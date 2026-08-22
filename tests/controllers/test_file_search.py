@@ -1,8 +1,9 @@
 """Test file search functionality"""
 
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -155,7 +156,7 @@ def setup_test_files(request: pytest.FixtureRequest) -> Generator[str, None, Non
         import shutil
 
         shutil.rmtree(mods_dir)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Failed to clean up test directory: {e}")
 
 

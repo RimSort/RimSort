@@ -149,7 +149,7 @@ class CollectionImport:
 
                         try:
                             steam_response = http.get(steam_link).text
-                        except Exception as e:
+                        except Exception as e:  # noqa: BLE001
                             logger.exception(e)
                             steam_response = ""
                         if STEAM_THERE_WAS_A_PROBLEM_FLAG in steam_response:
@@ -176,10 +176,8 @@ class CollectionImport:
                         ),
                         details="\n".join(failed_mods),
                     )
-        except Exception as e:
-            logger.error(
-                f"An error occurred while fetching collection content: {e!s}"
-            )
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"An error occurred while fetching collection content: {e!s}")
 
     def _get_package_id_from_pfid(self, pfid: str | int | None) -> str | None:
         """Map published id to package id if possible
@@ -397,7 +395,7 @@ class DynamicQuery(QObject):
         logger.debug("WebAPI is not active!")
         try:  # Try to initialize the API
             self.api = WebAPI(self.apikey, format="json", https=True)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.api = None
             # Catch exceptions that can potentially leak Steam API key
             stacktrace = traceback.format_exc()
@@ -566,7 +564,7 @@ class DynamicQuery(QObject):
                     admin_query=False,
                 )
                 all_details.extend(response["response"]["publishedfiledetails"])
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 stacktrace = traceback.format_exc()
                 if (
                     e.__class__.__name__ == "HTTPError"
@@ -606,7 +604,7 @@ class DynamicQuery(QObject):
         WebAPI.call() results that are being are parsing
         """
         if self.api is None:
-            raise Exception(
+            raise Exception(  # noqa: TRY002
                 "Tried to query files while API was not properly initialized."
             )  # Exit query
 
@@ -653,7 +651,7 @@ class DynamicQuery(QObject):
             admin_query=False,
         )
         # Print total mods found we need to iter through paginations to get info for
-        if (
+        if (  # noqa: SIM102
             self.pagenum and self.total == 0
         ):  # If True, this is initial loop; we properly set them in initial loop
             if result["response"]["total"]:
@@ -740,7 +738,7 @@ class DynamicQuery(QObject):
         if self.output_database_path:
             try:
                 atomic_json_dump(query, self.output_database_path, indent=4)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"Failed to save database before Steamworks: {e}")
 
         # Check Steam availability
@@ -822,7 +820,7 @@ class DynamicQuery(QObject):
         if self.output_database_path:
             try:
                 atomic_json_dump(query, self.output_database_path, indent=4)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"Failed to save database after Steamworks: {e}")
 
 
@@ -853,7 +851,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
             request = http.post(url, data=data, timeout=(5, 60))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
@@ -863,7 +861,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             logger.debug(json_response)
             if json_response.get("response", {}).get("resultcount", 0) > 0:
                 for mod_metadata in json_response["response"]["collectiondetails"]:
-                    metadata.append(mod_metadata)
+                    metadata.append(mod_metadata)  # noqa: PERF402
         except requests.exceptions.JSONDecodeError as e:
             logger.error(f"Invalid JSON response: {e}")
         finally:
@@ -942,7 +940,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                     for mod_metadata in json_response["response"][
                         "publishedfiledetails"
                     ]:
-                        metadata.append(mod_metadata)
+                        metadata.append(mod_metadata)  # noqa: PERF402
                 logger.debug(
                     f"GetPublishedFileDetails chunk [{items_processed}/{total}]: "
                     f"HTTP {request.status_code}, "

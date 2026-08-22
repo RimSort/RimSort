@@ -312,7 +312,7 @@ def test_missing_packageid_gets_sentinel() -> None:
     mod_data = {
         "name": "Test Mod Without PackageId",
     }
-    valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
+    _valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
     assert mod.package_id == DEFAULT_MISSING_PACKAGEID
     assert mod.valid is True
 
@@ -326,7 +326,7 @@ def test_empty_packageid_gets_sentinel() -> None:
         "name": "Test Mod With Empty PackageId",
         "packageId": "   ",  # Only whitespace
     }
-    valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
+    _valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
     assert mod.package_id == DEFAULT_MISSING_PACKAGEID
     assert mod.valid is True
 
@@ -340,6 +340,6 @@ def test_non_string_packageid_gets_sentinel() -> None:
         "name": "Test Mod With Non-String PackageId",
         "packageId": 12345,  # Integer instead of string
     }
-    valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
+    _valid, mod = create_about_mod(mod_data, target_version="1.5.1234")
     assert mod.package_id == DEFAULT_MISSING_PACKAGEID
     assert mod.valid is True

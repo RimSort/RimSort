@@ -601,8 +601,39 @@ Suchen Sie beim Deaktivieren alle Dateitypen mit Standardsuche.</translation>
         <translation>Klicken Sie mit der rechten Maustaste ein Ergebnis für Aktionen</translation>
     </message>
     <message>
+        <source>File Search</source>
+        <translation>Dateisuche</translation>
+    </message>
+    <message>
         <source>Right-click for actions</source>
         <translation>Klicken Sie mit der rechten Maustaste für Aktionen</translation>
+    </message>
+</context>
+<context>
+    <name>FilterPanel</name>
+    <message>
+        <source>Mod Source</source>
+        <translation>Mod-Quelle</translation>
+    </message>
+    <message>
+        <source>Mod Type</source>
+        <translation>Mod-Typ</translation>
+    </message>
+    <message>
+        <source>Tags</source>
+        <translation>Schlagworte</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>Wählen Sie „Alle“ aus</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Keiner</translation>
+    </message>
+    <message>
+        <source>Clear All</source>
+        <translation>Alles löschen</translation>
     </message>
 </context>
 <context>
@@ -658,7 +689,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>File deletion failed for: {names}</source>
-        <translation>Dateilöschung fehlgeschlagen für: {Names}</translation>
+        <translation>Dateilöschung fehlgeschlagen für:  {names}</translation>
     </message>
     <message>
         <source>Convert the following mods to git tracking? They will be updated via the Git Mod Updater instead of GitHub releases.
@@ -682,7 +713,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Failed: {names}</source>
-        <translation>Fehlgeschlagen: {Namen}</translation>
+        <translation>Fehlgeschlagen:  {names}</translation>
     </message>
     <message>
         <source>Checking for updates...</source>
@@ -1152,6 +1183,14 @@ Manage mods installed from GitHub releases.</source>
         <translation>Datei nicht hochladen.</translation>
     </message>
     <message>
+        <source>Import failed</source>
+        <translation>Der Import ist fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>Could not read the selected mod list file.</source>
+        <translation>Die ausgewählte Mod-Listendatei konnte nicht gelesen werden.</translation>
+    </message>
+    <message>
         <source>Upload failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1286,6 +1325,10 @@ Manage mods installed from GitHub releases.</source>
     <message>
         <source>Please add mods to list before attempting to download.</source>
         <translation>Bitte fügen Sie Mods zur Liste hinzu, bevor Sie versuchen, herunterzuladen.</translation>
+    </message>
+    <message>
+        <source>RimSort - SteamCMD downloader</source>
+        <translation>RimSort – SteamCMD-Downloader</translation>
     </message>
     <message>
         <source>SteamCMD not found</source>
@@ -2618,11 +2661,11 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
     </message>
     <message>
         <source>Verify Game Files</source>
-        <translation type="unfinished">Überprüfen Sie die Spieldateien</translation>
+        <translation>Überprüfen Sie die Spieldateien</translation>
     </message>
     <message>
         <source>Are you sure you want to verify RimWorld&apos;s game files through Steam?&lt;br&gt;&lt;br&gt;This process cannot be canceled once it has started.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sind Sie sicher, dass Sie die Spieledateien von RimWorld über Steam überprüfen möchten?&lt;br&gt;&lt;br&gt;Dieser Vorgang kann nicht abgebrochen werden, sobald er gestartet wurde.</translation>
     </message>
 </context>
 <context>
@@ -2668,6 +2711,18 @@ Wählen Sie aus, welche fehlenden Abhängigkeiten Sie zu Ihrer aktiven Mods-List
     <message>
         <source>Needs to be downloaded - requires SteamCMD</source>
         <translation>Muss heruntergeladen werden – erfordert SteamCMD</translation>
+    </message>
+    <message>
+        <source>Open Workshop</source>
+        <translation>Offene Werkstatt</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Herunterladen</translation>
+    </message>
+    <message>
+        <source>Workshop ID not found — open Workshop to find manually</source>
+        <translation>Workshop-ID nicht gefunden – öffnen Sie Workshop, um manuell zu suchen</translation>
     </message>
     <message>
         <source>
@@ -3980,6 +4035,21 @@ Alternative Dependencies:</source>
     </message>
 </context>
 <context>
+    <name>RimSort</name>
+    <message>
+        <source>RimSort Already Running</source>
+        <translation>RimSort läuft bereits</translation>
+    </message>
+    <message>
+        <source>Another instance of RimSort is already running.</source>
+        <translation>Eine weitere Instanz von RimSort läuft bereits.</translation>
+    </message>
+    <message>
+        <source>Please close the existing instance before starting a new one.</source>
+        <translation>Bitte schließen Sie die vorhandene Instanz, bevor Sie eine neue starten.</translation>
+    </message>
+</context>
+<context>
     <name>RuleEditor</name>
     <message>
         <source>No mod currently being edited</source>
@@ -4044,6 +4114,10 @@ Alternative Dependencies:</source>
     <message>
         <source>Search mods by name</source>
         <translation>Suchen Sie Mods nach Namen</translation>
+    </message>
+    <message>
+        <source>RimSort - Rule Editor</source>
+        <translation>RimSort – Regeleditor</translation>
     </message>
     <message>
         <source>Duplicate rule</source>
@@ -4419,8 +4493,40 @@ Alternative Dependencies:</source>
         <translation>Topologisch</translation>
     </message>
     <message>
+        <source>Game location</source>
+        <translation>Spielort</translation>
+    </message>
+    <message>
+        <source>Config location</source>
+        <translation>Konfigurationsort</translation>
+    </message>
+    <message>
+        <source>Steam mods location</source>
+        <translation>Speicherort der Steam-Mods</translation>
+    </message>
+    <message>
+        <source>Local mods location</source>
+        <translation>Lokaler Mod-Speicherort</translation>
+    </message>
+    <message>
+        <source>Instance folder location (optional)</source>
+        <translation>Speicherort des Instanzordners (optional)</translation>
+    </message>
+    <message>
+        <source>Backup Settings</source>
+        <translation>Sicherungseinstellungen</translation>
+    </message>
+    <message>
+        <source>Integration with recent save</source>
+        <translation>Integration mit dem letzten Speichern</translation>
+    </message>
+    <message>
         <source>RimWorld Versions Database</source>
         <translation>RimWorld-Versionsdatenbank</translation>
+    </message>
+    <message>
+        <source>Auxiliary Metadata DB deletion time limit in seconds. (Delete instantly 0, Never Delete -1)</source>
+        <translation>Zeitlimit für das Löschen der Hilfsmetadaten-Datenbank in Sekunden. (Sofort löschen 0, Nie löschen -1)</translation>
     </message>
     <message>
         <source>To enable editing of this time limit, enable the checkbox (Enable editing) on the right.
@@ -4435,6 +4541,14 @@ Dadurch bleiben Ihre Mod-Farben, Benutzernotizen usw. im Grunde für viele Sekun
 (Dies gilt auch für das Löschen außerhalb von RimSort)</translation>
     </message>
     <message>
+        <source>Sorting Method</source>
+        <translation>Sortiermethode</translation>
+    </message>
+    <message>
+        <source>Dependencies Handling Behavior</source>
+        <translation>Verhalten bei der Handhabung von Abhängigkeiten</translation>
+    </message>
+    <message>
         <source>Use dependency rules for sorting.</source>
         <translation>Verwenden Sie Abhängigkeitsregeln für die Sortierung.</translation>
     </message>
@@ -4445,6 +4559,10 @@ Dadurch bleiben Ihre Mod-Farben, Benutzernotizen usw. im Grunde für viele Sekun
     <message>
         <source>Prompt user to download dependencies when click in Sort</source>
         <translation>Fordern Sie den Benutzer zum Herunterladen von Abhängigkeiten beim Klicken in Sortier</translation>
+    </message>
+    <message>
+        <source>XML Parsing Behavior</source>
+        <translation>XML-Parsing-Verhalten</translation>
     </message>
     <message>
         <source>When enabled, *ByVersion tags take precedence over the base tags, 
@@ -4469,6 +4587,10 @@ Einige Mods verwenden die falsche Schreibweise (z. B. about/about.xml), was zu F
 Groß-/Kleinschreibung beachtende Dateisysteme (Linux). Gemäß der RimWorld-Modding-Spezifikation ist die
 Der richtige Pfad ist About/About.xml.
 Siehe: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
+    </message>
+    <message>
+        <source>Mod list options</source>
+        <translation>Mod-Listenoptionen</translation>
     </message>
     <message>
         <source>Notifies to download mods that may be missing in the active modlist</source>
@@ -4503,12 +4625,20 @@ Siehe: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translatio
         <translation>Versteckt ungültige Mods, deren Aktivierung wird nicht empfohlen</translation>
     </message>
     <message>
+        <source>Inactive Mods Sorting</source>
+        <translation>Sortierung inaktiver Mods</translation>
+    </message>
+    <message>
         <source>Save inactive mods sort state</source>
         <translation>Sortierstatus inaktiver Mods speichern</translation>
     </message>
     <message>
         <source>DB Builder</source>
         <translation>DB Builder</translation>
+    </message>
+    <message>
+        <source>When building the database:</source>
+        <translation>Beim Aufbau der Datenbank:</translation>
     </message>
     <message>
         <source>Get PublishedFileIDs from locally installed mods.</source>
@@ -4563,6 +4693,10 @@ Siehe: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translatio
         <translation>Datenbank erstellen</translation>
     </message>
     <message>
+        <source>Database expiry in seconds for example, 604800 for 7 days. and 0 for no expiry.</source>
+        <translation>Datenbankablauf in Sekunden, zum Beispiel 604800 für 7 Tage. und 0 für kein Ablaufdatum.</translation>
+    </message>
+    <message>
         <source>Internal Tools</source>
         <translation>Interne Tools</translation>
     </message>
@@ -4579,6 +4713,10 @@ Siehe: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translatio
 This may potentially prevent some issues with downloading mods such as download failures and deleted mods repopulating.</source>
         <translation>Löschen Sie den Depot -Cache automatisch, bevor Sie Mods über SteamCMD herunterladen.
 Dies kann möglicherweise einige Probleme beim Herunterladen von Mods wie Download -Fehlern und löschten Mods verhindern.</translation>
+    </message>
+    <message>
+        <source>SteamCMD installation location</source>
+        <translation>SteamCMD-Installationsort</translation>
     </message>
     <message>
         <source>Clear depot cache</source>
@@ -4601,8 +4739,24 @@ Dies kann möglicherweise einige Probleme beim Herunterladen von Mods wie Downlo
         <translation>DAWTCMD einbauen</translation>
     </message>
     <message>
+        <source>todds</source>
+        <translation>Todds</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>Qualitätsvoreinstellung</translation>
+    </message>
+    <message>
         <source>Optimized - Recommended for RimWorld</source>
         <translation>Optimiert - für Rimworld empfohlen</translation>
+    </message>
+    <message>
+        <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
+        <translation>Wenn -p als Pfad nicht angegeben ist, wird der Pfad der aktuell aktiven oder aller Mods-Auswahl verwendet.</translation>
+    </message>
+    <message>
+        <source>When optimizing textures</source>
+        <translation>Bei der Optimierung von Texturen</translation>
     </message>
     <message>
         <source>Optimize active mods only</source>
@@ -4623,6 +4777,14 @@ Dies kann möglicherweise einige Probleme beim Herunterladen von Mods wie Downlo
     <message>
         <source>Automatically run todds before launching the game</source>
         <translation>Todds automatisch ausführen, bevor das Spiel gestartet wird</translation>
+    </message>
+    <message>
+        <source>Text Editor command location</source>
+        <translation>Speicherort des Texteditor-Befehls</translation>
+    </message>
+    <message>
+        <source>Theme Settings</source>
+        <translation>Theme-Einstellungen</translation>
     </message>
     <message>
         <source>Enable to use theme / stylesheet instead of system Theme</source>
@@ -4656,6 +4818,10 @@ Der Name des Ordners wird als Name des Themas verwendet und jedes ungültige The
         <translation>Offene Themenort</translation>
     </message>
     <message>
+        <source>Font Settings</source>
+        <translation>Schriftarteinstellungen</translation>
+    </message>
+    <message>
         <source>Font Family</source>
         <translation>Schriftfamilie</translation>
     </message>
@@ -4668,12 +4834,40 @@ Der Name des Ordners wird als Name des Themas verwendet und jedes ungültige The
         <translation>Zurücksetzen</translation>
     </message>
     <message>
+        <source>Language Setting</source>
+        <translation>Spracheinstellung</translation>
+    </message>
+    <message>
         <source>Select Language (Restart required to apply changes)</source>
         <translation>Sprache auswählen (starten Sie erneut, um Änderungen anzuwenden).</translation>
     </message>
     <message>
+        <source>RimSort restart required for some settings</source>
+        <translation>Für einige Einstellungen ist ein RimSort-Neustart erforderlich</translation>
+    </message>
+    <message>
         <source>Constrain dialogues to main window monitor</source>
         <translation>Beschränken Sie Dialoge auf den Hauptfenstermonitor</translation>
+    </message>
+    <message>
+        <source>Main Window Launch State</source>
+        <translation>Startstatus des Hauptfensters</translation>
+    </message>
+    <message>
+        <source>Browser Window Launch State</source>
+        <translation>Startstatus des Browserfensters</translation>
+    </message>
+    <message>
+        <source>Settings Window Launch State</source>
+        <translation>Startstatus des Einstellungsfensters</translation>
+    </message>
+    <message>
+        <source>Custom Width:</source>
+        <translation>Benutzerdefinierte Breite:</translation>
+    </message>
+    <message>
+        <source>Custom Height:</source>
+        <translation>Benutzerdefinierte Höhe:</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -4933,6 +5127,10 @@ Z. B. &apos;oels.vehiclemapframework&apos;, Alternativen: &apos;oels.vehiclemapf
 <context>
     <name>SettingsFailureDialog</name>
     <message>
+        <source>Unable to parse settings file!</source>
+        <translation>Einstellungsdatei kann nicht geparst werden!</translation>
+    </message>
+    <message>
         <source>Your RimSort settings file is corrupt.
 Please choose one of the following options to proceed.</source>
         <translation>Ihre RIMSORT -Einstellungsdatei ist beschädigt.
@@ -5172,6 +5370,13 @@ Bitte wählen Sie eine der folgenden Optionen, um fortzufahren.</translation>
     </message>
 </context>
 <context>
+    <name>TaskProgressWindow</name>
+    <message>
+        <source>Cancel</source>
+        <translation>Stornieren</translation>
+    </message>
+</context>
+<context>
     <name>ThemeController</name>
     <message>
         <source>Theme path Error</source>
@@ -5270,6 +5475,10 @@ Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_g
     <message>
         <source>Export Mod List</source>
         <translation>MOD -Liste exportieren</translation>
+    </message>
+    <message>
+        <source>The selected file is not a valid mod list file.&lt;br&gt;Expected RimWorld ModsConfig XML or RimSort JSON export.&lt;br&gt;Details: {e}</source>
+        <translation>Die ausgewählte Datei ist keine gültige Mod-Listendatei.&lt;br&gt;Erwarteter RimWorld ModsConfig XML- oder RimSort JSON-Export.&lt;br&gt;Details: {e}</translation>
     </message>
     <message>
         <source>The selected file is not a valid mod list file.&lt;br&gt;Details: {e}</source>
@@ -5577,6 +5786,10 @@ Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_g
     <message>
         <source>Warning: These operations will delete selected files permanently!</source>
         <translation>WARNUNG: Diese Operationen löschen ausgewählte Dateien dauerhaft!</translation>
+    </message>
+    <message>
+        <source>Troubleshooting</source>
+        <translation>Fehlerbehebung</translation>
     </message>
     <message>
         <source>Export List</source>

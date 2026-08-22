@@ -152,5 +152,5 @@ class DownloadRimWorldDialog(QDialog):
                     "SteamCMD has been launched in a new terminal window.\nPlease follow the prompts to complete the download."
                 ),
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             show_warning(self.tr("Error"), self.tr(f"Failed to start download: {e}"))

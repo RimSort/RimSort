@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from shutil import rmtree
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6.QtWidgets import QApplication
@@ -227,7 +227,7 @@ class TestUIInteractions:
         troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
     ) -> None:
         """Test that apply button does nothing if cancelled."""
-        controller, game_dir, config_dir, steam_mods_dir = troubleshooting_controller
+        controller, game_dir, _config_dir, steam_mods_dir = troubleshooting_controller
 
         (game_dir / "test.txt").write_text("test")
         test_mod = steam_mods_dir / "123456789"
@@ -252,7 +252,7 @@ class TestSteamUtilities:
         troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
     ) -> None:
         """Test Steam clear cache button behavior."""
-        controller, _, _, steam_mods_dir = troubleshooting_controller
+        controller, _, _, _steam_mods_dir = troubleshooting_controller
 
         steam_path = Path("C:/Program Files (x86)/Steam")
         with (
@@ -282,7 +282,7 @@ class TestSteamUtilities:
         with (
             patch(
                 "pathlib.Path.exists",
-                side_effect=lambda p: False if str(p).endswith("downloading") else True,
+                side_effect=lambda p: not str(p).endswith("downloading"),
             ),
             patch(
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional"
@@ -565,12 +565,13 @@ class TestModListImportExport:
                 "app.controllers.troubleshooting_controller.show_dialogue_conditional",
                 return_value=True,
             ),
-            patch("builtins.open", create=True) as mock_open,
-            patch("json.load", return_value=import_data),
+            patch(
+                "app.controllers.troubleshooting_controller.MetadataController"
+            ) as mock_metadata_cls,
             patch(
                 "app.controllers.troubleshooting_controller.EventBus"
             ) as mock_event_bus,
         ):
+            mock_metadata_cls.instance.return_value = MagicMock()
             controller._on_mod_import_list_button_clicked()
-            mock_open.assert_called()
             mock_event_bus.return_value.do_refresh_mods_lists.emit.assert_called()
