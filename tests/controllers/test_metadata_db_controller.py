@@ -138,3 +138,49 @@ def test_aux_metadata_webapi_timestamp_fields(tmp_path: Path) -> None:
         assert fetched is not None
         assert fetched.external_time_created == 1234567890
         assert fetched.external_time_updated == 1234567891
+
+
+def test_schema_migration_from_legacy_published_file_id(tmp_path: Path) -> None:
+    """Test migration of auxiliary_metadata from legacy schema (published_file_id is non-nullable INTEGER)."""
+    import sqlite3
+    db_path = tmp_path / "legacy.db"
+    
+    # 1. Create a legacy SQLite table manually
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute(
+        "CREATE TABLE auxiliary_metadata ("
+        "  path TEXT PRIMARY KEY, "
+        "  published_file_id INTEGER NOT NULL"
+        ")"
+    )
+    # Insert legacy rows: one valid integer ID, one placeholder -1
+    cursor.execute(
+        "INSERT INTO auxiliary_metadata (path, published_file_id) VALUES (?, ?)",
+        (str(Path("/mods/mod_a")), 123456)
+    )
+    cursor.execute(
+        "INSERT INTO auxiliary_metadata (path, published_file_id) VALUES (?, ?)",
+        (str(Path("/mods/mod_b")), -1)
+    )
+    conn.commit()
+    conn.close()
+
+    # 2. Instantiate the controller. This triggers the schema migration.
+    controller = AuxMetadataController(db_path)
+
+    # 3. Verify the data migration and schema changes
+    with controller.Session() as session:
+        # Check mod_a: 123456 -> "123456"
+        entry_a = controller.get(session, Path("/mods/mod_a"))
+        assert entry_a is not None
+        assert entry_a.published_file_id == "123456"
+
+        # Check mod_b: -1 -> None
+        entry_b = controller.get(session, Path("/mods/mod_b"))
+        assert entry_b is not None
+        assert entry_b.published_file_id is None
+
+        # Verify added fields default correctly
+        assert entry_a.external_time_created == -1
+

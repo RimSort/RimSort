@@ -30,9 +30,9 @@ _ARCH = platform.architecture()[0]
 _CWD = os.getcwd()
 _SYSTEM = platform.system()
 _MACHINE = platform.machine() or platform.processor()
-# Normalize to match pre-built binary and todds asset naming on macOS
+# Normalize to match pre-built binary naming on macOS (using standard arm64 and x86_64)
 if _SYSTEM == "Darwin":
-    _PROCESSOR = {"arm64": "arm", "x86_64": "i386"}.get(_MACHINE, _MACHINE)
+    _PROCESSOR = {"arm64": "arm64", "x86_64": "x86_64"}.get(_MACHINE, _MACHINE)
 else:
     _PROCESSOR = _MACHINE
 
@@ -47,13 +47,11 @@ _NUITKA_CMD = [
     f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
-if (
-    _SYSTEM == "Darwin"
-    and _PROCESSOR in ["i386", "arm"]
-    or _SYSTEM == "Linux"
-    or _SYSTEM == "Windows"
-    and _ARCH == "64bit"
-):
+if _SYSTEM == "Darwin" and _PROCESSOR in ["x86_64", "arm64"]:
+    pass
+elif _SYSTEM == "Linux":
+    pass
+elif _SYSTEM == "Windows" and _ARCH == "64bit":
     pass
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
@@ -377,7 +375,8 @@ def get_latest_todds_release() -> None:
     # Setup environment
     if _SYSTEM == "Darwin":
         print(f"Darwin/MacOS system detected with a {_ARCH} {_PROCESSOR} CPU...")
-        target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
+        todds_arch = {"arm64": "arm", "x86_64": "i386"}.get(_PROCESSOR, _PROCESSOR)
+        target_archive = f"todds_{_SYSTEM}_{todds_arch}_{tag_name}.zip"
     elif _SYSTEM == "Linux":
         print(f"Linux system detected with a {_ARCH} {_PROCESSOR} CPU...")
         target_archive = f"todds_{_SYSTEM}_{_PROCESSOR}_{tag_name}.zip"
@@ -479,7 +478,9 @@ def post_build_fixup_macos_steamworks() -> None:
                     if "arm" in m and "arm" in name:
                         preferred = c
                         break
-                    if ("x86" in m or "i386" in m or "amd64" in m) and "i386" in name:
+                    if ("x86" in m or "i386" in m or "amd64" in m) and (
+                        "i386" in name or "x86_64" in name
+                    ):
                         preferred = c
                         break
                 if preferred is None:

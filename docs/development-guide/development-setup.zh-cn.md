@@ -70,7 +70,7 @@ RimSort 使用 [PySide6](https://pypi.org/project/PySide6/) 模块以及多个�
 
   - 参阅各自章节了解配置方法，或使用 `distribute.py` 自动安装。默认情况下该脚本会直接构建 RimSort，但可通过参数配置启用/禁用构建等步骤。使用 `python distribute.py --help` 查看详细说明
 
-- 使用 Apple M1/M2 芯片的 Mac 用户，若希望使用 MacPorts 而非 Homebrew，可参考以下命令配置：（同样适用于 i386 架构）
+- 使用 Apple M1/M2 芯片的 Mac 用户，若希望使用 MacPorts 而非 Homebrew，可参考以下命令配置：（同样适用于 x86_64 架构）
 
   - `sudo port select --set pip3 pip39`
   - `sudo port select --set python python9`

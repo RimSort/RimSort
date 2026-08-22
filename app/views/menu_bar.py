@@ -30,6 +30,7 @@ class MenuBar(QObject):
         self.settings_action: QAction
         self.quit_action: QAction
         self.open_mod_list_action: QAction
+        self.append_mod_list_action: QAction
         self.save_mod_list_action: QAction
         self.import_from_rentry_action: QAction
         self.import_from_workshop_collection_action: QAction
@@ -127,6 +128,9 @@ class MenuBar(QObject):
         file_menu = self.menu_bar.addMenu(self.tr("File"))
         self.open_mod_list_action = self._add_action(
             file_menu, self.tr("Open Mod List…"), "Ctrl+O"
+        )
+        self.append_mod_list_action = self._add_action(
+            file_menu, self.tr("Append Mod List…"), "Ctrl+Alt+O"
         )
         file_menu.addSeparator()
         self.save_mod_list_action = self._add_action(
