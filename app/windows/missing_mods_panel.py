@@ -360,7 +360,7 @@ class MissingModsPrompt(BaseModsPanel):
 
                 # Update the instance variable for compatibility with existing methods
                 self.data_by_variants = variants_by_packageid
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")
 
     def _find_row_for_combo_box(self, combo_box: QComboBox) -> int | None:

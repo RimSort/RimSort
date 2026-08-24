@@ -99,7 +99,7 @@ class ThemeController:
                         """
                         # return f.read()
                         return font_style + raw_stylesheet
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Error loading theme: {e}")
         else:
             logger.error(f"Attempted to load unsupported theme: {theme_name}")

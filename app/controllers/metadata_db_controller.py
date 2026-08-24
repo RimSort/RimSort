@@ -19,7 +19,7 @@ class MetadataDbController:
         try:
             if db_path.parent:
                 db_path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception(
                 f"Failed to ensure database directory exists for {db_path}: {e}"
             )
@@ -296,7 +296,7 @@ class AuxMetadataController(MetadataDbController):
 
         try:
             acf_data = acf_to_dict(str(acf_path))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error reading .acf file at {acf_path}: {e}")
             return
 

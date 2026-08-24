@@ -88,7 +88,7 @@ class TroubleshootingController:
                     item.unlink()
                 elif item.is_dir():
                     rmtree(item)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to delete {item}: {e}")
                 self.show_failed_warning(item, e)
 
@@ -114,7 +114,7 @@ class TroubleshootingController:
             temp_mods = game_dir / "Mods_temp"
             try:
                 mods_dir.rename(temp_mods)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 item = temp_mods
                 logger.error(f"Failed to rename {item} folder: {e}")
                 self.show_failed_warning(item, e)
@@ -128,7 +128,7 @@ class TroubleshootingController:
         if temp_mods.exists():
             try:
                 temp_mods.rename(mods_dir)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 item = temp_mods
                 logger.error(f"Failed to restore {item} folder: {e}")
                 self.show_failed_warning(item, e)
@@ -145,7 +145,7 @@ class TroubleshootingController:
                     "Process complete, wait for steam to complete further process.",
                 ),
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to launch Steam installation: {e}")
             show_dialogue_conditional(
                 title=self.translate(
@@ -201,7 +201,7 @@ class TroubleshootingController:
                     f"steam://workshop_download_item/294100/{mod_id}"
                 )
                 logger.info(f"opening: steam://workshop_download_item/294100/{mod_id}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to trigger Steam workshop redownload: {e}")
             show_dialogue_conditional(
                 title=self.translate(
@@ -236,7 +236,7 @@ class TroubleshootingController:
                     item.unlink()
                     deleted_any = True
                     logger.info(f"Deleted {item} successfully.")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to delete config file {item}: {e}")
                     self.show_failed_warning(item, e)
 
@@ -287,7 +287,7 @@ class TroubleshootingController:
                             "TroubleshootingController", "Deleted {item} successfully."
                         ).format(item=item),
                     )
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to delete game config file {item}: {e}")
                     self.show_failed_warning(item, e)
 
@@ -352,7 +352,7 @@ class TroubleshootingController:
             try:
                 rmtree(mods_dir)
                 mods_dir.mkdir()  # recreate empty Mods folder
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 item = mods_dir
                 logger.error(f"Failed to clear {item} folder: {e}")
                 self.show_failed_warning(item, e)
@@ -390,7 +390,7 @@ class TroubleshootingController:
                         "Successfully deleted all mods and resetting ModsConfig.xml to vanilla state.",
                     ),
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to reset ModsConfig.xml: {e}")
                 show_dialogue_conditional(
                     title=self.translate("TroubleshootingController", "Error"),
@@ -491,7 +491,7 @@ class TroubleshootingController:
             }
 
             atomic_json_dump(export_data, save_path, indent=2)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to export mod list: {e}")
             show_warning(
                 title=self.translate("TroubleshootingController", "Error"),
@@ -563,7 +563,7 @@ class TroubleshootingController:
                     "Details: {e}",
                 ).format(e=str(e)),
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to import mod list: {e}")
             show_dialogue_conditional(
                 self.translate("TroubleshootingController", "Error"),
@@ -596,7 +596,7 @@ class TroubleshootingController:
                     steam_root = steam_root.parent
                 if steam_root.name.lower() == "steam":
                     return steam_root
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             item = workshop_path
             logger.error(f"Failed to get steam root from {item} : {e}")
             self.show_failed_warning(item, e)
@@ -656,7 +656,7 @@ class TroubleshootingController:
                     buttons=["Ok"],
                 )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to clear Steam cache: {e}")
             show_dialogue_conditional(
                 title=self.translate("TroubleshootingController", "Cache Clear Failed"),
@@ -723,7 +723,7 @@ class TroubleshootingController:
                 icon="info",
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to repair Steam library: {e}")
             show_dialogue_conditional(
                 title=self.translate(
@@ -796,7 +796,7 @@ class TroubleshootingController:
                         "No orphaned workshop entries were found. The ACF file is clean.",
                     ),
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to clean orphaned workshop items: {e}")
             show_warning(
                 title=self.translate("TroubleshootingController", "Cleanup Failed"),

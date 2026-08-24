@@ -147,7 +147,7 @@ class WorkThread(QThread):
     def run(self) -> None:
         try:
             self.data = self.target()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self.exception = e
             logger.error(f"{type(e).__name__}: {e!s}\n{traceback.format_exc()}")
         logger.debug("WorkThread completed, returning to main thread")

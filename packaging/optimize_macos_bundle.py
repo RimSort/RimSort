@@ -41,7 +41,7 @@ def _is_fat_binary(path: str) -> bool:
             text=True,
         )
         return "Architectures in the fat file" in result.stdout
-    except Exception:  # noqa: BLE001
+    except Exception:
         return False
 
 

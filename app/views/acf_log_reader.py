@@ -255,7 +255,7 @@ class AcfLogReader(BaseModsPanel):
 
                 all_rows.append(base_items)
                 row_metadata.append((path, workshop_url))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to prepare ACF entry {pfid}: {e}", exc_info=True)
                 continue
 

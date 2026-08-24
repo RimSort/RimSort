@@ -63,7 +63,7 @@ def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
     # Parse the ACF file using the steamfiles wrapper
     try:
         return acf_to_dict(str(acf_path))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to parse ACF file at {acf_path}: {e}")
         return {}
 
@@ -428,7 +428,7 @@ def steamcmd_purge_mods(
             logger.debug(f"Removing mod manifest file: {manifest_path}")
             try:
                 manifest_path.unlink()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to remove manifest file {manifest_path}: {e}")
 
 
@@ -482,7 +482,7 @@ def validate_acf_file_exists(steam_mods_location: str) -> bool:
             logger.debug(f"ACF file not found at expected location: {acf_file_path}")
 
         return exists
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"Error validating ACF file path for {steam_mods_location}: {e}")
         return False
 

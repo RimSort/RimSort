@@ -69,7 +69,7 @@ def export_to_csv(panel: BaseModsPanel) -> None:
             EXPORT_FILESYSTEM_ERROR.format(e=str(e)),
             "Export File System Error",
         )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         _handle_csv_export_error(
             panel,
             EXPORT_UNKNOWN_ERROR,

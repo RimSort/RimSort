@@ -920,7 +920,7 @@ class SteamBrowser(QWidget):
                 self.web_view.page().runJavaScript(
                     setup_web_channel_script, 0, lambda result: None
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.error(f"Failed to inject workshop badge script: {exc}")
 
             if is_item_page or is_collection_page:
@@ -1129,7 +1129,7 @@ class SteamBrowser(QWidget):
                 self.web_view.loadProgress.disconnect()
                 self.web_view.loadFinished.disconnect()
                 self.web_view.urlChanged.disconnect()
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 pass
 
             # Clean up page

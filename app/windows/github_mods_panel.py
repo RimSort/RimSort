@@ -189,7 +189,7 @@ class GitHubModsPanel(BaseModsPanel):
                 auto_item = self.editor_model.item(row_idx, _COL_AUTO_UPDATE)
                 self.editor_table_view.setIndexWidget(auto_item.index(), auto_cb)
 
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).warning("Failed to populate GitHub mods table")
 
     def _on_auto_update_toggled(self, mod_path: str, checked: bool) -> None:
@@ -210,7 +210,7 @@ class GitHubModsPanel(BaseModsPanel):
                 if entry is not None:
                     entry.auto_update = checked
                     session.commit()
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).warning(
                 f"Failed to update auto_update for {mod_path}"
             )
@@ -273,7 +273,7 @@ class GitHubModsPanel(BaseModsPanel):
                     shutil.rmtree(Path(mod_path))
                 except FileNotFoundError:
                     logger.debug(f"Mod directory already missing: {mod_path}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Failed to delete {mod_path}: {e}")
                     fs_errors.append(mod["display_name"])
                     fs_ok = False
@@ -291,7 +291,7 @@ class GitHubModsPanel(BaseModsPanel):
                     AuxMetadataController.delete(session, Path(mod_path))
                     if fs_ok:
                         deleted += 1
-                except Exception:  # noqa: BLE001
+                except Exception:
                     session.rollback()
                     logger.opt(exception=True).warning(
                         f"Failed to clean up DB for {mod_path}"
@@ -391,7 +391,7 @@ class GitHubModsPanel(BaseModsPanel):
                     session.delete(entry)
                     session.commit()
                     converted += 1
-                except Exception:  # noqa: BLE001
+                except Exception:
                     session.rollback()
                     logger.opt(exception=True).warning(
                         f"Failed to convert {mod_path} to git tracking"
@@ -445,7 +445,7 @@ class GitHubModsPanel(BaseModsPanel):
 
             self.ui_elements.details_label.setText(self.tr("Checking for updates..."))
 
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.opt(exception=True).warning("Failed to start GitHub update check")
 
     def _on_check_updates_finished(self, updates: list[Any]) -> None:

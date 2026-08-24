@@ -154,7 +154,7 @@ class MainContentController(QObject):
                 count = session.query(GitHubModEntry).count()
             if count == 0:
                 return
-        except Exception:  # noqa: BLE001
+        except Exception:
             return
 
         cache_session = self._get_github_cache_session()
@@ -484,7 +484,7 @@ class MainContentController(QObject):
                 github_paths = {
                     entry.mod_path for entry in session.query(GitHubModEntry).all()
                 }
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Could not check GitHub mods table: {e}")
             return list(repos_paths)
 
@@ -874,7 +874,7 @@ class MainContentController(QObject):
                 self._http_download_worker.download_finished.disconnect()
                 self._http_download_worker.quit()
                 self._http_download_worker.wait()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.debug(f"Error during HTTP worker cleanup: {e}")
             self._http_download_worker = None
 
@@ -969,7 +969,7 @@ class MainContentController(QObject):
                 self._git_clone_worker.error.disconnect()
                 self._git_clone_worker.quit()
                 self._git_clone_worker.wait()
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 pass
             self._git_clone_worker = None
 
@@ -1007,7 +1007,7 @@ class MainContentController(QObject):
                 self._git_clone_worker.finished.disconnect()
                 self._git_clone_worker.progress.disconnect()
                 self._git_clone_worker.error.disconnect()
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 pass
             self._git_clone_worker = None
 
@@ -1069,7 +1069,7 @@ class MainContentController(QObject):
                 text=str(e),
             ).exec()
             releases = []
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to query GitHub releases: {e}")
             releases = []
 
@@ -1412,7 +1412,7 @@ class MainContentController(QObject):
         try:
             repo_user_or_org = extract_git_user_or_org(repo_url)
             repo_folder_name = extract_git_dir_name(repo_url)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to parse repository URL: {e}")
             InformationBox(
                 title=self.tr("Invalid repository URL"),
@@ -1509,7 +1509,7 @@ class MainContentController(QObject):
         try:
             g = Github(github_username, github_token)
             original_repo = g.get_repo(f"{repo_user_or_org}/{repo_folder_name}")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to initialize GitHub API: {e}")
             InformationBox(
                 title=self.tr("GitHub API error"),
@@ -1523,7 +1523,7 @@ class MainContentController(QObject):
             # Try to get existing fork
             fork_repo = g.get_repo(f"{github_username}/{repo_folder_name}")
             logger.info(f"Found existing fork: {fork_repo.full_name}")
-        except Exception:  # noqa: BLE001
+        except Exception:
             # Fork doesn't exist, create one
             try:
                 logger.info(f"Creating fork of {original_repo.full_name}")
@@ -1538,7 +1538,7 @@ class MainContentController(QObject):
                         "Fork: {fork_name}<br>Please wait a moment for GitHub to set up the fork."
                     ).format(fork_name=fork_repo.full_name),
                 ).exec()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to create fork: {e}")
                 InformationBox(
                     title=self.tr("Fork creation failed"),
@@ -1753,7 +1753,7 @@ class MainContentController(QObject):
                                         "Your original changes are preserved in the database file and will be committed."
                                     ),
                                 ).exec()
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             logger.warning(f"Could not check for merge conflicts: {e}")
 
                         # If conflicts were detected and resolved, continue with clean state
@@ -1796,7 +1796,7 @@ class MainContentController(QObject):
                     logger.info(
                         f"Created branch: {branch_name} (will switch after commit)"
                     )
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to create branch {branch_name}: {e}")
                     InformationBox(
                         title=self.tr("Branch creation failed"),
@@ -1826,7 +1826,7 @@ class MainContentController(QObject):
                 try:
                     status = repo.status()
                     logger.info(f"Git status before staging: {dict(status)}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Could not get git status: {e}")
 
                 # Stage and commit the database file (this will be on main branch initially)
@@ -1862,7 +1862,7 @@ class MainContentController(QObject):
                         logger.info(
                             f"Moved commit to branch: {branch_name} and reset main branch"
                         )
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         logger.exception("Failed to move commit to new branch")
                         # If this fails, the commit is still on main, but we can continue
                         # Just switch to the new branch and the commit will be duplicated
@@ -1929,7 +1929,7 @@ class MainContentController(QObject):
                                     information=str(push_result_force),
                                 ).exec()
 
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             logger.exception("Error during force push")
                             InformationBox(
                                 title=self.tr("Force push error"),
@@ -1962,7 +1962,7 @@ class MainContentController(QObject):
                         information=str(stage_commit_result),
                     ).exec()
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("Git operations failed")
             InformationBox(
                 title=self.tr("Git operation error"),
@@ -1984,9 +1984,9 @@ class MainContentController(QObject):
                                 logger.warning(
                                     "Main branch not found, staying on current branch"
                                 )
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             logger.warning(f"Failed to switch to main branch: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Failed to switch back to main branch: {e}")
 
     def _create_pull_request(
@@ -2041,10 +2041,10 @@ class MainContentController(QObject):
                     import webbrowser
 
                     webbrowser.open(pull_request.html_url)
-                except Exception:  # noqa: BLE001
+                except Exception:
                     logger.exception("Failed to open browser")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("Failed to create pull request")
             InformationBox(
                 title=self.tr("Pull request failed"),

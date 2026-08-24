@@ -127,7 +127,7 @@ class MetadataController(QObject):
                     entry = self.metadata_db_controller.get_or_create(session, path)
                     entry.type = str(mod_data.mod_type)
                     entry.published_file_id = mod_data.published_file_id
-                except Exception:  # noqa: BLE001
+                except Exception:
                     session.rollback()
                     logger.exception(f"Failed to update aux metadata for mod at {path}")
 

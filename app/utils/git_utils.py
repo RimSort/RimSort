@@ -135,7 +135,7 @@ def _fetch_with_timeout(repo: Repository, remote: pygit2.Remote, timeout: int) -
         try:
             remote.fetch()
             result["success"] = True
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             result["error"] = e
 
     fetch_thread = threading.Thread(target=fetch_target)
@@ -176,7 +176,7 @@ def _is_repository_corrupted(repo_path: str | Path) -> bool:
                 pass
         repo.free()
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         error_str = str(e).lower()
         # Check for common corruption indicators
         corruption_indicators = [
@@ -217,7 +217,7 @@ def _attempt_repository_repair(
                 repo.state_cleanup()
                 repo.free()
                 logger.debug(f"Cleaned up repository object: {repo_path_str}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Failed to cleanup repository object: {e}")
 
         # Try to delete the corrupted repository
@@ -269,7 +269,7 @@ def _attempt_repository_repair(
 
         return True
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to repair repository {repo_path_str}: {e}")
         return False
 
@@ -607,7 +607,7 @@ def parse_git_url(repo_url: str) -> ParsedGitUrl | None:
             return _parse_ssh_git_url(repo_url)
         else:
             return None
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"Failed to parse git URL '{repo_url}': {e}")
         return None
 
@@ -795,7 +795,7 @@ def git_clone(
                             f"Successfully cloned after renaming backup: {repo_path}"
                         )
                         return repo, GitCloneResult.CLONED
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.error(f"Failed to clone after renaming backup: {e}")
                         return None, GitCloneResult.PATH_DELETE_ERROR
 
@@ -850,7 +850,7 @@ def git_check_updates(
                     f"Fetch operation timed out after {config.fetch_timeout} seconds"
                 )
                 return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Fetch operation failed: {e!s}")
             return None
 
@@ -882,7 +882,7 @@ def git_check_updates(
         try:
             remote = repo.remotes["origin"]
             remote_url = remote.url
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: S110
             pass
 
         _handle_git_error(
@@ -953,7 +953,7 @@ def git_pull(
                     f"Fetch operation timed out after {config.fetch_timeout} seconds"
                 )
                 return GitPullResult.GIT_ERROR
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Fetch operation failed: {e!s}")
             # Check for corruption and attempt repair
             error_str = str(e).lower()
@@ -961,7 +961,7 @@ def git_pull(
                 remote_url = None
                 try:
                     remote_url = remote.url
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
                 repaired = _handle_git_error(
                     GitOperationType.PULL,
@@ -983,7 +983,7 @@ def git_pull(
                 stash_result = git_stash(repo, message="Auto-stash before pull")
                 if stash_result.is_error():
                     logger.warning("Failed to stash changes before pull")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Exception during stash before pull: {e}")
 
         # Get remote branch reference
@@ -1044,7 +1044,7 @@ def git_pull(
                             logger.warning(f"Conflict found in: {path_value}")
                         else:
                             logger.warning("Conflict found in unknown file")
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         logger.warning("Conflict found in unknown file")
 
                 if config.notify_errors:
@@ -1062,7 +1062,7 @@ def git_pull(
                     logger.info(
                         "Aborted merge due to conflicts and reset repository state."
                     )
-                except Exception:  # noqa: BLE001
+                except Exception:
                     logger.exception("Failed to abort merge and reset state")
 
                 return GitPullResult.CONFLICT
@@ -1092,7 +1092,7 @@ def git_pull(
         try:
             if remote:
                 remote_url = remote.url
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: S110
             pass
 
         repaired = _handle_git_error(
@@ -1142,7 +1142,7 @@ def git_push(
     if branch is None:
         try:
             branch = repo.head.shorthand
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.error("No active branch found")
             return GitPushResult.GIT_ERROR
 
@@ -1152,7 +1152,7 @@ def git_push(
         if local_oid is None:
             logger.info("No commits to push")
             return GitPushResult.NO_COMMITS
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.error("Failed to get local commit")
         return GitPushResult.GIT_ERROR
 
@@ -1260,7 +1260,7 @@ def git_stage_commit(
                     if tree_id == parent_tree.id:
                         logger.info("No changes to commit")
                         return GitStageCommitResult.NO_CHANGES
-                except Exception:  # noqa: BLE001
+                except Exception:
                     # This might be the first commit or no staged changes
                     logger.info("No changes to commit")
                     return GitStageCommitResult.NO_CHANGES
@@ -1284,7 +1284,7 @@ def git_stage_commit(
             if tree_id == parent_tree.id:
                 logger.info("No changes to commit after staging")
                 return GitStageCommitResult.NO_CHANGES
-        except Exception:  # noqa: BLE001
+        except Exception:
             # This might be the first commit
             logger.debug("First commit or no parent - proceeding with commit")
 
@@ -1295,7 +1295,7 @@ def git_stage_commit(
             parents = []
             try:
                 parents = [repo.head.target]
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 # This might be the first commit (no HEAD yet)
                 pass
 
@@ -1809,7 +1809,7 @@ def get_latest_commit_info(repo: Repository, short_format: bool = True) -> str:
         else:
             return "The HEAD is not a commit."
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return f"Latest commit info unavailable: {e!s}"
 
 
@@ -1824,7 +1824,7 @@ def get_repository_latest_commit(
             commit_info = get_latest_commit_info(repo, short_format=True)
             return True, commit_info, None
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         error_msg = str(e)
         logger.error(f"Error getting latest commit for {repo_path}: {error_msg}")
         return False, None, error_msg

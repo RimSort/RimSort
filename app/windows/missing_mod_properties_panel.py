@@ -112,7 +112,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
                 self.close()
                 # Emit event to check and warn about missing mod properties after closing the panel
                 EventBus().do_check_missing_mod_properties.emit()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error adding mods to ignore list: {e}")
             self._show_message(
                 "Error",
@@ -296,7 +296,7 @@ class MissingModPropertiesPanel(BaseModsPanel):
             # Use base class method to populate the table with grouped mods
             if grouped_mods:
                 self._populate_mods(grouped_mods, add_group_headers=True)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Log errors but don't raise - allow graceful degradation
             logger.error(f"Error populating table from metadata: {e}")
 

@@ -662,7 +662,7 @@ async def retry_with_backoff(
         try:
             # Try to execute the async function with provided arguments
             return await async_func(*args, **kwargs)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Check if we have more retries available
             if attempt < config.max_retries - 1:
                 # Calculate exponential backoff delay
@@ -791,7 +791,7 @@ class GoogleTranslateService(TranslationService):
                     cache.set(text, target_lang, source_lang, "google", translation)
 
                 return translation
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 error_str = str(e)
                 if attempt < self.config.retry_config.max_retries - 1:
                     if (
@@ -918,7 +918,7 @@ class DeepLService(TranslationService):
                         f"❌ DeepL translation timed out after {self.config.retry_config.max_retries} attempts"
                     )
                     return None
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # If the request fails, check if we should retry.
                 if attempt < self.config.retry_config.max_retries - 1:
                     # Calculate the delay for the next retry.
@@ -1024,7 +1024,7 @@ Only return the translation, no explanation:
                 if config.use_cache:
                     cache.set(text, target_lang, source_lang, "openai", translation)
                 return translation
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 # If the request fails, check if we should retry.
                 error_str = str(e).lower()
                 is_timeout = "timeout" in error_str
@@ -1078,7 +1078,7 @@ def get_source_keys_from_file(source_file: Path) -> set[str]:
                     keys.add(key)
 
         return keys
-    except Exception:  # noqa: BLE001
+    except Exception:
         return set()
 
 
@@ -1169,7 +1169,7 @@ def parse_ts_file(
             "language": root.get("language", "unknown"),
         }
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return {"error": str(e)}
 
 
@@ -1385,7 +1385,7 @@ async def auto_translate_file(
                     except TimeoutError:
                         print(f"❌ Translation timeout for [{i}]")
                         translated = ""  # Return empty string for failures
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         print(f"❌ Translation error for [{i}]: {e}")
                         translated = ""  # Return empty string for failures
                     return i, item, translated
@@ -1420,7 +1420,7 @@ async def auto_translate_file(
                         translation_failed_midway = True
                         break
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"⚠️  An unexpected error occurred during auto-translation: {e}")
             translation_failed_midway = True  # Mark as failed if an exception occurs
 
@@ -1469,7 +1469,7 @@ async def auto_translate_file(
                         get_translation_cache().save()
                         if failed > 0:  # If continue_on_failure is True but some failed
                             all_success = False
-                    except Exception as save_e:  # noqa: BLE001
+                    except Exception as save_e:
                         print(f"❌ Error saving the file: {save_e}")
                         print(f"🔄 Restoring from backup: {backup_file}")
                         if backup_file.exists():
@@ -1547,7 +1547,7 @@ def run_lupdate(language: str | None = None) -> bool:
     except FileNotFoundError:
         print("❌ pyside6-lupdate not found. Please install PySide6-Essentials.")
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"❌ Error: {e}")
         return False
 
@@ -1612,7 +1612,7 @@ def run_lrelease(language: str | None = None) -> bool:
     except FileNotFoundError:
         print("❌ pyside6-lrelease not found. Please install PySide6-Essentials.")
         return False
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"❌ Error: {e}")
         return False
 
@@ -2033,7 +2033,7 @@ def validate_translation(language: str | None = None, dry_run: bool = False) -> 
                         f.write(content)
                     print(f"💾 Saved fixes to {ts_file}")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"❌ Error validating file: {e}")
 
 

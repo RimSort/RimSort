@@ -114,7 +114,7 @@ def read_mods_config(path: Path) -> ModsConfig | None:
         return ModsConfig(
             version=version, activeMods=activeMods, knownExpansions=knownExpansions
         )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to read mods config: {e}")
         return None
 
@@ -131,7 +131,7 @@ def write_mods_config(path: Path, mods_config: ModsConfig) -> bool:
             {"ModsConfigData": mods_config.to_dict()}, str(path), raise_errs=True
         )
         return True
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to write mods config: {e}")
         return False
 
@@ -672,7 +672,7 @@ def _create_about_mod_from_xml(
 ) -> tuple[bool, AboutXmlMod]:
     try:
         mod_data = xml_path_to_json(str(mod_xml_path))
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.error(
             f"Unable to parse {mod_xml_path} with the exception: {traceback.format_exc()}"
         )
@@ -696,7 +696,7 @@ def _create_scenario_mod_from_rsc(
 ) -> tuple[bool, ScenarioMod]:
     try:
         mod_data = xml_path_to_json(str(mod_rsc_path))
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.error(
             f"Unable to parse {mod_rsc_path} with the exception: {traceback.format_exc()}"
         )

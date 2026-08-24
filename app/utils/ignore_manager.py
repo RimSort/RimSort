@@ -61,7 +61,7 @@ class IgnoreManager:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse ignore file {ignore_file}: {e}")
             return set()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to load ignored mods from {ignore_file}: {e}")
             return set()
 
@@ -92,7 +92,7 @@ class IgnoreManager:
 
             logger.info(f"Saved {len(ignored_mods)} ignored mods to {ignore_file}")
             return True
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to save ignored mods to {ignore_file}: {e}")
             return False
 

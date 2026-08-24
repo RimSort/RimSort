@@ -35,7 +35,7 @@ class VersionDataService:
                     data = json.load(f)
                     self._depots_data = data.get("depots", {})
                     self._versions_data = data.get("versions", {})
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(
                     f"Failed to load versions data from {self.versions_path}: {e}"
                 )

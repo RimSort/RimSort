@@ -518,7 +518,7 @@ class FileSearchDialog(QDialog):
                     subprocess.Popen(["code", path])
                 else:
                     self._open_file(path)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error opening file with {program}: {e}")
             # Fallback to default opener
             self._open_file(path)
@@ -527,7 +527,7 @@ class FileSearchDialog(QDialog):
     def _results_viewport_width(self) -> int:
         try:
             return max(0, int(self.results_table.viewport().width()))
-        except Exception:  # noqa: BLE001
+        except Exception:
             return max(0, int(self.results_table.width()))
 
     def _init_or_sync_results_weights(self) -> None:
@@ -731,7 +731,7 @@ class FileSearchDialog(QDialog):
                 self.results_table.setUpdatesEnabled(True)
                 self.results_table.setSortingEnabled(True)
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error adding result: {e}")
             self.results_table.setUpdatesEnabled(True)
 
@@ -814,7 +814,7 @@ class FileSearchDialog(QDialog):
                 ensure_ascii=False,
                 indent=4,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to save recent searches: {e}")
 
     def _load_recent_searches(self) -> None:
@@ -826,7 +826,7 @@ class FileSearchDialog(QDialog):
             try:
                 with open(recent_searches_file, "r", encoding="utf-8") as f:
                     self._recent_searches = json.load(f)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to load recent searches: {e}")
 
     def _on_filter_changed(self, text: str) -> None:

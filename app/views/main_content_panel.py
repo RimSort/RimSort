@@ -706,7 +706,7 @@ class MainContent(QObject):
                 Qt.WindowModality.ApplicationModal
             )
             missing_mod_properties_panel.show()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error checking mod properties: {e}")
 
     def __mod_list_slot(self, uuid: str, item: CustomListWidgetItem) -> None:
@@ -1186,7 +1186,7 @@ class MainContent(QObject):
             logger.info(f"Trying to append mods list from XML: {file_path}")
             (
                 active_mods_uuids,
-                inactive_mods_uuids,
+                _inactive_mods_uuids,
                 new_duplicate_mods,
                 new_missing_mods,
             ) = self.metadata_controller.get_mods_from_list(mod_list=file_path)
@@ -1239,7 +1239,7 @@ class MainContent(QObject):
             )
             try:
                 self._import_export_service.export_to_xml(data.active_mods, file_path)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 dialogue.show_fatal_error(
                     title=self.tr("Failed to export to file"),
                     text=self.tr("Failed to export active mods to file:"),
@@ -1757,7 +1757,7 @@ class MainContent(QObject):
 
         try:
             self._import_export_service.save_to_mods_config(data.active_mods)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.error("Could not save active mods")
             dialogue.show_fatal_error(
                 title=self.tr("Could not save active mods"),
@@ -1971,7 +1971,7 @@ class MainContent(QObject):
             )
             logger.error(f"Export failed due to Permission: {error_msg}")
             dialogue.show_warning(title=self.tr("Export Error"), text=error_msg)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             error_msg = self.tr("Export failed: {e}").format(e=str(e))
             logger.error(f"Export failed: {error_msg}")
             dialogue.show_warning(title=self.tr("Export Error"), text=error_msg)
@@ -2527,7 +2527,7 @@ class MainContent(QObject):
                             os.remove(temp_path)
                         logger.info("Download cancelled, cleaned up temporary file")
 
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     # Clean up progress widget
                     self.mod_info_panel.panel.removeWidget(progress_widget)
                     progress_widget.close()
@@ -2882,7 +2882,7 @@ class MainContent(QObject):
                 logger.debug(
                     f"Retrieved copy of existing {rules_source} database to update."
                 )
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.error("Failed to read info from existing database")
             dialogue.show_warning(
                 title=self.tr("Failed to read existing database"),

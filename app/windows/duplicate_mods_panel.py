@@ -82,5 +82,5 @@ class DuplicateModsPanel(BaseModsPanel):
                         logger.warning(
                             f"Metadata not found for path: {path} in package group {packageid}"
                         )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")
