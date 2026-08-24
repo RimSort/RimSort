@@ -125,3 +125,103 @@ def test_run_without_unsaved(
     assert patch_dialogue.return_value is None
     assert save_calls == []
     assert patch_launch == [(Path("/fake/path"), "--test")]
+
+
+def test_upload_file_cancel(
+    main_content: tuple[MainContent, list[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    mc, _ = main_content
+    # Create a temporary file
+    temp_file = tmp_path / "test_log.txt"
+    temp_file.write_text("dummy log content")
+
+    # Mock do_threaded_loading_animation to return None (cancel)
+    monkeypatch.setattr(mc, "do_threaded_loading_animation", Mock(return_value=None))
+
+    # This should return early without errors
+    mc._upload_file(temp_file)
+
+
+def test_upload_file_exception(
+    main_content: tuple[MainContent, list[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    mc, _ = main_content
+    temp_file = tmp_path / "test_log2.txt"
+    temp_file.write_text("dummy log content")
+
+    # Mock do_threaded_loading_animation to raise an Exception
+    monkeypatch.setattr(
+        mc, "do_threaded_loading_animation", Mock(side_effect=RuntimeError("upload error"))
+    )
+
+    # Mock dialogue.show_warning to capture call
+    mock_warning = Mock()
+    monkeypatch.setattr(dialogue, "show_warning", mock_warning)
+
+    mc._upload_file(temp_file)
+    mock_warning.assert_called_once()
+    assert "Upload failed" in mock_warning.call_args[1]["title"]
+
+
+def test_check_for_workshop_updates_exception(
+    main_content: tuple[MainContent, list[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mc, _ = main_content
+    # Mock do_threaded_loading_animation to raise an Exception
+    monkeypatch.setattr(
+        mc, "do_threaded_loading_animation", Mock(side_effect=RuntimeError("workshop error"))
+    )
+
+    # Connect status_signal to a mock slot
+    mock_slot = Mock()
+    mc.status_signal.connect(mock_slot)
+
+    # Mock check_internet_connection to return True
+    monkeypatch.setattr(
+        "app.views.main_content_panel.check_internet_connection", lambda: True
+    )
+
+    mc._do_check_for_workshop_updates()
+    mock_slot.assert_called_once_with(mc.tr("Failed to check for Workshop updates"))
+
+
+def test_check_for_workshop_updates_empty(
+    main_content: tuple[MainContent, list[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mc, _ = main_content
+    # Mock do_threaded_loading_animation to return a result with status "no_workshop_mods"
+    mock_result = Mock()
+    mock_result.status = "no_workshop_mods"
+    monkeypatch.setattr(
+        mc, "do_threaded_loading_animation", Mock(return_value=mock_result)
+    )
+
+    # Connect status_signal to a mock slot
+    mock_slot = Mock()
+    mc.status_signal.connect(mock_slot)
+
+    monkeypatch.setattr(
+        "app.views.main_content_panel.check_internet_connection", lambda: True
+    )
+
+    mc._do_check_for_workshop_updates()
+    mock_slot.assert_called_once_with(mc.tr("No Workshop mods to check for updates"))
+
+
+def test_append_mod_list_cancel(
+    main_content: tuple[MainContent, list[bool]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mc, _ = main_content
+    # Mock dialogue.show_dialogue_file to return None (cancel)
+    monkeypatch.setattr(dialogue, "show_dialogue_file", Mock(return_value=None))
+
+    # Calling this should log cancellation and return early
+    mc._do_append_list_file_xml()
+

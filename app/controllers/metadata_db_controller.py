@@ -62,6 +62,9 @@ class AuxMetadataController(MetadataDbController):
                 col_notnull = col_info[3]  # notnull flag
                 col_type = col_info[2]  # type string
                 if col_notnull or col_type.upper() == "INTEGER":
+                    # Re-query table info to include any columns added in the previous steps
+                    rows = conn.execute(text("PRAGMA table_info(auxiliary_metadata)"))
+                    columns = {row[1]: row for row in rows}
                     old_col_names = list(columns.keys())
                     conn.execute(
                         text(

@@ -51,6 +51,9 @@ class MenuBarController(QObject):
         self.menu_bar.open_mod_list_action.triggered.connect(
             EventBus().do_open_mod_list.emit
         )
+        self.menu_bar.append_mod_list_action.triggered.connect(
+            EventBus().do_append_mod_list.emit
+        )
         self.menu_bar.save_mod_list_action.triggered.connect(
             EventBus().do_save_mod_list_as.emit
         )

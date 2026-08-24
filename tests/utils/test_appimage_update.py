@@ -115,7 +115,7 @@ SAMPLE_ASSETS_WITH_TAR_GZ: list[dict[str, Any]] = [
         "https://example.com/rimsort.AppImage",
     ),
     _make_asset(
-        "RimSort-1.2.3-Darwin_arm.tar.gz",
+        "RimSort-1.2.3-Darwin_arm64.tar.gz",
         "https://example.com/darwin.tar.gz",
     ),
     _make_asset(

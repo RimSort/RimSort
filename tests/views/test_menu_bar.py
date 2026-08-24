@@ -121,6 +121,23 @@ class TestMenuBarControllerWithDisabledUpdater:
             assert controller is not None
 
 
+class TestMenuBarAppendAction:
+    """Test the Append Mod List menu action."""
+
+    def test_append_mod_list_action_emits_event(
+        self,
+        menu_bar_instance: MenuBar,
+        mock_settings_controller: MagicMock,
+    ) -> None:
+        """Verify that triggering append_mod_list_action emits the do_append_mod_list signal."""
+        with patch("app.controllers.menu_bar_controller.EventBus") as mock_event_bus:
+            _controller = MenuBarController(
+                menu_bar_instance, mock_settings_controller.settings, lambda: None
+            )
+            menu_bar_instance.append_mod_list_action.trigger()
+            mock_event_bus.return_value.do_append_mod_list.emit.assert_called_once()
+
+
 class TestMenuBarGameFileVerification:
     """Test confirmation before verifying game files from the menu bar."""
 

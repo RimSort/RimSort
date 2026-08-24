@@ -16,17 +16,17 @@ jobs:
         include:
           - os: macos-15-intel
             platform: "Darwin"
-            arch: "i386"
+            arch: "x86_64"
             env:
-              ARTIFACT_KEY_GLOB: "*Darwin_i386*"
-              ARTIFACT_KEY: "Darwin_i386"
+              ARTIFACT_KEY_GLOB: "*Darwin_x86_64*"
+              ARTIFACT_KEY: "Darwin_x86_64"
               EXPECTED_NAME: "RimSort"
           - os: macos-latest
-            arch: "arm"
+            arch: "arm64"
             platform: "Darwin"
             env:
-              ARTIFACT_KEY_GLOB: "*Darwin_arm*"
-              ARTIFACT_KEY: "Darwin_arm"
+              ARTIFACT_KEY_GLOB: "*Darwin_arm64*"
+              ARTIFACT_KEY: "Darwin_arm64"
               EXPECTED_NAME: "RimSort"
           - os: ubuntu-22.04
             platform: "Ubuntu-22.04"

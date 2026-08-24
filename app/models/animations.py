@@ -80,7 +80,8 @@ class LoadingAnimation(QWidget):
 
         # Store data
         self.animation_finished = False
-        self.data: dict[Any, Any] = {}
+        self.data: Any = None
+        self.exception: Exception | None = None
 
         # Setup thread
         self.gif_path = gif_path
@@ -112,16 +113,16 @@ class LoadingAnimation(QWidget):
             logger.debug("Animation is finished")
             self.stop_animation()
 
-    def handle_data(self, data: dict[Any, Any]) -> None:
+    def handle_data(self, data: Any) -> None:
         """Handle data received from thread."""
-        if data:
-            logger.debug(f"Received {type(data)} from thread")
-            self.data = data
+        logger.debug(f"Received {type(data)} from thread")
+        self.data = data
 
     def prepare_stop_animation(self) -> None:
         """Prepare to stop the animation."""
-        # Set flag when thread finished
+        # Set flag and copy thread exception when thread finished
         logger.debug("Flagging animation to complete")
+        self.exception = self._thread.exception
         self.animation_finished = True
 
     def stop_animation(self) -> None:
@@ -141,11 +142,13 @@ class WorkThread(QThread):
         QThread.__init__(self)
         self.data = None
         self.target = target
+        self.exception: Exception | None = None
 
     def run(self) -> None:
         try:
             self.data = self.target()
         except Exception as e:  # noqa: BLE001
+            self.exception = e
             logger.error(f"{type(e).__name__}: {e!s}\n{traceback.format_exc()}")
         logger.debug("WorkThread completed, returning to main thread")
         self.data_ready.emit(self.data)

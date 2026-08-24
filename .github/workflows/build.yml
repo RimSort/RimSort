@@ -43,14 +43,14 @@ jobs:
         include:
           - os: macos-15-intel
             platform: "Darwin"
-            arch: "i386"
+            arch: "x86_64"
             env:
               BUILD_OUTPUT: "app.app"
               Executable: RimSort
 
           - os: macos-latest
             platform: "Darwin"
-            arch: "arm"
+            arch: "arm64"
             env:
               BUILD_OUTPUT: "app.app"
               Executable: RimSort
@@ -96,7 +96,7 @@ jobs:
         run: |
           brew remove --force --ignore-dependencies openssl@3
           brew cleanup openssl@3
-        if: runner.os == 'macos' && matrix.arch == 'i386'
+        if: runner.os == 'macos' && matrix.arch == 'x86_64'
 
       - name: Get semantic version
         id: sem_version
