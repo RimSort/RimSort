@@ -13,7 +13,7 @@ dependencies = [
     "charset-normalizer==3.5.0",
     "click==8.4.2",
     "loguru==0.7.3",
-    "lxml==6.1.1",
+    "lxml==6.1.2",
     "msgspec==0.21.1",
     "natsort==8.4.0",
     "networkx==3.6.1",
