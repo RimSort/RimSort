@@ -114,7 +114,7 @@ class ZipExtractThread(QThread):
             if self.delete:
                 os.remove(self.zip_path)
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"ZIP extraction failed: {e}")
             self.finished.emit(False, f"Extraction error: {e!s}")
 
@@ -154,7 +154,7 @@ def validate_zip_integrity(zip_path: str | Path) -> tuple[bool, str]:
     except BadZipFile as e:
         logger.error(f"Invalid ZIP file: {e}")
         return False, f"Invalid ZIP file: {e!s}"
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to validate ZIP: {e}")
         return False, f"Error validating ZIP: {e!s}"
 
@@ -241,7 +241,7 @@ def create_zip_backup(
                 # Update progress
                 if progress_callback:
                     progress_callback(current_file, total_files)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to add {file_path} to backup: {e}")
 
     logger.info(f"Created backup: {backup_file}")

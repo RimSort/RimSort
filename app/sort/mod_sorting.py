@@ -198,7 +198,7 @@ def path_to_mod_tags(
 
     try:
         tags = auxdb_get_mod_tags(settings, path)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.debug(f"Failed to retrieve tags for sorting path {path}: {e}")
         return ""
 
@@ -287,7 +287,7 @@ def _get_path_to_color_map(
                 aux_entry = aux_controller.get(aux_session, path)
                 if aux_entry and aux_entry.color_hex:
                     path_to_color[path] = aux_entry.color_hex
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"Failed to fetch auxiliary metadata for batch: {e}")
     return path_to_color
 
@@ -312,7 +312,7 @@ def _get_path_to_updated_map(
                 aux_entry = aux_controller.get(aux_session, path)
                 if aux_entry and aux_entry.acf_time_updated > 0:
                     path_to_updated[path] = aux_entry.acf_time_updated
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"Failed to fetch update times from auxiliary metadata: {e}")
     return path_to_updated
 

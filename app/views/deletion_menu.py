@@ -391,7 +391,7 @@ class ModDeletionMenu(QMenu):
                 mod_metadata, deletion_fn, result, mod_name
             )
 
-        except Exception as general_error:  # noqa: BLE001
+        except Exception as general_error:
             logger.error(f"Critical error processing mod {mod_name}: {general_error}")
             result.failed_count += 1
             return False
@@ -401,7 +401,7 @@ class ModDeletionMenu(QMenu):
         try:
             self.delete_mod_from_aux_db(mod_path)
             return True
-        except Exception as db_error:  # noqa: BLE001
+        except Exception as db_error:
             logger.error(f"Failed to update database for mod {mod_name}: {db_error}")
             return False
 
@@ -434,7 +434,7 @@ class ModDeletionMenu(QMenu):
             result.failed_count += 1
             return False
 
-        except Exception as deletion_error:  # noqa: BLE001
+        except Exception as deletion_error:
             logger.error(
                 f"Unexpected error during deletion of mod {mod_name}: {deletion_error}"
             )
@@ -706,7 +706,7 @@ class ModDeletionMenu(QMenu):
                 f"Successfully initiated {action} for {len(publishedfileids)} mods."
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to initiate Steam {action}: {e}")
             show_warning(
                 title=self.tr("{action} Error").format(

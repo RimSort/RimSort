@@ -155,7 +155,9 @@ def test_upload_file_exception(
 
     # Mock do_threaded_loading_animation to raise an Exception
     monkeypatch.setattr(
-        mc, "do_threaded_loading_animation", Mock(side_effect=RuntimeError("upload error"))
+        mc,
+        "do_threaded_loading_animation",
+        Mock(side_effect=RuntimeError("upload error")),
     )
 
     # Mock dialogue.show_warning to capture call
@@ -174,7 +176,9 @@ def test_check_for_workshop_updates_exception(
     mc, _ = main_content
     # Mock do_threaded_loading_animation to raise an Exception
     monkeypatch.setattr(
-        mc, "do_threaded_loading_animation", Mock(side_effect=RuntimeError("workshop error"))
+        mc,
+        "do_threaded_loading_animation",
+        Mock(side_effect=RuntimeError("workshop error")),
     )
 
     # Connect status_signal to a mock slot
@@ -224,4 +228,3 @@ def test_append_mod_list_cancel(
 
     # Calling this should log cancellation and return early
     mc._do_append_list_file_xml()
-

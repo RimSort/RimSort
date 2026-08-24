@@ -137,7 +137,7 @@ class SearchWorker(QThread):
                 self.memory_warning_shown = True
 
             return memory_percent <= self.memory_warning_threshold
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error checking memory usage: {e}")
             return True
 
@@ -179,7 +179,7 @@ class SearchWorker(QThread):
                             binary_content.decode("utf-8", errors="replace")
                             + "\n\n[File truncated due to size...]"
                         )
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(f"Failed to read large file {file_path}: {e}")
                     return ""
         except OSError as e:
@@ -208,7 +208,7 @@ class SearchWorker(QThread):
         except ImportError:
             # charset_normalizer not available, continue with fallbacks
             pass
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Error detecting encoding: {e}")
 
         # Try common encodings
@@ -233,7 +233,7 @@ class SearchWorker(QThread):
                 binary_content = f.read()
                 # Try to decode with 'replace' option to substitute invalid chars
                 return binary_content.decode("utf-8", errors="replace")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to read file {file_path} after all attempts: {e}")
             return ""
 
@@ -394,7 +394,7 @@ class SearchWorker(QThread):
 
             joined_preview = "\n".join(preview_lines)
             return f"{header}\n{prefix}{joined_preview}{suffix}"
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to get preview for {file_path}: {e}")
             return f"Error generating preview: {e}"
 
@@ -486,7 +486,7 @@ class SearchWorker(QThread):
             # If element not found, return empty string to fall back to standard preview
             return ""
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Error generating XML preview for {file_path}: {e}")
             # Return empty string to fall back to standard preview
             return ""
@@ -575,7 +575,7 @@ class SearchWorker(QThread):
             self.finished.emit()
             self.stats.emit(self.tr("Search complete"))
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Unexpected error during search: {e}")
             self.error.emit(str(e))
 
@@ -698,7 +698,7 @@ class FileSearchController(QObject):
                 self.search_worker.quit()
                 if not self.search_worker.wait(1000):  # Wait up to 1 second
                     self.search_worker.terminate()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Error cleaning up previous search worker: {e}")
 
         # Log search parameters

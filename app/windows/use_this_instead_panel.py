@@ -173,7 +173,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
             # Track row indices for selection during population to avoid double iteration
             self._track_row_indices_during_population(groups)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error populating metadata: {e}")
             # Graceful degradation: clear table if error occurs
             self._clear_table_model()
@@ -468,7 +468,7 @@ class UseThisInsteadPanel(BaseModsPanel):
                 if alt is not None:
                     alternatives[mod] = alt
             return alternatives
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error filtering alternatives: {e}")
             return {}
 
@@ -557,7 +557,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             self._add_mod_row(mod_info)
             if is_original:
                 self._original_rows.add(current_row)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error accessing metadata for mod in group {package_id}: {e}")
 
     def _check_and_get_replacement_local_metadata(
@@ -579,7 +579,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             exists_locally, path = self._check_replacement_exists_locally(pfid)
             local_metadata = self._get_local_metadata_for_replacement(path)
             return exists_locally, path, local_metadata
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(
                 f"Error checking local replacement metadata for pfid {pfid}: {e}"
             )

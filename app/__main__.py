@@ -111,7 +111,7 @@ def main_thread() -> None:
     try:
         app_controller = AppController()
         sys.exit(app_controller.run())
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # Catch exceptions during initial application instantiation
         # Uncaught exceptions during the application loop are caught with excepthook
         stacktrace: str = ""
@@ -140,7 +140,7 @@ def main_thread() -> None:
             try:
                 logger.debug("Stopping watchdog...")
                 app_controller.shutdown_watchdog()
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 stacktrace = traceback.format_exc()
                 logger.warning(f"Exception: {e}")
                 logger.warning(
@@ -171,7 +171,7 @@ if __name__ == "__main__":
                 sys.stdin = open("CONIN$", "r", encoding="utf-8", errors="replace")  # noqa: SIM115
                 sys.stdout = open("CONOUT$", "w", encoding="utf-8", buffering=1)  # noqa: SIM115
                 sys.stderr = open("CONOUT$", "w", encoding="utf-8", buffering=1)  # noqa: SIM115
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 pass  # No console available; carry on silently.
 
         import runpy
@@ -189,7 +189,7 @@ if __name__ == "__main__":
             from app.cli.main import cli
 
             cli()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Handle CLI errors without Qt dialogs
             import traceback
 
@@ -262,7 +262,7 @@ if __name__ == "__main__":
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()
             sys.exit(1)
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.warning(
             "Failed to acquire single-instance lock, continuing without lock",
             exc_info=True,

@@ -109,7 +109,7 @@ def process_batch_repository(
             else:
                 return False, str(result)
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         error_msg = str(e)
         error_lower = error_msg.lower()
 
@@ -148,7 +148,7 @@ def process_batch_repository(
                                         False,
                                         f"Operation failed after repair: {result}",
                                     )
-                    except Exception as retry_e:  # noqa: BLE001
+                    except Exception as retry_e:
                         logger.error(f"Failed {operation_name} after repair: {retry_e}")
                         return (
                             False,
@@ -157,7 +157,7 @@ def process_batch_repository(
                 else:
                     logger.error(f"Failed to repair corrupted repository: {repo_path}")
                     return False, f"Corrupted repository - repair failed: {error_msg}"
-            except Exception as repair_e:  # noqa: BLE001
+            except Exception as repair_e:
                 logger.error(f"Exception during corruption repair: {repair_e}")
                 return False, f"Corruption repair failed: {repair_e!s}"
         else:
@@ -301,7 +301,7 @@ class GitCloneWorker(BaseGitWorker):
             else:
                 self.emit_error(f"Clone failed: {result}")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if not self.isInterruptionRequested():
                 self.handle_exception("clone", e)
         finally:
@@ -309,7 +309,7 @@ class GitCloneWorker(BaseGitWorker):
                 git_utils.git_cleanup(repo)
                 try:
                     gc.collect()
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
 
 
@@ -368,7 +368,7 @@ class GitPushWorker(BaseGitWorker):
                 else:
                     self.emit_error(f"Push failed: {result}")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if not self.isInterruptionRequested():
                 self.handle_exception("push", e)
 
@@ -427,7 +427,7 @@ class GitStageCommitWorker(BaseGitWorker):
                 else:
                     self.emit_error(f"Stage and commit failed: {result}")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if not self.isInterruptionRequested():
                 self.handle_exception("stage and commit", e)
 
@@ -448,7 +448,7 @@ def check_repository_updates(
             else:
                 return True, [], None  # No updates found
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         error_msg = str(e)
         logger.error(f"Error checking updates for {repo_path}: {error_msg}")
         return False, None, error_msg

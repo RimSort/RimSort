@@ -278,7 +278,7 @@ class InstanceController(QObject):
             test_file.unlink()
         except PermissionError:
             return False, f"No write permission for: {override_path}"
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             return False, f"Cannot access folder: {e}"
 
         return True, ""

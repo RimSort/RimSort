@@ -96,7 +96,7 @@ def test_tags(temp_db: AuxMetadataController) -> None:
         # Ensure unique constraint is enforced
         try:
             session.commit()
-        except Exception:  # noqa: BLE001
+        except Exception:
             session.rollback()
         else:
             assert False
@@ -143,8 +143,9 @@ def test_aux_metadata_webapi_timestamp_fields(tmp_path: Path) -> None:
 def test_schema_migration_from_legacy_published_file_id(tmp_path: Path) -> None:
     """Test migration of auxiliary_metadata from legacy schema (published_file_id is non-nullable INTEGER)."""
     import sqlite3
+
     db_path = tmp_path / "legacy.db"
-    
+
     # 1. Create a legacy SQLite table manually
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -157,11 +158,11 @@ def test_schema_migration_from_legacy_published_file_id(tmp_path: Path) -> None:
     # Insert legacy rows: one valid integer ID, one placeholder -1
     cursor.execute(
         "INSERT INTO auxiliary_metadata (path, published_file_id) VALUES (?, ?)",
-        (str(Path("/mods/mod_a")), 123456)
+        (str(Path("/mods/mod_a")), 123456),
     )
     cursor.execute(
         "INSERT INTO auxiliary_metadata (path, published_file_id) VALUES (?, ?)",
-        (str(Path("/mods/mod_b")), -1)
+        (str(Path("/mods/mod_b")), -1),
     )
     conn.commit()
     conn.close()
@@ -183,4 +184,3 @@ def test_schema_migration_from_legacy_published_file_id(tmp_path: Path) -> None:
 
         # Verify added fields default correctly
         assert entry_a.external_time_created == -1
-

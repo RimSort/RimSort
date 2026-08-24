@@ -280,7 +280,7 @@ class MetadataMediator:
                         f"Retrieved game version from Version.txt: {self.game_version}"
                     )
                     return True
-            except Exception:  # noqa: BLE001
+            except Exception:
                 logger.error(
                     f"Unable to parse Version.txt from game folder: {version_file_path}"
                 )
@@ -395,7 +395,7 @@ class MetadataMediator:
                             )
 
                     results[mod.uuid] = mod
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Error parsing mod at path: {path}")
                     logger.error(e)
 

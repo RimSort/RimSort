@@ -38,7 +38,7 @@ def subfolder_contains_candidate_path(
         subfolder_paths.extend(
             [subfolder / folder for folder in subfolder.iterdir() if folder.is_dir()]
         )
-    except Exception:  # noqa: BLE001
+    except Exception:
         # Could not list subdirectories, return False
         return False
 
@@ -88,7 +88,7 @@ def cleanup_old_backups(backup_dir: Path, keep: int) -> None:
             for old_backup in backups[keep:]:
                 logger.info(f"Deleting old backup: {old_backup}")
                 os.remove(old_backup)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"An error occurred during backup cleanup: {e}")
 
 
@@ -147,7 +147,7 @@ def create_saves_backup(
 
         return str(backup_archive_path)
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"An error occurred during save backup: {e}")
         return None
 

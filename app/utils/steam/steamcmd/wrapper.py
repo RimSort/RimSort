@@ -205,7 +205,7 @@ class SteamcmdInterface:
                 runner,
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             if runner is not None:
                 runner.message(
                     f"Failed to create symlink. Error: {type(e).__name__}: {e!s}"
@@ -734,7 +734,7 @@ class SteamcmdInterface:
                         tarobj.extractall(self.steamcmd_install_path)
                     runner.message("Installation completed")
                     installed = True
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 runner.message("Installation failed")
                 show_fatal_error(
                     "SteamcmdInterface",

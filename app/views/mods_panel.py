@@ -467,7 +467,7 @@ class ModListItemInner(QWidget):
             try:
                 if widget.isHidden():
                     return 0
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 pass
             pixmap = widget.pixmap()
             if pixmap and not pixmap.isNull():
@@ -1000,7 +1000,7 @@ class TagEditDialog(QDialog):
     def populate_tags(self) -> None:
         try:
             tags = auxdb_get_all_tags(self.settings)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Unable to load existing tags: {e}")
             tags = []
 
@@ -2235,7 +2235,7 @@ class ModListWidget(QListWidget):
                                     logger.debug(
                                         f'Successfully "converted" local mod -> SteamCMD by renaming from {folder_name} -> {publishedfileid}'
                                     )
-                                except Exception as e:  # noqa: BLE001
+                                except Exception as e:
                                     stacktrace = format_exc()
                                     logger.error(
                                         f"Failed to convert mod: {original_mod_path} - {e}"
@@ -2272,7 +2272,7 @@ class ModListWidget(QListWidget):
                                     logger.debug(
                                         f'Successfully "converted" SteamCMD mod by renaming from {publishedfileid} -> {mod_name}'
                                     )
-                                except Exception as e:  # noqa: BLE001
+                                except Exception as e:
                                     stacktrace = format_exc()
                                     logger.error(
                                         f"Failed to convert mod: {original_mod_path} - {e}"
@@ -2385,7 +2385,7 @@ class ModListWidget(QListWidget):
                                 logger.debug(
                                     f'Successfully "converted" Steam mod by copying {publishedfileid_from_folder_name} -> {mod_name} and migrating mod to local mods directory'
                                 )
-                            except Exception as e:  # noqa: BLE001
+                            except Exception as e:
                                 stacktrace = format_exc()
                                 logger.error(f"Failed to convert mod: {path} - {e}")
                                 logger.error(stacktrace)
@@ -3083,7 +3083,7 @@ class ModListWidget(QListWidget):
                 try:
                     data["list_type"] = self.list_type
                     item.setData(Qt.ItemDataRole.UserRole, data)
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
                 uuid = data["path"]
                 self.paths.insert(idx, uuid)
@@ -3563,7 +3563,7 @@ class ModListWidget(QListWidget):
                     else:
                         current_item_data.__dict__["is_new"] = False
                         current_item_data.__dict__["in_save"] = is_in_save
-                except Exception:  # noqa: BLE001
+                except Exception:
                     current_item_data.__dict__["is_new"] = False
                     current_item_data.__dict__["in_save"] = False
             else:
@@ -3851,7 +3851,7 @@ class ModListWidget(QListWidget):
             # Normalize to lowercase
             self._latest_save_package_ids = {str(i).lower() for i in ids_set}
             return self._latest_save_package_ids
-        except Exception:  # noqa: BLE001
+        except Exception:
             return None
 
     def _has_replacement(
@@ -4153,7 +4153,7 @@ class ModListWidget(QListWidget):
             if data is not None:
                 data["list_type"] = self.list_type
                 item.setData(Qt.ItemDataRole.UserRole, data)
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: S110
             pass
 
         # Reconnect to ALL slots
@@ -4204,7 +4204,7 @@ class ModsPanel(QWidget):
         # Select the combo box entry by matching stored enum name to item userData
         try:
             desired_enum = ModsPanelSortKey[self.inactive_mods_sort_key]
-        except Exception:  # noqa: BLE001
+        except Exception:
             desired_enum = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
         idx = self.inactive_mods_sort_combobox.findData(desired_enum)
         if idx >= 0:
@@ -4605,7 +4605,7 @@ class ModsPanel(QWidget):
         # FILESYSTEM_MODIFIED_TIME if the stored value is invalid.
         try:
             desired_enum = ModsPanelSortKey[self.inactive_mods_sort_key]
-        except Exception:  # noqa: BLE001
+        except Exception:
             desired_enum = ModsPanelSortKey.FILESYSTEM_MODIFIED_TIME
         idx = self.inactive_mods_sort_combobox.findData(desired_enum)
         if idx >= 0:
@@ -4793,7 +4793,7 @@ class ModsPanel(QWidget):
             if hasattr(self, "_size_worker") and self._size_worker:
                 try:
                     self._size_worker.deleteLater()
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
                 self._size_worker = None
 
@@ -4963,7 +4963,7 @@ class ModsPanel(QWidget):
         """Refresh the available tags in both filter panels from the aux DB."""
         try:
             tags = auxdb_get_all_tags(self.settings)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Unable to load tag filter list: {e}")
             tags = []
         self.active_filter_button.filter_panel.set_available_tags(tags)
@@ -5034,7 +5034,7 @@ class ModsPanel(QWidget):
                             "is_new", False
                         ):
                             new_count += 1
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
 
             # Count recently-updated mods. Only if the indicator is enabled
@@ -5046,7 +5046,7 @@ class ModsPanel(QWidget):
                             "is_recently_updated", False
                         ):
                             updated_count += 1
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
 
             padding = " "

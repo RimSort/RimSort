@@ -255,7 +255,7 @@ class RunnerPanel(QWidget):
             if self._is_process_running("steamcmd"):
                 self._stop_steamcmd_log_tail()
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error killing process: {e}")
             # Try direct kill as fallback
             self.process.kill()
@@ -302,7 +302,7 @@ class RunnerPanel(QWidget):
             except OSError as e:
                 logger.error(f"Error writing to file: {e}")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Unexpected error in save operation: {e}")
 
     def change_progress_bar_color(self, state: str) -> None:
@@ -747,7 +747,7 @@ class RunnerPanel(QWidget):
                         mod_title = mod_metadata.get("title")
                         if mod_title:
                             pfids_to_name[mod_metadata["publishedfileid"]] = mod_title
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Error fetching mod details from Steam API: {e}")
 
         return pfids_to_name

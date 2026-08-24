@@ -66,7 +66,7 @@ def parse_github_url(url: str) -> tuple[str, str] | None:
     """
     try:
         parsed = urlparse(url)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
     if parsed.hostname not in ("github.com", "www.github.com"):

@@ -122,7 +122,7 @@ class SteamworksInterface:
         self.steamworks = STEAMWORKS(_libs=_libs)
         try:
             self.steamworks.initialize()  # Init the Steamworks API
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(
                 f"Unable to initialize Steamworks API due to exception: {e.__class__.__name__}"
             )
@@ -511,7 +511,7 @@ class SteamworksSubscriptionHandler(Process):
                     f"⚠ Timeout after {STEAMWORKS_TIMEOUT}s (callbacks: {steamworks_interface.callbacks_count}). Operations queued - Steam will process in background."
                 )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(
                 f"✗ Error during subscription action {self.action}: {e}", exc_info=True
             )
@@ -650,7 +650,7 @@ class SteamworksSubscriptionHandler(Process):
                     logger.warning(
                         "DownloadItem skipped: not supported by SteamworksPy library."
                     )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(
                     f"Failed to trigger download for {pfid}: {e}", exc_info=True
                 )
@@ -703,7 +703,7 @@ class SteamworksSubscriptionHandler(Process):
                     )
                 else:
                     logger.debug(f"✓ {operation.capitalize()} callback fired")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.debug(f"{operation.capitalize()} callback: {e}")
 
         return callback

@@ -68,7 +68,7 @@ class InstanceService:
                 f"Copying game folder from {existing_instance_game_folder} to {target_game_folder}"
             )
             copytree(existing_instance_game_folder, target_game_folder, symlinks=True)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An error occurred while copying game folder: {e}")
 
     @staticmethod
@@ -95,7 +95,7 @@ class InstanceService:
                 target_config_folder,
                 symlinks=True,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An error occurred while copying config folder: {e}")
 
     @staticmethod
@@ -120,7 +120,7 @@ class InstanceService:
                 target_local_folder,
                 symlinks=True,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An error occurred while copying local folder: {e}")
 
     @staticmethod
@@ -143,7 +143,7 @@ class InstanceService:
                         os.path.join(target_local_folder, subdir),
                         symlinks=True,
                     )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An error occurred while cloning Workshop mods: {e}")
 
     @staticmethod
@@ -281,7 +281,7 @@ class InstanceService:
                         "Compressing [{instance_name}] instance folder to archive...",
                     ).format(instance_name=instance_name),
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 show_fatal_error(
                     title=QCoreApplication.translate(
                         "InstanceService", "Error compressing instance"
@@ -331,7 +331,7 @@ class InstanceService:
             instance_controller = InstanceController.from_archive(input_path)
         except InvalidArchivePathError:
             return
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"An error occurred while reading instance archive: {e}")
             show_fatal_error(
                 title=QCoreApplication.translate(
@@ -931,7 +931,7 @@ class InstanceService:
                         ignore_errors=False,
                         onerror=handle_remove_read_only,
                     )
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Error deleting instance: {e}")
                 self.settings.instances.pop(self.settings.current_instance)
                 EventBus().do_activate_current_instance.emit(DEFAULT_INSTANCE_NAME)

@@ -128,5 +128,5 @@ class WorkshopModUpdaterPanel(BaseModsPanel):
             for uuid, metadata in self.eligible_metadata:
                 mod_info = ModInfo.from_metadata(uuid, metadata)
                 self._add_mod_row(mod_info)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error populating table from metadata: {e}")

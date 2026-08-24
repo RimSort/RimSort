@@ -570,7 +570,7 @@ class BaseModsPanel(QWidget):
                     if mod_path and os.path.exists(mod_path):
                         try:
                             shutil.rmtree(mod_path)
-                        except Exception as e:  # noqa: BLE001
+                        except Exception as e:
                             logger.error(
                                 f"Error deleting mod directory {mod_path}: {e}"
                             )
@@ -843,7 +843,7 @@ class BaseModsPanel(QWidget):
                 return None
 
             return name_item.data(Qt.ItemDataRole.UserRole)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Error accessing key from row {row}: {e}")
             return None
 
@@ -883,7 +883,7 @@ class BaseModsPanel(QWidget):
                             if isinstance(mod, AboutXmlMod):
                                 compat["packageid"] = str(mod.package_id)
                             selected_mods.append(compat)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Error getting selected mod metadata: {e}")
         return selected_mods
 

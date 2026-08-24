@@ -156,7 +156,7 @@ def setup_test_files(request: pytest.FixtureRequest) -> Generator[str, None, Non
         import shutil
 
         shutil.rmtree(mods_dir)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Warning: Failed to clean up test directory: {e}")
 
 

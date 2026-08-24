@@ -73,7 +73,7 @@ def validate_rimworld_mods_list(
         ):
             logger.info("Validated XML formatting (RimWorld .rml modlist)")
             return mods_config_data["savedModList"]["meta"]["modIds"]["li"]
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Error trying to validate data: {e}")
         show_warning(
             title=translate("validate_rimworld_mods_list", "Unable to read data"),

@@ -92,7 +92,7 @@ def main() -> int:
         try:
             errors = check_file(path)
             all_errors.extend(errors)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"Error scanning {path}: {exc}", file=sys.stderr)
             return 1
 

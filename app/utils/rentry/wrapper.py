@@ -106,7 +106,7 @@ class RentryUpload:
         except requests.RequestException as e:
             # Handle any exceptions that occur during the process
             RentryError().show_request_exception(e)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Handle any other exceptions that occur during the process
             logger.error(f"An error occurred while Uploading rentry.co content: {e!s}")
             show_fatal_error(
@@ -286,7 +286,7 @@ class RentryImport:
         except requests.RequestException as e:
             # Handle any exceptions that occur during the process
             RentryError().show_request_exception(e)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Handle any other exceptions that occur during the process
             logger.error(f"An error occurred while fetching rentry.co content: {e!s}")
             show_fatal_error(

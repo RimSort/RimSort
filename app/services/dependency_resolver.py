@@ -75,7 +75,7 @@ def _resolve_from_about_xml(
                 try:
                     major, minor = metadata_controller.game_version.split(".")[:2]
                     target_keys = [f"v{major}.{minor}", f"{major}.{minor}"]
-                except Exception:  # noqa: BLE001
+                except Exception:
                     target_keys = []
 
                 deps_by_version = root.find("modDependenciesByVersion")
@@ -108,7 +108,7 @@ def _resolve_from_about_xml(
 
             if workshop_id:
                 return workshop_id
-        except Exception:  # noqa: BLE001, S112
+        except Exception:  # noqa: S112
             continue
     return None
 

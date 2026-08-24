@@ -38,14 +38,14 @@ class WindowManager:
             if window is not None:
                 try:
                     window.close()
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     # Avoid RuntimeError: libshiboken: Internal C++ object (Panel) already deleted.
                     pass
         for window in self._child_windows:
             if window is not None:
                 try:
                     window.close()
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     # Avoid RuntimeError: libshiboken: Internal C++ object (Panel) already deleted.
                     pass
         self._child_windows.clear()

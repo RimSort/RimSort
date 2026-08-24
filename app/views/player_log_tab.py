@@ -278,7 +278,7 @@ class LogHighlighter(QSyntaxHighlighter):
                 for match in self._search_regex.finditer(text):
                     start, end = match.span()
                     self.setFormat(start, end - start, self.search_format)
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: S110
                 pass
         # Apply other patterns
         for pattern, fmt in self.patterns:
@@ -432,7 +432,7 @@ class PlayerLogTab(QWidget):
             player_log_path: Path = Path(config_folder).parent / "Player.log"
             if player_log_path.exists():
                 return player_log_path
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: S110
             pass
         return None
 
@@ -914,7 +914,7 @@ class PlayerLogTab(QWidget):
             self._update_file_info()
             self._update_statistics()
             self.apply_filter(new_content)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error reading appended log content: {e!s}")
             self._file_change_debounce_timer.start()  # Restart the debounce timer on error
 
@@ -962,7 +962,7 @@ class PlayerLogTab(QWidget):
                 logger.info(
                     f"Started real-time monitoring of Player.log at {self.player_log_path}"
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Failed to start observer: {e}")
                 show_warning(f"Failed to start real-time monitoring: {e}")
                 self.real_time_monitor_checkbox.setChecked(False)
@@ -1056,7 +1056,7 @@ class PlayerLogTab(QWidget):
             logger.info(
                 "Loaded player log file in chunks using memory-efficient storage."
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to load player log file: {e}")
             self.progress_bar.hide()
             self.enable_options()
@@ -1116,7 +1116,7 @@ class PlayerLogTab(QWidget):
             self.last_modified_label.setText(
                 self.tr("Modified: {modified_str}").format(modified_str=modified_str)
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to update file info: {e}")
 
     def _update_match_count(self) -> None:
@@ -1248,7 +1248,7 @@ class PlayerLogTab(QWidget):
                 # Update visual feedback
                 self._update_navigation_feedback(pattern, len(matches))
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error in goto_previous_pattern: {e}")
             self._clear_pattern_cache(pattern)
 
@@ -1280,7 +1280,7 @@ class PlayerLogTab(QWidget):
                 # Update visual feedback
                 self._update_navigation_feedback(pattern, len(matches))
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error in goto_next_pattern: {e}")
             self._clear_pattern_cache(pattern)
 
@@ -1357,7 +1357,7 @@ class PlayerLogTab(QWidget):
                     title=self.tr("Log loaded successfully from URL"),
                     text=f"{url}",
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 show_warning(
                     title=self.tr("Failed to load log from URL"),
                     text=self.tr("Failed due to error: {error}").format(error=e),
@@ -1377,7 +1377,7 @@ class PlayerLogTab(QWidget):
                 show_information(f"Log exported to {file_path}")
             except OSError as e:
                 show_warning(f"Failed to export log: {e.strerror}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 show_warning(f"Failed to export log: {type(e).__name__}: {e}")
 
     def show_context_menu(self, pos: QPoint) -> None:

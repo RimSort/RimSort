@@ -117,7 +117,7 @@ class IgnoreJsonEditor(QDialog):
                 self._add_mod_item(mod_packageid)
 
             logger.info(f"Loaded {len(ignored_mods)} ignored mods")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to load ignored mods: {e}")
             QMessageBox.critical(
                 self,
@@ -167,7 +167,7 @@ class IgnoreJsonEditor(QDialog):
                     self.tr("Error"),
                     self.tr("Failed to save changes to ignore list."),
                 )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error saving changes: {e}")
             QMessageBox.critical(
                 self,

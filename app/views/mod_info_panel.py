@@ -87,7 +87,7 @@ class ClickablePathLabel(QLabel):
                 try:
                     webbrowser.open(self.path)
                     logger.info(f"Opening URL: {self.path}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to open URL {self.path}: {e}")
             else:
                 try:
@@ -100,7 +100,7 @@ class ClickablePathLabel(QLabel):
                             logger.warning(f"Path is not a directory: {self.path}")
                     else:
                         logger.warning(f"Mod folder does not exist: {self.path}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.error(f"Failed to open mod folder {self.path}: {e}")
         super().mousePressEvent(event)
 
@@ -520,7 +520,7 @@ class ModInfoPanel:
             mod_path = getattr(self, "_github_mod_path", None)
             if mod_path:
                 self._update_github_info(mod_path)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.debug("Could not refresh GitHub info for current mod")
 
     def _update_github_info(self, mod_path: str | None) -> None:
@@ -585,7 +585,7 @@ class ModInfoPanel:
                                 update_available = True
                 finally:
                     cache_session.close()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 logger.debug("Could not load cached releases for {}", owner_repo)
 
             self.show_github_info(
@@ -595,7 +595,7 @@ class ModInfoPanel:
                 update_available=update_available,
                 mod_path=mod_path,
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.debug("Could not check GitHub mod status for {}", mod_path)
             self.hide_github_info()
 
@@ -691,7 +691,7 @@ class ModInfoPanel:
         """Set user-defined tags information."""
         try:
             tags = auxdb_get_mod_tags(self.settings, uuid)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Failed to load tags for mod info panel UUID {uuid}: {e}")
             tags = []
 
@@ -708,7 +708,7 @@ class ModInfoPanel:
         try:
             size_bytes = path_to_folder_size(uuid)
             self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Error calculating folder size for UUID {uuid}: {e}")
             self.mod_info_folder_size_value.setText("Not available")
 

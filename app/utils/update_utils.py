@@ -400,7 +400,7 @@ class TarExtractThread(QThread):
                 f"Time elapsed: {elapsed:.2f} seconds",
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("tar.gz extraction failed")
             self.finished.emit(False, f"Extraction error: {e!s}")
 
@@ -622,7 +622,7 @@ class UpdateManager(QObject):
             total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
             logger.info(f"Update check process completed in {total_time:.2f}s")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
             logger.exception(f"Update check failed after {total_time:.2f}s")
             dialogue.show_warning(
@@ -741,7 +741,7 @@ class UpdateManager(QObject):
                     return version.parse("999.999.999")
 
             return version.parse(current_version)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to parse version '{current_version}': {e}")
             return version.parse("0.0.0")
 
@@ -817,7 +817,7 @@ class UpdateManager(QObject):
             # Parse version
             try:
                 latest_version = version.parse(normalized_tag)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning(f"Failed to parse version from tag {tag_name}: {e}")
                 self.show_update_error()
                 return None
@@ -852,7 +852,7 @@ class UpdateManager(QObject):
                 text=self.tr(ERR_API_CONNECTION_TEXT).format(error=str(e)),
             )
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Unexpected error fetching release info: {e}")
             self.show_update_error()
             return None
@@ -1089,7 +1089,7 @@ class UpdateManager(QObject):
         try:
             self._download_update(url)
             self.download_complete.emit(True, "")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self.download_complete.emit(False, str(e))
 
     def _perform_update(
@@ -1146,7 +1146,7 @@ class UpdateManager(QObject):
                             self.mod_info_panel.panel.removeWidget(
                                 self._progress_widget
                             )
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
 
             self.download_complete.connect(on_complete)
@@ -1260,7 +1260,7 @@ class UpdateManager(QObject):
                 text=self.tr(ERR_LAUNCH_FAILED_TEXT),
                 information=f"Error: {e!s}",
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("Unexpected update process failure")
             dialogue.show_warning(
                 title=self.tr(ERR_UPDATE_FAILED_TITLE),
@@ -1275,7 +1275,7 @@ class UpdateManager(QObject):
                     self.mod_info_panel.info_panel_frame.show()
                     if hasattr(self.main_content, "disable_enable_widgets_signal"):
                         self.main_content.disable_enable_widgets_signal.emit(True)
-                except Exception:  # noqa: BLE001, S110
+                except Exception:  # noqa: S110
                     pass
 
     def _get_file_size(self, url: str) -> int:
@@ -1291,7 +1291,7 @@ class UpdateManager(QObject):
         try:
             head_response = http.head(url, timeout=API_TIMEOUT, allow_redirects=True)
             return int(head_response.headers.get("content-length", 0))
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.debug(f"Failed to get file size: {e}")
             return 0
 
@@ -1526,7 +1526,7 @@ class UpdateManager(QObject):
                             # Restore panel visibility
                             # jscpd:ignore-end
                             self.mod_info_panel.info_panel_frame.show()
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(f"Error closing progress widget: {e}")
 
             extract_thread = ZipExtractThread(
@@ -1568,7 +1568,7 @@ class UpdateManager(QObject):
             if temp_zip_path.exists():
                 try:
                     temp_zip_path.unlink()
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(f"Failed to clean up temp ZIP file: {e}")
 
     def _extract_tar_gz(self, content: bytes, temp_base: Path) -> int:
@@ -1647,7 +1647,7 @@ class UpdateManager(QObject):
                                 self._progress_widget
                             )
                             self.mod_info_panel.info_panel_frame.show()
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(f"Error closing progress widget: {e}")
 
             extract_thread = TarExtractThread(
@@ -1682,7 +1682,7 @@ class UpdateManager(QObject):
             if temp_tar_path.exists():
                 try:
                     temp_tar_path.unlink()
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(f"Failed to clean up temp tar.gz file: {e}")
 
     def _normalize_structure(self, temp_base: Path, extracted_files: int) -> None:
@@ -1719,7 +1719,7 @@ class UpdateManager(QObject):
             try:
                 self._normalize_extracted_structure(temp_base, extracted_files)
                 normalization_result["success"] = True
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 normalization_result["error"] = e
             finally:
                 logger.debug("Structure normalization worker thread completed")
@@ -1738,7 +1738,7 @@ class UpdateManager(QObject):
                     self.mod_info_panel.panel.removeWidget(self._progress_widget)
                     # Restore panel visibility
                     self.mod_info_panel.info_panel_frame.show()
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: S110
             pass
 
         if not normalization_result["success"]:
@@ -2136,7 +2136,7 @@ class UpdateManager(QObject):
                         update_manager=self,
                     )
                     logger.debug(f"Updated script path to: {script_path}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(
                         f"Failed to copy update.bat to app storage, using original: {e}"
                     )
@@ -2425,7 +2425,7 @@ class UpdateManager(QObject):
                 lf.write(
                     f"\n===== RimSort updater launched: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ({system}) =====\n"  # noqa: DTZ005
                 )
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: S110
             # Non-fatal; continue without preface
             pass
 
@@ -2512,7 +2512,7 @@ class UpdateManager(QObject):
                 if self.mod_info_panel:
                     self.mod_info_panel.panel.removeWidget(progress_widget)
                     self.mod_info_panel.info_panel_frame.show()
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.exception("Error cleaning up progress widget")
 
     def _create_backup_with_progress(self) -> None:
@@ -2574,7 +2574,7 @@ class UpdateManager(QObject):
                 # Use emit for thread safety, or call directly if on main thread
                 try:
                     self._progress_widget.update_progress(percent, message)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.debug(f"Error updating backup progress: {e}")
 
         try:
@@ -2592,7 +2592,7 @@ class UpdateManager(QObject):
             else:
                 logger.warning("Backup file not created")
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to create backup: {e}")
             logger.error(f"Backup creation error traceback: {traceback.format_exc()}")
             # show dialog and ask user to if they want to proceed with update anyway
@@ -2631,7 +2631,7 @@ class UpdateManager(QObject):
                 try:
                     backup_file.unlink()
                     logger.info(f"Removed old backup: {backup_file.name}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     logger.warning(
                         f"Failed to remove old backup {backup_file.name}: {e}"
                     )
@@ -2640,7 +2640,7 @@ class UpdateManager(QObject):
                 f"Cleaned up {len(backups_to_remove)} old backups, keeping {max_backups} most recent"
             )
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(f"Failed to cleanup old backups: {e}")
 
     def show_update_error(self) -> None:

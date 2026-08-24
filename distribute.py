@@ -47,11 +47,13 @@ _NUITKA_CMD = [
     f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
-if _SYSTEM == "Darwin" and _PROCESSOR in ["x86_64", "arm64"]:
-    pass
-elif _SYSTEM == "Linux":
-    pass
-elif _SYSTEM == "Windows" and _ARCH == "64bit":
+if (
+    _SYSTEM == "Darwin"
+    and _PROCESSOR in ["x86_64", "arm64"]
+    or _SYSTEM == "Linux"
+    or _SYSTEM == "Windows"
+    and _ARCH == "64bit"
+):
     pass
 else:
     print(f"Unsupported SYSTEM: {_SYSTEM} {_ARCH} with {_PROCESSOR}")
@@ -410,7 +412,7 @@ def get_latest_todds_release() -> None:
         if os.path.exists(todds_executable_path):
             original_stat = os.stat(todds_executable_path)
             os.chmod(todds_executable_path, original_stat.st_mode | S_IEXEC)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Failed to download: {browser_download_url}")
         print(
             "Did the file/url change?\nDoes your environment have access to the Internet?"
@@ -487,7 +489,7 @@ def post_build_fixup_macos_steamworks() -> None:
                     preferred = candidates[0]
                 shutil.copyfile(preferred, generic)
                 print(f"Added SteamworksPy.dylib to bundle: {bundle}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Warning: post_build_fixup_macos_steamworks failed: {e}")
 
 
@@ -510,7 +512,7 @@ def post_build_optimize_macos_bundle() -> None:
                     bundle,
                 ]
             )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Warning: post_build_optimize_macos_bundle failed: {e}")
 
 

@@ -48,7 +48,7 @@ def copy_to_clipboard_safely(text: str) -> None:
     try:
         clipboard = QApplication.clipboard()
         clipboard.setText(text)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.error(f"Failed to copy to clipboard: {e}")
         dialogue.show_fatal_error(
             title=translate("copy_to_clipboard_safely", "Failed to copy to clipboard."),
@@ -216,7 +216,7 @@ def attempt_chmod(
         try:
             func(path)
             return True
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning(
                 f"attempt_chmod for {func.__name__} double failure at {path}: {e}"
             )
@@ -501,7 +501,7 @@ def platform_specific_open(path: str | Path) -> None:
                 # Try to open with notepad as fallback
                 try:
                     subprocess.Popen(["notepad.exe", path])
-                except Exception as notepad_error:  # noqa: BLE001
+                except Exception as notepad_error:
                     logger.error(f"Failed to open with notepad: {notepad_error}")
                     dialogue.show_warning(
                         title="Failed to open file",
@@ -694,7 +694,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
         try:
             with open(steam_folder / primary_library, "r") as f:
                 rimworld_path = __load_data(f)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.warning(f"Failed to parse {primary_library}", exc_info=True)
             return rimworld_path
     elif os.path.exists(steam_folder / backup_library):
@@ -702,7 +702,7 @@ def find_steam_rimworld(steam_folder: Path | str) -> str:
         try:
             with open(steam_folder / backup_library, "r") as f:
                 rimworld_path = __load_data(f)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.warning(f"Failed to parse {backup_library}", exc_info=True)
             return rimworld_path
     else:

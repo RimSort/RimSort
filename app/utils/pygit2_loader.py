@@ -24,7 +24,7 @@ try:
     import pygit2
     from pygit2.enums import CheckoutStrategy, ResetMode, SortMode
     from pygit2.repository import Repository
-except Exception:  # noqa: BLE001
+except Exception:
     import certifi
 
     os.environ["SSL_CERT_FILE"] = certifi.where()

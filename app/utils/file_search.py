@@ -151,7 +151,7 @@ class FileSearch:
                                         result_callback(result)
                                 yield result
                                 break
-                    except Exception as e:  # noqa: BLE001
+                    except Exception as e:
                         logger.error(f"Error reading file {file_path}: {e}")
 
     def _read_file_in_chunks(
@@ -175,7 +175,7 @@ class FileSearch:
             with open(file_path, "rb") as f:
                 while chunk := f.read(chunk_size):
                     yield chunk.decode("utf-8", errors="ignore")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(f"Failed to read file {file_path} in chunks: {e}")
 
     def _create_search_method(
@@ -261,7 +261,7 @@ class FileSearch:
             try:
                 with open(file_path, "r", encoding=encoding, errors="ignore") as f:
                     return f.read()
-            except Exception:  # noqa: BLE001, S112
+            except Exception:  # noqa: S112
                 continue
         return ""
 
@@ -288,7 +288,7 @@ class FileSearch:
                     encoding = results.encoding
                     if encoding:
                         return raw_data.decode(encoding, errors="ignore")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.error(
                 f"Failed to read file {file_path} with charset_normalizer: {e}"
             )
