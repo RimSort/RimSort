@@ -8,6 +8,7 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 # Shared flag values to keep recipes DRY and consistent.
 ruff_config := "--config pyproject.toml"
 pytest_opts := "--doctest-modules --no-qt-log"
+cov_opts := "--junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing"
 
 # ─── Default Target (lists all available recipes) ────────────────────────
 @default:
@@ -21,7 +22,7 @@ pytest_opts := "--doctest-modules --no-qt-log"
 run: dev-setup
     uv run python -m app
 
-# Run tests with doctest modules enabled
+# Run tests with doctest modules enabled and output capture disabled
 test: dev-setup
     uv run pytest {{pytest_opts}} -s
 
@@ -31,7 +32,7 @@ test-verbose: dev-setup
 
 # Run tests with full coverage reports (XML, HTML, and terminal)
 test-coverage: dev-setup
-    uv run pytest {{pytest_opts}} --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing
+    uv run pytest {{pytest_opts}} {{cov_opts}}
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Code Quality
