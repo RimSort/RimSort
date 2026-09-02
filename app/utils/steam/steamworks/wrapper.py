@@ -458,9 +458,15 @@ class SteamworksSubscriptionHandler(Process):
             f"=== SteamworksSubscriptionHandler START: action={self.action}, mods={len(self.pfid_or_pfids)} ==="
         )
 
-        # We don't set a strict callback count since Steam may not fire callbacks reliably
-        # Instead, we queue operations, wait for processing, and trust Steam handled them
-        callbacks_total = None
+        # Track the expected callback count so we can return as soon as Steam
+        # confirms every queued operation, instead of always blocking for the
+        # full timeout. Resubscribe queues both an unsubscribe and a subscribe
+        # callback per mod; DownloadItem callbacks are tracked separately and
+        # don't count here. If Steam fails to fire a callback for some items
+        # (documented as unreliable for large batches), _wait_for_callbacks
+        # still falls back to the full time-based timeout below.
+        callback_multiplier = 2 if self.action == "resubscribe" else 1
+        callbacks_total = len(self.pfid_or_pfids) * callback_multiplier
         logger.warning(f"Queuing {len(self.pfid_or_pfids)} mod(s) for {self.action}")
 
         steamworks_interface = SteamworksInterface(
