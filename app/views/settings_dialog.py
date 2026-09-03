@@ -442,6 +442,43 @@ class SettingsDialog(QDialog):
         row_layout.addWidget(self.show_save_comparison_indicators_checkbox)
         tab_layout.addLayout(row_layout)
 
+        self._do_modlist_history_group(tab_layout)
+
+    def _do_modlist_history_group(self, tab_layout: QBoxLayout) -> None:
+        section_label = self._make_section_label(
+            self.tr("Mod list history"), Qt.AlignmentFlag.AlignCenter
+        )
+        tab_layout.addWidget(section_label)
+
+        self.modlist_history_enabled_checkbox = QCheckBox(
+            self.tr("Save a snapshot of the mod list every time it is saved")
+        )
+        self.modlist_history_enabled_checkbox.setToolTip(
+            self.tr(
+                "If enabled, RimSort writes a timestamped copy of the active and "
+                "inactive mod lists on every save so you can compare them later "
+                "(File → Mod List History…)."
+            )
+        )
+        tab_layout.addWidget(self.modlist_history_enabled_checkbox)
+
+        retention_layout = QHBoxLayout()
+        retention_label = QLabel(self.tr("Number of snapshots to keep:"))
+        retention_label.setToolTip(
+            self.tr(
+                "The number of mod list snapshots to keep. Set to -1 to keep all."
+            )
+        )
+        retention_layout.addWidget(retention_label)
+        self.modlist_history_retention_count_spinbox = QSpinBox()
+        self.modlist_history_retention_count_spinbox.setRange(-1, 9999)
+        self.modlist_history_retention_count_spinbox.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
+        retention_layout.addWidget(self.modlist_history_retention_count_spinbox)
+        retention_layout.addStretch()
+        tab_layout.addLayout(retention_layout)
+
     def __create_db_group(
         self, section_lbl: str, none_lbl: str, tab_layout: QBoxLayout
     ) -> tuple[

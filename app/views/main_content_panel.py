@@ -43,6 +43,7 @@ from app.models.settings import Settings
 from app.services.dependency_resolver import build_dependencies_dialog_context
 from app.services.import_export_service import ImportExportService
 from app.services.mod_list_parser import ModListFormatError, parse_mod_list_file
+from app.services.modlist_history_service import ModlistHistoryService
 from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
@@ -99,6 +100,7 @@ from app.windows.ignore_json_editor import IgnoreJsonEditor
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mod_properties_panel import MissingModPropertiesPanel
 from app.windows.missing_mods_panel import MissingModsPrompt
+from app.windows.modlist_history_panel import ModlistHistoryPanel
 from app.windows.rule_editor_panel import RuleEditor
 from app.windows.runner_panel import RunnerPanel
 from app.windows.use_this_instead_panel import UseThisInsteadPanel
@@ -156,6 +158,9 @@ class MainContent(QObject):
         self._import_export_service = ImportExportService(
             self.metadata_controller, self.settings
         )
+        self._modlist_history_service = ModlistHistoryService(
+            self.metadata_controller, self.settings
+        )
         self.query_runner: RunnerPanel | None = None
         self.steamworks_in_use = False
         self.todds_runner: RunnerPanel | None = None
@@ -207,6 +212,7 @@ class MainContent(QObject):
             self._do_export_list_clipboard
         )
         EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
+        EventBus().do_open_modlist_history.connect(self._do_open_modlist_history)
         EventBus().do_upload_log.connect(self._upload_file)
         EventBus().do_open_default_editor.connect(self._open_in_default_editor)
         EventBus().do_download_all_mods_via_steamcmd.connect(
@@ -1145,27 +1151,35 @@ class MainContent(QObject):
                     information=str(exc),
                 )
                 return
-            (
-                active_mods_uuids,
-                inactive_mods_uuids,
-                self.duplicate_mods,
-                self.missing_mods,
-            ) = self.metadata_controller.get_mods_from_list(mod_list=parsed.package_ids)
-            logger.info("Got new mods according to imported XML")
-            # Normal RimWorld XML mod lists only contain package IDs, not RimSort UI
-            # divider metadata. Clear persisted divider state so dividers from the
-            # previously loaded list are not reinserted at stale numeric positions.
-            self.settings.active_mods_dividers = []
-            self.settings.save()
-            self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
-
-            # check if we have duplicate mods, prompt user
-            self.__duplicate_mods_prompt()
-
-            # check if we have missing mods, prompt user
-            self.__missing_mods_prompt()
+            self._apply_imported_package_ids(parsed.package_ids)
         else:
             logger.info("USER ACTION: pressed cancel, passing")
+
+    def _apply_imported_package_ids(self, package_ids: list[str]) -> None:
+        """Load a plain list of package IDs into the active/inactive lists.
+
+        Shared by file import and mod list history restore. Only updates the
+        in-memory lists; the user still has to press Save to persist.
+        """
+        (
+            active_mods_uuids,
+            inactive_mods_uuids,
+            self.duplicate_mods,
+            self.missing_mods,
+        ) = self.metadata_controller.get_mods_from_list(mod_list=package_ids)
+        logger.info("Got new mods according to imported list")
+        # Plain package-ID lists carry no RimSort UI divider metadata. Clear
+        # persisted divider state so dividers from the previously loaded list are
+        # not reinserted at stale numeric positions.
+        self.settings.active_mods_dividers = []
+        self.settings.save()
+        self._insert_data_into_lists(active_mods_uuids, inactive_mods_uuids)
+
+        # check if we have duplicate mods, prompt user
+        self.__duplicate_mods_prompt()
+
+        # check if we have missing mods, prompt user
+        self.__missing_mods_prompt()
 
     def _do_append_list_file_xml(self) -> None:
         """
@@ -1248,6 +1262,24 @@ class MainContent(QObject):
                 )
         else:
             logger.debug("USER ACTION: pressed cancel, passing")
+
+    def _do_open_modlist_history(self) -> None:
+        """Open the Mod List History dialog for the current instance."""
+        panel = ModlistHistoryPanel(
+            history_service=self._modlist_history_service,
+            restore_callback=self._restore_modlist_snapshot,
+        )
+        self.window_manager.register(panel)
+        panel.show()
+
+    def _restore_modlist_snapshot(self, package_ids: list[str]) -> None:
+        """Load a history snapshot's active list into the UI (does not save)."""
+        self.mods_panel.reset_all_filters_and_search("Active")
+        self.mods_panel.reset_all_filters_and_search("Inactive")
+        logger.info(
+            f"Restoring mod list from history snapshot ({len(package_ids)} active mods)"
+        )
+        self._apply_imported_package_ids(package_ids)
 
     def _do_import_list_rentry(self) -> None:
         """
@@ -1755,8 +1787,10 @@ class MainContent(QObject):
         self.active_mods_uuids_last_save = active_mods_uuids
         logger.info(f"Collected {len(data.active_mods)} active mods for saving")
 
+        save_succeeded = False
         try:
             self._import_export_service.save_to_mods_config(data.active_mods)
+            save_succeeded = True
         except Exception:
             logger.error("Could not save active mods")
             dialogue.show_fatal_error(
@@ -1764,6 +1798,15 @@ class MainContent(QObject):
                 text=self.tr("Failed to save active mods to file:"),
                 details=traceback.format_exc(),
             )
+
+        if save_succeeded and self.settings.modlist_history_enabled:
+            try:
+                self._modlist_history_service.write_snapshot(
+                    active_mods_uuids, inactive_mods_uuids
+                )
+            except Exception:
+                logger.exception("Failed to write mod list history snapshot")
+
         EventBus().do_save_button_animation_stop.emit()
         # Save current modlists to their respective restore states
         self.active_mods_uuids_restore_state = active_mods_uuids

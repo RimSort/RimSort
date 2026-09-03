@@ -92,6 +92,15 @@ class TestRecentlyUpdatedIndicatorDefaults:
         assert settings.mod_list_updated_threshold_days == 3
 
 
+class TestModlistHistoryDefaults:
+    """Test defaults for the mod list history feature."""
+
+    def test_modlist_history_defaults(self, settings: Settings) -> None:
+        """History is on by default and keeps 100 snapshots."""
+        assert settings.modlist_history_enabled is True
+        assert settings.modlist_history_retention_count == 100
+
+
 class TestRimWorldVersionsDefaults:
     """Test defaults for the new RimWorld Versions DB feature."""
 

@@ -2453,6 +2453,10 @@ Manage mods installed from GitHub releases.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3403,6 +3407,149 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Open folder(s) in text editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4494,6 +4641,26 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Integration with recent save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

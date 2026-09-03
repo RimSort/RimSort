@@ -216,6 +216,9 @@ class Settings(QObject):
         self.include_mod_notes_in_mod_name_filter: bool = False
         # UI: Save-comparison labels and icons
         self.show_save_comparison_indicators: bool = True
+        # Mod list history: write a timestamped snapshot on every save
+        self.modlist_history_enabled: bool = True
+        self.modlist_history_retention_count: int = 100
         # Clear button behavior
         self.clear_moves_dlc: bool = False
 
