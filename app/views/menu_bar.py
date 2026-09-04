@@ -37,6 +37,7 @@ class MenuBar(QObject):
         self.import_from_save_file_action: QAction
         self.export_to_clipboard_action: QAction
         self.export_to_rentry_action: QAction
+        self.modlist_history_action: QAction
         self.upload_log_actions: list[QAction] = []
         self.default_open_log_actions: list[QAction] = []
         self.upload_rimsort_log_action: QAction
@@ -155,6 +156,10 @@ class MenuBar(QObject):
         )
         self.export_to_rentry_action = self._add_action(
             self.export_submenu, self.tr("To Rentry.co…")
+        )
+        file_menu.addSeparator()
+        self.modlist_history_action = self._add_action(
+            file_menu, self.tr("Mod List History…")
         )
         file_menu.addSeparator()
 
