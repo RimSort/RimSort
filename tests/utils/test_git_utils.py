@@ -101,6 +101,30 @@ class TestParseGitUrl:
         assert result.clone_url == "http://github.com/user/repo"
         assert result.repo_name == "repo"
 
+    def test_private_host_with_single_path_segment(self) -> None:
+        result = parse_git_url("https://repo.host/repository.git")
+        assert result is not None
+        assert result.clone_url == "https://repo.host/repository.git"
+        assert result.repo_name == "repository"
+
+    def test_private_host_preserves_arbitrary_path_depth(self) -> None:
+        result = parse_git_url("https://repo.host/mods/rimworld/my-mod.git")
+        assert result is not None
+        assert result.clone_url == "https://repo.host/mods/rimworld/my-mod.git"
+        assert result.repo_name == "my-mod"
+
+    def test_private_host_does_not_treat_path_as_browse_suffix(self) -> None:
+        result = parse_git_url("https://repo.host/mods/tree/my-mod.git")
+        assert result is not None
+        assert result.clone_url == "https://repo.host/mods/tree/my-mod.git"
+        assert result.branch is None
+
+    def test_git_protocol_preserves_arbitrary_path_depth(self) -> None:
+        result = parse_git_url("git://repo.host/mods/rimworld/my-mod.git")
+        assert result is not None
+        assert result.clone_url == "git://repo.host/mods/rimworld/my-mod.git"
+        assert result.repo_name == "my-mod"
+
     def test_url_with_trailing_slash(self) -> None:
         result = parse_git_url("https://github.com/user/repo/")
         assert result is not None
