@@ -465,9 +465,7 @@ class SettingsDialog(QDialog):
         retention_layout = QHBoxLayout()
         retention_label = QLabel(self.tr("Number of snapshots to keep:"))
         retention_label.setToolTip(
-            self.tr(
-                "The number of mod list snapshots to keep. Set to -1 to keep all."
-            )
+            self.tr("The number of mod list snapshots to keep. Set to -1 to keep all.")
         )
         retention_layout.addWidget(retention_label)
         self.modlist_history_retention_count_spinbox = QSpinBox()
