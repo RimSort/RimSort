@@ -28,6 +28,10 @@ For **_windows defender (WD)_** specifically, we tend to try and send samples to
 
 For **_macOS_,** we'd require a similar yet separate yearly fee to sign apps on macOS. Mac users can, for now, use [this workaround](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing#macos). There is no solution for us on macOS other than paying Apple.
 
+## How do I update RimSort manually if the built-in updater fails?
+
+Close RimSort, then download the latest release for your current release channel, operating system, and CPU architecture from the [RimSort releases page](https://github.com/RimSort/RimSort/releases). Do not use `Code > Download ZIP`, because that archive contains the source code rather than a runnable build. Extract archive-based releases into a new empty folder instead of merging them with the old installation; on macOS, replace the existing `RimSort.app`, and on Linux, replace the AppImage and make the new file executable with `chmod +x RimSort-*.AppImage`. Launch the new version before removing the old application files. Your settings and other RimSort data are stored separately in your operating system's application data directory, so leave that directory in place. See [Downloading and Installing](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing) for platform-specific instructions.
+
 ## Where are game paths located?
 
 Game paths and other location settings are located in the settings panel under `Locations`.
