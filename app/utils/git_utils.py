@@ -575,7 +575,12 @@ class ParsedGitUrl:
     repo_name: str
 
 
-_BROWSE_PATH_SEGMENTS = {"tree", "blob", "commit", "releases", "issues", "pull"}
+_TWO_SEGMENT_BROWSE_HOSTS = {
+    "github.com",
+    "www.github.com",
+    "gitlab.com",
+    "www.gitlab.com",
+}
 
 
 def parse_git_url(repo_url: str) -> ParsedGitUrl | None:
@@ -601,7 +606,7 @@ def parse_git_url(repo_url: str) -> ParsedGitUrl | None:
         return None
 
     try:
-        if repo_url.startswith(("http://", "https://")):
+        if repo_url.startswith(("git://", "http://", "https://")):
             return _parse_https_git_url(repo_url)
         elif repo_url.startswith("git@"):
             return _parse_ssh_git_url(repo_url)
@@ -613,24 +618,31 @@ def parse_git_url(repo_url: str) -> ParsedGitUrl | None:
 
 
 def _parse_https_git_url(repo_url: str) -> ParsedGitUrl | None:
-    """Parse an HTTPS git URL, stripping browse-path suffixes."""
+    """Parse a URL-style git remote, stripping known browse-path suffixes."""
     parsed = urlparse(repo_url)
     segments = [s for s in parsed.path.strip("/").split("/") if s]
 
-    # Need at least owner/repo
-    if len(segments) < 2:
+    if not parsed.hostname or not segments:
         return None
 
-    owner = segments[0]
-    repo_with_ext = segments[1]
+    is_browse_host = parsed.hostname.lower() in _TWO_SEGMENT_BROWSE_HOSTS
+    if is_browse_host:
+        # GitHub-style browse URLs identify the repository as owner/repo.
+        if len(segments) < 2:
+            return None
+        clone_segments = segments[:2]
+    else:
+        # Plain git servers may mount repositories at any path depth.
+        clone_segments = segments
+
+    repo_with_ext = clone_segments[-1]
     repo_name = repo_with_ext.removesuffix(".git")
 
     branch: str | None = None
-    if len(segments) >= 3 and segments[2] in _BROWSE_PATH_SEGMENTS:  # noqa: SIM102
-        if segments[2] in ("tree", "blob") and len(segments) >= 4:
-            branch = "/".join(segments[3:])
+    if is_browse_host and len(segments) >= 4 and segments[2] in ("tree", "blob"):
+        branch = "/".join(segments[3:])
 
-    clone_path = f"/{owner}/{repo_with_ext}"
+    clone_path = f"/{'/'.join(clone_segments)}"
     clone_url = parsed._replace(path=clone_path, query="", fragment="").geturl()
 
     return ParsedGitUrl(clone_url=clone_url, branch=branch, repo_name=repo_name)
