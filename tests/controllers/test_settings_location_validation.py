@@ -48,3 +48,24 @@ def test_local_mods_validation_rejects_different_existing_folder(
 
     assert not is_valid
     assert "Mods" in error
+
+
+def test_local_mods_validation_rejects_folder_when_identity_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    game_folder = tmp_path / "RimWorld"
+    local_mods = game_folder / "Mods"
+    local_mods.mkdir(parents=True)
+
+    def raise_os_error(_self: Path, _other: Path) -> bool:
+        raise OSError("identity unavailable")
+
+    monkeypatch.setattr(Path, "samefile", raise_os_error)
+
+    is_valid, error = _controller(game_folder)._validate_local_mods_location(
+        str(local_mods)
+    )
+
+    assert not is_valid
+    assert "Mods" in error
