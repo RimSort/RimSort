@@ -27,6 +27,7 @@ from app.models.metadata.metadata_structure import (
     CaseInsensitiveStr,
     ExternalRule,
     ExternalRulesSchema,
+    ListedMod,
     ModType,
     SteamDbEntry,
     SteamDbEntryBlacklist,
@@ -553,24 +554,30 @@ def test_create_listed_mod_from_path_steamcmd_mod_1() -> None:
     assert not mod.c_sharp_mod
 
 
-def test_create_listed_mod_from_path_steamcmd_mod_with_git_repository(
-    tmp_path: Path,
-) -> None:
+def _create_git_mod_from_steamcmd_fixture(
+    tmp_path: Path, directory_name: str
+) -> tuple[bool, ListedMod]:
     local_mods_path = tmp_path / "Local"
-    path = local_mods_path / "1111"
+    path = local_mods_path / directory_name
     shutil.copytree(
         Path("tests/data/mod_examples/Local/steamcmd_mod_1"),
         path,
     )
     _ = pygit2.init_repository(str(path), False)
 
-    valid, mod = create_listed_mod_from_path(
+    return create_listed_mod_from_path(
         path,
         "1.5",
         local_mods_path,
         tmp_path / "RimWorld",
         tmp_path / "Steam",
     )
+
+
+def test_create_listed_mod_from_path_steamcmd_mod_with_git_repository(
+    tmp_path: Path,
+) -> None:
+    valid, mod = _create_git_mod_from_steamcmd_fixture(tmp_path, "1111")
 
     assert valid
     assert mod.valid
@@ -580,20 +587,8 @@ def test_create_listed_mod_from_path_steamcmd_mod_with_git_repository(
 def test_create_listed_mod_from_path_git_mod_with_published_file_id(
     tmp_path: Path,
 ) -> None:
-    local_mods_path = tmp_path / "Local"
-    path = local_mods_path / "named-source-checkout"
-    shutil.copytree(
-        Path("tests/data/mod_examples/Local/steamcmd_mod_1"),
-        path,
-    )
-    _ = pygit2.init_repository(str(path), False)
-
-    valid, mod = create_listed_mod_from_path(
-        path,
-        "1.5",
-        local_mods_path,
-        tmp_path / "RimWorld",
-        tmp_path / "Steam",
+    valid, mod = _create_git_mod_from_steamcmd_fixture(
+        tmp_path, "named-source-checkout"
     )
 
     assert valid
