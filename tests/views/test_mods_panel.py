@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -5,10 +6,58 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
+from app.models.metadata.metadata_structure import (
+    AboutXmlMod,
+    CaseInsensitiveSet,
+    CaseInsensitiveStr,
+)
 from app.models.settings import Settings
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
-from app.views.mods_panel import ModListItemInner, TagEditDialog
+from app.views.mods_panel import ModListItemInner, ModListWidget, TagEditDialog
+
+
+def _make_active_mod_list(
+    qtbot: Any,
+    mods: dict[str, AboutXmlMod],
+    paths: list[str],
+) -> ModListWidget:
+    settings = MagicMock(spec=Settings)
+    settings.external_use_this_instead_metadata_source = "None"
+    settings.show_save_comparison_indicators = False
+    settings.mod_list_updated_indicator = False
+    settings.mod_list_startup_impact = False
+    settings.use_alternative_package_ids_as_satisfying_dependencies = False
+
+    metadata_controller = MagicMock()
+    metadata_controller.mods_metadata = mods
+    metadata_controller.settings = settings
+    metadata_controller.is_version_mismatch.return_value = False
+    metadata_controller.steamdb_packageid_to_name = {}
+
+    widget = ModListWidget.__new__(ModListWidget)
+    QListWidget.__init__(widget)
+    qtbot.addWidget(widget)
+    widget.list_type = "Active"
+    widget.settings = settings
+    widget.metadata_controller = metadata_controller
+    widget.paths = paths
+    widget.ignore_warning_list = []
+
+    for path in paths:
+        item_data = object.__new__(CustomListWidgetItemMetadata)
+        item_data.path = path
+        item_data.warning_toggled = False
+        item_data.alternative = None
+        item_data.errors = ""
+        item_data.warnings = ""
+        item_data.errors_warnings = ""
+
+        item = CustomListWidgetItem()
+        item.setData(Qt.ItemDataRole.UserRole, item_data, avoid_emit=True)
+        widget.addItem(item)
+
+    return widget
 
 
 class TestTagEditDialog:
@@ -170,6 +219,57 @@ class TestTagEditDialog:
 
         dialog.tags_text_input.setText("d")
         assert all(tag.isHidden() is True for tag in self._get_tags(dialog.tags_list))
+
+
+@pytest.mark.parametrize(
+    ("rule_name", "paths", "expected_header", "unexpected_header"),
+    [
+        (
+            "load_before",
+            ["/mods/b", "/mods/a"],
+            "Should be Loaded Before:",
+            "Should be Loaded After:",
+        ),
+        (
+            "load_after",
+            ["/mods/a", "/mods/b"],
+            "Should be Loaded After:",
+            "Should be Loaded Before:",
+        ),
+    ],
+)
+def test_load_order_warning_header_matches_rule_direction(
+    qtbot: Any,
+    rule_name: str,
+    paths: list[str],
+    expected_header: str,
+    unexpected_header: str,
+) -> None:
+    mod_a = AboutXmlMod(
+        name="Alpha",
+        _mod_path=Path("/mods/a"),
+        package_id=CaseInsensitiveStr("mod.a"),
+    )
+    mod_b = AboutXmlMod(
+        name="Beta",
+        _mod_path=Path("/mods/b"),
+        package_id=CaseInsensitiveStr("mod.b"),
+    )
+    setattr(mod_a.about_rules, rule_name, CaseInsensitiveSet(["mod.b"]))
+    widget = _make_active_mod_list(
+        qtbot,
+        {"/mods/a": mod_a, "/mods/b": mod_b},
+        paths,
+    )
+
+    widget.recalculate_internal_errors_warnings()
+
+    item = widget.item(paths.index("/mods/a"))
+    assert item is not None
+    warning = item.data(Qt.ItemDataRole.UserRole).warnings
+    assert expected_header in warning
+    assert "* Beta" in warning
+    assert unexpected_header not in warning
 
 
 class TestStartupImpactLabel:
