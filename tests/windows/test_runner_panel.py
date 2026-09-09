@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from re import compile
 from typing import Any
@@ -57,6 +58,12 @@ class TestRunnerPanelSteamcmdLogging:
 
 
 class TestRunnerPanelSteamcmdLogTail:
+    def test_new_panel_has_no_process_environment_overrides(self, qapp: Any) -> None:
+        panel = RunnerPanel()
+
+        assert panel.process_last_environment is None
+        assert panel._steamcmd_environment is None
+
     def test_poll_steamcmd_log_parses_new_lines(self, tmp_path: Path) -> None:
         log_path = tmp_path / "console_log.txt"
         log_path.write_text("Loading Steam API...ok\n", encoding="utf-8")
@@ -192,6 +199,74 @@ class TestRunnerPanelSteamcmdLogTail:
         mock_timer.timeout.connect.assert_called_once()
         mock_timer.start.assert_called_once()
         mock_process.start.assert_called_once()
+
+    @patch("app.windows.runner_panel.QProcess")
+    def test_execute_applies_process_environment(
+        self, mock_qprocess: MagicMock, tmp_path: Path
+    ) -> None:
+        mock_process = MagicMock()
+        mock_qprocess.return_value = mock_process
+
+        panel = RunnerPanel.__new__(RunnerPanel)
+        panel.system = "Linux"
+        panel.todds_dry_run_support = False
+        panel.process_last_command = ""
+        panel.process_last_args = []
+        panel.restart_process_button = MagicMock()
+        panel.kill_process_button = MagicMock()
+        panel.progress_bar = MagicMock()
+        panel.message = MagicMock()  # type: ignore[method-assign]
+        panel._steamcmd_console_log_path = ""
+
+        steamcmd_home = tmp_path / "home"
+        panel.execute(
+            "/steamcmd/steamcmd.sh",
+            ["+quit"],
+            environment={"HOME": str(steamcmd_home)},
+        )
+
+        process_environment = mock_process.setProcessEnvironment.call_args.args[0]
+        assert process_environment.value("HOME") == str(steamcmd_home)
+        assert process_environment.value("PATH") == os.environ["PATH"]
+        mock_process.start.assert_called_once()
+
+    @patch("app.windows.runner_panel.QProcess")
+    def test_next_steamcmd_batch_reuses_isolated_environment(
+        self, mock_qprocess: MagicMock, tmp_path: Path
+    ) -> None:
+        mock_process = MagicMock()
+        mock_qprocess.return_value = mock_process
+
+        panel = RunnerPanel.__new__(RunnerPanel)
+        panel._pending_steamcmd_batches = [["12345"]]
+        panel._steamcmd_batch_index = 1
+        panel._steamcmd_wrapper = MagicMock()
+        panel._steamcmd_wrapper._build_download_script.return_value = "/tmp/script.txt"
+        panel._steamcmd_executable = "/steamcmd/steamcmd.sh"
+        panel._steamcmd_environment = {"HOME": str(tmp_path / "home")}
+        panel.message = MagicMock()  # type: ignore[method-assign]
+
+        panel._start_next_steamcmd_batch()
+
+        process_environment = mock_process.setProcessEnvironment.call_args.args[0]
+        assert process_environment.value("HOME") == str(tmp_path / "home")
+        mock_process.start.assert_called_once()
+
+    def test_restart_reuses_process_environment(self, tmp_path: Path) -> None:
+        panel = RunnerPanel.__new__(RunnerPanel)
+        panel.process_last_command = "/steamcmd/steamcmd.sh"
+        panel.process_last_args = ["+quit"]
+        panel.process_last_environment = {"HOME": str(tmp_path / "home")}
+        panel.message = MagicMock()  # type: ignore[method-assign]
+        panel.execute = MagicMock()  # type: ignore[method-assign]
+
+        panel._do_restart_process()
+
+        panel.execute.assert_called_once_with(
+            "/steamcmd/steamcmd.sh",
+            ["+quit"],
+            environment={"HOME": str(tmp_path / "home")},
+        )
 
     @patch("app.windows.runner_panel.QTimer")
     def test_steamcmd_log_timer_stop_on_finished(

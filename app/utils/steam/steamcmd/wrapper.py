@@ -293,6 +293,27 @@ class SteamcmdInterface:
     def console_log_path(self) -> Path:
         return Path(self.steamcmd_install_path) / "logs" / "console_log.txt"
 
+    def _get_process_environment(self) -> dict[str, str] | None:
+        """Return an isolated environment for SteamCMD on Linux.
+
+        SteamCMD otherwise shares the desktop Steam client's configuration under
+        the user's home directory and can overwrite its ``libraryfolders.vdf``.
+        Other platforms retain their existing inherited environment.
+        """
+        if self.system != "Linux":
+            return None
+
+        home_path = Path(self.steamcmd_prefix).expanduser().resolve() / "home"
+        config_path = home_path / ".config"
+        data_path = home_path / ".local" / "share"
+        config_path.mkdir(parents=True, exist_ok=True)
+        data_path.mkdir(parents=True, exist_ok=True)
+        return {
+            "HOME": str(home_path),
+            "XDG_CONFIG_HOME": str(config_path),
+            "XDG_DATA_HOME": str(data_path),
+        }
+
     def _build_download_script(self, publishedfileids: list[str]) -> str:
         """Write a SteamCMD script for *publishedfileids* and return its path.
 
@@ -370,6 +391,7 @@ class SteamcmdInterface:
         runner._pending_steamcmd_batches = batches[1:]
         runner._steamcmd_executable = self.steamcmd
         runner._steamcmd_wrapper = self
+        runner._steamcmd_environment = self._get_process_environment()
 
         # Kick off the first batch immediately.
         batch_num = 1
@@ -385,6 +407,7 @@ class SteamcmdInterface:
             self.steamcmd,
             [f'+runscript "{script_path}"'],
             total,
+            environment=runner._steamcmd_environment,
         )
 
     def download_game_version(
