@@ -400,6 +400,17 @@ def _set_mod_type(
     elif parent_path == workshop_path:
         mod.mod_type = ModType.STEAM_WORKSHOP
     elif parent_path == local_path:
+        published_file_id_path = mod.mod_path / Path("About/PublishedFileId.txt")
+        if (
+            published_file_id_path.exists()
+            and mod.published_file_id == mod.mod_path.name
+        ):
+            # SteamCMD installs Workshop items into directories named after their
+            # PublishedFileId. Some Workshop items also ship a .git directory,
+            # which must not take precedence over that SteamCMD layout.
+            mod.mod_type = ModType.STEAM_CMD
+            return mod
+
         try:
             repo = pygit2.discover_repository(str(mod.mod_path))
 
@@ -416,7 +427,7 @@ def _set_mod_type(
             )
             logger.error(e)
 
-        if (mod.mod_path / Path("About/PublishedFileId.txt")).exists():
+        if published_file_id_path.exists():
             mod.mod_type = ModType.STEAM_CMD
         else:
             mod.mod_type = ModType.LOCAL
