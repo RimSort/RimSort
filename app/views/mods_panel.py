@@ -5305,6 +5305,11 @@ class ModsPanel(QWidget):
             ):
                 if pattern.lower() not in str(mod_obj.package_id).lower():
                     item_filtered = True
+            elif pattern and search_filter == "authors":
+                if not isinstance(mod_obj, AboutXmlMod) or not any(
+                    pattern.lower() in author.lower() for author in mod_obj.authors
+                ):
+                    item_filtered = True
 
             # Source filtering (set-based from FilterState)
             if not item_filtered and fs.sources != FilterState.ALL_SOURCES:
