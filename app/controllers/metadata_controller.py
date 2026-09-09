@@ -746,7 +746,7 @@ class MetadataController(QObject):
         ``AppInfo().databases_folder / <repo-name> / <file_name>``, not
         at the settings default.
         """
-        if source == "Disabled":
+        if source in {"None", "Disabled"}:
             return None
         if source == "Configured file path":
             return Path(file_path) if file_path else None

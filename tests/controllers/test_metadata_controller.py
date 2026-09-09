@@ -99,6 +99,19 @@ def test_metadata_controller_creation(metadata_controller: MetadataController) -
     assert metadata_controller.steamcmd_wrapper is not None
 
 
+@pytest.mark.parametrize("source", ["None", "Disabled"])
+def test_resolve_db_path_returns_none_for_disabled_sources(source: str) -> None:
+    assert (
+        MetadataController._resolve_db_path(
+            source,
+            "/configured/database.json",
+            "https://github.com/example/database",
+            "database.json",
+        )
+        is None
+    )
+
+
 @pytest.fixture
 def metadata_controller_p(
     metadata_controller: MetadataController,
