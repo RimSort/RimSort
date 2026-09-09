@@ -278,9 +278,14 @@ class SettingsController(QObject):
         game_folder = self.settings.instances[
             self.settings.current_instance
         ].game_folder
-        if not (Path(local_folder).is_dir()) or local_folder != str(
-            Path(game_folder) / "Mods"
-        ):
+        local_path = Path(local_folder)
+        is_game_mods_folder = False
+        if local_path.is_dir():
+            try:
+                is_game_mods_folder = local_path.samefile(Path(game_folder) / "Mods")
+            except OSError:
+                is_game_mods_folder = False
+        if not is_game_mods_folder:
             return False, self.tr(
                 "The selected local mods folder location is not a valid directory.<br><br>"
                 "Please select a valid folder for local mods.<br><br>"
