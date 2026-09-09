@@ -1,5 +1,5 @@
 import os
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from platform import system
 from re import compile, search
 from typing import TYPE_CHECKING, Any
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 import psutil
 from loguru import logger
-from PySide6.QtCore import QProcess, Qt, QTimer, Signal
+from PySide6.QtCore import QProcess, QProcessEnvironment, Qt, QTimer, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QIcon, QKeyEvent, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -77,6 +77,7 @@ class RunnerPanel(QWidget):
         self.process_last_output = ""
         self.process_last_command = ""
         self.process_last_args: Sequence[str] = []
+        self.process_last_environment: dict[str, str] | None = None
         self.steamcmd_current_pfid: str | None = None
         self.login_error = False
         self.redownloading = False
@@ -85,6 +86,7 @@ class RunnerPanel(QWidget):
         self._pending_steamcmd_batches: list[list[str]] = []
         self._steamcmd_executable: str = ""
         self._steamcmd_wrapper: SteamcmdInterface | None = None
+        self._steamcmd_environment: dict[str, str] | None = None
         self._steamcmd_batch_index: int = 1  # 1-based; first batch already sent
 
         # SteamCMD console_log.txt tail (live logs on Windows)
@@ -263,7 +265,11 @@ class RunnerPanel(QWidget):
     def _do_restart_process(self) -> None:
         if self.process_last_command != "":
             self.message("\nRestarting last used process...\n")
-            self.execute(self.process_last_command, self.process_last_args)
+            self.execute(
+                self.process_last_command,
+                self.process_last_args,
+                environment=self.process_last_environment,
+            )
 
     def _do_save_runner_output(self) -> None:
         """
@@ -315,6 +321,7 @@ class RunnerPanel(QWidget):
         command: str,
         args: Sequence[str],
         progress_bar: int | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
         """
         Execute the given command in a new terminal-like GUI
@@ -323,11 +330,13 @@ class RunnerPanel(QWidget):
             command: Path to the executable
             args: Arguments for the executable
             progress_bar: Value for the progress bar, None to hide progress bar
+            environment: Environment variables to override for the subprocess
         """
         logger.info("RunnerPanel subprocess initiating...")
         # Store command info for potential restart
         self.process_last_command = command
         self.process_last_args = args
+        self.process_last_environment = dict(environment) if environment else None
 
         # Show control buttons
         self.restart_process_button.show()
@@ -337,6 +346,7 @@ class RunnerPanel(QWidget):
         self.process = QProcess(self)
         self.process.setProgram(command)
         self.process.setArguments(args)
+        self._apply_process_environment(self.process, environment)
         self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.process.readyReadStandardError.connect(self.handle_output)
         self.process.readyReadStandardOutput.connect(self.handle_output)
@@ -359,6 +369,19 @@ class RunnerPanel(QWidget):
 
         # Start the process
         self.process.start()
+
+    @staticmethod
+    def _apply_process_environment(
+        process: QProcess, environment: Mapping[str, str] | None
+    ) -> None:
+        """Apply environment overrides while preserving inherited variables."""
+        if not environment:
+            return
+
+        process_environment = QProcessEnvironment.systemEnvironment()
+        for name, value in environment.items():
+            process_environment.insert(name, value)
+        process.setProcessEnvironment(process_environment)
 
     def _start_steamcmd_log_tail(self) -> None:
         """Tail SteamCMD console_log.txt for live line-by-line output."""
@@ -661,6 +684,7 @@ class RunnerPanel(QWidget):
         self.process = QProcess(self)
         self.process.setProgram(self._steamcmd_executable)
         self.process.setArguments([f'+runscript "{script_path}"'])
+        self._apply_process_environment(self.process, self._steamcmd_environment)
         self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.process.readyReadStandardError.connect(self.handle_output)
         self.process.readyReadStandardOutput.connect(self.handle_output)
