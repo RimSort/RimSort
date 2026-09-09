@@ -58,6 +58,12 @@ class TestRunnerPanelSteamcmdLogging:
 
 
 class TestRunnerPanelSteamcmdLogTail:
+    def test_new_panel_has_no_process_environment_overrides(self, qapp: Any) -> None:
+        panel = RunnerPanel()
+
+        assert panel.process_last_environment is None
+        assert panel._steamcmd_environment is None
+
     def test_poll_steamcmd_log_parses_new_lines(self, tmp_path: Path) -> None:
         log_path = tmp_path / "console_log.txt"
         log_path.write_text("Loading Steam API...ok\n", encoding="utf-8")
