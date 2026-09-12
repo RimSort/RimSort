@@ -2481,6 +2481,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>导出到 剪切板</translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation>模组列表历史记录...</translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation>打开</translation>
     </message>
@@ -3434,6 +3438,149 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>在文本编辑器中打开文件夹</translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation>模组列表历史</translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation>每次保存都会写入您的模组列表的快照。选择一个快照将其与之前的快照进行比较，或者按住 Ctrl 并选择两个快照以直接进行比较。</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>改变</translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation>模组</translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation>恢复所选内容</translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation>导出选定的...</translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation>编辑注释...</translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation>打开历史文件夹</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation>还没有快照</translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation>保存您的模组列表以创建一个</translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation>最旧的快照</translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation>没有什么可以比较的</translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation>比较</translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation>→  {old} {new}</translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation>没有差异</translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation>添加到活动 ({n})</translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation>已从活动状态中删除 ({n})</translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation>重新排序 ({n})</translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation>新安装/禁用 ({n})</translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation>不再安装 ({n})</translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation>来源：{src}</translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation>恢复模组列表</translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation>从此快照 ({ts}) 加载活动模组列表？</translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation>这将替换当前在 RimSort 中加载的模组。在您按“保存”之前，不会将任何内容写入磁盘。</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>恢复</translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation>恢复失败</translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation>无法恢复选定的快照。</translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation>导出快照</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>导出失败</translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation>无法写入快照文件。</translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation>快照注释</translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation>{ts} 注意：</translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation>无法保存笔记</translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
+        <translation>无法写入快照注释。</translation>
     </message>
 </context>
 <context>
@@ -4526,6 +4673,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Integration with recent save</source>
         <translation>与最近保存的集成</translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation>模组列表历史记录</translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation>每次保存时都会保存 mod 列表的快照</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation>如果启用，RimSort 会在每次保存时写入活动和非活动 Mod 列表的带时间戳的副本，以便您稍后可以比较它们（文件 → Mod 列表历史记录...）。</translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation>要保留的快照数量：</translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
+        <translation>要保留的 mod 列表快照的数量。设置为 -1 以保留全部。</translation>
     </message>
     <message>
         <source>RimWorld Versions Database</source>
