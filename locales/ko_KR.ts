@@ -2464,6 +2464,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Rentry.co로 내보내기...</translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation>모드 목록 기록…</translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation>열기...</translation>
     </message>
@@ -3431,6 +3435,149 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>텍스트 에디터의 오픈 폴더</translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation>모드 목록 기록</translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation>저장할 때마다 모드 목록의 스냅샷이 기록됩니다.스냅샷을 선택하여 이전 것과 비교하거나, Ctrl 키를 누른 채 두 개의 스냅샷을 선택하여 직접 비교하세요.</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>변화</translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation>모드</translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation>선택한 항목 복원</translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation>선택 항목 내보내기…</translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation>메모 편집…</translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation>기록 폴더 열기</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>닫다</translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation>아직 스냅샷이 없습니다.</translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation>모드 목록을 저장하여 새로 만드세요</translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation>가장 오래된 스냅샷</translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation>비교할 것이 없습니다.</translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation>비교</translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation>→  {old} {new}</translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation>차이 없음</translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation>활성({n})에 추가됨</translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation>활성({n})에서 제거됨</translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation>재정렬됨({n})</translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation>새로 설치/비활성화됨({n})</translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation>더 이상 설치되지 않음({n})</translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation>출처: {src}</translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation>모드 목록 복원</translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation>이 스냅샷({ts})에서 활성 모드 목록을 로드하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation>이는 현재 RimSort에 로드된 모드를 대체합니다.저장을 누를 때까지 디스크에 아무 것도 기록되지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>복원하다</translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation>복원 실패</translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation>선택한 스냅샷을 복원할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation>스냅샷 내보내기</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>내보내기 실패</translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation>스냅샷 파일을 쓸 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation>스냅샷 메모</translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation>{ts}에 대한 참고 사항:</translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation>메모를 저장할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
+        <translation>스냅샷 메모를 작성할 수 없습니다.</translation>
     </message>
 </context>
 <context>
@@ -4522,6 +4669,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Integration with recent save</source>
         <translation>최근 저장과 통합</translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation>모드 목록 기록</translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation>모드 목록이 저장될 때마다 스냅샷을 저장하세요.</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation>활성화되면 RimSort는 저장할 때마다 활성 및 비활성 모드 목록의 타임스탬프 사본을 작성하므로 나중에 비교할 수 있습니다(파일 → 모드 목록 기록…).</translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation>보관할 스냅샷 수:</translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
+        <translation>보관할 모드 목록 스냅샷 수입니다.모두 유지하려면 -1로 설정합니다.</translation>
     </message>
     <message>
         <source>RimWorld Versions Database</source>

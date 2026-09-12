@@ -2464,6 +2464,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Rentry.coにエクスポート…</translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation>MODリスト履歴…</translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation>開く…</translation>
     </message>
@@ -3431,6 +3435,149 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>テキストエディターのオープンフォルダー</translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation>MODリスト履歴</translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation>保存するたびに、MOD リストのスナップショットが書き込まれます。スナップショットを選択してその前のスナップショットと比較するか、Ctrl キーを押しながら 2 つのスナップショットを選択して直接比較します。</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>変化</translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation>モジュール</translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation>選択したものを復元する</translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation>選択したものをエクスポート…</translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation>メモを編集…</translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation>履歴フォルダーを開く</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>近い</translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation>まだスナップショットはありません</translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation>MOD リストを保存して作成します</translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation>最も古いスナップショット</translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation>比較するものは何もありません</translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation>比較する</translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation>→  {old} {new}</translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation>違いはありません</translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation>アクティブ ({n}) に追加されました</translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation>アクティブ ({n}) から削除されました</translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation>並べ替え ({n})</translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation>新規インストール/無効化 ({n})</translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation>もうインストールされていません ({n})</translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation>出典:  {src}</translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation>Modリストを復元する</translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation>このスナップショット ({ts}) からアクティブな MOD リストをロードしますか?</translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation>これは、RimSort に現在ロードされている MOD を置き換えます。[保存] を押すまで、ディスクには何も書き込まれません。</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>復元する</translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation>復元に失敗しました</translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation>選択したスナップショットを復元できませんでした。</translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation>スナップショットのエクスポート</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>エクスポートに失敗しました</translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation>スナップショット ファイルを書き込めませんでした。</translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation>スナップショットメモ</translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation>{ts} のメモ:</translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation>メモを保存できませんでした</translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
+        <translation>スナップショットノートを書き込めませんでした。</translation>
     </message>
 </context>
 <context>
@@ -4522,6 +4669,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Integration with recent save</source>
         <translation>最近の保存との統合</translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation>MODリスト履歴</translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation>MODリストを保存するたびにスナップショットを保存します</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation>有効にすると、RimSort は保存するたびにアクティブな MOD リストと非アクティブな MOD リストのタイムスタンプ付きコピーを書き込むため、後で比較できるようになります ([ファイル] → [MOD リスト履歴…])。</translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation>保持するスナップショットの数:</translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
+        <translation>保持する MOD リストのスナップショットの数。すべてを保持するには、-1 に設定します。</translation>
     </message>
     <message>
         <source>RimWorld Versions Database</source>

@@ -2467,6 +2467,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Rentry.co'ya</translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation>Mod Listesi Geçmişi…</translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation>Aç</translation>
     </message>
@@ -3429,6 +3433,149 @@ An alternative updated mod is recommended:
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>Metin Düzenleyicisinde Klasör (ler)</translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation>Mod Listesi Geçmişi</translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation>Her kaydetme, mod listenizin anlık görüntüsünü yazar.Bir anlık görüntüyü öncekiyle karşılaştırmak için seçin veya Ctrl tuşunu basılı tutarak iki anlık görüntüyü doğrudan karşılaştırmak için seçin.</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>Değiştirmek</translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation>Mod</translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation>Seçileni Geri Yükle</translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation>Seçilenleri Dışa Aktar…</translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation>Notu Düzenle…</translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation>Geçmiş Klasörünü Aç</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Kapalı</translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation>Henüz anlık görüntü yok</translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation>Bir tane oluşturmak için mod listenizi kaydedin</translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation>En eski anlık görüntü</translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation>Karşılaştırılacak hiçbir şey yok</translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation>Karşılaştırma</translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation>→  {old} {new}</translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation>Fark yok</translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation>Etkinliğe eklendi ({n})</translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation>Aktiften kaldırıldı ({n})</translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation>Yeniden sıralandı ({n})</translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation>Yeni yüklendi / devre dışı bırakıldı ({n})</translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation>Artık kurulu değil ({n})</translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation>Kaynak: {src}</translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation>Mod Listesini Geri Yükle</translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation>Bu anlık görüntüden ({ts}) aktif mod listesi yüklensin mi?</translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation>Bu, şu anda RimSort'ta yüklü olan modların yerini alır.Siz Kaydet'e basana kadar diske hiçbir şey yazılmaz.</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Eski haline getirmek</translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation>Geri yükleme başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation>Seçilen anlık görüntü geri yüklenemedi.</translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation>Anlık görüntüyü dışa aktar</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>Dışa aktarma başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation>Anlık görüntü dosyası yazılamadı.</translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation>Anlık Görüntü Notu</translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation>{ts} için not:</translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation>Not kaydedilemedi</translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
+        <translation>Anlık görüntü notu yazılamadı.</translation>
     </message>
 </context>
 <context>
@@ -4521,6 +4668,26 @@ An alternative updated mod is recommended:
     <message>
         <source>Integration with recent save</source>
         <translation>Son kaydetmeyle entegrasyon</translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation>Mod listesi geçmişi</translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation>Her kaydedildiğinde mod listesinin anlık görüntüsünü kaydedin</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation>Etkinleştirilirse, RimSort her kayıtta etkin ve etkin olmayan mod listelerinin zaman damgalı bir kopyasını yazar, böylece bunları daha sonra karşılaştırabilirsiniz (Dosya → Mod Listesi Geçmişi…).</translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation>Saklanacak anlık görüntü sayısı:</translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
+        <translation>Saklanacak mod listesi anlık görüntülerinin sayısı.Tümünü korumak için -1'e ayarlayın.</translation>
     </message>
     <message>
         <source>RimWorld Versions Database</source>

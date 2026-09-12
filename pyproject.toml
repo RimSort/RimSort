@@ -38,6 +38,7 @@ steamfiles = { git = "https://github.com/RimSort/steamfiles" }
 
 [dependency-groups]
 dev = [
+    "googletrans>=4.0.0rc1",
     "lxml-stubs>=0.5.1",
     "mypy>=1.20.2",
     "pyright>=1.1.411",

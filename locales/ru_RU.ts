@@ -2468,6 +2468,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>В Rentry.co…</translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation>История списка модов…</translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation>Открыть...</translation>
     </message>
@@ -3440,6 +3444,149 @@ Alternative Dependencies:</source>
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>Открыть папку(и) в текстовом редакторе</translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation>История списка модов</translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation>При каждом сохранении создается снимок вашего списка модов.Выберите снимок, чтобы сравнить его с предыдущим, или, удерживая клавишу Ctrl, выберите два снимка, чтобы сравнить их напрямую.</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>Изменять</translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation>Мод</translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation>Восстановить выбранное</translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation>Экспортировать выбранное…</translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation>Изменить примечание…</translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation>Открыть папку истории</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрывать</translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation>Снимков пока нет</translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation>Сохраните список модов, чтобы создать его.</translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation>Самый старый снимок</translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation>Не с чем сравнивать</translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation>Сравнивая</translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation>→  {old} {new}</translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation>Никаких различий</translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation>Добавлен в активный ({n})</translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation>Удален из активного ({n})</translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation>Переупорядочено ({n})</translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation>Недавно установленный/отключенный ({n})</translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation>Больше не установлено ({n})</translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation>Источник:  {src}</translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation>Восстановить список модов</translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation>Загрузить список активных модов из этого снимка ({ts})?</translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation>Это заменяет моды, загруженные в настоящее время в RimSort.На диск ничего не записывается, пока вы не нажмете «Сохранить».</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Восстановить</translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation>Восстановление не удалось</translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation>Не удалось восстановить выбранный снимок.</translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation>Экспортировать снимок</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>Экспорт не удался</translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation>Не удалось записать файл снимка.</translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation>Примечание к снимку</translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation>Примечание для {ts}:</translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation>Не удалось сохранить заметку</translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
+        <translation>Не удалось записать заметку о снимке.</translation>
     </message>
 </context>
 <context>
@@ -4532,6 +4679,26 @@ Alternative Dependencies:</source>
     <message>
         <source>Integration with recent save</source>
         <translation>Интеграция с последним сохранением</translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation>История списка модов</translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation>Сохраняйте снимок списка модов каждый раз, когда он сохраняется.</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation>Если этот параметр включен, RimSort записывает копию списков активных и неактивных модов с отметкой времени при каждом сохранении, чтобы вы могли сравнить их позже (Файл → История списка модов…).</translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation>Количество сохраняемых снимков:</translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
+        <translation>Количество сохраняемых снимков списка модов.Установите значение -1, чтобы сохранить все.</translation>
     </message>
     <message>
         <source>RimWorld Versions Database</source>

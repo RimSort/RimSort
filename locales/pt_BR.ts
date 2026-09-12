@@ -2465,6 +2465,10 @@ Manage mods installed from GitHub releases.</source>
         <translation>Para Rentry.co...</translation>
     </message>
     <message>
+        <source>Mod List History…</source>
+        <translation>Histórico da lista de mods…</translation>
+    </message>
+    <message>
         <source>Open...</source>
         <translation>Abrir...</translation>
     </message>
@@ -3435,6 +3439,149 @@ Um mod alternativo atualizado é recomendado:
     <message>
         <source>Open folder(s) in text editor</source>
         <translation>Pasta (s) aberta no editor de texto</translation>
+    </message>
+</context>
+<context>
+    <name>ModlistHistoryPanel</name>
+    <message>
+        <source>Mod List History</source>
+        <translation>Histórico da lista de mods</translation>
+    </message>
+    <message>
+        <source>Every save writes a snapshot of your mod list. Select a snapshot to compare it with the one before it, or hold Ctrl and select two snapshots to compare them directly.</source>
+        <translation>Cada salvamento grava um instantâneo da sua lista de mods.Selecione um instantâneo para compará-lo com o anterior ou segure Ctrl e selecione dois instantâneos para compará-los diretamente.</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>Mudar</translation>
+    </message>
+    <message>
+        <source>Mod</source>
+        <translation>Modo</translation>
+    </message>
+    <message>
+        <source>Restore Selected</source>
+        <translation>Restaurar selecionado</translation>
+    </message>
+    <message>
+        <source>Export Selected…</source>
+        <translation>Exportar selecionado…</translation>
+    </message>
+    <message>
+        <source>Edit Note…</source>
+        <translation>Editar nota…</translation>
+    </message>
+    <message>
+        <source>Open History Folder</source>
+        <translation>Abrir pasta de histórico</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Fechar</translation>
+    </message>
+    <message>
+        <source>No snapshots yet</source>
+        <translation>Ainda não há instantâneos</translation>
+    </message>
+    <message>
+        <source>Save your mod list to create one</source>
+        <translation>Salve sua lista de mods para criar uma</translation>
+    </message>
+    <message>
+        <source>Oldest snapshot</source>
+        <translation>Instantâneo mais antigo</translation>
+    </message>
+    <message>
+        <source>Nothing to compare against</source>
+        <translation>Nada para comparar</translation>
+    </message>
+    <message>
+        <source>Comparing</source>
+        <translation>Comparando</translation>
+    </message>
+    <message>
+        <source>{old} → {new}</source>
+        <translation>→  {old} {new}</translation>
+    </message>
+    <message>
+        <source>No differences</source>
+        <translation>Sem diferenças</translation>
+    </message>
+    <message>
+        <source>Added to active ({n})</source>
+        <translation>Adicionado ao ativo ({n})</translation>
+    </message>
+    <message>
+        <source>Removed from active ({n})</source>
+        <translation>Removido da atividade ({n})</translation>
+    </message>
+    <message>
+        <source>Reordered ({n})</source>
+        <translation>Reordenado ({n})</translation>
+    </message>
+    <message>
+        <source>Newly installed / disabled ({n})</source>
+        <translation>Recém-instalado/desativado ({n})</translation>
+    </message>
+    <message>
+        <source>No longer installed ({n})</source>
+        <translation>Não está mais instalado ({n})</translation>
+    </message>
+    <message>
+        <source>Source: {src}</source>
+        <translation>Fonte: {src}</translation>
+    </message>
+    <message>
+        <source>Restore Mod List</source>
+        <translation>Restaurar lista de mods</translation>
+    </message>
+    <message>
+        <source>Load the active mod list from this snapshot ({ts})?</source>
+        <translation>Carregar a lista de mods ativos deste instantâneo ({ts})?</translation>
+    </message>
+    <message>
+        <source>This replaces the mods currently loaded in RimSort. Nothing is written to disk until you press Save.</source>
+        <translation>Isso substitui os mods atualmente carregados no RimSort.Nada é gravado no disco até você pressionar Salvar.</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Restaurar</translation>
+    </message>
+    <message>
+        <source>Restore failed</source>
+        <translation>Falha na restauração</translation>
+    </message>
+    <message>
+        <source>Could not restore the selected snapshot.</source>
+        <translation>Não foi possível restaurar o instantâneo selecionado.</translation>
+    </message>
+    <message>
+        <source>Export snapshot</source>
+        <translation>Exportar instantâneo</translation>
+    </message>
+    <message>
+        <source>Export failed</source>
+        <translation>Falha na exportação</translation>
+    </message>
+    <message>
+        <source>Could not write the snapshot file.</source>
+        <translation>Não foi possível gravar o arquivo de instantâneo.</translation>
+    </message>
+    <message>
+        <source>Snapshot Note</source>
+        <translation>Nota instantânea</translation>
+    </message>
+    <message>
+        <source>Note for {ts}:</source>
+        <translation>Nota para {ts}:</translation>
+    </message>
+    <message>
+        <source>Could not save note</source>
+        <translation>Não foi possível salvar a nota</translation>
+    </message>
+    <message>
+        <source>The snapshot note could not be written.</source>
+        <translation>A nota instantânea não pôde ser gravada.</translation>
     </message>
 </context>
 <context>
@@ -4527,6 +4674,26 @@ Um mod alternativo atualizado é recomendado:
     <message>
         <source>Integration with recent save</source>
         <translation>Integração com salvamento recente</translation>
+    </message>
+    <message>
+        <source>Mod list history</source>
+        <translation>Histórico da lista de mods</translation>
+    </message>
+    <message>
+        <source>Save a snapshot of the mod list every time it is saved</source>
+        <translation>Salve um instantâneo da lista de mods sempre que ela for salva</translation>
+    </message>
+    <message>
+        <source>If enabled, RimSort writes a timestamped copy of the active and inactive mod lists on every save so you can compare them later (File → Mod List History…).</source>
+        <translation>Se ativado, o RimSort grava uma cópia com carimbo de data e hora das listas de mods ativos e inativos em cada salvamento para que você possa compará-los mais tarde (Arquivo → Histórico da lista de mods…).</translation>
+    </message>
+    <message>
+        <source>Number of snapshots to keep:</source>
+        <translation>Número de instantâneos a serem mantidos:</translation>
+    </message>
+    <message>
+        <source>The number of mod list snapshots to keep. Set to -1 to keep all.</source>
+        <translation>O número de instantâneos da lista de mods a serem mantidos.Defina como -1 para manter tudo.</translation>
     </message>
     <message>
         <source>RimWorld Versions Database</source>
