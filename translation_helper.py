@@ -775,8 +775,10 @@ class GoogleTranslateService(TranslationService):
         for attempt in range(self.config.retry_config.max_retries):
             try:
                 # The googletrans 4.0.0rc1 library has an async translate method
-                result_or_coro = self.translator.translate(
-                    text, dest=target, src=source
+                # (cast to Any: the sync/async fallback works across googletrans
+                # forks, which pyright can't express via the installed types)
+                result_or_coro = cast(
+                    Any, self.translator.translate(text, dest=target, src=source)
                 )
 
                 # Handle both sync and async versions of googletrans
