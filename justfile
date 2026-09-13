@@ -39,7 +39,7 @@ test-coverage: dev-setup
 # ═══════════════════════════════════════════════════════════════════════════
 
 # Container image for super-linter (matches CI version)
-superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
+superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.7.0"
 
 # Run super-linter locally via container (ruff, ruff-format, jscpd, bash,
 # json, yaml, checkov, gitleaks). Mypy/Pyright run natively because they
