@@ -75,7 +75,7 @@ jobs:
           PYTHON_RUFF_FORMAT_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
           FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/"
-          IGNORE_GITIGNORED_FILES: true
+          IGNORE_GITIGNORED_FILES: false
           # Set your fix mode variables to true
           FIX_PYTHON_RUFF: true
           FIX_PYTHON_RUFF_FORMAT: true

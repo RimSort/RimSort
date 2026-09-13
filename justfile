@@ -79,7 +79,7 @@ super-lint:
         -e PYTHON_RUFF_CONFIG_FILE=pyproject.toml \
         -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
         -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/" \
-        -e IGNORE_GITIGNORED_FILES=true \
+        -e IGNORE_GITIGNORED_FILES=false \
         -v "$(pwd)":/tmp/lint \
         -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
         {{superlinter_image}}
