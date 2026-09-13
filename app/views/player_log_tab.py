@@ -4,6 +4,7 @@ import re
 from collections import deque
 from collections.abc import Callable
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 
 from loguru import logger
@@ -1400,7 +1401,7 @@ class PlayerLogTab(QWidget):
                 ):  # error messages frequently tag on a ] or other terminator character
                     if os.path.exists(candidate):
                         menu.addAction(
-                            f"Open '{candidate}'", lambda p=candidate: self.open_file(p)
+                            f"Open '{candidate}'", partial(self.open_file, candidate)
                         )
                         break
         menu.exec(self.log_display.mapToGlobal(pos))
