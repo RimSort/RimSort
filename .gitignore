@@ -56,3 +56,5 @@ ltex.dictionary*
 
 # Translation cache
 .translation_cache.json
+# CocoIndex Code (ccc)
+/.cocoindex_code/
