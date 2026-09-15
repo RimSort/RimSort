@@ -41,9 +41,10 @@ test-coverage: dev-setup
 # Container image for super-linter (matches CI version)
 superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
 
-# Run super-linter locally via container (ruff, ruff-format, jscpd, bash,
-# json, yaml, checkov, gitleaks). Mypy/Pyright run natively because they
-# need the local venv to resolve imports.
+# Run super-linter locally via container (ruff, ruff-format, mypy, jscpd, bash,
+# json, yaml, checkov, gitleaks). Pyright runs natively because it needs the
+# local venv to resolve imports. GitHub Actions validation is also included for
+# CI parity.
 [unix]
 super-lint:
     #!/usr/bin/env bash
@@ -68,18 +69,32 @@ super-lint:
         -e DEFAULT_BRANCH=main \
         -e LOG_LEVEL=NOTICE \
         -e LINTER_RULES_PATH=. \
+        -e VALIDATE_ALL_CODEBASE=true \
+        -e VALIDATE_PYTHON_MYPY=true \
         -e VALIDATE_PYTHON_RUFF=true \
         -e VALIDATE_PYTHON_RUFF_FORMAT=true \
-        -e VALIDATE_BASH=true \
-        -e VALIDATE_JSCPD=true \
+        -e VALIDATE_GITHUB_ACTIONS=true \
+        -e VALIDATE_GITLEAKS=true \
         -e VALIDATE_JSON=true \
         -e VALIDATE_YAML=true \
+        -e VALIDATE_BASH=true \
+        -e VALIDATE_GOOGLE_SHELLCHECK=true \
         -e VALIDATE_CHECKOV=true \
-        -e VALIDATE_GITLEAKS=true \
+        -e VALIDATE_JSCPD=true \
+        -e VALIDATE_JAVASCRIPT_ESLINT=true \
+        -e VALIDATE_HTML_HTMLLINT=true \
+        -e MARKDOWN_CONFIG_FILE=.markdownlint-cli2.jsonc \
+        -e VALIDATE_MARKDOWN=true \
+        -e FIX_MARKDOWN=true \
         -e PYTHON_RUFF_CONFIG_FILE=pyproject.toml \
         -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
-        -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/" \
+        -e PYTHON_MYPY_CONFIG_FILE=pyproject.toml \
+        -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/|setup_.*_script\\.js" \
         -e IGNORE_GITIGNORED_FILES=true \
+        -e FIX_PYTHON_RUFF=true \
+        -e FIX_PYTHON_RUFF_FORMAT=true \
+        -e FIX_JAVASCRIPT_ESLINT=true \
+        -e GITHUB_ACTIONS_COMMAND_ARGS='-ignore '\''unknown permission scope '"'""attestations'"'"'\''' \
         -v "$(pwd)":/tmp/lint \
         -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
         {{superlinter_image}}
