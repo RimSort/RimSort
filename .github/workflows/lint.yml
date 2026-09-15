@@ -54,6 +54,7 @@ jobs:
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true
           LINTER_RULES_PATH: .
           PYTHONPATH: "/github/workspace/:\
             /github/workflow/.venv/lib/python3.12/site-packages"
@@ -65,20 +66,25 @@ jobs:
           VALIDATE_JSON: true
           VALIDATE_YAML: true
           VALIDATE_BASH: true
+          VALIDATE_GOOGLE_SHELLCHECK: true
           VALIDATE_CHECKOV: true
           VALIDATE_JSCPD: true
-          VALIDATE_VALIDATE_NATURAL_LANGUAGE: true
-          # Linter not up to date
+          VALIDATE_JAVASCRIPT_ESLINT: true
+          VALIDATE_HTML_HTMLLINT: true
+          MARKDOWN_CONFIG_FILE: .markdownlint-cli2.jsonc
+          VALIDATE_MARKDOWN: true
+          FIX_MARKDOWN: true
           GITHUB_ACTIONS_COMMAND_ARGS: >-
             -ignore 'unknown permission scope "attestations"'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_RUFF_FORMAT_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
-          FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/"
+          FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/|setup_.*_script\\.js"
           IGNORE_GITIGNORED_FILES: true
           # Set your fix mode variables to true
           FIX_PYTHON_RUFF: true
           FIX_PYTHON_RUFF_FORMAT: true
+          FIX_JAVASCRIPT_ESLINT: true
       - name: Commit and push linting fixes
         id: auto-commit
         # Run only on:
