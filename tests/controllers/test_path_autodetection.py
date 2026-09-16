@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -255,9 +256,13 @@ class TestGetDarwinPaths:
 
     def test_fallback_when_no_vdf(self, tmp_path: Path) -> None:
         steam_root = self._make_darwin_steam_root(tmp_path)
+        service = _make_service()
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call()
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch.object(service, "_macos_game_app_roots", return_value=()),
+        ):
+            result = service.get_darwin_paths()
 
         # Fallback uses canonical "RimWorld" casing when no .app bundle found on disk
         expected_game = (
@@ -285,8 +290,13 @@ class TestGetDarwinPaths:
         assert result[2].parts[-3:] == ("workshop", "content", "294100")
 
     def test_no_steam_root_returns_hardcoded_paths(self, tmp_path: Path) -> None:
-        with patch("pathlib.Path.home", return_value=tmp_path):
-            result = self._call()
+        service = _make_service()
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch.object(service, "_macos_game_app_roots", return_value=()),
+        ):
+            result = service.get_darwin_paths()
 
         assert "RimWorldMac.app" in str(result[0])
         assert "Config" in str(result[1])
@@ -370,3 +380,289 @@ class TestVdfEdgeCases:
             result = self._call_linux()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+
+
+class TestLooksLikeRimworldDir:
+    """Tests for PathAutodetectService._looks_like_rimworld_dir()."""
+
+    def test_accepts_parsable_version_txt(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        (game_dir / "Version.txt").write_text("1.6.4871 rev573\n")
+
+        assert _make_service()._looks_like_rimworld_dir(game_dir)
+
+    def test_rejects_unparsable_version_txt(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        (game_dir / "Version.txt").write_text("not a version\n")
+
+        assert not _make_service()._looks_like_rimworld_dir(game_dir)
+
+    def test_accepts_known_executable(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        (game_dir / "RimWorldLinux64").write_bytes(b"\x7fELF")
+
+        assert _make_service()._looks_like_rimworld_dir(game_dir)
+
+    def test_rejects_lookalike_folder_without_markers(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "RimWorld"
+        game_dir.mkdir()
+        (game_dir / "readme.txt").write_text("hello")
+
+        assert not _make_service()._looks_like_rimworld_dir(game_dir)
+
+    def test_rejects_missing_directory(self, tmp_path: Path) -> None:
+        assert not _make_service()._looks_like_rimworld_dir(tmp_path / "missing")
+
+    def test_rejects_symlinked_directory(self, tmp_path: Path) -> None:
+        real_dir = tmp_path / "real"
+        real_dir.mkdir()
+        (real_dir / "Version.txt").write_text("1.6.4871 rev573\n")
+        link = tmp_path / "link"
+        link.symlink_to(real_dir)
+
+        assert not _make_service()._looks_like_rimworld_dir(link)
+
+
+class TestIterShallowDirs:
+    """Tests for PathAutodetectService._iter_shallow_dirs()."""
+
+    def test_yields_children_up_to_max_depth(self, tmp_path: Path) -> None:
+        (tmp_path / "a" / "b" / "c").mkdir(parents=True)
+        (tmp_path / "d").mkdir()
+
+        found = sorted(p.name for p in _make_service()._iter_shallow_dirs(tmp_path, 2))
+
+        # "c" sits at depth 3 and is not yielded
+        assert found == ["a", "b", "d"]
+
+    def test_skips_hidden_entries(self, tmp_path: Path) -> None:
+        (tmp_path / ".hidden").mkdir()
+        (tmp_path / "visible").mkdir()
+
+        found = [p.name for p in _make_service()._iter_shallow_dirs(tmp_path, 1)]
+
+        assert found == ["visible"]
+
+    def test_skips_symlinked_dirs_without_following(self, tmp_path: Path) -> None:
+        outside_target = tmp_path / "outside" / "target"
+        outside_target.mkdir(parents=True)
+        games_root = tmp_path / "Games"
+        (games_root / "real").mkdir(parents=True)
+        (games_root / "link").symlink_to(outside_target)
+
+        found = [p.name for p in _make_service()._iter_shallow_dirs(games_root, 2)]
+
+        assert found == ["real"]
+
+    def test_missing_root_yields_nothing(self, tmp_path: Path) -> None:
+        assert list(_make_service()._iter_shallow_dirs(tmp_path / "nope", 2)) == []
+
+
+class TestNonSteamMacGameSearch:
+    """Tests for the GOG-style .app search on macOS."""
+
+    @staticmethod
+    def _make_gog_bundle(apps_root: Path, name: str = "RimWorld.app") -> Path:
+        """Create a Ludeon-layout RimWorld .app bundle inside apps_root."""
+        bundle = apps_root / name
+        (bundle / "Contents" / "Resources").mkdir(parents=True)
+        (bundle / "Data").mkdir()
+        (bundle / "Mods").mkdir()
+        (bundle / "Version.txt").write_text("1.6.4871 rev573\n")
+        return bundle
+
+    def test_finds_gog_bundle_in_applications(self, tmp_path: Path) -> None:
+        apps_root = tmp_path / "Applications"
+        apps_root.mkdir()
+        bundle = self._make_gog_bundle(apps_root)
+        service = _make_service()
+
+        with patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)):
+            result = service._find_non_steam_game_folder_macos()
+
+        assert result == bundle
+
+    def test_prefers_canonical_bundle_name(self, tmp_path: Path) -> None:
+        apps_root = tmp_path / "Applications"
+        apps_root.mkdir()
+        self._make_gog_bundle(apps_root, name="RimWorldMac.app")
+        canonical = self._make_gog_bundle(apps_root, name="RimWorld.app")
+        service = _make_service()
+
+        with patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)):
+            result = service._find_non_steam_game_folder_macos()
+
+        assert result == canonical
+
+    def test_rejects_lookalike_bundle_without_markers(self, tmp_path: Path) -> None:
+        apps_root = tmp_path / "Applications"
+        (apps_root / "RimWorld.app" / "Contents").mkdir(parents=True)
+        service = _make_service()
+
+        with patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)):
+            result = service._find_non_steam_game_folder_macos()
+
+        assert result is None
+
+    def test_get_darwin_paths_uses_gog_bundle_when_no_steam(
+        self, tmp_path: Path
+    ) -> None:
+        apps_root = tmp_path / "Applications"
+        bundle = self._make_gog_bundle(apps_root)
+        service = _make_service()
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)),
+        ):
+            result = service.get_darwin_paths()
+
+        assert result[0] == bundle
+
+    def test_steam_installation_wins_over_gog_bundle(self, tmp_path: Path) -> None:
+        steam_root = tmp_path / "Library" / "Application Support" / "Steam"
+        steam_root.mkdir(parents=True)
+        (steam_root / "steamapps").mkdir()
+        steam_game = (
+            steam_root / "steamapps" / "common" / "RimWorld" / "RimWorldMac.app"
+        )
+        steam_game.mkdir(parents=True)
+        apps_root = tmp_path / "Applications"
+        self._make_gog_bundle(apps_root)
+        service = _make_service()
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)),
+        ):
+            result = service.get_darwin_paths()
+
+        assert result[0] == steam_game
+
+
+class TestNonSteamLinuxGameSearch:
+    """Tests for the GOG-style game search on Linux."""
+
+    @staticmethod
+    def _make_game_dir(path: Path) -> Path:
+        """Create a directory carrying RimWorld content markers."""
+        path.mkdir(parents=True)
+        (path / "Version.txt").write_text("1.6.4871 rev573\n")
+        (path / "Data").mkdir()
+        (path / "Mods").mkdir()
+        return path
+
+    @staticmethod
+    def _write_heroic_metadata(tmp_path: Path, payload: str) -> None:
+        heroic_config = tmp_path / ".config" / "heroic" / "gog_store"
+        heroic_config.mkdir(parents=True)
+        (heroic_config / "installed.json").write_text(payload)
+
+    def test_finds_gog_games_layout(self, tmp_path: Path) -> None:
+        game_dir = self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = _make_service().get_linux_paths()
+
+        assert result[0] == game_dir
+
+    def test_finds_games_root_layout(self, tmp_path: Path) -> None:
+        game_dir = self._make_game_dir(tmp_path / "Games" / "Heroic" / "RimWorld")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = _make_service().get_linux_paths()
+
+        assert result[0] == game_dir
+
+    def test_finds_heroic_metadata_custom_location(self, tmp_path: Path) -> None:
+        custom_dir = self._make_game_dir(tmp_path / "custom" / "install")
+        self._write_heroic_metadata(
+            tmp_path,
+            json.dumps([{"appName": "1207658924", "install_path": str(custom_dir)}]),
+        )
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = _make_service().get_linux_paths()
+
+        assert result[0] == custom_dir
+
+    def test_ignores_malformed_heroic_metadata(self, tmp_path: Path) -> None:
+        self._write_heroic_metadata(tmp_path, "this is not json")
+        game_dir = self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = _make_service().get_linux_paths()
+
+        # Malformed metadata is skipped and the roots search still runs
+        assert result[0] == game_dir
+
+    def test_steam_installation_wins_over_non_steam(self, tmp_path: Path) -> None:
+        steam_root = _setup_steam_root(tmp_path, ".steam/steam")
+        self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = _make_service().get_linux_paths()
+
+        assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
+
+    def test_symlinked_game_dir_not_detected(self, tmp_path: Path) -> None:
+        real_game = self._make_game_dir(tmp_path / "elsewhere" / "game")
+        (tmp_path / "GOG Games").mkdir(parents=True)
+        (tmp_path / "GOG Games" / "RimWorld").symlink_to(real_game)
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = _make_service().get_linux_paths()
+
+        assert "steamapps" in str(result[0])
+
+
+class TestGetExecutablePathLinux:
+    """Tests for the Linux executable lookup in app.utils.generic.get_executable_path."""
+
+    @staticmethod
+    def _call(game_dir: Path) -> str | None:
+        from app.utils.generic import get_executable_path
+
+        with patch("platform.system", return_value="Linux"):
+            return get_executable_path(game_dir)
+
+    @staticmethod
+    def _make_executable(path: Path) -> None:
+        """Create a fake game binary with the executable bit set."""
+        path.write_bytes(b"placeholder")
+        path.chmod(0o755)
+
+    def test_accepts_modern_rimworld_linux64(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        self._make_executable(game_dir / "RimWorldLinux64")
+
+        assert self._call(game_dir) == str(game_dir / "RimWorldLinux64")
+
+    def test_accepts_legacy_rimworld_linux(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        self._make_executable(game_dir / "RimWorldLinux")
+
+        assert self._call(game_dir) == str(game_dir / "RimWorldLinux")
+
+    def test_accepts_non_executable_windows_binary_on_linux(
+        self, tmp_path: Path
+    ) -> None:
+        """Windows .exe files are accepted without the executable bit (Wine/Proton)."""
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        (game_dir / "RimWorldWin64.exe").write_bytes(b"MZ")
+
+        assert self._call(game_dir) == str(game_dir / "RimWorldWin64.exe")
+
+    def test_rejects_non_executable_linux_binary(self, tmp_path: Path) -> None:
+        """A Linux binary without the executable bit is not launchable."""
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        (game_dir / "RimWorldLinux64").write_bytes(b"placeholder")
+
+        assert self._call(game_dir) is None

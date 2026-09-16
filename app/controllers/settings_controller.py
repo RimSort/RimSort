@@ -246,7 +246,7 @@ class SettingsController(QObject):
                 "Please select a valid game location.<br><br>"
                 "Windows: RimWorldWin64.exe or RimWorldWin.exe<br><br>"
                 "Mac: RimworldMac.app<br><br>"
-                "Linux: RimWorldLinux<br><br>"
+                "Linux: RimWorldLinux64 or RimWorldLinux<br><br>"
                 "RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux"
             )
         return True, ""
