@@ -1,22 +1,18 @@
 # tests/views/test_main_content_run.py
-from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
-from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 from app.views import dialogue
 from app.views.main_content_panel import MainContent
 
 
 @pytest.fixture(autouse=True)
-def patch_dialogue(monkeypatch: pytest.MonkeyPatch) -> Mock:
-    mock_dialog = Mock()
-    mock_dialog.return_value = None
-    monkeypatch.setattr(dialogue, "show_dialogue_conditional", mock_dialog)
-    return mock_dialog
+def patch_dialogue(mock_dialogue: Mock) -> Mock:
+    """Auto-patch dialogue for every test in this module."""
+    return mock_dialogue
 
 
 @pytest.fixture(autouse=True)
@@ -35,42 +31,6 @@ def patch_launch(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Path, str]]:
     # Also patch platform_specific_open to avoid trying to open Steam protocol
     monkeypatch.setattr(main_content_panel, "platform_specific_open", Mock())
     return calls
-
-
-@pytest.fixture
-def main_content(
-    monkeypatch: pytest.MonkeyPatch,
-    qapp: QApplication,
-    mock_settings_controller: MagicMock,
-    mock_metadata_controller: MagicMock,
-    mock_steamcmd_interface: MagicMock,
-) -> Generator[tuple[MainContent, list[bool]], None, None]:
-    # Ensure active_mods_dividers is set on the settings object
-    QObject.__setattr__(mock_settings_controller.settings, "active_mods_dividers", [])
-    # Set game_folder and run_args on the instance to match test expectations
-    instance = mock_settings_controller.settings.instances["Default"]
-    instance.game_folder = "/fake/path"
-    instance.run_args = "--test"
-    # Initialize MainContent with settings from the mock settings controller
-    mc = MainContent(
-        mock_settings_controller.settings, metadata_controller=mock_metadata_controller
-    )
-    # Patch _do_save to capture calls
-    save_calls: list[bool] = []
-    monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
-    # Mock check_if_essential_paths_are_set to return True
-    monkeypatch.setattr(
-        mc, "check_if_essential_paths_are_set", lambda prompt=True: True
-    )
-    mc.todds_controller = MagicMock()
-
-    yield mc, save_calls
-
-    # Cleanup: delete the widget to avoid Qt object reuse issues
-    mc.deleteLater()
-    qapp.processEvents()
-    # Reset singleton for next test
-    MainContent._instance = None
 
 
 @pytest.fixture
