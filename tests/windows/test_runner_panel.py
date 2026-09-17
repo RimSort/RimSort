@@ -350,6 +350,14 @@ class TestRunnerPanelSteamcmdLogTail:
         assert messages == ["line one", "line two"]
 
 
+def _make_panel_with_real_output_handler(tmp_path: Path) -> Any:
+    panel = _make_steamcmd_panel(tmp_path)
+    del panel._handle_steamcmd_output  # use the real method, not the stub
+    panel.steamcmd_current_pfid = "123"
+    panel.steamcmd_download_tracking = ["123"]
+    return panel
+
+
 class TestSteamcmdDownloadSucceededSignal:
     """Covers the per-mod success signal that backs preserving the Mod
     Downloader's wait-list: successful mods should be droppable from it,
@@ -359,11 +367,7 @@ class TestSteamcmdDownloadSucceededSignal:
     def test_success_line_emits_signal_and_clears_tracking(
         self, tmp_path: Path, fresh_event_bus: None
     ) -> None:
-        panel = _make_steamcmd_panel(tmp_path)
-        del panel._handle_steamcmd_output  # use the real method, not the stub
-        panel.steamcmd_current_pfid = "123"
-        panel.steamcmd_download_tracking = ["123"]
-
+        panel = _make_panel_with_real_output_handler(tmp_path)
         received: list[str] = []
         EventBus().steamcmd_mod_download_succeeded.connect(received.append)
 
@@ -377,11 +381,7 @@ class TestSteamcmdDownloadSucceededSignal:
     def test_error_line_does_not_emit_signal(
         self, tmp_path: Path, fresh_event_bus: None
     ) -> None:
-        panel = _make_steamcmd_panel(tmp_path)
-        del panel._handle_steamcmd_output  # use the real method, not the stub
-        panel.steamcmd_current_pfid = "123"
-        panel.steamcmd_download_tracking = ["123"]
-
+        panel = _make_panel_with_real_output_handler(tmp_path)
         received: list[str] = []
         EventBus().steamcmd_mod_download_succeeded.connect(received.append)
 

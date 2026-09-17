@@ -14,6 +14,19 @@ import pytest
 from app.views.main_content_panel import MainContent
 
 
+def _make_ready_for_steamcmd_download(
+    mc: MainContent, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Point steamcmd_wrapper.steamcmd at a real (empty) file so the
+    "SteamCMD executable found" check passes, and swap out RunnerPanel so
+    no real download window gets constructed.
+    """
+    steamcmd_exe = tmp_path / "steamcmd.exe"
+    steamcmd_exe.write_text("")
+    mc.steamcmd_wrapper.steamcmd = str(steamcmd_exe)
+    monkeypatch.setattr("app.views.main_content_panel.RunnerPanel", MagicMock())
+
+
 class TestDefensiveCopyAgainstBrowserTeardown:
     """publishedfileids can be the same list object SteamBrowser holds as
     downloader_list_mods_tracking (the download button emits it directly).
@@ -28,11 +41,7 @@ class TestDefensiveCopyAgainstBrowserTeardown:
         tmp_path: Path,
     ) -> None:
         mc, _ = main_content
-        steamcmd_exe = tmp_path / "steamcmd.exe"
-        steamcmd_exe.write_text("")
-        mc.steamcmd_wrapper.steamcmd = str(steamcmd_exe)
-
-        monkeypatch.setattr("app.views.main_content_panel.RunnerPanel", MagicMock())
+        _make_ready_for_steamcmd_download(mc, monkeypatch, tmp_path)
 
         # Simulate SteamBrowser: the button emits its tracking list directly,
         # and closing the window clears that same list object in place.
@@ -58,11 +67,7 @@ class TestDefensiveCopyAgainstBrowserTeardown:
         tmp_path: Path,
     ) -> None:
         mc, _ = main_content
-        steamcmd_exe = tmp_path / "steamcmd.exe"
-        steamcmd_exe.write_text("")
-        mc.steamcmd_wrapper.steamcmd = str(steamcmd_exe)
-
-        monkeypatch.setattr("app.views.main_content_panel.RunnerPanel", MagicMock())
+        _make_ready_for_steamcmd_download(mc, monkeypatch, tmp_path)
 
         mock_browser = MagicMock()
         mock_browser.get_download_list_snapshot.return_value = {"111": "Mod A"}
