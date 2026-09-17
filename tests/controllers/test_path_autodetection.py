@@ -2,7 +2,7 @@ import json
 import platform
 from pathlib import Path
 from typing import Any, cast
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -430,6 +430,16 @@ class TestLooksLikeRimworldDir:
 
         assert not _make_service()._looks_like_rimworld_dir(link)
 
+    def test_version_file_read_error_is_not_fatal(self, tmp_path: Path) -> None:
+        game_dir = tmp_path / "game"
+        game_dir.mkdir()
+        (game_dir / "Version.txt").touch()
+
+        with patch.object(Path, "open", side_effect=OSError("unreadable")):
+            result = _make_service()._has_parsable_version_file(game_dir)
+
+        assert result is False
+
 
 class TestIterShallowDirs:
     """Tests for PathAutodetectService._iter_shallow_dirs()."""
@@ -465,6 +475,22 @@ class TestIterShallowDirs:
     def test_missing_root_yields_nothing(self, tmp_path: Path) -> None:
         assert list(_make_service()._iter_shallow_dirs(tmp_path / "nope", 2)) == []
 
+    def test_unreadable_directory_entry_is_skipped(self, tmp_path: Path) -> None:
+        broken_entry = MagicMock()
+        broken_entry.name = "broken"
+        broken_entry.is_dir.side_effect = OSError("unreadable")
+        valid_entry = MagicMock()
+        valid_entry.name = "valid"
+        valid_entry.path = str(tmp_path / "valid")
+        valid_entry.is_dir.return_value = True
+        scandir_context = MagicMock()
+        scandir_context.__enter__.return_value = [broken_entry, valid_entry]
+
+        with patch("os.scandir", return_value=scandir_context):
+            result = list(_make_service()._iter_shallow_dirs(tmp_path, 1))
+
+        assert result == [tmp_path / "valid"]
+
 
 class TestNonSteamMacGameSearch:
     """Tests for the GOG-style .app search on macOS."""
@@ -485,7 +511,11 @@ class TestNonSteamMacGameSearch:
         bundle = self._make_gog_bundle(apps_root)
         service = _make_service()
 
-        with patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)):
+        with patch.object(
+            service,
+            "_macos_game_app_roots",
+            return_value=(tmp_path / "missing", apps_root),
+        ):
             result = service._find_non_steam_game_folder_macos()
 
         assert result == bundle
@@ -511,6 +541,28 @@ class TestNonSteamMacGameSearch:
             result = service._find_non_steam_game_folder_macos()
 
         assert result is None
+
+    @pytest.mark.parametrize(
+        "candidate_name", ["RimWorld", "RimWorld.app"], ids=["not_app", "no_contents"]
+    )
+    def test_mac_validator_rejects_invalid_bundle_structure(
+        self, tmp_path: Path, candidate_name: str
+    ) -> None:
+        candidate = tmp_path / candidate_name
+        candidate.mkdir()
+
+        assert not _make_service()._looks_like_rimworld_mac_app(candidate)
+
+    def test_gog_provenance_read_error_is_not_fatal(self) -> None:
+        with (
+            patch.object(Path, "is_dir", side_effect=OSError("unreadable")),
+            patch("app.services.path_autodetect_service.logger.debug") as debug_mock,
+        ):
+            _make_service()._log_non_steam_provenance(Path("RimWorld.app"))
+
+        debug_mock.assert_called_once_with(
+            "Could not inspect non-Steam installation provenance"
+        )
 
     @pytest.mark.parametrize(
         "with_steam", [False, True], ids=["gog_only", "steam_wins"]
@@ -836,6 +888,18 @@ class TestNonSteamWindowsGameSearch:
 
         assert result is None
 
+    def test_windows_search_roots_include_standard_locations(
+        self, tmp_path: Path
+    ) -> None:
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            roots = _make_service()._windows_game_search_roots()
+
+        assert roots == (
+            Path("C:/GOG Games"),
+            tmp_path / "GOG Games",
+            tmp_path / "Games",
+        )
+
     def test_looks_like_rimworld_windows_dir(self, tmp_path: Path) -> None:
         game_dir = self._make_windows_game_dir(tmp_path / "game")
         assert _make_service()._looks_like_rimworld_windows_dir(game_dir)
@@ -980,6 +1044,33 @@ class TestNonSteamWindowsGameSearch:
             result = _make_service()._find_gog_registry_game_folder()
 
         assert result is None
+
+    def test_gog_registry_lookup_skips_unreadable_game_subkey(
+        self, tmp_path: Path
+    ) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / "RimWorld")
+        fake_winreg = _FakeWinreg(
+            {
+                "SOFTWARE": {
+                    "WOW6432Node": {
+                        "GOG.com": {
+                            "Games": {
+                                "broken": "unreadable",
+                                "1207658903": {"__values__": {"path": str(game_dir)}},
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        with (
+            patch.dict("sys.modules", {"winreg": fake_winreg}),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result == game_dir
 
     def test_gog_registry_lookup_returns_none_off_windows(self) -> None:
         with patch("sys.platform", "darwin"):
