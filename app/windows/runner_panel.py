@@ -567,6 +567,7 @@ class RunnerPanel(QWidget):
         ):
             # Remove the current PFID from tracking if it was successfully downloaded
             self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
+            EventBus().steamcmd_mod_download_succeeded.emit(self.steamcmd_current_pfid)
             self.progress_bar.setValue(self.progress_bar.value() + 1)
         elif "ERROR! Download item " in line:
             # Track failed downloads

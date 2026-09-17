@@ -695,6 +695,30 @@ class SteamBrowser(QWidget):
         for mod_id in mods_to_clear_badges_for:
             self._update_badge_js(mod_id, BadgeState.DEFAULT)
 
+    def get_download_list_snapshot(self) -> dict[str, str]:
+        """
+        Capture the current downloader wait-list as {publishedfileid: display_title}.
+
+        Used to preserve the user's queued mods across the window being closed
+        (e.g. when a SteamCMD/Steamworks download is kicked off), since closing
+        this window tears down and clears the list.
+        """
+        snapshot: dict[str, str] = {}
+        for i in range(self.downloader_list.count()):
+            item = self.downloader_list.item(i)
+            if item is None:
+                continue
+            publishedfileid = item.data(Qt.ItemDataRole.UserRole)
+            widget = self.downloader_list.itemWidget(item)
+            title = widget.text() if isinstance(widget, QLabel) else publishedfileid
+            snapshot[publishedfileid] = title
+        return snapshot
+
+    def restore_download_list(self, snapshot: dict[str, str]) -> None:
+        """Re-populate the downloader wait-list from a previously captured snapshot."""
+        for publishedfileid, title in snapshot.items():
+            self._add_mod_to_list(publishedfileid, title=title)
+
     def _downloader_item_contextmenu_event(self, point: QPoint) -> None:
         context_item = self.downloader_list.itemAt(point)
 

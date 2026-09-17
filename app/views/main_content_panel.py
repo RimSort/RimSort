@@ -154,6 +154,7 @@ class MainContent(QObject):
     def _init_services(self) -> None:
         self.db_builder = DatabaseBuilder(self.settings)
         self.steam_browser: SteamBrowser | None = None
+        self._pending_downloader_snapshot: dict[str, str] = {}
         self._workshop_restore_target: QWidget | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
@@ -264,6 +265,9 @@ class MainContent(QObject):
         )
 
         EventBus().do_steamcmd_download.connect(self._do_download_mods_with_steamcmd)
+        EventBus().steamcmd_mod_download_succeeded.connect(
+            self._on_steamcmd_mod_download_succeeded
+        )
 
         EventBus().do_steamworks_api_call.connect(self._do_steamworks_api_call_animated)
 
@@ -2152,6 +2156,10 @@ class MainContent(QObject):
         )
         self.window_manager.register_attr(self, "steam_browser")
 
+        if self._pending_downloader_snapshot:
+            self.steam_browser.restore_download_list(self._pending_downloader_snapshot)
+            self._pending_downloader_snapshot = {}
+
         self._workshop_restore_target = restore_target
 
         self.steam_browser.destroyed.connect(
@@ -2317,6 +2325,10 @@ class MainContent(QObject):
         if self.steamcmd_wrapper.setup:
             self._do_download_mods_with_steamcmd([workshop_id])
 
+    def _on_steamcmd_mod_download_succeeded(self, publishedfileid: str) -> None:
+        """Drop a successfully-downloaded mod from the preserved downloader wait-list."""
+        self._pending_downloader_snapshot.pop(publishedfileid, None)
+
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
@@ -2358,6 +2370,9 @@ class MainContent(QObject):
             self.steamcmd_wrapper.steamcmd
         ):
             if self.steam_browser:
+                self._pending_downloader_snapshot.update(
+                    self.steam_browser.get_download_list_snapshot()
+                )
                 self.steam_browser.close()
 
             self.steamcmd_runner = RunnerPanel(
@@ -2509,6 +2524,9 @@ class MainContent(QObject):
             return
         # Close browser if open
         if self.steam_browser:
+            self._pending_downloader_snapshot.update(
+                self.steam_browser.get_download_list_snapshot()
+            )
             self.steam_browser.close()
         # Process API call
         self.do_threaded_loading_animation(
