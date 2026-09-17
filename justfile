@@ -118,6 +118,10 @@ ruff-fix:
 ruff-format-fix:
     uv run ruff format {{ruff_config}} .
 
+# Check Markdown documentation for issues (markdownlint-cli2)
+markdownlint:
+    npx markdownlint-cli2@latest
+
 # Fix Markdown documentation issues (markdownlint-cli2 --fix)
 markdownlint-fix:
     npx markdownlint-cli2@latest --fix
@@ -140,17 +144,18 @@ jscpd:
 check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Run all code quality checks available on Windows: typecheck + pyright + jscpd + deferred-import guard
+# Run all code quality checks available on Windows: typecheck + pyright + jscpd + markdownlint + deferred-import guard
 [windows]
-check: typecheck pyright jscpd deferred-imports
+check: typecheck pyright jscpd markdownlint deferred-imports
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Check for new function-local from app/ imports (circular-import regression guard)
 deferred-imports:
     uv run python check_deferred_imports.py
 
-# Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
-fix: ruff shfmt-fix markdownlint-fix
+# Automatically fix linting and formatting issues, then verify the markdown check passes
+# (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes + markdownlint check)
+fix: ruff shfmt-fix markdownlint-fix markdownlint
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage
