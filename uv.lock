@@ -733,25 +733,25 @@ wheels = [
 
 [[package]]
 name = "pygit2"
-version = "1.20.0"
+version = "1.20.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/54/9273c78efd3d570091af585bdeb68a46089e80602dafe11989cca40c6d0f/pygit2-1.20.0.tar.gz", hash = "sha256:7253735629c22fff412a72c48c204b19c206fda9fcb01e51113d9689194cb1cf", size = 826041, upload-time = "2026-08-08T14:45:11.281Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/11/592cc7854795830a7257ab6025a1fc803b58b0e7bf7d31f619bc7288ed4d/pygit2-1.20.1.tar.gz", hash = "sha256:36dff84d237f2b8f18b0b146d6e7c3f99a7bce2da98cc4103a14387f53319f95", size = 888235, upload-time = "2026-09-12T10:33:12.681Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/32/4a/20433a321dc495231f6c017db880dfb6e0d5436780a699ce5e6ac5c1fead/pygit2-1.20.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:dec857dcd64cfb3f52d2e79faa53ff9fc34a6db2ed5d3f865bf5a7239177de56", size = 5725662, upload-time = "2026-08-08T14:43:54.133Z" },
-    { url = "https://files.pythonhosted.org/packages/b4/b7/add39585242cd7f24701e4899e6cff73cc8aa64dc9c945497071043f39cd/pygit2-1.20.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b9374c6f8d8ee0ba01a58238416ed2b24d4c154a8823ebc6b638a7ee4a480415", size = 5716598, upload-time = "2026-08-08T14:43:56.171Z" },
-    { url = "https://files.pythonhosted.org/packages/b7/b8/6039aef21a18da62dd41c0457af47c6d84e24845b1cc938661ec56446a55/pygit2-1.20.0-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:62bd32dcfc1982e1cb2218ca38c14c511caf970ec64ae2d39e6aa0d9d62dc4f0", size = 6070500, upload-time = "2026-08-08T14:43:57.701Z" },
-    { url = "https://files.pythonhosted.org/packages/26/0b/8e9852340ddcaea2f4f28f4d4f6324254c75d845654aae61f67b7b2b084b/pygit2-1.20.0-cp312-cp312-manylinux_2_26_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:a9a540410f9f893c5e68e221d1df21319fe5add04e45d51b2329ce0fa14516b7", size = 4667205, upload-time = "2026-08-08T14:43:59.178Z" },
-    { url = "https://files.pythonhosted.org/packages/33/26/bd9b33dbd8535b4f667f7cac56a15740fa5039c8ceb735fda1cd0d2d3b65/pygit2-1.20.0-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b2be2e29283268a2842342c7d4e206e1d8326dfc71598743fa8ef61ef6d744d5", size = 5838298, upload-time = "2026-08-08T14:44:00.745Z" },
-    { url = "https://files.pythonhosted.org/packages/d3/ce/7a7c5007c3b1e7082503b23a51f1329f42525cda6531630623fb52ba8390/pygit2-1.20.0-cp312-cp312-manylinux_2_38_riscv64.manylinux_2_39_riscv64.whl", hash = "sha256:8119ef9b00587f243ee5462dfe5dc71aad600cf1b25b268bffa67065d3412439", size = 5327204, upload-time = "2026-08-08T14:44:02.11Z" },
-    { url = "https://files.pythonhosted.org/packages/33/61/fa9b9c75c4a87d5877179c13ea26e958f2ea5bb6a42f5228615bf26e4010/pygit2-1.20.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:7150878d113dee6291ca2d17876729b739e762d1585d90459aa61b34bd662de7", size = 6201154, upload-time = "2026-08-08T14:44:03.481Z" },
-    { url = "https://files.pythonhosted.org/packages/8f/e2/3ba5a1d42e3334c93387eb4d01365762f735c25655e9907c23d58e110cef/pygit2-1.20.0-cp312-cp312-musllinux_1_2_riscv64.whl", hash = "sha256:a79cf9048797997cc3610726b7b2827d6459961208553b187522786ab5ffc0f2", size = 4886640, upload-time = "2026-08-08T14:44:04.873Z" },
-    { url = "https://files.pythonhosted.org/packages/23/6b/bba0edae78e97e220908c33a8bf1ef5418bc558e3c657ec0d29f18e77304/pygit2-1.20.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:97619aa269f31f2b94e83078b5c6df4e7a0cc9bdfe5b672378c10ed09d50c360", size = 5936908, upload-time = "2026-08-08T14:44:06.544Z" },
-    { url = "https://files.pythonhosted.org/packages/09/9b/22149d9b5059ad47b21bf9c7791fc59ce2226aafb95dbfe0e6e7fa54af89/pygit2-1.20.0-cp312-cp312-win32.whl", hash = "sha256:d49d7bb4987fabece611f4f873bfe490e574f0bb5bb4fafe557d4d504efe3026", size = 1019713, upload-time = "2026-08-08T14:44:07.836Z" },
-    { url = "https://files.pythonhosted.org/packages/3c/fb/8c9fb460aa70e34681e26d1b314dc2ee6a7de556941d20d6fec3485d0377/pygit2-1.20.0-cp312-cp312-win_amd64.whl", hash = "sha256:2c16126d27218e7b5d059e5072b15819261ec3ad515ff45ed611fa1687993c25", size = 1333225, upload-time = "2026-08-08T14:44:09.124Z" },
-    { url = "https://files.pythonhosted.org/packages/1d/a3/8ca3be722208fd764364feabe5c2a9186a96dcc2be73feb7f7bfce4dda5b/pygit2-1.20.0-cp312-cp312-win_arm64.whl", hash = "sha256:3f7b97f577d7d15d59fbef8e3f6f6943bdc5e315cbf6d4c0478984858e55b0ea", size = 1043775, upload-time = "2026-08-08T14:44:10.157Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/dc/ff53b26831e7baba14ee85e581737518e0927fc9cbde54c3ce1f21b19277/pygit2-1.20.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:a0a1353e1e0074bc79f506c60b63dd6b59ff60a1f21570cb9721ce73ac3b8262", size = 3252807, upload-time = "2026-09-12T10:31:45.418Z" },
+    { url = "https://files.pythonhosted.org/packages/26/74/384f87c037be551d3d5ae81ac183f06acdaded7f9ff5173a49deebb940ba/pygit2-1.20.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8537a48ab25338f38d5707e8d34d8817eb7cc492fe551ef0219980fe6f77cd8d", size = 2740993, upload-time = "2026-09-12T10:31:47.379Z" },
+    { url = "https://files.pythonhosted.org/packages/70/c0/9602ec6732afabf2954c6ea620530e76f5b6c01de6a3ead24d25654a1bfd/pygit2-1.20.1-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f09a132454dbc97f80fb8155fe5d2cc40b1924827c42e8c741b9950af6a509ef", size = 6077979, upload-time = "2026-09-12T10:31:49.151Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/d9/c719857971470edcc895991657b66da697f0eef3bb34f3b417ca956a9fec/pygit2-1.20.1-cp312-cp312-manylinux_2_26_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:1d60a644d1280210f88e00ebe9929212eb74b0e32260c61c22c0d148fe8d0afd", size = 4674943, upload-time = "2026-09-12T10:31:50.698Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/c1/2a5c1ab50e7e4c59dbced3ee81878aab0510fcec724583f4b5456a2d702a/pygit2-1.20.1-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:39724d0d4f922058e1105c6a084f5c801eef6b7991033e6cb8d3efd174ef5338", size = 5845519, upload-time = "2026-09-12T10:31:52.356Z" },
+    { url = "https://files.pythonhosted.org/packages/65/a6/3b3e3e6e7b9f0b30f3d6e0387aa2ce7bb74ca534563a6d311fef3acef122/pygit2-1.20.1-cp312-cp312-manylinux_2_38_riscv64.manylinux_2_39_riscv64.whl", hash = "sha256:befdb91f1d5f09981289d9785948a4f902cc3a961904bf9ae40010ef71fd51b4", size = 5334295, upload-time = "2026-09-12T10:31:54.619Z" },
+    { url = "https://files.pythonhosted.org/packages/35/a0/20c4fb35ab6b47b42da8bb30048a38b213af05b2d37a58754de402816fc1/pygit2-1.20.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:f25df036a3ea4fcaa5051a1cc3adc1ed62e328a3a68b139ceb41b344882c6ea8", size = 6209345, upload-time = "2026-09-12T10:31:56.484Z" },
+    { url = "https://files.pythonhosted.org/packages/74/45/f90903e4b0a509875410206fbba6c1f9939dc314ea48548e4b75f3ef6abe/pygit2-1.20.1-cp312-cp312-musllinux_1_2_riscv64.whl", hash = "sha256:009b2b5d2eb01f5da2d6dcdd51acf67478dcf953799c0d1f425b04e60f4fd3d8", size = 4895904, upload-time = "2026-09-12T10:31:58.582Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/7f/2bc0bd2f20a813aca967d7e29bad8079d9ec1c99a2c0801b2e7c54c9cd5b/pygit2-1.20.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:579ab2893420983662bdd1a6870f889e03674fb9c9dc314075083b7f741d3bf5", size = 5944462, upload-time = "2026-09-12T10:32:00.176Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/55/956a09626492d9806b81636d77c39da633c97f48c674629b48e009b5c6c9/pygit2-1.20.1-cp312-cp312-win32.whl", hash = "sha256:532a63e6a6f2457465d1c1497a3dabc2676daf17d7c8d919246cfc99137e3e57", size = 1020954, upload-time = "2026-09-12T10:32:01.738Z" },
+    { url = "https://files.pythonhosted.org/packages/11/87/c0604188f5e3f9e6680ae510c8b51db1989fb5a04c6e1268468a8600ef1e/pygit2-1.20.1-cp312-cp312-win_amd64.whl", hash = "sha256:0bab03e4879ea55fd9c7b16c2d28d8023484c82e1d145fad67b1ac0efca596f2", size = 1334612, upload-time = "2026-09-12T10:32:03.086Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/1b/c459d5de701a4b3a07cb9ec8282de0c60e5b4eae3f349c4339946fbf5906/pygit2-1.20.1-cp312-cp312-win_arm64.whl", hash = "sha256:38e663e69224d02611c7293d9bd633a2237560d730db7c3d9fd3662a468105ef", size = 1045384, upload-time = "2026-09-12T10:32:04.643Z" },
 ]
 
 [[package]]
@@ -1079,7 +1079,7 @@ requires-dist = [
     { name = "packaging", specifier = "==26.3" },
     { name = "platformdirs", specifier = "==4.11.8" },
     { name = "psutil", specifier = "==7.2.2" },
-    { name = "pygit2", specifier = "==1.20.0" },
+    { name = "pygit2", specifier = "==1.20.1" },
     { name = "pygithub", specifier = "==2.10.0" },
     { name = "pyside6", specifier = "==6.11.2" },
     { name = "rapidfuzz", specifier = ">=3.14.3" },
