@@ -41,10 +41,12 @@ test-coverage: dev-setup
 # Container image for super-linter (matches CI version)
 superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
 
-# Run super-linter locally via container (ruff, ruff-format, mypy, jscpd, bash,
-# json, yaml, checkov, gitleaks). Pyright runs natively because it needs the
-# local venv to resolve imports. GitHub Actions validation is also included for
-# CI parity.
+# Run super-linter locally via container (ruff, ruff-format, mypy, jscpd,
+# bash/shellcheck, shfmt, json, yaml, markdown, checkov, gitleaks,
+# github-actions). Pyright runs natively because it needs the local venv to
+# resolve imports. Env is kept identical to .github/workflows/lint.yml.
+# Note: super-linter v8.6.0 rejects mixing VALIDATE_*=true/false, so this list
+# stays all-true (opt-in mode; unlisted linters are disabled).
 [unix]
 super-lint:
     #!/usr/bin/env bash
@@ -78,14 +80,13 @@ super-lint:
         -e VALIDATE_JSON=true \
         -e VALIDATE_YAML=true \
         -e VALIDATE_BASH=true \
-        -e VALIDATE_GOOGLE_SHELLCHECK=true \
         -e VALIDATE_CHECKOV=true \
         -e VALIDATE_JSCPD=true \
-        -e VALIDATE_JAVASCRIPT_ESLINT=true \
-        -e VALIDATE_HTML_HTMLLINT=true \
-        -e MARKDOWN_CONFIG_FILE=.markdownlint-cli2.jsonc \
+        -e VALIDATE_SHELL_SHFMT=true \
+        -e MARKDOWN_CONFIG_FILE=.markdownlint.json \
         -e VALIDATE_MARKDOWN=true \
         -e FIX_MARKDOWN=true \
+        -e FIX_SHELL_SHFMT=true \
         -e PYTHON_RUFF_CONFIG_FILE=pyproject.toml \
         -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
         -e PYTHON_MYPY_CONFIG_FILE=pyproject.toml \
@@ -93,7 +94,6 @@ super-lint:
         -e IGNORE_GITIGNORED_FILES=true \
         -e FIX_PYTHON_RUFF=true \
         -e FIX_PYTHON_RUFF_FORMAT=true \
-        -e FIX_JAVASCRIPT_ESLINT=true \
         -e GITHUB_ACTIONS_COMMAND_ARGS='-ignore '\''unknown permission scope '"'""attestations'"'"'\''' \
         -v "$(pwd)":/tmp/lint \
         -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \

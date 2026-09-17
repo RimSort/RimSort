@@ -1,21 +1,17 @@
-// markdownlint-cli2 configuration (stored centrally, used for both check and fix modes)
-// Configuration is applied via justfile recipes: markdownlint (check) and markdownlint-fix (fix)
+// markdownlint-cli2 options (local check/fix mode).
+// The rule set lives in .markdownlint.json, which is read by BOTH
+// markdownlint-cli2 (via `just markdownlint-fix`) and super-linter (CI, via
+// MARKDOWN_CONFIG_FILE) so that policies stay in sync. Do not add a `config`
+// property here: a .markdownlint.json in the same directory overrides it
+// automatically.
 {
-  "noProgress": true,
   "noBanner": true,
-  "config": {
-    // Disable everything by default, then explicitly enable the fixable subset
-    "default": false,
-    // Whitespace and blank-line fixers
-    "MD009": true,  // no-trailing-spaces
-    "MD012": true,  // no-multiple-blanks
-    "MD022": true,  // blanks-around-headings
-    "MD031": true,  // blanks-around-fences
-    "MD032": true,  // blanks-around-lists
-    // File-ending fixable
-    "MD047": true   // single-trailing-newline
-  },
+  "noProgress": true,
   "globs": [
-    "docs/**/*.md"
+    "docs/**/*.md",
+    "*.md"
+  ],
+  "ignores": [
+    "LICENSE.md"
   ]
 }
