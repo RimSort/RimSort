@@ -1,6 +1,7 @@
 import json
 import platform
 from pathlib import Path
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -560,7 +561,10 @@ class TestNonSteamLinuxGameSearch:
     def test_finds_gog_games_layout(self, tmp_path: Path) -> None:
         game_dir = self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
             result = _make_service().get_linux_paths()
 
         assert result[0] == game_dir
@@ -568,7 +572,10 @@ class TestNonSteamLinuxGameSearch:
     def test_finds_games_root_layout(self, tmp_path: Path) -> None:
         game_dir = self._make_game_dir(tmp_path / "Games" / "Heroic" / "RimWorld")
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
             result = _make_service().get_linux_paths()
 
         assert result[0] == game_dir
@@ -580,7 +587,10 @@ class TestNonSteamLinuxGameSearch:
             json.dumps([{"appName": "1207658924", "install_path": str(custom_dir)}]),
         )
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
             result = _make_service().get_linux_paths()
 
         assert result[0] == custom_dir
@@ -589,7 +599,10 @@ class TestNonSteamLinuxGameSearch:
         self._write_heroic_metadata(tmp_path, "this is not json")
         game_dir = self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
             result = _make_service().get_linux_paths()
 
         # Malformed metadata is skipped and the roots search still runs
@@ -599,7 +612,10 @@ class TestNonSteamLinuxGameSearch:
         steam_root = _setup_steam_root(tmp_path, ".steam/steam")
         self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
             result = _make_service().get_linux_paths()
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
@@ -609,7 +625,10 @@ class TestNonSteamLinuxGameSearch:
         (tmp_path / "GOG Games").mkdir(parents=True)
         (tmp_path / "GOG Games" / "RimWorld").symlink_to(real_game)
 
-        with patch("pathlib.Path.home", return_value=tmp_path):
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
             result = _make_service().get_linux_paths()
 
         assert "steamapps" in str(result[0])
@@ -794,14 +813,13 @@ class _FakeWinreg:
 
     HKEY_LOCAL_MACHINE = "HKEY_LOCAL_MACHINE"
 
-    def __init__(self, tree: dict) -> None:
-        self._tree = tree
+    def __init__(self, tree: dict[str, Any]) -> None:
+        self._tree: dict[str, Any] = tree
 
     class _Key:
-        def __init__(self, subkeys: dict, values: dict) -> None:
-            self._subkeys = subkeys
-            self._values = values
-            self._enum_idx = 0
+        def __init__(self, subkeys: dict[str, Any], values: dict[str, str]) -> None:
+            self._subkeys: dict[str, Any] = subkeys
+            self._values: dict[str, str] = values
 
         def __enter__(self) -> "_FakeWinreg._Key":
             return self
@@ -812,13 +830,20 @@ class _FakeWinreg:
     def OpenKey(self, root: "str | _FakeWinreg._Key", path: str) -> "_FakeWinreg._Key":
         # winreg.OpenKey accepts either a predefined root key or an already
         # opened key; relative paths resolve against the latter's subkeys.
-        node = root._subkeys if isinstance(root, self._Key) else self._tree
+        node: dict[str, Any] = (
+            root._subkeys if isinstance(root, self._Key) else self._tree
+        )
         normalized = path.replace("/", "\\")
         for part in normalized.split("\\"):
-            if part not in node:
+            child: Any = node.get(part)
+            if not isinstance(child, dict):
                 raise FileNotFoundError(path)
-            node = node[part]
-        return self._Key(node, node.get("__values__", {}))
+            node = child
+        raw_values: Any = node.get("__values__", {})
+        values: dict[str, str] = (
+            cast("dict[str, str]", raw_values) if isinstance(raw_values, dict) else {}
+        )
+        return self._Key(node, values)
 
     def EnumKey(self, key: "_FakeWinreg._Key", index: int) -> str:
         names = [n for n in key._subkeys if n != "__values__"]
@@ -826,7 +851,7 @@ class _FakeWinreg:
             raise OSError("no more data")
         return names[index]
 
-    def QueryValueEx(self, key: "_FakeWinreg._Key", value_name: str) -> tuple:
+    def QueryValueEx(self, key: "_FakeWinreg._Key", value_name: str) -> tuple[str, str]:
         if value_name not in key._values:
             raise FileNotFoundError(value_name)
         return (key._values[value_name], "REG_SZ")

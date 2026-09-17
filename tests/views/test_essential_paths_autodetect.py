@@ -12,6 +12,8 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
+from app.models.instance import Instance
+from app.models.settings import Settings
 from app.utils.system_info import SystemInfo
 from app.views import main_content_panel as mcp_module
 from app.views.main_content_panel import MainContent
@@ -20,12 +22,12 @@ from app.views.main_content_panel import MainContent
 @pytest.fixture
 def empty_instance_main_content(
     main_content: tuple[MainContent, list[bool]],
-) -> tuple[MainContent, object, object]:
+) -> tuple[MainContent, Instance, Settings]:
     """MainContent whose current instance has all paths cleared."""
     mc, _save_calls = main_content
     # The shared fixture stubs the essential-paths check; restore the real
     # method because these tests exercise it directly.
-    mc.check_if_essential_paths_are_set = types.MethodType(
+    mc.check_if_essential_paths_are_set = types.MethodType(  # type: ignore[method-assign]
         MainContent.check_if_essential_paths_are_set, mc
     )
     instance = mc.settings.instances[mc.settings.current_instance]
@@ -47,9 +49,9 @@ def _make_gog_layout(tmp_path: Path) -> tuple[Path, Path]:
 
 def _patch_autodetect(
     monkeypatch: pytest.MonkeyPatch,
-    game_dir,
-    config_dir,
-    workshop_dir,
+    game_dir: Path,
+    config_dir: Path,
+    workshop_dir: Path,
 ) -> MagicMock:
     """Point MainContent's PathAutodetectService/SystemInfo at test data."""
     service = MagicMock()
@@ -74,8 +76,8 @@ class TestSilentEssentialAutodetect:
     def test_fills_only_missing_paths_and_saves(
         self,
         monkeypatch: pytest.MonkeyPatch,
-        tmp_path,
-        empty_instance_main_content,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, instance, settings = empty_instance_main_content
         # Simulate a GOG-like install: game bundle with Mods, no workshop.
@@ -97,8 +99,8 @@ class TestSilentEssentialAutodetect:
     def test_never_overwrites_existing_values(
         self,
         monkeypatch: pytest.MonkeyPatch,
-        tmp_path,
-        empty_instance_main_content,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, instance, settings = empty_instance_main_content
         instance.game_folder = "/manually/chosen/game"
@@ -116,8 +118,8 @@ class TestSilentEssentialAutodetect:
     def test_no_fill_when_detected_paths_do_not_exist(
         self,
         monkeypatch: pytest.MonkeyPatch,
-        tmp_path,
-        empty_instance_main_content,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, instance, settings = empty_instance_main_content
         _patch_autodetect(
@@ -145,8 +147,8 @@ class TestEssentialCheckUsesAutodetect:
         self,
         monkeypatch: pytest.MonkeyPatch,
         mock_dialogue: Mock,
-        tmp_path,
-        empty_instance_main_content,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, _instance, _settings = empty_instance_main_content
         game_dir, config_dir = _make_gog_layout(tmp_path)
@@ -161,8 +163,8 @@ class TestEssentialCheckUsesAutodetect:
         self,
         monkeypatch: pytest.MonkeyPatch,
         mock_dialogue: Mock,
-        tmp_path,
-        empty_instance_main_content,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, _instance, _settings = empty_instance_main_content
         _patch_autodetect(
@@ -182,8 +184,8 @@ class TestEssentialCheckUsesAutodetect:
         self,
         monkeypatch: pytest.MonkeyPatch,
         mock_dialogue: Mock,
-        tmp_path,
-        empty_instance_main_content,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         """prompt=False (e.g. deliberate path clearing) must not re-fill paths."""
         mc, instance, _settings = empty_instance_main_content
