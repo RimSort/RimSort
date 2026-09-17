@@ -41,9 +41,12 @@ test-coverage: dev-setup
 # Container image for super-linter (matches CI version)
 superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
 
-# Run super-linter locally via container (ruff, ruff-format, jscpd, bash,
-# json, yaml, checkov, gitleaks). Mypy/Pyright run natively because they
-# need the local venv to resolve imports.
+# Run super-linter locally via container (ruff, ruff-format, mypy, jscpd,
+# bash/shellcheck, shfmt, json, yaml, markdown, checkov, gitleaks,
+# github-actions). Pyright runs natively because it needs the local venv to
+# resolve imports. Env is kept identical to .github/workflows/lint.yml.
+# Note: super-linter v8.6.0 rejects mixing VALIDATE_*=true/false, so this list
+# stays all-true (opt-in mode; unlisted linters are disabled).
 [unix]
 super-lint:
     #!/usr/bin/env bash
@@ -68,18 +71,30 @@ super-lint:
         -e DEFAULT_BRANCH=main \
         -e LOG_LEVEL=NOTICE \
         -e LINTER_RULES_PATH=. \
+        -e VALIDATE_ALL_CODEBASE=true \
+        -e VALIDATE_PYTHON_MYPY=true \
         -e VALIDATE_PYTHON_RUFF=true \
         -e VALIDATE_PYTHON_RUFF_FORMAT=true \
-        -e VALIDATE_BASH=true \
-        -e VALIDATE_JSCPD=true \
+        -e VALIDATE_GITHUB_ACTIONS=true \
+        -e VALIDATE_GITLEAKS=true \
         -e VALIDATE_JSON=true \
         -e VALIDATE_YAML=true \
+        -e VALIDATE_BASH=true \
         -e VALIDATE_CHECKOV=true \
-        -e VALIDATE_GITLEAKS=true \
+        -e VALIDATE_JSCPD=true \
+        -e VALIDATE_SHELL_SHFMT=true \
+        -e MARKDOWN_CONFIG_FILE=.markdownlint.json \
+        -e VALIDATE_MARKDOWN=true \
+        -e FIX_MARKDOWN=true \
+        -e FIX_SHELL_SHFMT=true \
         -e PYTHON_RUFF_CONFIG_FILE=pyproject.toml \
         -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
-        -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/" \
+        -e PYTHON_MYPY_CONFIG_FILE=pyproject.toml \
+        -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/|setup_.*_script\\.js" \
         -e IGNORE_GITIGNORED_FILES=true \
+        -e FIX_PYTHON_RUFF=true \
+        -e FIX_PYTHON_RUFF_FORMAT=true \
+        -e GITHUB_ACTIONS_COMMAND_ARGS='-ignore '\''unknown permission scope '"'""attestations'"'"'\''' \
         -v "$(pwd)":/tmp/lint \
         -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
         {{superlinter_image}}
@@ -103,6 +118,10 @@ ruff-fix:
 ruff-format-fix:
     uv run ruff format {{ruff_config}} .
 
+# Check Markdown documentation for issues (markdownlint-cli2)
+markdownlint:
+    npx markdownlint-cli2@latest
+
 # Fix Markdown documentation issues (markdownlint-cli2 --fix)
 markdownlint-fix:
     npx markdownlint-cli2@latest --fix
@@ -125,17 +144,18 @@ jscpd:
 check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Run all code quality checks available on Windows: typecheck + pyright + jscpd + deferred-import guard
+# Run all code quality checks available on Windows: typecheck + pyright + jscpd + markdownlint + deferred-import guard
 [windows]
-check: typecheck pyright jscpd deferred-imports
+check: typecheck pyright jscpd markdownlint deferred-imports
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Check for new function-local from app/ imports (circular-import regression guard)
 deferred-imports:
     uv run python check_deferred_imports.py
 
-# Automatically fix linting and formatting issues (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes)
-fix: ruff shfmt-fix markdownlint-fix
+# Automatically fix linting and formatting issues, then verify the markdown check passes
+# (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes + markdownlint check)
+fix: ruff shfmt-fix markdownlint-fix markdownlint
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage

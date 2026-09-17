@@ -155,7 +155,7 @@ lang: zh-cn
 
 - **[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2)** 用于 Markdown lint 检查（`just markdownlint`）。
   - VS Code 扩展：<https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint>
-  - 配置位于 `.markdownlint-cli2.jsonc`。
+  - 配置位于 `.markdownlint.json`（规则，与 CI super-linter 共享）和 `.markdownlint-cli2.jsonc`（CLI2 选项）。
 
 ### 约定
 

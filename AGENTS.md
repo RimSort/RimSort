@@ -45,7 +45,7 @@ Never run `uv lock --upgrade` (== `just update`) as part of a task — dependenc
 | `just pyright` | pyright (standard mode) against `pyproject.toml` |
 | `just jscpd` | Copy-paste detection — CI enforces **0% duplication** (config in `.jscpd.json`). If code repeats, extract a shared helper. |
 | `just deferred-imports` | Guard against new function-local `from app…` imports (see Traps) |
-| `just markdownlint` | Markdown lint for `docs/**` (config in `.markdownlint-cli2.jsonc`) |
+| `just markdownlint` | Markdown lint for `docs/**` and root `*.md` (rules in `.markdownlint.json`; options in `.markdownlint-cli2.jsonc`) |
 | `just shfmt` | Shell script formatting |
 
 Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or the full `just check`, then `just test`) and get everything green before declaring a change complete. CI runs ruff, ruff-format, mypy, pyright, jscpd, gitleaks, markdownlint, and pytest on ubuntu/macos/windows.

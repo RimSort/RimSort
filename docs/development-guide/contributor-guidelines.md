@@ -151,7 +151,7 @@ Key recipes for contributors:
   - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt)
 - **[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2)** is used for Markdown linting (`just markdownlint`).
   - [VS Code extension](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
-  - Configuration is in `.markdownlint-cli2.jsonc`.
+  - Configuration is in `.markdownlint.json` (rules, shared with CI super-linter) and `.markdownlint-cli2.jsonc` (CLI2 options).
 
 ### Conventions
 
