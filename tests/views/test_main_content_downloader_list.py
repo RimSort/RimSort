@@ -48,7 +48,7 @@ class TestDefensiveCopyAgainstBrowserTeardown:
 
         mc._do_download_mods_with_steamcmd(shared_list)
 
-        download_kwargs = mc.steamcmd_wrapper.download_mods.call_args.kwargs
+        download_kwargs = mc.steamcmd_wrapper.download_mods.call_args.kwargs  # type: ignore[attr-defined]
         assert download_kwargs["publishedfileids"] == ["111", "222", "333"]
 
     def test_snapshot_is_captured_before_browser_closes(
