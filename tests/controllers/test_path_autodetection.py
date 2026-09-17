@@ -564,6 +564,18 @@ class TestNonSteamMacGameSearch:
             "Could not inspect non-Steam installation provenance"
         )
 
+    def test_logs_gog_provenance_from_bundle_metadata(self, tmp_path: Path) -> None:
+        bundle = self._make_gog_bundle(tmp_path)
+        metadata_file = bundle / "Contents" / "Resources" / "goggame-294100.info"
+        metadata_file.write_text("{}")
+
+        with patch("app.services.path_autodetect_service.logger.info") as info_mock:
+            _make_service()._log_non_steam_provenance(bundle)
+
+        info_mock.assert_called_once_with(
+            "Installation appears to be GOG-distributed (goggame metadata present)"
+        )
+
     @pytest.mark.parametrize(
         "with_steam", [False, True], ids=["gog_only", "steam_wins"]
     )
