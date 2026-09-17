@@ -4,6 +4,7 @@ import fnmatch
 import json
 import os
 import re
+import sys
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
@@ -50,8 +51,10 @@ class PathAutodetectService:
         "RimWorldWin64.exe",
         "RimWorldWin.exe",
     )
-    # Ludeon macOS bundles keep game content (Data/, Mods/, Version.txt) at
-    # the bundle root, next to Contents/.
+    # GOG Galaxy (Windows) records installed games under this registry key;
+    # each game gets a subkey named by its numeric ID whose "executable"
+    # REG_SZ value points inside the install directory.
+    _GOG_GALAXY_GAMES_KEY = "SOFTWARE\\WOW6432Node\\GOG.com\\Games"
     _MAX_SEARCH_DEPTH = 2
     _MAX_ENTRIES_PER_DIR = 500
     _MAX_METADATA_ENTRIES = 100
@@ -271,6 +274,10 @@ class PathAutodetectService:
         else:
             steam_mods_folder = Path(steam_mods_folder) / "workshop/content/294100"
 
+        game_folder = self._fall_back_to_non_steam_game_folder(
+            game_folder, self._find_non_steam_game_folder_windows
+        )
+
         return game_folder, config_folder, steam_mods_folder
 
     def _fall_back_to_non_steam_game_folder(
@@ -339,20 +346,43 @@ class PathAutodetectService:
         logger.debug("No non-Steam RimWorld game folder found")
         return None
 
-    def _find_heroic_game_folder(self) -> Path | None:
-        """Read Heroic Games Launcher's GOG install metadata, if present.
+    def _find_non_steam_game_folder_windows(self) -> Path | None:
+        """Search for a RimWorld game folder installed outside Steam (e.g. GOG).
 
-        Heroic records installed GOG games in
-        ``~/.config/heroic/gog_store/installed.json`` (a JSON array with
-        ``install_path`` fields), which covers custom Heroic install
-        locations without hardcoding them. Parsing is defensive: size-capped,
-        shape-checked, and any malformed file is skipped rather than trusted.
+        Consults the GOG Galaxy registry key for the game first (covers custom
+        install drives), then Heroic metadata, then a bounded search over
+        platform-standard roots. All candidates must pass content validation.
 
         :return: Validated game folder, or None when nothing was found.
         """
-        metadata_file = (
-            Path.home() / ".config" / "heroic" / "gog_store" / "installed.json"
-        )
+        gog_folder = self._find_gog_registry_game_folder()
+        if gog_folder is not None:
+            return gog_folder
+        heroic_folder = self._find_heroic_game_folder()
+        if heroic_folder is not None:
+            return heroic_folder
+        for root in self._windows_game_search_roots():
+            if not root.is_dir():
+                continue
+            for child in self._iter_shallow_dirs(root, self._MAX_SEARCH_DEPTH):
+                if self._looks_like_rimworld_windows_dir(child):
+                    logger.info(f"Found non-Steam RimWorld installation: {child}")
+                    return child
+        logger.debug("No non-Steam RimWorld game folder found")
+        return None
+
+    def _find_heroic_game_folder(self) -> Path | None:
+        """Read Heroic Games Launcher's GOG install metadata, if present.
+
+        Heroic records installed GOG games in ``installed.json`` (a JSON array
+        with ``install_path`` fields) under its config directory, which covers
+        custom Heroic install locations without hardcoding them. Parsing is
+        defensive: size-capped, shape-checked, and any malformed file is
+        skipped rather than trusted.
+
+        :return: Validated game folder, or None when nothing was found.
+        """
+        metadata_file = self._heroic_gog_metadata_file()
         if not metadata_file.is_file() or metadata_file.is_symlink():
             return None
         try:
@@ -374,7 +404,12 @@ class PathAutodetectService:
             if not isinstance(install_path, str):
                 continue
             candidate = Path(install_path).expanduser()
-            if candidate.is_absolute() and self._looks_like_rimworld_dir(candidate):
+            validator = (
+                self._looks_like_rimworld_windows_dir
+                if sys.platform == "win32"
+                else self._looks_like_rimworld_dir
+            )
+            if candidate.is_absolute() and validator(candidate):
                 logger.info(f"Found RimWorld via Heroic metadata: {candidate}")
                 return candidate
         return None
@@ -400,6 +435,101 @@ class PathAutodetectService:
         user_home = Path.home()
         return (user_home / "GOG Games", user_home / "Games")
 
+    @staticmethod
+    def _heroic_gog_metadata_file() -> Path:
+        """Path to Heroic's GOG installed-games metadata, per platform."""
+        user_home = Path.home()
+        if sys.platform == "win32":
+            return (
+                user_home
+                / "AppData"
+                / "Roaming"
+                / "heroic"
+                / "gog_store"
+                / "installed.json"
+            )
+        return user_home / ".config" / "heroic" / "gog_store" / "installed.json"
+
+    def _windows_game_search_roots(self) -> tuple[Path, ...]:
+        """Standard roots for GOG-style game installations on Windows.
+
+        GOG Galaxy defaults to ``C:\\GOG Games``; the offline installer and
+        Heroic default to ``%USERPROFILE%\\GOG Games``. Names inside the roots
+        do not matter; candidates are validated by content.
+        """
+        user_home = Path.home()
+        return (
+            Path("C:/GOG Games"),
+            user_home / "GOG Games",
+            user_home / "Games",
+        )
+
+    def _find_gog_registry_game_folder(self) -> Path | None:
+        """Read the game install directory from the GOG Galaxy registry key.
+
+        GOG Galaxy writes a per-game subkey under
+        ``HKLM\\SOFTWARE\\WOW6432Node\\GOG.com\\Games`` whose ``executable``
+        value points at the game binary inside the install directory. Covers
+        arbitrary custom install drives without any filesystem scanning.
+        Read-only; returns None anywhere except Windows.
+
+        :return: Validated game folder, or None when nothing was found.
+        """
+        if sys.platform != "win32":
+            return None
+        try:
+            import winreg
+        except ImportError:
+            return None
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE, self._GOG_GALAXY_GAMES_KEY
+            ) as games_key:
+                subkey_count = 0
+                while subkey_count < self._MAX_METADATA_ENTRIES:
+                    try:
+                        subkey_name = winreg.EnumKey(games_key, subkey_count)
+                    except OSError:
+                        break
+                    subkey_count += 1
+                    try:
+                        with winreg.OpenKey(games_key, subkey_name) as game_key:
+                            exe_value = winreg.QueryValueEx(game_key, "executable")
+                    except OSError:
+                        continue
+                    if not exe_value or not isinstance(exe_value[0], str):
+                        continue
+                    candidate = Path(exe_value[0]).parent
+                    if self._looks_like_rimworld_windows_dir(candidate):
+                        logger.info(
+                            f"Found RimWorld via GOG Galaxy registry: {candidate}"
+                        )
+                        return candidate
+        except OSError:
+            logger.debug("GOG Galaxy registry key not present or not readable")
+            return None
+        return None
+
+    @classmethod
+    def _has_parsable_version_file(cls, path: Path) -> bool:
+        """Check for a regular ``Version.txt`` whose first line parses as a
+        RimWorld version (e.g. "1.6.4871 rev573").
+
+        :param path: Candidate game directory.
+        :return: True when the version marker is present and parsable.
+        """
+        version_file = path / cls._VERSION_FILE_NAME
+        if not version_file.is_file() or version_file.is_symlink():
+            return False
+        try:
+            with version_file.open("r", encoding="utf-8", errors="replace") as f:
+                head = f.read(256)
+        except OSError:
+            return False
+        lines = head.splitlines()
+        first_line = lines[0].strip() if lines else ""
+        return bool(cls._VERSION_RE.match(first_line))
+
     @classmethod
     def _looks_like_rimworld_dir(cls, path: Path) -> bool:
         """Validate that a directory carries RimWorld content markers.
@@ -414,18 +544,29 @@ class PathAutodetectService:
         """
         if not path.is_dir() or path.is_symlink():
             return False
-        version_file = path / cls._VERSION_FILE_NAME
-        if version_file.is_file() and not version_file.is_symlink():
-            try:
-                with version_file.open("r", encoding="utf-8", errors="replace") as f:
-                    head = f.read(256)
-            except OSError:
-                return False
-            lines = head.splitlines()
-            first_line = lines[0].strip() if lines else ""
-            if cls._VERSION_RE.match(first_line):
-                return True
+        if cls._has_parsable_version_file(path):
+            return True
         return any((path / exe).is_file() for exe in cls._LINUX_GAME_EXECUTABLES)
+
+    @classmethod
+    def _looks_like_rimworld_windows_dir(cls, path: Path) -> bool:
+        """Validate that a directory carries Windows RimWorld content markers.
+
+        Accepts a directory containing a parsable ``Version.txt`` or a known
+        Windows game executable. Mirrors :meth:`_looks_like_rimworld_dir` for
+        the Windows build of the game (GOG installs place ``Version.txt`` and
+        the .exe next to ``Data/``/``Mods/`` at the install root).
+
+        :param path: Candidate directory.
+        :return: True when RimWorld content markers are present.
+        """
+        if not path.is_dir() or path.is_symlink():
+            return False
+        if cls._has_parsable_version_file(path):
+            return True
+        return (path / "RimWorldWin64.exe").is_file() or (
+            path / "RimWorldWin.exe"
+        ).is_file()
 
     @classmethod
     def _looks_like_rimworld_mac_app(cls, path: Path) -> bool:

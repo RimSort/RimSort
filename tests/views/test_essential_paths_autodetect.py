@@ -7,6 +7,7 @@ user, so a GOG/Heroic installation configures itself on first launch.
 """
 
 import types
+from pathlib import Path
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -33,6 +34,15 @@ def empty_instance_main_content(
     instance.local_folder = ""
     instance.workshop_folder = ""
     return mc, instance, mc.settings
+
+
+def _make_gog_layout(tmp_path: Path) -> tuple[Path, Path]:
+    """Create an existing game bundle (with Mods) and a config directory."""
+    game_dir = tmp_path / "RimWorld.app"
+    (game_dir / "Mods").mkdir(parents=True)
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    return game_dir, config_dir
 
 
 def _patch_autodetect(
@@ -69,10 +79,7 @@ class TestSilentEssentialAutodetect:
     ) -> None:
         mc, instance, settings = empty_instance_main_content
         # Simulate a GOG-like install: game bundle with Mods, no workshop.
-        game_dir = tmp_path / "RimWorld.app"
-        (game_dir / "Mods").mkdir(parents=True)
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
+        game_dir, config_dir = _make_gog_layout(tmp_path)
         _patch_autodetect(monkeypatch, game_dir, config_dir, tmp_path / "missing_ws")
         save_mock = Mock()
         monkeypatch.setattr(settings, "save", save_mock)
@@ -95,10 +102,7 @@ class TestSilentEssentialAutodetect:
     ) -> None:
         mc, instance, settings = empty_instance_main_content
         instance.game_folder = "/manually/chosen/game"
-        game_dir = tmp_path / "RimWorld.app"
-        (game_dir / "Mods").mkdir(parents=True)
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
+        game_dir, config_dir = _make_gog_layout(tmp_path)
         _patch_autodetect(monkeypatch, game_dir, config_dir, tmp_path / "ws")
         monkeypatch.setattr(settings, "save", Mock())
 
@@ -145,10 +149,7 @@ class TestEssentialCheckUsesAutodetect:
         empty_instance_main_content,
     ) -> None:
         mc, _instance, _settings = empty_instance_main_content
-        game_dir = tmp_path / "RimWorld.app"
-        (game_dir / "Mods").mkdir(parents=True)
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
+        game_dir, config_dir = _make_gog_layout(tmp_path)
         _patch_autodetect(monkeypatch, game_dir, config_dir, tmp_path / "ws")
 
         result = mc.check_if_essential_paths_are_set(prompt=True)
@@ -186,10 +187,7 @@ class TestEssentialCheckUsesAutodetect:
     ) -> None:
         """prompt=False (e.g. deliberate path clearing) must not re-fill paths."""
         mc, instance, _settings = empty_instance_main_content
-        game_dir = tmp_path / "RimWorld.app"
-        (game_dir / "Mods").mkdir(parents=True)
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
+        game_dir, config_dir = _make_gog_layout(tmp_path)
         _patch_autodetect(monkeypatch, game_dir, config_dir, tmp_path / "ws")
 
         result = mc.check_if_essential_paths_are_set(prompt=False)

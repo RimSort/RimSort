@@ -1,8 +1,12 @@
 import json
+import platform
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from app.services.path_autodetect_service import PathAutodetectService
+from app.utils.generic import get_executable_path
 
 
 def _vdf_escape(path: Path) -> str:
@@ -507,11 +511,23 @@ class TestNonSteamMacGameSearch:
 
         assert result is None
 
-    def test_get_darwin_paths_uses_gog_bundle_when_no_steam(
-        self, tmp_path: Path
+    @pytest.mark.parametrize(
+        "with_steam", [False, True], ids=["gog_only", "steam_wins"]
+    )
+    def test_get_darwin_paths_gog_vs_steam_priority(
+        self, tmp_path: Path, with_steam: bool
     ) -> None:
         apps_root = tmp_path / "Applications"
-        bundle = self._make_gog_bundle(apps_root)
+        gog_bundle = self._make_gog_bundle(apps_root)
+        steam_game: Path | None = None
+        if with_steam:
+            steam_root = tmp_path / "Library" / "Application Support" / "Steam"
+            steam_root.mkdir(parents=True)
+            (steam_root / "steamapps").mkdir()
+            steam_game = (
+                steam_root / "steamapps" / "common" / "RimWorld" / "RimWorldMac.app"
+            )
+            steam_game.mkdir(parents=True)
         service = _make_service()
 
         with (
@@ -520,27 +536,7 @@ class TestNonSteamMacGameSearch:
         ):
             result = service.get_darwin_paths()
 
-        assert result[0] == bundle
-
-    def test_steam_installation_wins_over_gog_bundle(self, tmp_path: Path) -> None:
-        steam_root = tmp_path / "Library" / "Application Support" / "Steam"
-        steam_root.mkdir(parents=True)
-        (steam_root / "steamapps").mkdir()
-        steam_game = (
-            steam_root / "steamapps" / "common" / "RimWorld" / "RimWorldMac.app"
-        )
-        steam_game.mkdir(parents=True)
-        apps_root = tmp_path / "Applications"
-        self._make_gog_bundle(apps_root)
-        service = _make_service()
-
-        with (
-            patch("pathlib.Path.home", return_value=tmp_path),
-            patch.object(service, "_macos_game_app_roots", return_value=(apps_root,)),
-        ):
-            result = service.get_darwin_paths()
-
-        assert result[0] == steam_game
+        assert result[0] == (steam_game if with_steam else gog_bundle)
 
 
 class TestNonSteamLinuxGameSearch:
@@ -624,8 +620,6 @@ class TestGetExecutablePathLinux:
 
     @staticmethod
     def _call(game_dir: Path) -> str | None:
-        from app.utils.generic import get_executable_path
-
         with patch("platform.system", return_value="Linux"):
             return get_executable_path(game_dir)
 
@@ -635,19 +629,15 @@ class TestGetExecutablePathLinux:
         path.write_bytes(b"placeholder")
         path.chmod(0o755)
 
-    def test_accepts_modern_rimworld_linux64(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize("binary_name", ["RimWorldLinux64", "RimWorldLinux"])
+    def test_accepts_linux_native_binary(
+        self, tmp_path: Path, binary_name: str
+    ) -> None:
         game_dir = tmp_path / "game"
         game_dir.mkdir()
-        self._make_executable(game_dir / "RimWorldLinux64")
+        self._make_executable(game_dir / binary_name)
 
-        assert self._call(game_dir) == str(game_dir / "RimWorldLinux64")
-
-    def test_accepts_legacy_rimworld_linux(self, tmp_path: Path) -> None:
-        game_dir = tmp_path / "game"
-        game_dir.mkdir()
-        self._make_executable(game_dir / "RimWorldLinux")
-
-        assert self._call(game_dir) == str(game_dir / "RimWorldLinux")
+        assert self._call(game_dir) == str(game_dir / binary_name)
 
     def test_accepts_non_executable_windows_binary_on_linux(
         self, tmp_path: Path
@@ -659,6 +649,10 @@ class TestGetExecutablePathLinux:
 
         assert self._call(game_dir) == str(game_dir / "RimWorldWin64.exe")
 
+    @pytest.mark.skipif(
+        platform.system() == "Windows",
+        reason="os.access(X_OK) does not reflect the executable bit on Windows",
+    )
     def test_rejects_non_executable_linux_binary(self, tmp_path: Path) -> None:
         """A Linux binary without the executable bit is not launchable."""
         game_dir = tmp_path / "game"
@@ -666,3 +660,173 @@ class TestGetExecutablePathLinux:
         (game_dir / "RimWorldLinux64").write_bytes(b"placeholder")
 
         assert self._call(game_dir) is None
+
+
+class TestNonSteamWindowsGameSearch:
+    """Tests for the GOG-style game search on Windows (runs on any platform)."""
+
+    @staticmethod
+    def _make_windows_game_dir(path: Path) -> Path:
+        """Create a directory carrying Windows RimWorld content markers."""
+        path.mkdir(parents=True)
+        (path / "Version.txt").write_text("1.6.4871 rev573\n")
+        (path / "RimWorldWin64.exe").write_bytes(b"MZ")
+        return path
+
+    def test_finds_gog_games_root(self, tmp_path: Path) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / "GOG Games" / "RimWorld")
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch.object(
+                PathAutodetectService,
+                "_windows_game_search_roots",
+                return_value=(tmp_path / "GOG Games", tmp_path / "Games"),
+            ),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_non_steam_game_folder_windows()
+
+        assert result == game_dir
+
+    def test_looks_like_rimworld_windows_dir(self, tmp_path: Path) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / "game")
+        assert _make_service()._looks_like_rimworld_windows_dir(game_dir)
+
+    def test_looks_like_rimworld_windows_dir_rejects_lookalike(
+        self, tmp_path: Path
+    ) -> None:
+        lookalike = tmp_path / "RimWorld"
+        lookalike.mkdir()
+        (lookalike / "readme.txt").write_text("hello")
+        assert not _make_service()._looks_like_rimworld_windows_dir(lookalike)
+
+    def test_gog_registry_lookup_uses_executable_value(self, tmp_path: Path) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / "CustomDrive" / "RimWorld")
+        fake_winreg = _FakeWinreg(
+            {
+                "SOFTWARE": {
+                    "WOW6432Node": {
+                        "GOG.com": {
+                            "Games": {
+                                "1207658903": {
+                                    "__values__": {
+                                        "executable": str(
+                                            game_dir / "RimWorldWin64.exe"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        with (
+            patch.dict("sys.modules", {"winreg": fake_winreg}),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result == game_dir
+
+    def test_gog_registry_lookup_ignores_non_rimworld_games(
+        self, tmp_path: Path
+    ) -> None:
+        other_game = tmp_path / "OtherGame"
+        other_game.mkdir(parents=True)
+        (other_game / "Game.exe").write_bytes(b"MZ")
+        fake_winreg = _FakeWinreg(
+            {
+                "SOFTWARE": {
+                    "WOW6432Node": {
+                        "GOG.com": {
+                            "Games": {
+                                "1421409411": {
+                                    "__values__": {
+                                        "executable": str(other_game / "Game.exe")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        with (
+            patch.dict("sys.modules", {"winreg": fake_winreg}),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result is None
+
+    def test_gog_registry_lookup_returns_none_off_windows(self) -> None:
+        with patch("sys.platform", "darwin"):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result is None
+
+    def test_heroic_metadata_path_per_platform(self) -> None:
+        with (
+            patch("sys.platform", "win32"),
+            patch("pathlib.Path.home", return_value=Path("/users/tester")),
+        ):
+            windows_path = PathAutodetectService._heroic_gog_metadata_file()
+        with (
+            patch("sys.platform", "linux"),
+            patch("pathlib.Path.home", return_value=Path("/home/tester")),
+        ):
+            linux_path = PathAutodetectService._heroic_gog_metadata_file()
+
+        assert windows_path == Path(
+            "/users/tester/AppData/Roaming/heroic/gog_store/installed.json"
+        )
+        assert linux_path == Path(
+            "/home/tester/.config/heroic/gog_store/installed.json"
+        )
+
+
+class _FakeWinreg:
+    """Minimal winreg stand-in serving a fixed key tree (read-only)."""
+
+    HKEY_LOCAL_MACHINE = "HKEY_LOCAL_MACHINE"
+
+    def __init__(self, tree: dict) -> None:
+        self._tree = tree
+
+    class _Key:
+        def __init__(self, subkeys: dict, values: dict) -> None:
+            self._subkeys = subkeys
+            self._values = values
+            self._enum_idx = 0
+
+        def __enter__(self) -> "_FakeWinreg._Key":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+    def OpenKey(self, root: "str | _FakeWinreg._Key", path: str) -> "_FakeWinreg._Key":
+        # winreg.OpenKey accepts either a predefined root key or an already
+        # opened key; relative paths resolve against the latter's subkeys.
+        node = root._subkeys if isinstance(root, self._Key) else self._tree
+        normalized = path.replace("/", "\\")
+        for part in normalized.split("\\"):
+            if part not in node:
+                raise FileNotFoundError(path)
+            node = node[part]
+        return self._Key(node, node.get("__values__", {}))
+
+    def EnumKey(self, key: "_FakeWinreg._Key", index: int) -> str:
+        names = [n for n in key._subkeys if n != "__values__"]
+        if index >= len(names):
+            raise OSError("no more data")
+        return names[index]
+
+    def QueryValueEx(self, key: "_FakeWinreg._Key", value_name: str) -> tuple:
+        if value_name not in key._values:
+            raise FileNotFoundError(value_name)
+        return (key._values[value_name], "REG_SZ")
