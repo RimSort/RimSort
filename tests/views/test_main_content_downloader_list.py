@@ -1,9 +1,11 @@
-"""Tests for preserving the Mod Downloader wait-list across SteamCMD runs.
+"""Tests for preserving the Mod Downloader wait-list across SteamCMD and
+Steamworks operations.
 
 Covers the fix in MainContent that snapshots the browser's queued mods
-before the browser window closes (which used to wipe them out unconditionally
-via SteamBrowser.closeEvent), restores them if the Mod Downloader is
-reopened, and drops individual mods once SteamCMD confirms they downloaded.
+whenever it's about to close (which used to wipe them out unconditionally
+via SteamBrowser.closeEvent, no matter what triggered the close), restores
+them if the Mod Downloader is reopened, and drops individual mods once
+SteamCMD confirms they downloaded or a Steamworks operation completes.
 """
 
 from pathlib import Path
@@ -60,20 +62,42 @@ class TestDefensiveCopyAgainstBrowserTeardown:
         download_kwargs = mc.steamcmd_wrapper.download_mods.call_args.kwargs  # type: ignore[attr-defined]
         assert download_kwargs["publishedfileids"] == ["111", "222", "333"]
 
-    def test_snapshot_is_captured_before_browser_closes(
-        self,
-        main_content: tuple[MainContent, list[bool]],
-        monkeypatch: pytest.MonkeyPatch,
-        tmp_path: Path,
-    ) -> None:
-        mc, _ = main_content
-        _make_ready_for_steamcmd_download(mc, monkeypatch, tmp_path)
 
+class TestSnapshotDownloaderList:
+    """_snapshot_downloader_list backs SteamBrowser.about_to_close: it must
+    capture the live browser's wait-list no matter what triggers the close
+    (a download starting, or the user just closing the window), so a
+    download still in progress never loses track of its remaining mods.
+    """
+
+    def test_captures_live_browser_state(self) -> None:
+        mc = MainContent.__new__(MainContent)
+        mc._pending_downloader_snapshot = {}
         mock_browser = MagicMock()
         mock_browser.get_download_list_snapshot.return_value = {"111": "Mod A"}
         mc.steam_browser = mock_browser
 
-        mc._do_download_mods_with_steamcmd(["111"])
+        mc._snapshot_downloader_list()
+
+        assert mc._pending_downloader_snapshot == {"111": "Mod A"}
+
+    def test_merges_with_any_existing_pending_entries(self) -> None:
+        mc = MainContent.__new__(MainContent)
+        mc._pending_downloader_snapshot = {"999": "Mod Z"}
+        mock_browser = MagicMock()
+        mock_browser.get_download_list_snapshot.return_value = {"111": "Mod A"}
+        mc.steam_browser = mock_browser
+
+        mc._snapshot_downloader_list()
+
+        assert mc._pending_downloader_snapshot == {"999": "Mod Z", "111": "Mod A"}
+
+    def test_noop_when_browser_is_closed(self) -> None:
+        mc = MainContent.__new__(MainContent)
+        mc._pending_downloader_snapshot = {"111": "Mod A"}
+        mc.steam_browser = None
+
+        mc._snapshot_downloader_list()
 
         assert mc._pending_downloader_snapshot == {"111": "Mod A"}
 
@@ -163,3 +187,71 @@ class TestOpenSteamBrowserRestoresPendingSnapshot:
         mc._open_steam_browser("https://steamcommunity.com/workshop/")
 
         mock_new_browser.restore_download_list.assert_not_called()
+
+    def test_wires_about_to_close_to_resnapshot_the_live_list(
+        self,
+        main_content: tuple[MainContent, list[bool]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Regression test: if the user reopens the Mod Downloader and closes
+        it again while SteamCMD is still running, the restored (and possibly
+        further-edited) live list must be re-captured before it's cleared,
+        or a failure discovered later has nothing left to report into.
+        """
+        mc, _ = main_content
+        mc.steam_browser = None
+        mc._pending_downloader_snapshot = {}
+
+        mock_new_browser = MagicMock()
+        monkeypatch.setattr(
+            "app.views.main_content_panel.SteamBrowser",
+            MagicMock(return_value=mock_new_browser),
+        )
+
+        mc._open_steam_browser("https://steamcommunity.com/workshop/")
+
+        mock_new_browser.about_to_close.connect.assert_called_once_with(
+            mc._snapshot_downloader_list
+        )
+
+
+class TestSteamworksSubscribeSnapshotCleanup:
+    """Steamworks subscribe/unsubscribe has no per-mod success/failure
+    reporting the way SteamCMD does, so once the operation returns, every
+    mod it covered should stop being preserved as "pending" or it would
+    keep reappearing (and be re-submittable) in the reopened wait-list.
+    """
+
+    def test_completed_ids_are_dropped_from_pending_snapshot(
+        self,
+        main_content: tuple[MainContent, list[bool]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        mc, _ = main_content
+        mc.steam_browser = None
+        mc._pending_downloader_snapshot = {
+            "111": "Mod A",
+            "222": "Mod B",
+            "333": "Mod C",
+        }
+        monkeypatch.setattr(mc, "do_threaded_loading_animation", MagicMock())
+        monkeypatch.setattr(mc, "_do_refresh", MagicMock())
+
+        mc._do_steamworks_api_call_animated(["unsubscribe", ["111", "222"]])
+
+        assert mc._pending_downloader_snapshot == {"333": "Mod C"}
+
+    def test_unrelated_pending_ids_are_left_alone(
+        self,
+        main_content: tuple[MainContent, list[bool]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        mc, _ = main_content
+        mc.steam_browser = None
+        mc._pending_downloader_snapshot = {"333": "Mod C"}
+        monkeypatch.setattr(mc, "do_threaded_loading_animation", MagicMock())
+        monkeypatch.setattr(mc, "_do_refresh", MagicMock())
+
+        mc._do_steamworks_api_call_animated(["unsubscribe", ["111"]])
+
+        assert mc._pending_downloader_snapshot == {"333": "Mod C"}

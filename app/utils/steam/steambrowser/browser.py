@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer, QUrl
+from PySide6.QtCore import QPoint, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QCloseEvent, QPixmap
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import (
@@ -182,6 +182,11 @@ class SteamBrowser(QWidget):
     """
     A generic panel used to browse Workshop content - downloader included
     """
+
+    # Emitted at the top of closeEvent, before the wait-list is cleared and
+    # torn down, so callers can preserve it regardless of what triggered the
+    # close (programmatic .close() or the user closing the window directly).
+    about_to_close = Signal()
 
     # Cleared in closeEvent when the window is closed.
     web_view: QWebEngineView | None
@@ -1132,6 +1137,7 @@ class SteamBrowser(QWidget):
     def closeEvent(self, event: QCloseEvent) -> None:
         """Properly clean up web engine resources to prevent memory leaks and hanging processes"""
         logger.debug("Cleaning up SteamBrowser resources...")
+        self.about_to_close.emit()
 
         if self._load_progress_fallback_timer is not None:
             self._load_progress_fallback_timer.stop()

@@ -2155,6 +2155,10 @@ class MainContent(QObject):
             self.settings,
         )
         self.window_manager.register_attr(self, "steam_browser")
+        # Re-snapshot the wait-list right before it tears down, no matter what
+        # triggers the close (a download starting, or the user just closing
+        # the window), so an active download's remaining mods are never lost.
+        self.steam_browser.about_to_close.connect(self._snapshot_downloader_list)
 
         if self._pending_downloader_snapshot:
             self.steam_browser.restore_download_list(self._pending_downloader_snapshot)
@@ -2325,6 +2329,13 @@ class MainContent(QObject):
         if self.steamcmd_wrapper.setup:
             self._do_download_mods_with_steamcmd([workshop_id])
 
+    def _snapshot_downloader_list(self) -> None:
+        """Capture the browser's current wait-list before it tears down."""
+        if self.steam_browser is not None:
+            self._pending_downloader_snapshot.update(
+                self.steam_browser.get_download_list_snapshot()
+            )
+
     def _on_steamcmd_mod_download_succeeded(self, publishedfileid: str) -> None:
         """
         Drop a successfully-downloaded mod from wherever the downloader
@@ -2384,9 +2395,8 @@ class MainContent(QObject):
             self.steamcmd_wrapper.steamcmd
         ):
             if self.steam_browser:
-                self._pending_downloader_snapshot.update(
-                    self.steam_browser.get_download_list_snapshot()
-                )
+                # Closing triggers about_to_close, which snapshots the
+                # wait-list before it's cleared (see _open_steam_browser).
                 self.steam_browser.close()
 
             self.steamcmd_runner = RunnerPanel(
@@ -2538,9 +2548,8 @@ class MainContent(QObject):
             return
         # Close browser if open
         if self.steam_browser:
-            self._pending_downloader_snapshot.update(
-                self.steam_browser.get_download_list_snapshot()
-            )
+            # Closing triggers about_to_close, which snapshots the wait-list
+            # before it's cleared (see _open_steam_browser).
             self.steam_browser.close()
         # Process API call
         self.do_threaded_loading_animation(
@@ -2550,6 +2559,11 @@ class MainContent(QObject):
                 "Processing Steam subscription action(s) via Steamworks API..."
             ),
         )
+        # Steamworks subscribe/unsubscribe has no granular per-mod
+        # success/failure reporting like SteamCMD does, so once the call
+        # returns, treat every mod in it as handled and stop preserving it.
+        for publishedfileid in publishedfileids:
+            self._pending_downloader_snapshot.pop(str(publishedfileid), None)
         # Do a full refresh of metadata and UI
         self._do_refresh()
 
