@@ -2326,10 +2326,24 @@ class MainContent(QObject):
             self._do_download_mods_with_steamcmd([workshop_id])
 
     def _on_steamcmd_mod_download_succeeded(self, publishedfileid: str) -> None:
-        """Drop a successfully-downloaded mod from the preserved downloader wait-list."""
+        """
+        Drop a successfully-downloaded mod from wherever the downloader
+        wait-list currently holds it: the preserved snapshot if the Mod
+        Downloader is closed, or the live browser's list if it was reopened
+        (and the snapshot already handed off to it) while the download ran.
+        """
         self._pending_downloader_snapshot.pop(publishedfileid, None)
+        if (
+            self.steam_browser is not None
+            and publishedfileid in self.steam_browser.downloader_list_mods_tracking
+        ):
+            self.steam_browser._remove_mod_from_list(publishedfileid)
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
+        # Copy defensively: this can be the same list object as
+        # SteamBrowser.downloader_list_mods_tracking (the download button emits
+        # it directly), which gets cleared when we close the browser below.
+        publishedfileids = list(publishedfileids)
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
