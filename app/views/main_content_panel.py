@@ -38,12 +38,14 @@ from app.controllers.sort_controller import Sorter
 from app.controllers.todds_controller import ToddsController
 from app.models.animations import LoadingAnimation
 from app.models.divider import is_divider_uuid
+from app.models.instance import Instance
 from app.models.metadata.metadata_structure import AboutXmlMod, ModType
 from app.models.settings import Settings
 from app.services.dependency_resolver import build_dependencies_dialog_context
 from app.services.import_export_service import ImportExportService
 from app.services.mod_list_parser import ModListFormatError, parse_mod_list_file
 from app.services.modlist_history_service import ModlistHistoryService
+from app.services.path_autodetect_service import PathAutodetectService
 from app.services.window_manager import WindowManager
 from app.sort.mod_sorting import ModsPanelSortKey
 from app.utils import http
@@ -385,6 +387,62 @@ class MainContent(QObject):
         """Force Refresh metadata cache"""
         self.metadata_controller.refresh_metadata()
 
+    @staticmethod
+    def _instance_essential_paths_ready(instance: Instance) -> bool:
+        """Check that game, config and local mods paths are set and exist."""
+        return bool(
+            instance.game_folder
+            and instance.config_folder
+            and instance.local_folder
+            and os.path.exists(instance.game_folder)
+            and os.path.exists(instance.config_folder)
+            and os.path.exists(instance.local_folder)
+        )
+
+    def _autodetect_missing_essential_paths(self) -> bool:
+        """Silently auto-fill missing essential paths for the current instance.
+
+        Runs the platform path autodetection once and fills ONLY instance
+        fields that are empty with paths that actually exist, mirroring the
+        Autodetect button in the settings dialog, which never overwrites
+        existing values. Steam-integration checkboxes are intentionally left
+        untouched; the workshop path is only filled when it exists, so GOG
+        and other DRM-free installs stay clean.
+
+        :return: True when at least one path was filled and settings were saved.
+        """
+        autodetect = PathAutodetectService()
+        operating_system = SystemInfo().operating_system
+        if operating_system == SystemInfo.OperatingSystem.MACOS:
+            game_folder, config_folder, workshop_folder = autodetect.get_darwin_paths()
+        elif operating_system == SystemInfo.OperatingSystem.LINUX:
+            game_folder, config_folder, workshop_folder = autodetect.get_linux_paths()
+        elif operating_system == SystemInfo.OperatingSystem.WINDOWS:
+            game_folder, config_folder, workshop_folder = autodetect.get_windows_paths()
+        else:
+            logger.error("Cannot autodetect paths on an unknown operating system")
+            return False
+
+        instance = self.settings.instances[self.settings.current_instance]
+        candidate_paths = {
+            "game_folder": game_folder,
+            "config_folder": config_folder,
+            "local_folder": game_folder / "Mods",
+            "workshop_folder": workshop_folder,
+        }
+        changed = False
+        for field, detected_path in candidate_paths.items():
+            current_value = getattr(instance, field, "")
+            if (not current_value) and detected_path.exists():
+                logger.info(
+                    f"Auto-filling empty {field} with auto-detected path: {detected_path}"
+                )
+                setattr(instance, field, str(detected_path))
+                changed = True
+        if changed:
+            self.settings.save()
+        return changed
+
     def check_if_essential_paths_are_set(self, prompt: bool = True) -> bool:
         """
         When the user starts the app for the first time, none
@@ -399,39 +457,47 @@ class MainContent(QObject):
         logger.info(f"Game folder: {game_folder_path}")
         logger.info(f"Config folder: {config_folder_path}")
         logger.info(f"Local mods folder: {local_mods_folder_path}")
-        if (
-            game_folder_path
-            and config_folder_path
-            and local_mods_folder_path
-            and os.path.exists(game_folder_path)
-            and os.path.exists(config_folder_path)
-            and os.path.exists(local_mods_folder_path)
+        if self._instance_essential_paths_ready(
+            self.settings.instances[current_instance]
         ):
             logger.info("Essential paths set!")
             return True
-        else:
-            logger.warning("Essential path(s) are invalid or not set!")
-            answer = dialogue.show_dialogue_conditional(
-                title=self.tr("Essential path(s)"),
-                text=self.tr("Essential path(s) are invalid or not set!"),
-                information=(
-                    self.tr(
-                        "RimSort requires the below paths to be set.<br/><br/>"
-                        "1) Game folder (Folder where RimWorld is installed).<br/><br/>"
-                        "2) Config folder (Folder where ModsConfig.xml is located)<br/><br/>"
-                        "3) Local mods folder (Mods folder inside the RimWorld installation).<br/><br/>"
-                        "4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)<br/><br/>"
-                        "Try Using the autodetect functionality to set all paths automatically.<br/><br/>"
-                        "Would you like to open the settings to configure them now?"
-                    )
-                ),
-            )
-            if (
-                answer == QMessageBox.StandardButton.Yes
-                and self._show_settings_dialog is not None
+
+        logger.warning("Essential path(s) are invalid or not set!")
+
+        # First-run convenience: silently run path autodetection and save any
+        # missing essential paths before bothering the user. Deliberate
+        # "Clear All Locations" flows reach the non-prompting refresh path
+        # (prompt=False) and are not affected by this.
+        if prompt:
+            self._autodetect_missing_essential_paths()
+            if self._instance_essential_paths_ready(
+                self.settings.instances[current_instance]
             ):
-                self._show_settings_dialog("Locations")
-            return False
+                logger.info("Essential paths were completed by silent autodetection")
+                return True
+
+        answer = dialogue.show_dialogue_conditional(
+            title=self.tr("Essential path(s)"),
+            text=self.tr("Essential path(s) are invalid or not set!"),
+            information=(
+                self.tr(
+                    "RimSort requires the below paths to be set.<br/><br/>"
+                    "1) Game folder (Folder where RimWorld is installed).<br/><br/>"
+                    "2) Config folder (Folder where ModsConfig.xml is located)<br/><br/>"
+                    "3) Local mods folder (Mods folder inside the RimWorld installation).<br/><br/>"
+                    "4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)<br/><br/>"
+                    "Try Using the autodetect functionality to set all paths automatically.<br/><br/>"
+                    "Would you like to open the settings to configure them now?"
+                )
+            ),
+        )
+        if (
+            answer == QMessageBox.StandardButton.Yes
+            and self._show_settings_dialog is not None
+        ):
+            self._show_settings_dialog("Locations")
+        return False
 
     def ___get_relative_middle(self, some_list: ModListWidget) -> int:
         rect = some_list.contentsRect()

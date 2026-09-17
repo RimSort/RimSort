@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import sys
 import uuid as uuid_module
+from collections.abc import Generator
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from PySide6.QtCore import QCoreApplication, QObject
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 from app.controllers.settings_controller import SettingsController
 from app.models.instance import Instance
 from app.models.settings import Settings
+from app.views import dialogue
 
 # Ensure the steamworks module is mockable for the MainWindow import chain.
 # This must run at import time, before any test imports MainWindow.
@@ -24,6 +26,7 @@ if "steamworks" not in sys.modules:
     sys.modules["steamworks"].STEAMWORKS = MagicMock()  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
+    from app.views.main_content_panel import MainContent
     from app.views.main_window import MainWindow
 
 
@@ -41,6 +44,54 @@ def make_stub_main_window(metadata_controller: MagicMock | None = None) -> MainW
     instance.watchdog_event_handler = None
     instance.metadata_controller = metadata_controller or MagicMock()
     return instance
+
+
+@pytest.fixture
+def mock_dialogue(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Patch dialogue.show_dialogue_conditional with a Mock returning None."""
+    mock_dialog = Mock()
+    mock_dialog.return_value = None
+    monkeypatch.setattr(dialogue, "show_dialogue_conditional", mock_dialog)
+    return mock_dialog
+
+
+@pytest.fixture
+def main_content(
+    monkeypatch: pytest.MonkeyPatch,
+    qapp: QApplication,
+    mock_settings_controller: MagicMock,
+    mock_metadata_controller: MagicMock,
+    mock_steamcmd_interface: MagicMock,
+) -> Generator[tuple[MainContent, list[bool]], None, None]:
+    """MainContent with a fake instance path and a stubbed essential-paths check."""
+    from app.views.main_content_panel import MainContent
+
+    # Ensure active_mods_dividers is set on the settings object
+    QObject.__setattr__(mock_settings_controller.settings, "active_mods_dividers", [])
+    # Set game_folder and run_args on the instance to match test expectations
+    instance = mock_settings_controller.settings.instances["Default"]
+    instance.game_folder = "/fake/path"
+    instance.run_args = "--test"
+    # Initialize MainContent with settings from the mock settings controller
+    mc = MainContent(
+        mock_settings_controller.settings, metadata_controller=mock_metadata_controller
+    )
+    # Patch _do_save to capture calls
+    save_calls: list[bool] = []
+    monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
+    # Mock check_if_essential_paths_are_set to return True
+    monkeypatch.setattr(
+        mc, "check_if_essential_paths_are_set", lambda prompt=True: True
+    )
+    mc.todds_controller = MagicMock()
+
+    yield mc, save_calls
+
+    # Cleanup: delete the widget to avoid Qt object reuse issues
+    mc.deleteLater()
+    qapp.processEvents()
+    # Reset singleton for next test
+    MainContent._instance = None
 
 
 @pytest.fixture

@@ -257,12 +257,15 @@ def get_executable_path(game_install_path: Path) -> str | None:
             (
                 str(exe)
                 for exe in [
+                    p / "RimWorldLinux64",
                     p / "RimWorldLinux",
                     p / "RimWorldWin64.exe",
                     p / "RimWorldWin.exe",
                 ]
                 if exe.exists()
-                and (exe.name != "RimWorldLinux" or os.access(exe, os.X_OK))
+                and (
+                    not exe.name.startswith("RimWorldLinux") or os.access(exe, os.X_OK)
+                )
             ),
             None,
         ),
