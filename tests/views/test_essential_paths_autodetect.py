@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from PySide6.QtWidgets import QMessageBox
 
 from app.models.instance import Instance
 from app.models.settings import Settings
@@ -52,6 +53,9 @@ def _patch_autodetect(
     game_dir: Path,
     config_dir: Path,
     workshop_dir: Path,
+    operating_system: SystemInfo.OperatingSystem | None = (
+        SystemInfo.OperatingSystem.MACOS
+    ),
 ) -> MagicMock:
     """Point MainContent's PathAutodetectService/SystemInfo at test data."""
     service = MagicMock()
@@ -62,7 +66,7 @@ def _patch_autodetect(
     service_factory = MagicMock(return_value=service)
 
     system_info = MagicMock()
-    system_info.return_value.operating_system = SystemInfo.OperatingSystem.MACOS
+    system_info.return_value.operating_system = operating_system
     system_info.OperatingSystem = SystemInfo.OperatingSystem
 
     monkeypatch.setattr(mcp_module, "PathAutodetectService", service_factory)
@@ -70,19 +74,47 @@ def _patch_autodetect(
     return service
 
 
+def _patch_missing_autodetect(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> MagicMock:
+    """Return an autodetect service whose candidate paths do not exist."""
+    return _patch_autodetect(
+        monkeypatch,
+        tmp_path / "no_game",
+        tmp_path / "no_config",
+        tmp_path / "no_ws",
+    )
+
+
 class TestSilentEssentialAutodetect:
     """Tests for MainContent._autodetect_missing_essential_paths()."""
 
+    @pytest.mark.parametrize(
+        ("operating_system", "getter_name"),
+        [
+            (SystemInfo.OperatingSystem.MACOS, "get_darwin_paths"),
+            (SystemInfo.OperatingSystem.LINUX, "get_linux_paths"),
+            (SystemInfo.OperatingSystem.WINDOWS, "get_windows_paths"),
+        ],
+    )
     def test_fills_only_missing_paths_and_saves(
         self,
         monkeypatch: pytest.MonkeyPatch,
         tmp_path: Path,
         empty_instance_main_content: tuple[MainContent, Instance, Settings],
+        operating_system: SystemInfo.OperatingSystem,
+        getter_name: str,
     ) -> None:
         mc, instance, settings = empty_instance_main_content
         # Simulate a GOG-like install: game bundle with Mods, no workshop.
         game_dir, config_dir = _make_gog_layout(tmp_path)
-        _patch_autodetect(monkeypatch, game_dir, config_dir, tmp_path / "missing_ws")
+        service = _patch_autodetect(
+            monkeypatch,
+            game_dir,
+            config_dir,
+            tmp_path / "missing_ws",
+            operating_system,
+        )
         save_mock = Mock()
         monkeypatch.setattr(settings, "save", save_mock)
 
@@ -95,6 +127,38 @@ class TestSilentEssentialAutodetect:
         # Non-existent workshop path must not be filled
         assert instance.workshop_folder == ""
         save_mock.assert_called_once()
+        getattr(service, getter_name).assert_called_once_with()
+
+    def test_unknown_platform_does_not_change_paths(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
+    ) -> None:
+        mc, instance, settings = empty_instance_main_content
+        _patch_autodetect(
+            monkeypatch,
+            tmp_path / "unused_game",
+            tmp_path / "unused_config",
+            tmp_path / "unused_ws",
+            operating_system=None,
+        )
+        save_mock = Mock()
+        monkeypatch.setattr(settings, "save", save_mock)
+
+        changed = mc._autodetect_missing_essential_paths()
+
+        assert changed is False
+        assert (
+            instance.game_folder,
+            instance.config_folder,
+            instance.local_folder,
+        ) == (
+            "",
+            "",
+            "",
+        )
+        save_mock.assert_not_called()
 
     def test_never_overwrites_existing_values(
         self,
@@ -122,12 +186,7 @@ class TestSilentEssentialAutodetect:
         empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, instance, settings = empty_instance_main_content
-        _patch_autodetect(
-            monkeypatch,
-            tmp_path / "no_game",
-            tmp_path / "no_config",
-            tmp_path / "no_ws",
-        )
+        _patch_missing_autodetect(monkeypatch, tmp_path)
         save_mock = Mock()
         monkeypatch.setattr(settings, "save", save_mock)
 
@@ -167,12 +226,7 @@ class TestEssentialCheckUsesAutodetect:
         empty_instance_main_content: tuple[MainContent, Instance, Settings],
     ) -> None:
         mc, _instance, _settings = empty_instance_main_content
-        _patch_autodetect(
-            monkeypatch,
-            tmp_path / "no_game",
-            tmp_path / "no_config",
-            tmp_path / "no_ws",
-        )
+        _patch_missing_autodetect(monkeypatch, tmp_path)
         mock_dialogue.reset_mock()
 
         result = mc.check_if_essential_paths_are_set(prompt=True)
@@ -225,3 +279,21 @@ class TestEssentialCheckUsesAutodetect:
 
         assert result is False
         assert instance.game_folder == ""
+
+    def test_opens_location_settings_when_user_accepts_prompt(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_dialogue: Mock,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
+    ) -> None:
+        mc, _instance, _settings = empty_instance_main_content
+        _patch_missing_autodetect(monkeypatch, tmp_path)
+        show_settings = Mock()
+        mc._show_settings_dialog = show_settings
+        mock_dialogue.return_value = QMessageBox.StandardButton.Yes
+
+        result = mc.check_if_essential_paths_are_set(prompt=True)
+
+        assert result is False
+        show_settings.assert_called_once_with("Locations")

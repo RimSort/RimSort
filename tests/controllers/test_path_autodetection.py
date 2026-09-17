@@ -650,6 +650,21 @@ class TestNonSteamLinuxGameSearch:
 
         assert result is None
 
+    def test_ignores_oversized_heroic_metadata(self, tmp_path: Path) -> None:
+        metadata_file = tmp_path / ".config" / "heroic" / "gog_store" / "installed.json"
+        metadata_file.parent.mkdir(parents=True)
+        metadata_file.write_bytes(
+            b"x" * (PathAutodetectService._MAX_METADATA_FILE_BYTES + 1)
+        )
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
+            result = _make_service()._find_heroic_game_folder()
+
+        assert result is None
+
     def test_steam_installation_wins_over_non_steam(self, tmp_path: Path) -> None:
         steam_root = _setup_steam_root(tmp_path, ".steam/steam")
         self._make_game_dir(tmp_path / "GOG Games" / "RimWorld" / "game")
@@ -749,6 +764,77 @@ class TestNonSteamWindowsGameSearch:
             result = _make_service()._find_non_steam_game_folder_windows()
 
         assert result == game_dir
+
+    def test_get_windows_paths_falls_back_to_non_steam_install(
+        self, tmp_path: Path
+    ) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / "GOG Games" / "RimWorld")
+        service = _make_service()
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch(
+                "app.services.path_autodetect_service.find_steam_folder",
+                return_value=("C:/MissingSteam", False),
+            ),
+            patch(
+                "app.services.path_autodetect_service.find_steam_rimworld",
+                return_value="",
+            ),
+            patch.object(
+                service,
+                "_find_non_steam_game_folder_windows",
+                return_value=game_dir,
+            ),
+        ):
+            result = service.get_windows_paths()
+
+        assert result[0] == game_dir
+
+    @pytest.mark.parametrize("source", ["registry", "heroic"])
+    def test_windows_launcher_metadata_precedes_root_scan(
+        self, tmp_path: Path, source: str
+    ) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / source / "RimWorld")
+        service = _make_service()
+        registry_result = game_dir if source == "registry" else None
+        heroic_result = game_dir if source == "heroic" else None
+
+        with (
+            patch.object(
+                service,
+                "_find_gog_registry_game_folder",
+                return_value=registry_result,
+            ),
+            patch.object(
+                service, "_find_heroic_game_folder", return_value=heroic_result
+            ) as heroic_mock,
+            patch.object(service, "_windows_game_search_roots") as roots_mock,
+        ):
+            result = service._find_non_steam_game_folder_windows()
+
+        assert result == game_dir
+        roots_mock.assert_not_called()
+        if source == "registry":
+            heroic_mock.assert_not_called()
+
+    def test_windows_search_returns_none_when_roots_are_absent(
+        self, tmp_path: Path
+    ) -> None:
+        service = _make_service()
+
+        with (
+            patch.object(service, "_find_gog_registry_game_folder", return_value=None),
+            patch.object(service, "_find_heroic_game_folder", return_value=None),
+            patch.object(
+                service,
+                "_windows_game_search_roots",
+                return_value=(tmp_path / "missing",),
+            ),
+        ):
+            result = service._find_non_steam_game_folder_windows()
+
+        assert result is None
 
     def test_looks_like_rimworld_windows_dir(self, tmp_path: Path) -> None:
         game_dir = self._make_windows_game_dir(tmp_path / "game")
@@ -875,6 +961,17 @@ class TestNonSteamWindowsGameSearch:
                 }
             }
         )
+
+        with (
+            patch.dict("sys.modules", {"winreg": fake_winreg}),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result is None
+
+    def test_gog_registry_lookup_handles_missing_root_key(self) -> None:
+        fake_winreg = _FakeWinreg({})
 
         with (
             patch.dict("sys.modules", {"winreg": fake_winreg}),
