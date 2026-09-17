@@ -580,11 +580,26 @@ class TestNonSteamLinuxGameSearch:
 
         assert result[0] == game_dir
 
-    def test_finds_heroic_metadata_custom_location(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        "electron_store_shape",
+        [True, False],
+        ids=["electron_store_object", "legacy_top_level_list"],
+    )
+    def test_finds_heroic_metadata_custom_location(
+        self, tmp_path: Path, electron_store_shape: bool
+    ) -> None:
         custom_dir = self._make_game_dir(tmp_path / "custom" / "install")
+        entries = [
+            {
+                "appName": "1207658924",
+                "install_path": str(custom_dir),
+                "executable": str(custom_dir / "RimWorldLinux64"),
+            }
+        ]
+        payload = {"installed": entries} if electron_store_shape else entries
         self._write_heroic_metadata(
             tmp_path,
-            json.dumps([{"appName": "1207658924", "install_path": str(custom_dir)}]),
+            json.dumps(payload),
         )
 
         with (
@@ -607,6 +622,33 @@ class TestNonSteamLinuxGameSearch:
 
         # Malformed metadata is skipped and the roots search still runs
         assert result[0] == game_dir
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"installed": {}},
+            {
+                "installed": [
+                    None,
+                    {"install_path": None},
+                    {"install_path": "relative/path"},
+                ]
+            },
+        ],
+        ids=["installed_not_list", "invalid_entries"],
+    )
+    def test_ignores_invalid_heroic_electron_store_data(
+        self, tmp_path: Path, payload: object
+    ) -> None:
+        self._write_heroic_metadata(tmp_path, json.dumps(payload))
+
+        with (
+            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("sys.platform", "linux"),
+        ):
+            result = _make_service()._find_heroic_game_folder()
+
+        assert result is None
 
     def test_steam_installation_wins_over_non_steam(self, tmp_path: Path) -> None:
         steam_root = _setup_steam_root(tmp_path, ".steam/steam")
@@ -720,7 +762,43 @@ class TestNonSteamWindowsGameSearch:
         (lookalike / "readme.txt").write_text("hello")
         assert not _make_service()._looks_like_rimworld_windows_dir(lookalike)
 
-    def test_gog_registry_lookup_uses_executable_value(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize("value_name", ["path", "exe", "EXE"])
+    def test_gog_registry_lookup_uses_supported_values(
+        self, tmp_path: Path, value_name: str
+    ) -> None:
+        game_dir = self._make_windows_game_dir(tmp_path / "CustomDrive" / "RimWorld")
+        registry_value = (
+            str(game_dir)
+            if value_name == "path"
+            else str(game_dir / "RimWorldWin64.exe")
+        )
+        fake_winreg = _FakeWinreg(
+            {
+                "SOFTWARE": {
+                    "WOW6432Node": {
+                        "GOG.com": {
+                            "Games": {
+                                "1207658903": {
+                                    "__values__": {value_name: registry_value}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        with (
+            patch.dict("sys.modules", {"winreg": fake_winreg}),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result == game_dir
+
+    def test_gog_registry_falls_back_to_exe_when_path_is_invalid(
+        self, tmp_path: Path
+    ) -> None:
         game_dir = self._make_windows_game_dir(tmp_path / "CustomDrive" / "RimWorld")
         fake_winreg = _FakeWinreg(
             {
@@ -730,9 +808,8 @@ class TestNonSteamWindowsGameSearch:
                             "Games": {
                                 "1207658903": {
                                     "__values__": {
-                                        "executable": str(
-                                            game_dir / "RimWorldWin64.exe"
-                                        )
+                                        "path": str(tmp_path / "stale-install-path"),
+                                        "exe": str(game_dir / "RimWorldWin64.exe"),
                                     }
                                 }
                             }
@@ -762,9 +839,34 @@ class TestNonSteamWindowsGameSearch:
                     "WOW6432Node": {
                         "GOG.com": {
                             "Games": {
-                                "1421409411": {
+                                "1421409411": {"__values__": {"path": str(other_game)}}
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        with (
+            patch.dict("sys.modules", {"winreg": fake_winreg}),
+            patch("sys.platform", "win32"),
+        ):
+            result = _make_service()._find_gog_registry_game_folder()
+
+        assert result is None
+
+    def test_gog_registry_lookup_ignores_invalid_values(self) -> None:
+        fake_winreg = _FakeWinreg(
+            {
+                "SOFTWARE": {
+                    "WOW6432Node": {
+                        "GOG.com": {
+                            "Games": {
+                                "1207658903": {
                                     "__values__": {
-                                        "executable": str(other_game / "Game.exe")
+                                        "path": "",
+                                        "exe": 123,
+                                        "EXE": None,
                                     }
                                 }
                             }
@@ -817,9 +919,9 @@ class _FakeWinreg:
         self._tree: dict[str, Any] = tree
 
     class _Key:
-        def __init__(self, subkeys: dict[str, Any], values: dict[str, str]) -> None:
+        def __init__(self, subkeys: dict[str, Any], values: dict[str, object]) -> None:
             self._subkeys: dict[str, Any] = subkeys
-            self._values: dict[str, str] = values
+            self._values: dict[str, object] = values
 
         def __enter__(self) -> "_FakeWinreg._Key":
             return self
@@ -840,8 +942,10 @@ class _FakeWinreg:
                 raise FileNotFoundError(path)
             node = child
         raw_values: Any = node.get("__values__", {})
-        values: dict[str, str] = (
-            cast("dict[str, str]", raw_values) if isinstance(raw_values, dict) else {}
+        values: dict[str, object] = (
+            cast("dict[str, object]", raw_values)
+            if isinstance(raw_values, dict)
+            else {}
         )
         return self._Key(node, values)
 
@@ -851,7 +955,9 @@ class _FakeWinreg:
             raise OSError("no more data")
         return names[index]
 
-    def QueryValueEx(self, key: "_FakeWinreg._Key", value_name: str) -> tuple[str, str]:
+    def QueryValueEx(
+        self, key: "_FakeWinreg._Key", value_name: str
+    ) -> tuple[object, str]:
         if value_name not in key._values:
             raise FileNotFoundError(value_name)
         return (key._values[value_name], "REG_SZ")

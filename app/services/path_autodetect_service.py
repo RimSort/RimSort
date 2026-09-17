@@ -52,8 +52,8 @@ class PathAutodetectService:
         "RimWorldWin.exe",
     )
     # GOG Galaxy (Windows) records installed games under this registry key;
-    # each game gets a subkey named by its numeric ID whose "executable"
-    # REG_SZ value points inside the install directory.
+    # each game gets a subkey named by its numeric ID with an install "path"
+    # and, depending on the Galaxy version, an "exe"/"EXE" value.
     _GOG_GALAXY_GAMES_KEY = "SOFTWARE\\WOW6432Node\\GOG.com\\Games"
     _MAX_SEARCH_DEPTH = 2
     _MAX_ENTRIES_PER_DIR = 500
@@ -374,11 +374,11 @@ class PathAutodetectService:
     def _find_heroic_game_folder(self) -> Path | None:
         """Read Heroic Games Launcher's GOG install metadata, if present.
 
-        Heroic records installed GOG games in ``installed.json`` (a JSON array
-        with ``install_path`` fields) under its config directory, which covers
-        custom Heroic install locations without hardcoding them. Parsing is
-        defensive: size-capped, shape-checked, and any malformed file is
-        skipped rather than trusted.
+        Heroic records installed GOG games in an electron-store
+        ``installed.json`` object whose ``installed`` array contains
+        ``install_path`` fields. Legacy top-level arrays are accepted too.
+        Parsing is defensive: size-capped, shape-checked, and any malformed
+        file is skipped rather than trusted.
 
         :return: Validated game folder, or None when nothing was found.
         """
@@ -389,12 +389,15 @@ class PathAutodetectService:
             if metadata_file.stat().st_size > self._MAX_METADATA_FILE_BYTES:
                 logger.warning("Heroic GOG metadata file is too large; skipping")
                 return None
-            installed = json.loads(metadata_file.read_text(encoding="utf-8"))
+            metadata: object = json.loads(metadata_file.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             logger.warning(
                 "Failed to read Heroic GOG metadata; skipping", exc_info=True
             )
             return None
+        installed: object = (
+            metadata.get("installed", []) if isinstance(metadata, dict) else metadata
+        )
         if not isinstance(installed, list):
             return None
         for entry in installed[: self._MAX_METADATA_ENTRIES]:
@@ -468,10 +471,10 @@ class PathAutodetectService:
         """Read the game install directory from the GOG Galaxy registry key.
 
         GOG Galaxy writes a per-game subkey under
-        ``HKLM\\SOFTWARE\\WOW6432Node\\GOG.com\\Games`` whose ``executable``
-        value points at the game binary inside the install directory. Covers
-        arbitrary custom install drives without any filesystem scanning.
-        Read-only; returns None anywhere except Windows.
+        ``HKLM\\SOFTWARE\\WOW6432Node\\GOG.com\\Games`` whose ``path`` value is
+        the install directory, while ``exe``/``EXE`` points at the
+        game binary. Covers arbitrary custom install drives without filesystem
+        scanning. Read-only; returns None anywhere except Windows.
 
         :return: Validated game folder, or None when nothing was found.
         """
@@ -494,17 +497,34 @@ class PathAutodetectService:
                     subkey_count += 1
                     try:
                         with winreg.OpenKey(games_key, subkey_name) as game_key:
-                            exe_value = winreg.QueryValueEx(game_key, "executable")
+                            for value_name, points_to_executable in (
+                                ("path", False),
+                                ("exe", True),
+                                ("EXE", True),
+                            ):
+                                try:
+                                    registry_value = winreg.QueryValueEx(
+                                        game_key, value_name
+                                    )
+                                except OSError:
+                                    continue
+                                if (
+                                    not registry_value
+                                    or not isinstance(registry_value[0], str)
+                                    or not registry_value[0]
+                                ):
+                                    continue
+                                candidate = Path(registry_value[0])
+                                if points_to_executable:
+                                    candidate = candidate.parent
+                                if self._looks_like_rimworld_windows_dir(candidate):
+                                    logger.info(
+                                        "Found RimWorld via GOG Galaxy registry: "
+                                        f"{candidate}"
+                                    )
+                                    return candidate
                     except OSError:
                         continue
-                    if not exe_value or not isinstance(exe_value[0], str):
-                        continue
-                    candidate = Path(exe_value[0]).parent
-                    if self._looks_like_rimworld_windows_dir(candidate):
-                        logger.info(
-                            f"Found RimWorld via GOG Galaxy registry: {candidate}"
-                        )
-                        return candidate
         except OSError:
             logger.debug("GOG Galaxy registry key not present or not readable")
             return None

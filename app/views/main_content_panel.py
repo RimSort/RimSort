@@ -469,9 +469,13 @@ class MainContent(QObject):
         # missing essential paths before bothering the user. Deliberate
         # "Clear All Locations" flows reach the non-prompting refresh path
         # (prompt=False) and are not affected by this.
-        if prompt and self._autodetect_missing_essential_paths():
-            logger.info("Essential paths were completed by silent autodetection")
-            return True
+        if prompt:
+            self._autodetect_missing_essential_paths()
+            if self._instance_essential_paths_ready(
+                self.settings.instances[current_instance]
+            ):
+                logger.info("Essential paths were completed by silent autodetection")
+                return True
 
         answer = dialogue.show_dialogue_conditional(
             title=self.tr("Essential path(s)"),

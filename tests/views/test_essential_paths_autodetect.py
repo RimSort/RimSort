@@ -180,6 +180,35 @@ class TestEssentialCheckUsesAutodetect:
         assert result is False
         mock_dialogue.assert_called_once()
 
+    def test_prompts_when_autodetect_only_partially_fills_paths(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_dialogue: Mock,
+        tmp_path: Path,
+        empty_instance_main_content: tuple[MainContent, Instance, Settings],
+    ) -> None:
+        mc, instance, settings = empty_instance_main_content
+        game_dir = tmp_path / "RimWorld.app"
+        (game_dir / "Mods").mkdir(parents=True)
+        _patch_autodetect(
+            monkeypatch,
+            game_dir,
+            tmp_path / "missing_config",
+            tmp_path / "missing_ws",
+        )
+        save_mock = Mock()
+        monkeypatch.setattr(settings, "save", save_mock)
+        mock_dialogue.reset_mock()
+
+        result = mc.check_if_essential_paths_are_set(prompt=True)
+
+        assert result is False
+        assert instance.game_folder == str(game_dir)
+        assert instance.config_folder == ""
+        assert instance.local_folder == str(game_dir / "Mods")
+        save_mock.assert_called_once()
+        mock_dialogue.assert_called_once()
+
     def test_no_autodetect_without_prompt(
         self,
         monkeypatch: pytest.MonkeyPatch,
