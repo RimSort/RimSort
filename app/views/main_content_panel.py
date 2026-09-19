@@ -154,6 +154,7 @@ class MainContent(QObject):
     def _init_services(self) -> None:
         self.db_builder = DatabaseBuilder(self.settings)
         self.steam_browser: SteamBrowser | None = None
+        self._pending_downloader_snapshot: dict[str, str] = {}
         self._workshop_restore_target: QWidget | None = None
         self.steamcmd_runner: RunnerPanel | None = None
         self.steamcmd_wrapper = SteamcmdInterface.instance()
@@ -264,6 +265,9 @@ class MainContent(QObject):
         )
 
         EventBus().do_steamcmd_download.connect(self._do_download_mods_with_steamcmd)
+        EventBus().steamcmd_mod_download_succeeded.connect(
+            self._on_steamcmd_mod_download_succeeded
+        )
 
         EventBus().do_steamworks_api_call.connect(self._do_steamworks_api_call_animated)
 
@@ -2151,6 +2155,14 @@ class MainContent(QObject):
             self.settings,
         )
         self.window_manager.register_attr(self, "steam_browser")
+        # Re-snapshot the wait-list right before it tears down, no matter what
+        # triggers the close (a download starting, or the user just closing
+        # the window), so an active download's remaining mods are never lost.
+        self.steam_browser.about_to_close.connect(self._snapshot_downloader_list)
+
+        if self._pending_downloader_snapshot:
+            self.steam_browser.restore_download_list(self._pending_downloader_snapshot)
+            self._pending_downloader_snapshot = {}
 
         self._workshop_restore_target = restore_target
 
@@ -2317,7 +2329,29 @@ class MainContent(QObject):
         if self.steamcmd_wrapper.setup:
             self._do_download_mods_with_steamcmd([workshop_id])
 
+    def _snapshot_downloader_list(self) -> None:
+        """Capture the browser's current wait-list before it tears down."""
+        if self.steam_browser is not None:
+            self._pending_downloader_snapshot.update(
+                self.steam_browser.get_download_list_snapshot()
+            )
+
+    def _on_steamcmd_mod_download_succeeded(self, publishedfileid: str) -> None:
+        """
+        Drop a successfully-downloaded mod from wherever the downloader
+        wait-list currently holds it: the preserved snapshot if the Mod
+        Downloader is closed, or the live browser's list if it was reopened
+        (and the snapshot already handed off to it) while the download ran.
+        """
+        self._pending_downloader_snapshot.pop(publishedfileid, None)
+        if self.steam_browser is not None:
+            self.steam_browser.remove_mod_if_queued(publishedfileid)
+
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
+        # Copy defensively: this can be the same list object as
+        # SteamBrowser.downloader_list_mods_tracking (the download button emits
+        # it directly), which gets cleared when we close the browser below.
+        publishedfileids = list(publishedfileids)
         logger.debug(
             f"Attempting to download {len(publishedfileids)} mods with SteamCMD"
         )
@@ -2358,6 +2392,8 @@ class MainContent(QObject):
             self.steamcmd_wrapper.steamcmd
         ):
             if self.steam_browser:
+                # Closing triggers about_to_close, which snapshots the
+                # wait-list before it's cleared (see _open_steam_browser).
                 self.steam_browser.close()
 
             self.steamcmd_runner = RunnerPanel(
@@ -2407,7 +2443,7 @@ class MainContent(QObject):
         # APP_ID 294100 is RimWorld
         platform_specific_open(f"steam://validate/294100/{instruction[1]}")
 
-    def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
+    def _do_steamworks_api_call(self, instruction: list[Any]) -> bool:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
@@ -2420,6 +2456,10 @@ class MainContent(QObject):
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
             instruction[1] is a list containing [game_folder_path: str, args: list] respectively
+        :return: True if the instruction was actually dispatched to Steamworks,
+            False if it was skipped (Steam unavailable, already busy, unsupported
+            instruction, etc.) - callers use this to know whether it's safe to
+            treat the instruction's mods as handled.
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         # use prebuilt libs path
@@ -2427,7 +2467,7 @@ class MainContent(QObject):
         if not self.steamworks_in_use:
             if not check_steam_available(_libs=libs_path):
                 logger.error("Steam is not available, skipping Steamworks API call")
-                return
+                return False
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
@@ -2451,6 +2491,7 @@ class MainContent(QObject):
                         f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
                     )
                     self.steamworks_in_use = False
+                    return True
                 elif (
                     instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
@@ -2471,17 +2512,20 @@ class MainContent(QObject):
                     handler.join()
                     # Clean up after processing
                     self.steamworks_in_use = False
+                    return True
                 else:
                     logger.warning(
                         "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
                     )
+                    return False
             else:
                 logger.error(f"Unsupported instruction {instruction}")
-                return
+                return False
         else:
             logger.warning(
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
+            return False
 
     def _do_steamworks_api_call_animated(
         self, instruction: list[list[str] | str]
@@ -2509,15 +2553,26 @@ class MainContent(QObject):
             return
         # Close browser if open
         if self.steam_browser:
+            # Closing triggers about_to_close, which snapshots the wait-list
+            # before it's cleared (see _open_steam_browser).
             self.steam_browser.close()
         # Process API call
-        self.do_threaded_loading_animation(
+        dispatched = self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "steam.gif"),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
             text=self.tr(
                 "Processing Steam subscription action(s) via Steamworks API..."
             ),
         )
+        # Steamworks subscribe/unsubscribe has no granular per-mod
+        # success/failure reporting like SteamCMD does, so we can't tell which
+        # specific mods succeeded - only whether the call was dispatched at
+        # all (e.g. it's skipped outright if Steam isn't available). Only
+        # then treat every mod in it as handled; otherwise keep preserving
+        # them so a silent failure doesn't just discard them.
+        if dispatched:
+            for publishedfileid in publishedfileids:
+                self._pending_downloader_snapshot.pop(str(publishedfileid), None)
         # Do a full refresh of metadata and UI
         self._do_refresh()
 

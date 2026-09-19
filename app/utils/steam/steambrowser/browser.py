@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer, QUrl
+from PySide6.QtCore import QPoint, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QCloseEvent, QPixmap
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import (
@@ -182,6 +182,11 @@ class SteamBrowser(QWidget):
     """
     A generic panel used to browse Workshop content - downloader included
     """
+
+    # Emitted at the top of closeEvent, before the wait-list is cleared and
+    # torn down, so callers can preserve it regardless of what triggered the
+    # close (programmatic .close() or the user closing the window directly).
+    about_to_close = Signal()
 
     # Cleared in closeEvent when the window is closed.
     web_view: QWebEngineView | None
@@ -642,6 +647,13 @@ class SteamBrowser(QWidget):
         publishedfileid: str,
         title: str | None = None,
     ) -> None:
+        # Normalize to str: collection adds come from Steam's WebAPI JSON,
+        # which returns publishedfileid as a number, while JS-bridge/URL adds
+        # already pass a str. Keeping this the single choke point for tracking
+        # list membership ensures pfid comparisons/lookups elsewhere (e.g.
+        # matching a SteamCMD success line, popping a completed download from
+        # the preserved snapshot) never miss due to an int/str mismatch.
+        publishedfileid = str(publishedfileid)
         # Try to extract the mod name from the page title, fallback to current_title
         extracted_page_title = extract_page_title_steam_browser(self.current_title)
         page_title = (
@@ -695,6 +707,33 @@ class SteamBrowser(QWidget):
         for mod_id in mods_to_clear_badges_for:
             self._update_badge_js(mod_id, BadgeState.DEFAULT)
 
+    def get_download_list_snapshot(self) -> dict[str, str]:
+        """
+        Capture the current downloader wait-list as {publishedfileid: display_title}.
+
+        Used to preserve the user's queued mods across the window being closed
+        (e.g. when a SteamCMD/Steamworks download is kicked off), since closing
+        this window tears down and clears the list.
+        """
+        snapshot: dict[str, str] = {}
+        for i in range(self.downloader_list.count()):
+            item = self.downloader_list.item(i)
+            if item is None:
+                continue
+            publishedfileid = item.data(Qt.ItemDataRole.UserRole)
+            if not publishedfileid:
+                continue
+            publishedfileid = str(publishedfileid)
+            widget = self.downloader_list.itemWidget(item)
+            title = widget.text() if isinstance(widget, QLabel) else publishedfileid
+            snapshot[publishedfileid] = title
+        return snapshot
+
+    def restore_download_list(self, snapshot: dict[str, str]) -> None:
+        """Re-populate the downloader wait-list from a previously captured snapshot."""
+        for publishedfileid, title in snapshot.items():
+            self._add_mod_to_list(publishedfileid, title=title)
+
     def _downloader_item_contextmenu_event(self, point: QPoint) -> None:
         context_item = self.downloader_list.itemAt(point)
 
@@ -735,6 +774,17 @@ class SteamBrowser(QWidget):
             logger.warning(
                 f"Mod {publishedfileid} not found in download tracking list, cannot remove."
             )
+
+    def remove_mod_if_queued(self, publishedfileid: str) -> None:
+        """Remove a mod from the downloader list if it's currently queued.
+
+        Unlike _remove_mod_from_list, this is a quiet no-op (no warning log)
+        when the mod isn't queued - meant for callers (e.g. a SteamCMD
+        success notification) that don't know in advance whether this
+        browser instance is even the one tracking that mod.
+        """
+        if publishedfileid in self.downloader_list_mods_tracking:
+            self._remove_mod_from_list(publishedfileid)
 
     def _subscribe_to_mods_from_list(self) -> None:
         logger.debug(
@@ -1108,6 +1158,7 @@ class SteamBrowser(QWidget):
     def closeEvent(self, event: QCloseEvent) -> None:
         """Properly clean up web engine resources to prevent memory leaks and hanging processes"""
         logger.debug("Cleaning up SteamBrowser resources...")
+        self.about_to_close.emit()
 
         if self._load_progress_fallback_timer is not None:
             self._load_progress_fallback_timer.stop()

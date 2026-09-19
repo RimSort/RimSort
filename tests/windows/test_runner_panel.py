@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from PySide6.QtCore import QProcess
 
+from app.utils.event_bus import EventBus
 from app.windows.runner_panel import RunnerPanel
 
 
@@ -347,3 +348,44 @@ class TestRunnerPanelSteamcmdLogTail:
         panel.handle_output()
 
         assert messages == ["line one", "line two"]
+
+
+def _make_panel_with_real_output_handler(tmp_path: Path) -> Any:
+    panel = _make_steamcmd_panel(tmp_path)
+    del panel._handle_steamcmd_output  # use the real method, not the stub
+    panel.steamcmd_current_pfid = "123"
+    panel.steamcmd_download_tracking = ["123"]
+    return panel
+
+
+class TestSteamcmdDownloadSucceededSignal:
+    """Covers the per-mod success signal that backs preserving the Mod
+    Downloader's wait-list: successful mods should be droppable from it,
+    failed ones should not.
+    """
+
+    def test_success_line_emits_signal_and_clears_tracking(
+        self, tmp_path: Path, fresh_event_bus: None
+    ) -> None:
+        panel = _make_panel_with_real_output_handler(tmp_path)
+        received: list[str] = []
+        EventBus().steamcmd_mod_download_succeeded.connect(received.append)
+
+        panel._handle_steamcmd_output(
+            'Success. Downloaded item 123 to "C:/mods/123" (1234 bytes)'
+        )
+
+        assert received == ["123"]
+        assert panel.steamcmd_download_tracking == []
+
+    def test_error_line_does_not_emit_signal(
+        self, tmp_path: Path, fresh_event_bus: None
+    ) -> None:
+        panel = _make_panel_with_real_output_handler(tmp_path)
+        received: list[str] = []
+        EventBus().steamcmd_mod_download_succeeded.connect(received.append)
+
+        panel._handle_steamcmd_output("ERROR! Download item 123 failed (Timeout).")
+
+        assert received == []
+        assert panel.steamcmd_download_tracking == ["123"]
