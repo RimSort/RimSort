@@ -128,22 +128,21 @@ class TestOnSteamcmdModDownloadSucceeded:
         # Snapshot already handed off to the freshly reopened browser.
         mc._pending_downloader_snapshot = {}
         mock_browser = MagicMock()
-        mock_browser.downloader_list_mods_tracking = ["111", "222"]
         mc.steam_browser = mock_browser
 
         mc._on_steamcmd_mod_download_succeeded("111")
 
-        mock_browser._remove_mod_from_list.assert_called_once_with("111")
+        # Whether "111" is actually still queued in this browser is
+        # remove_mod_if_queued's own concern (see test_steam_browser_downloader_list.py).
+        mock_browser.remove_mod_if_queued.assert_called_once_with("111")
 
-    def test_does_not_touch_live_browser_for_unrelated_mod(self) -> None:
+    def test_does_nothing_to_browser_when_none_is_open(self) -> None:
         mc = self._make_bare_main_content()
-        mock_browser = MagicMock()
-        mock_browser.downloader_list_mods_tracking = ["999"]
-        mc.steam_browser = mock_browser
+        mc._pending_downloader_snapshot = {"111": "Mod A"}
 
-        mc._on_steamcmd_mod_download_succeeded("111")
+        mc._on_steamcmd_mod_download_succeeded("111")  # must not raise
 
-        mock_browser._remove_mod_from_list.assert_not_called()
+        assert mc._pending_downloader_snapshot == {}
 
 
 class TestOpenSteamBrowserRestoresPendingSnapshot:
@@ -234,7 +233,9 @@ class TestSteamworksSubscribeSnapshotCleanup:
             "222": "Mod B",
             "333": "Mod C",
         }
-        monkeypatch.setattr(mc, "do_threaded_loading_animation", MagicMock())
+        monkeypatch.setattr(
+            mc, "do_threaded_loading_animation", MagicMock(return_value=True)
+        )
         monkeypatch.setattr(mc, "_do_refresh", MagicMock())
 
         mc._do_steamworks_api_call_animated(["unsubscribe", ["111", "222"]])
@@ -249,9 +250,81 @@ class TestSteamworksSubscribeSnapshotCleanup:
         mc, _ = main_content
         mc.steam_browser = None
         mc._pending_downloader_snapshot = {"333": "Mod C"}
-        monkeypatch.setattr(mc, "do_threaded_loading_animation", MagicMock())
+        monkeypatch.setattr(
+            mc, "do_threaded_loading_animation", MagicMock(return_value=True)
+        )
         monkeypatch.setattr(mc, "_do_refresh", MagicMock())
 
         mc._do_steamworks_api_call_animated(["unsubscribe", ["111"]])
 
         assert mc._pending_downloader_snapshot == {"333": "Mod C"}
+
+    def test_ids_are_kept_when_the_call_was_not_dispatched(
+        self,
+        main_content: tuple[MainContent, list[bool]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """E.g. check_steam_available() returned False and
+        _do_steamworks_api_call early-returned without doing anything -
+        the mods were never actually (un)subscribed, so they must not be
+        dropped from the preserved wait-list.
+        """
+        mc, _ = main_content
+        mc.steam_browser = None
+        mc._pending_downloader_snapshot = {"111": "Mod A", "222": "Mod B"}
+        monkeypatch.setattr(
+            mc, "do_threaded_loading_animation", MagicMock(return_value=False)
+        )
+        monkeypatch.setattr(mc, "_do_refresh", MagicMock())
+
+        mc._do_steamworks_api_call_animated(["unsubscribe", ["111", "222"]])
+
+        assert mc._pending_downloader_snapshot == {"111": "Mod A", "222": "Mod B"}
+
+
+class TestFailedSteamcmdRunPreservesFullSnapshotThroughReopen:
+    """Closer to end-to-end: a SteamCMD run that never reports a single
+    success (e.g. it crashed outright, or every mod failed) must leave the
+    entire original wait-list intact and restorable, not just whichever
+    mods happened to be popped off individually.
+    """
+
+    def test_full_list_survives_close_and_reopen_with_no_successes(
+        self,
+        main_content: tuple[MainContent, list[bool]],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        mc, _ = main_content
+        _make_ready_for_steamcmd_download(mc, monkeypatch, tmp_path)
+
+        # Mirror what SteamBrowser.closeEvent actually does: emit
+        # about_to_close (here, just call the connected slot directly)
+        # before the list would be cleared.
+        mock_browser = MagicMock()
+        mock_browser.get_download_list_snapshot.return_value = {
+            "111": "Mod A",
+            "222": "Mod B",
+            "333": "Mod C",
+        }
+        mock_browser.close.side_effect = mc._snapshot_downloader_list
+        mc.steam_browser = mock_browser
+
+        mc._do_download_mods_with_steamcmd(["111", "222", "333"])
+
+        # SteamCMD fails entirely: no steamcmd_mod_download_succeeded
+        # signals ever fire, so nothing gets popped from the snapshot.
+
+        # Reopen the Mod Downloader.
+        mc.steam_browser = None
+        mock_new_browser = MagicMock()
+        monkeypatch.setattr(
+            "app.views.main_content_panel.SteamBrowser",
+            MagicMock(return_value=mock_new_browser),
+        )
+
+        mc._open_steam_browser("https://steamcommunity.com/workshop/")
+
+        mock_new_browser.restore_download_list.assert_called_once_with(
+            {"111": "Mod A", "222": "Mod B", "333": "Mod C"}
+        )

@@ -7,7 +7,7 @@ instead of losing them if the download later fails.
 
 from unittest.mock import MagicMock
 
-from PySide6.QtWidgets import QApplication, QListWidget
+from PySide6.QtWidgets import QApplication, QListWidget, QListWidgetItem
 
 from app.utils.steam.steambrowser.browser import SteamBrowser
 
@@ -44,6 +44,62 @@ class TestGetDownloadListSnapshot:
         browser = _make_browser()
 
         assert browser.get_download_list_snapshot() == {}
+
+    def test_skips_items_with_no_pfid_data(self, qapp: QApplication) -> None:
+        """An item with no UserRole data (publishedfileid is None) must not
+        become a dict key, despite the dict[str, str] annotation.
+        """
+        browser = _make_browser()
+        browser._add_mod_to_list("111", title="Mod A")
+        browser.downloader_list.addItem(QListWidgetItem("no pfid set"))
+
+        assert browser.get_download_list_snapshot() == {"111": "Mod A"}
+
+
+class TestAddModToListNormalizesPfid:
+    """Collection adds come from Steam's WebAPI JSON, which returns
+    publishedfileid as a number, while JS-bridge/URL adds already pass a
+    str. Both must end up comparable as str, or a collection-queued mod's
+    int key would never match a SteamCMD success line's str pfid.
+    """
+
+    def test_int_pfid_is_stored_as_str(self, qapp: QApplication) -> None:
+        browser = _make_browser()
+
+        browser._add_mod_to_list(111, title="Mod A")  # type: ignore[arg-type]
+
+        assert browser.downloader_list_mods_tracking == ["111"]
+        assert browser.get_download_list_snapshot() == {"111": "Mod A"}
+
+    def test_int_and_str_pfid_for_same_mod_are_treated_as_duplicates(
+        self, qapp: QApplication
+    ) -> None:
+        browser = _make_browser()
+
+        browser._add_mod_to_list(111, title="Mod A")  # type: ignore[arg-type]
+        browser._add_mod_to_list("111", title="Mod A")
+
+        assert browser.downloader_list_mods_tracking == ["111"]
+        assert browser.downloader_list.count() == 1
+
+
+class TestRemoveModIfQueued:
+    def test_removes_a_queued_mod(self, qapp: QApplication) -> None:
+        browser = _make_browser()
+        browser._add_mod_to_list("111", title="Mod A")
+
+        browser.remove_mod_if_queued("111")
+
+        assert browser.downloader_list_mods_tracking == []
+        assert browser.downloader_list.count() == 0
+
+    def test_is_a_quiet_noop_for_an_unqueued_mod(self, qapp: QApplication) -> None:
+        browser = _make_browser()
+        browser._add_mod_to_list("999", title="Mod Z")
+
+        browser.remove_mod_if_queued("111")  # must not raise
+
+        assert browser.downloader_list_mods_tracking == ["999"]
 
 
 class TestRestoreDownloadList:

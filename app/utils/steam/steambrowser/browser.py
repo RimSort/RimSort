@@ -647,6 +647,13 @@ class SteamBrowser(QWidget):
         publishedfileid: str,
         title: str | None = None,
     ) -> None:
+        # Normalize to str: collection adds come from Steam's WebAPI JSON,
+        # which returns publishedfileid as a number, while JS-bridge/URL adds
+        # already pass a str. Keeping this the single choke point for tracking
+        # list membership ensures pfid comparisons/lookups elsewhere (e.g.
+        # matching a SteamCMD success line, popping a completed download from
+        # the preserved snapshot) never miss due to an int/str mismatch.
+        publishedfileid = str(publishedfileid)
         # Try to extract the mod name from the page title, fallback to current_title
         extracted_page_title = extract_page_title_steam_browser(self.current_title)
         page_title = (
@@ -714,6 +721,9 @@ class SteamBrowser(QWidget):
             if item is None:
                 continue
             publishedfileid = item.data(Qt.ItemDataRole.UserRole)
+            if not publishedfileid:
+                continue
+            publishedfileid = str(publishedfileid)
             widget = self.downloader_list.itemWidget(item)
             title = widget.text() if isinstance(widget, QLabel) else publishedfileid
             snapshot[publishedfileid] = title
@@ -764,6 +774,17 @@ class SteamBrowser(QWidget):
             logger.warning(
                 f"Mod {publishedfileid} not found in download tracking list, cannot remove."
             )
+
+    def remove_mod_if_queued(self, publishedfileid: str) -> None:
+        """Remove a mod from the downloader list if it's currently queued.
+
+        Unlike _remove_mod_from_list, this is a quiet no-op (no warning log)
+        when the mod isn't queued - meant for callers (e.g. a SteamCMD
+        success notification) that don't know in advance whether this
+        browser instance is even the one tracking that mod.
+        """
+        if publishedfileid in self.downloader_list_mods_tracking:
+            self._remove_mod_from_list(publishedfileid)
 
     def _subscribe_to_mods_from_list(self) -> None:
         logger.debug(

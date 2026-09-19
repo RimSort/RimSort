@@ -2344,11 +2344,8 @@ class MainContent(QObject):
         (and the snapshot already handed off to it) while the download ran.
         """
         self._pending_downloader_snapshot.pop(publishedfileid, None)
-        if (
-            self.steam_browser is not None
-            and publishedfileid in self.steam_browser.downloader_list_mods_tracking
-        ):
-            self.steam_browser._remove_mod_from_list(publishedfileid)
+        if self.steam_browser is not None:
+            self.steam_browser.remove_mod_if_queued(publishedfileid)
 
     def _do_download_mods_with_steamcmd(self, publishedfileids: list[str]) -> None:
         # Copy defensively: this can be the same list object as
@@ -2446,7 +2443,7 @@ class MainContent(QObject):
         # APP_ID 294100 is RimWorld
         platform_specific_open(f"steam://validate/294100/{instruction[1]}")
 
-    def _do_steamworks_api_call(self, instruction: list[Any]) -> None:
+    def _do_steamworks_api_call(self, instruction: list[Any]) -> bool:
         """
         Create & launch Steamworks API process to handle instructions received from connected signals
 
@@ -2459,6 +2456,10 @@ class MainContent(QObject):
         :param instruction: a list where:
             instruction[0] is a string that corresponds with the following supported_actions[]
             instruction[1] is a list containing [game_folder_path: str, args: list] respectively
+        :return: True if the instruction was actually dispatched to Steamworks,
+            False if it was skipped (Steam unavailable, already busy, unsupported
+            instruction, etc.) - callers use this to know whether it's safe to
+            treat the instruction's mods as handled.
         """
         logger.info(f"Received Steamworks API instruction: {instruction}")
         # use prebuilt libs path
@@ -2466,7 +2467,7 @@ class MainContent(QObject):
         if not self.steamworks_in_use:
             if not check_steam_available(_libs=libs_path):
                 logger.error("Steam is not available, skipping Steamworks API call")
-                return
+                return False
             subscription_actions = ["resubscribe", "subscribe", "unsubscribe"]
             supported_actions = ["launch_game_process"]
             supported_actions.extend(subscription_actions)
@@ -2490,6 +2491,7 @@ class MainContent(QObject):
                         f"Steamworks API process wrapper completed for PID: {steamworks_api_process.pid}"
                     )
                     self.steamworks_in_use = False
+                    return True
                 elif (
                     instruction[0] in subscription_actions and len(instruction[1]) >= 1
                 ):  # ISteamUGC/{SubscribeItem/UnsubscribeItem}
@@ -2510,17 +2512,20 @@ class MainContent(QObject):
                     handler.join()
                     # Clean up after processing
                     self.steamworks_in_use = False
+                    return True
                 else:
                     logger.warning(
                         "Skipping Steamworks API call - only 1 Steamworks API initialization allowed at a time!!"
                     )
+                    return False
             else:
                 logger.error(f"Unsupported instruction {instruction}")
-                return
+                return False
         else:
             logger.warning(
                 "Steamworks API is already initialized! We do NOT want multiple interactions. Skipping instruction..."
             )
+            return False
 
     def _do_steamworks_api_call_animated(
         self, instruction: list[list[str] | str]
@@ -2552,7 +2557,7 @@ class MainContent(QObject):
             # before it's cleared (see _open_steam_browser).
             self.steam_browser.close()
         # Process API call
-        self.do_threaded_loading_animation(
+        dispatched = self.do_threaded_loading_animation(
             gif_path=str(AppInfo().theme_data_folder / "default-icons" / "steam.gif"),
             target=partial(self._do_steamworks_api_call, instruction=instruction),
             text=self.tr(
@@ -2560,10 +2565,14 @@ class MainContent(QObject):
             ),
         )
         # Steamworks subscribe/unsubscribe has no granular per-mod
-        # success/failure reporting like SteamCMD does, so once the call
-        # returns, treat every mod in it as handled and stop preserving it.
-        for publishedfileid in publishedfileids:
-            self._pending_downloader_snapshot.pop(str(publishedfileid), None)
+        # success/failure reporting like SteamCMD does, so we can't tell which
+        # specific mods succeeded - only whether the call was dispatched at
+        # all (e.g. it's skipped outright if Steam isn't available). Only
+        # then treat every mod in it as handled; otherwise keep preserving
+        # them so a silent failure doesn't just discard them.
+        if dispatched:
+            for publishedfileid in publishedfileids:
+                self._pending_downloader_snapshot.pop(str(publishedfileid), None)
         # Do a full refresh of metadata and UI
         self._do_refresh()
 
