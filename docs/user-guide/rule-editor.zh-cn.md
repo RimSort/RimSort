@@ -8,7 +8,7 @@ lang: zh-cn
 
 # 规则编辑器
 
-要访问规则编辑器，你可以在主菜单栏中点击 `编辑 > 规则编辑器...（Edit > Rule Editor...）`，或者右击想要编辑的 Mod，在上下文菜单中选择 `其他选项 > 在规则编辑器中编辑（Miscellaneous Options > Edit mod with Rule Editor）`。
+要访问规则编辑器，你可以在主菜单栏中点击 `编辑 > 规则编辑器…（Edit > Rule Editor…）`，或者右击想要编辑的 Mod，在上下文菜单中选择 `其他选项 > 在规则编辑器中编辑（Miscellaneous Options > Edit mod with Rule Editor）`。
 
 ![规则编辑器预览](../assets/images/previews/rule_editor.png)
 
@@ -25,7 +25,7 @@ lang: zh-cn
 ### 从主菜单
 
 1. 点击主菜单栏中的 `编辑`
-2. 选择 `规则编辑器...`
+2. 选择 `规则编辑器…`
 
 ### 从 Mod 的上下文菜单
 
@@ -47,6 +47,8 @@ lang: zh-cn
 - **社区规则（loadAfter/loadBefore/incompatibilitiesWith）**：社区定义的规则
 - **强制排序至顶部/底部**：复选框，用于强制 Mod 加载到列表顶部或底部
 
+- **用户规则（loadAfter/loadBefore/incompatibilitiesWith）**：你定义的个人规则，带有相同的"强制排序至顶部/底部"复选框
+
 ### Mod 列表（右侧顶部）
 
 - 可搜索的所有可用 Mod 列表
@@ -62,6 +64,9 @@ lang: zh-cn
 - **规则来源**：About.xml、社区规则或用户规则
 - **规则类型**：loadAfter、loadBefore、incompatibleWith、loadTop 或 loadBottom
 - **注释**：解释规则的可选注释
+
+{: .note}
+> 来自 `About.xml` 的规则以全小写形式显示规则类型（`loadafter`、`loadbefore`、`incompatiblewith`），而社区规则和用户规则使用 camelCase 形式（`loadAfter`、`loadBefore`、`incompatibleWith`、`loadTop`、`loadBottom`）。
 
 ## 使用规则编辑器
 
@@ -96,8 +101,8 @@ lang: zh-cn
 ### 保存更改
 
 - 点击相应规则类型的保存按钮：
-  - **保存社区规则** 按钮（带有社区规则工具提示的磁盘图标）
-  - **保存用户规则** 按钮（带有用户规则工具提示的磁盘图标）
+  - **保存社区规则（Save Community Rules）** 按钮（磁盘图标，工具提示为"Save rules to communityRules.json"）
+  - **保存用户规则（Save User Rules）** 按钮（磁盘图标，工具提示为"Save rules to userRules.json"）
 - 更改将保存到相应的 JSON 文件，并刷新元数据缓存
 
 ## 规则类型说明

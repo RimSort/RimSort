@@ -8,7 +8,7 @@ lang: ru
 
 # Редактор правил
 
-Откройте через **Edit → Rule Editor...** или контекстное меню мода: **Miscellaneous Options → Edit mod with Rule Editor**.
+Откройте через **Edit → Rule Editor…** или контекстное меню мода: **Miscellaneous Options → Edit mod with Rule Editor**.
 
 ![Редактор правил](../assets/images/previews/rule_editor.png)
 
@@ -25,7 +25,7 @@ lang: ru
 ### Из меню
 
 1. **Edit**
-2. **Rule Editor...**
+2. **Rule Editor…**
 
 ### Из списка модов
 
@@ -39,8 +39,11 @@ lang: ru
 - **About.xml (loadAfter)** — после этого мода
 - **About.xml (loadBefore)** — перед этим модом
 - **About.xml (incompatibilitiesWith)** — несовместимые
-- **Community / User rules** — loadAfter, loadBefore, incompatibleWith
-- **Force top/bottom** — принудительно в начало/конец списка
+
+- **Community Rules (loadAfter/loadBefore/incompatibilitiesWith)** — правила сообщества
+- **Force load at top/bottom** — чекбоксы принудительной загрузки в начало/конец списка
+
+- **User Rules (loadAfter/loadBefore/incompatibilitiesWith)** — ваши личные правила, с теми же чекбоксами Force load at top/bottom
 
 ### Список модов (справа сверху)
 
@@ -49,6 +52,9 @@ lang: ru
 ### Таблица правил (снизу)
 
 Колонки: имя, PackageId, источник, тип правила, комментарий.
+
+{: .note}
+> Правила из `About.xml` показывают тип в нижнем регистре (`loadafter`, `loadbefore`, `incompatiblewith`), а правила Community и User — в camelCase (`loadAfter`, `loadBefore`, `incompatibleWith`, `loadTop`, `loadBottom`).
 
 ## Работа с правилами
 
@@ -74,7 +80,9 @@ lang: ru
 
 ### Сохранение
 
-Кнопки **Save community rules** / **Save user rules** — JSON и обновление кэша.
+- **Save Community Rules** (значок диска, подсказка «Save rules to communityRules.json»)
+- **Save User Rules** (значок диска, подсказка «Save rules to userRules.json»)
+- Изменения сохраняются в соответствующие JSON-файлы и обновляется кэш метаданных.
 
 ## Типы правил
 

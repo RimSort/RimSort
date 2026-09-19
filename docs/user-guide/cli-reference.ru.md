@@ -27,7 +27,7 @@ CLI RimSort для серверов и контейнеров:
 - **Без display server** — Docker, CI/CD
 - **Коды выхода** — для скриптов
 - **Переменные окружения** — ключи без истории shell
-- **Без Qt** — минимальные зависимости
+- **Не запускает GUI** — работает в headless-режиме без окон (PySide6 всё равно импортируется кодом, но графический интерфейс не создаётся)
 
 Сейчас: `build-db` — сборка метаданных Workshop. Другие команды могут появиться позже.
 
@@ -114,7 +114,7 @@ RimSort build-db --output steamDB.json --update
 
 ##### **`Error: Invalid Steam WebAPI key! Key must be 32 characters`**
 
-Проверьте длину на [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey).
+Ключ имеет неверную длину (в сообщении также указана полученная длина, напр. `(got 20)`). Проверьте ключ на [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Частая причина — лишние пробелы или перевод строки при копировании.
 
 ##### **`Error: Cannot update non-existent database`**
 

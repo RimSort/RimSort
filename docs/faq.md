@@ -30,7 +30,7 @@ For **_macOS_,** we'd require a similar yet separate yearly fee to sign apps on 
 
 ## How do I update RimSort manually if the built-in updater fails?
 
-Close RimSort, then download the latest release for your current release channel, operating system, and CPU architecture from the [RimSort releases page](https://github.com/RimSort/RimSort/releases). Do not use `Code > Download ZIP`, because that archive contains the source code rather than a runnable build. Extract archive-based releases into a new empty folder instead of merging them with the old installation; on macOS, replace the existing `RimSort.app`, and on Linux, replace the AppImage and make the new file executable with `chmod +x RimSort-*.AppImage`. Launch the new version before removing the old application files. Your settings and other RimSort data are stored separately in your operating system's application data directory, so leave that directory in place. See [Downloading and Installing](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing) for platform-specific instructions.
+Close RimSort, then download the latest release that matches your release type (stable or edge), operating system, and CPU architecture from the [RimSort releases page](https://github.com/RimSort/RimSort/releases). Do not use `Code > Download ZIP`, because that archive contains the source code rather than a runnable build. Extract archive-based releases into a new empty folder instead of merging them with the old installation; on macOS, replace the existing `RimSort.app`, and on Linux, replace the AppImage and make the new file executable with `chmod +x RimSort-*.AppImage`. Launch the new version before removing the old application files. Your settings and other RimSort data are stored separately in your operating system's application data directory, so leave that directory in place. See [Downloading and Installing](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing) for platform-specific instructions.
 
 ## Where are game paths located?
 
@@ -50,7 +50,7 @@ The Community Rules Database (Community Rules DB / CR DB) is used for getting Ri
 
 ## How do I enable Steam client integration features like `Open mod in Steam` if I have Steam installed?
 
-Go to `Settings > Advanced > Enable Steam client integration` and check the checkbox.
+Go to `Settings > Locations > Enable Steam client integration` and check the checkbox.
 
 ## Why do I get a `Could not initialize Steam API` error when starting RimWorld from RimSort?
 

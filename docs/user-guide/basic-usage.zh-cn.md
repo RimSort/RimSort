@@ -25,6 +25,8 @@ RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问
 
 根据操作系统和桌面环境的不同，菜单栏可能位于 RimSort 主窗口顶部，或集成在全局菜单栏中。这里会显示当前运行的 RimSort 版本（如 v2.8.3），和包含更多选项的下拉菜单。你可以在此找到特定功能，例如导出 Mod 列表、上传日志、使用 todds 纹理优化工具或访问 Steam 创意工坊。
 
+要将某个 Mod 列表与当前的激活列表合并，请使用 `文件 > 追加 Mod 列表...（File > Append Mod List...）`。所选文件中尚未出现在激活列表中的 Mod 将被追加进去。
+
 ## 设置
 
 通过菜单栏的 `文件 > 设置 ...（File > Settings...）` 可进入设置面板。该窗口包含多个标签页，每个标签页都有明确分类。
@@ -58,6 +60,8 @@ RimSort 会提示你配置游戏路径并安装 SteamCMD。它可能还会询问
 > RimSort 发布版本不包含这些额外的外部元数据。有关可选（但强烈推荐）外部元数据库的信息，及其获取方式，请参阅 [数据库](../user-guide/databases.zh-cn)。
 
 RimSort 利用外部元数据来增强其功能，它们提供了已下载 Mod 的 `About.xml` 文件所含信息之外的附加数据。RimSort 中的外部元数据是用户可扩展的，可共享的。
+
+除下文详述的 Steam 创意工坊和规则数据库外，RimSort 还支持其他可选的元数据库，包括 **Use This Instead** 数据库（针对过时或不兼容 Mod 的替代建议）、**No Version Warning** 数据库（已知与版本无关的 Mod）以及 **RimWorld Versions** 数据库（由下载 RimWorld 功能使用）。配置详情请参阅 [数据库页面](../user-guide/databases.zh-cn)。
 
 ### Steam 创意工坊元数据（`steamDB.json`）
 

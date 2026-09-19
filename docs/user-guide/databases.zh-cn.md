@@ -44,6 +44,10 @@ RimSort 使用外部数据库来增强排序和依赖项处理等功能。这些
 
 Steam 创意工坊数据库（Steam DB）主要用于提供额外的依赖项数据。这些信息需要通过抓取 Steam 创意工坊并下载 Mod 来解析获取。通过静态数据库，用户无需实际下载 Mod 即可访问这些信息。
 
+## RimWorld 版本数据库
+
+RimWorld 版本数据库（`rimworld_versions.json`，来源于 [rimworld-versions 仓库](https://github.com/bukforks/rimworld-versions)）记录了可用的 RimWorld 游戏版本及其 depot。RimSort 使用它来实现 `Download` 菜单下的 **下载 RimWorld 版本（Download RimWorld Version）** 功能，让你可以从 Steam 下载指定的 RimWorld 版本。与其他数据库一样，其来源可在设置面板的 `数据库（Databases）` 中配置。
+
 ## 通过 RimSort 的 Git 集成管理数据库
 
 ### _**前置条件:**_ 为你的系统安装 [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)

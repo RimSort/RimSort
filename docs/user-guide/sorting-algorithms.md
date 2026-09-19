@@ -15,9 +15,33 @@ RimSort exposes two sorting algorithms by default for sorting the active mod lis
 
 ---
 
+## Tiered sorting
+
+Regardless of which algorithm is selected, RimSort does **_not_** sort the entire active
+mod list with a single pass. Instead, the `Sorter` first partitions the active list into
+four tiers, sorts each tier subgraph independently with the chosen algorithm, and then
+concatenates the results in tier order:
+
+- **Tier 0** — Core, Harmony, Prepatcher, the official RimWorld DLCs, and everything
+  that recursively depends on them.
+- **Tier 1** — known framework mods (such as Universum, Vanilla Expanded Framework, and
+  XMLExtensions) as well as any mod tagged with `loadTop` (Force load at top of list),
+  plus their recursive dependencies.
+- **Tier 2** — everything else.
+- **Tier 3** — mods tagged with `loadBottom` (Force load at bottom of list) and the mods
+  that recursively depend on them.
+
+This means that the `loadTop` / `loadBottom` rules you define (via the Rule Editor or the
+community rules database) do not directly re-order mods — instead they route mods into a
+higher or lower tier. Mods tagged with `loadTop` will always sort _before_ any mod that is
+not tagged with it, and mods tagged with `loadBottom` will always sort _after_ any mod
+that is not tagged with it.
+
+---
+
 ## Alphabetical Sorting Algorithm
 
-The first algorithm, `Alphabetical`, which is a more simplistic approach to properly sorting. This method alphabetizes your mods after splitting it into tiers.
+The first algorithm, `Alphabetical`, which is a more simplistic approach to properly sorting. Within each tier, this method alphabetizes your mods before applying rules.
 
 The RimPy sorting algorithm follows, roughly, the steps described in [RimPy's Autosorting Wiki](https://github.com/rimpy-custom/RimPy/wiki/Autosorting).
 

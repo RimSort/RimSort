@@ -48,7 +48,7 @@ RimSort 使用 Steam 创意工坊数据库（Steam DB）来加载 Steam 平台�
 
 ## 如果已安装 Steam，如何启用如 `在 Steam 打开 Mod（Open mod in Steam）` 等 Steam 客户端集成功能？
 
-前往 `设置 > 高级 > 启用 Steam 客户端集成（Settings > Advanced > Enable Steam client integration）` 并勾选。
+前往 `设置 > 位置（Settings > Locations > Enable Steam client integration）` 并勾选。
 
 ## 为什么通过 RimSort 启动 RimWorld 时会出现 `无法初始化 Steam API（Could not initialize Steam API）` 错误？
 

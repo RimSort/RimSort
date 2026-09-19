@@ -52,7 +52,7 @@ Features all the basic functionality you'd expect from a mod manager plus extras
   - This is used to interact with Steam client, as well as provide Steam API game launch
 - Log sharing to [0x0.st](http://0x0.st/)
 - Mod list sharing with [Rentry.co](https://rentry.co/)
-- [todds DDS encoder](https://github.com/joseasoler/todds)
+- [todds DDS encoder](https://github.com/todds-encoder/todds)
   - Optimize your textures with 3 available presets
 - Steam Browser that allows you to download mods via SteamCMD, as well as Steam client
   - Download mods from the Steam Workshop without a copy of RimWorld from Steam

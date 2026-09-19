@@ -22,7 +22,9 @@ RimSort by default will prompt you to configure game configuration paths and ins
 
 ## Main Menu Bar
 
-The main menu bar is, depending on your operating system and desktop environment, either the bar at the top of the main RimSort Window, or part of the global menu bar. It contains the RimSort version you are running as well as dropdown menus that hide additional options. Here, you'll find special options to interact with RimSort like exporting your mod list, uploading logs, using the todds texture optimizer, or accessing the Steam Workshop.
+The main menu bar is, depending on your operating system and desktop environment, either the bar at the top of the main RimSort Window, or part of the global menu bar. It contains the RimSort version you are running as well as dropdown menus that hide additional options. Here, you'll find special options to interact with RimSort like opening, appending, saving, importing, and exporting your mod list, uploading logs, using the todds texture optimizer, or accessing the Steam Workshop.
+
+To merge a mod list with your current active list, use `File > Append Mod List...`. The mods from the selected file that are not already in your active list will be appended to it.
 
 ## Settings panel
 
@@ -46,6 +48,8 @@ Certain errors/warnings are produced based on dependency presence, incompatibili
 > RimSort releases do not come with this additional external metadata. For information on the optional but highly recommended databases that provide the additional external metadata and how to get them, see the [Databases page](../user-guide/databases).
 
 RimSort uses external metadata in order to enhance its functionality. The metadata provides it with additional information beyond the information present in a downloaded mod's `About.xml` file. External Metadata in RimSort is designed to be highly user extendable and sharable.
+
+In addition to the Steam Workshop and rules databases detailed below, RimSort supports other optional metadata databases, including the **Use This Instead** database (alternative mod suggestions for outdated or incompatible mods), the **No Version Warning** database (mods known to be version-agnostic), and the **RimWorld Versions** database (used by the Download RimWorld feature). See the [Databases page](../user-guide/databases) for details on configuring these.
 
 ### Steam Workshop Metadata (`steamDB.json`)
 

@@ -51,7 +51,7 @@ RimSort — менеджер и сортировщик модов для [RimWor
 - Интеграция со [SteamworksPy](https://github.com/philippj/SteamworksPy)
 - Публикация логов на [0x0.st](http://0x0.st/)
 - Списки модов через [Rentry.co](https://rentry.co/)
-- [todds](https://github.com/joseasoler/todds) — оптимизация текстур DDS
+- [todds](https://github.com/todds-encoder/todds) — оптимизация текстур DDS
 - Браузер мастерской Steam + загрузка через SteamCMD или клиент Steam
 - Steam DB Builder и Rule Editor (схемы совместимы с RimPy)
 

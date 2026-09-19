@@ -18,7 +18,7 @@ permalink: development-guide/development-setup
 
 ### Introduction
 
-RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/) module, as well as several others. Some modules require special care in order to be built. It is compiled and packaged using [Nuikta](https://nuitka.net/).
+RimSort is built in Python using the [PySide6](https://pypi.org/project/PySide6/) module, as well as several others. Some modules require special care in order to be built. It is compiled and packaged using [Nuitka](https://nuitka.net/).
 
 ## Prerequisites
 
@@ -32,10 +32,10 @@ Your OS needs to be one that PySide6 supports. As an example, we use the followi
   - `ubuntu-22.04`
   - `ubuntu-24.04`
 - macOS builds:
-  - `macos-15-intel` (i386)
+  - `macos-15-intel` (x86_64)
   - `macos-latest` (arm)
 - Windows:
-  - `windows-latest` (Windows 2022 at the time of writing)
+  - `windows-latest`
 
 ### Tools and Software
 
@@ -116,10 +116,6 @@ Ensure that build requirements are installed by running `uv sync --group build`.
 
 See their respective sections for information on how to set them up. Alternatively, use `distribute.py` to do so automatically. By default, the script will build RimSort, but it can be configured to enable or disable various steps including building. See `uv run python distribute.py --help` for more info.
 
-- If you are using a Mac with an Apple M1/M2 CPU, the following instructions also work for x86_64, if you would rather use MacPorts over Homebrew or another method. Consider the following:
-  - `sudo port select --set pip3 pip39`
-  - `sudo port select --set python python9`
-
 - Mac users should also keep in mind that Apple has its own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
   - This can cause issues when trying to run RimSort (or execute dependent libs)!
   - You can circumvent this issue by using `xattr` command to manually whitelist:
@@ -130,7 +126,7 @@ See their respective sections for information on how to set them up. Alternative
 
 ### Using SteamworksPy binaries
 
-For RimSort to actually USE the SteamworksPy module, you need the compiled library for your platform, as well as the binaries from the steamworks SDK in the RimSort project root - in conjunction the python module included at: `SteamworksPy/steamworks`.
+For RimSort to actually USE the SteamworksPy module, you need the compiled library for your platform, as well as the binaries from the steamworks SDK in the RimSort project root - in conjunction with the Python module included in the submodule at: `submodules/SteamworksPy/library`.
 
   - Repo maintainers will provide pre-built binaries for the `SteamworksPy` library, as well as the redistributables from the steamworks-sdk in-repo as well as in each platform's respective release.
   - On Linux, you will want to copy `SteamworksPy_*.so` (where \* is your CPU) to `SteamworksPy.so`
@@ -160,7 +156,7 @@ Execute: `python -c "from distribute import build_steamworkspy; build_steamworks
 
 ### Texture optimization (todds)
 
-- RimSort uses [todds](https://github.com/joseasoler/todds) as a dependency for texture optimization. It is shipped with RimSort, archived into the binary releases. If you are building/running from source, you will want to place a todds binary at `./todds/todds` (for Linux/Mac) OR `.\todds\todds.exe` (for Windows)
+- RimSort uses [todds](https://github.com/todds-encoder/todds) as a dependency for texture optimization. It is shipped with RimSort, archived into the binary releases. If you are building/running from source, you will want to place a todds binary at `./todds/todds` (for Linux/Mac) OR `.\todds\todds.exe` (for Windows)
 
 ### Running RimSort from source
 
@@ -210,22 +206,22 @@ The `dev/` directory is in `.gitignore` and will not be committed.
 
 ### Packaging RimSort
 
-After following all the prior steps, from the RimSort project root directory, first add the `SteamworksPy` submodule to the Python path:
-
-On Linux/macOS:
-
-```shell
-PYTHONPATH=./submodules/SteamworksPy
-```
-
-On Windows (Powershell):
-
-```powershell
-$env:PYTHONPATH = ".\submodules\SteamworksPy"
-```
-
-Then build with nuitka:
+Packaging a distributable RimSort binary is fully automated by `distribute.py`, which
+initializes submodules, (optionally) builds the SteamworksPy library, fetches the latest
+`todds` release, and compiles the application with Nuitka. From the project root run:
 
 ```shell
-uv run nuitka app/__main__.py
+uv run python distribute.py
 ```
+
+For additional options (skipping steps, supplying a custom Steamworks SDK source,
+enabling dev mode, etc.), see:
+
+```shell
+uv run python distribute.py --help
+```
+
+If you need to drive Nuitka directly (for example, for local iteration), note that
+`freeze_application()` in `distribute.py` first adds the `SteamworksPy` submodule to
+`PYTHONPATH` and then compiles the `app/` package. Prefer the `distribute.py` script
+for real builds rather than invoking Nuitka by hand.

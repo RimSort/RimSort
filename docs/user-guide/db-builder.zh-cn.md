@@ -28,7 +28,7 @@ _**NOTE:**_ 数据库构建器有一些「隐性要求」。如果你不是 Stea
 - 你的 Steam 账户需要至少消费 5 美元才能获得 Steam WebAPI 的常规访问权限。这是 RimSort 构建完整 Mod 依赖元数据的重要途径。
 - 要使用 SteamWorks 功能，你需要在 Steam 平台拥有 RimWorld。这是 Steam 允许通过 SteamWorks API 访问某些功能的必要条件。
 
-### 如何获取 Steam WebAPI 密钥用于数据库构建器动态查询
+### 如何获取 Steam WebAPI 密钥用于数据库构建器
 
 1. 打开 Steam [API 密钥注册页](https://steamcommunity.com/login/home/?goto=%2Fdev%2Fapikey)。注册需要 Steam 账户和域名，但实际使用的域名似乎无关紧要：
 
@@ -40,7 +40,7 @@ _**NOTE:**_ 数据库构建器有一些「隐性要求」。如果你不是 Stea
 
 3. _**请妥善保管你的 Steam 密钥，不要与他人分享。**_ 点击注册按钮后，你将看到新生成的 Steam API 密钥。如需更换密钥，只需点击撤销按钮然后重新注册即可。
 
-4. 在 RimSort 设置面板的 `数据库构建器（DS Builder）` 页，将密钥填入 `Steam API Key`。
+4. 在 RimSort 设置面板的 `数据库构建器（DB Builder）` 页，将密钥填入 `Steam API Key`。
 
 数据库构建器有两种「包含」模式，可用于 RimSort 创建、管理、维护和更新 Steam 数据库（与 RimPy 的 db.json 格式兼容）。
 
@@ -90,7 +90,7 @@ _**NOTE:**_ 数据库构建器有一些「隐性要求」。如果你不是 Stea
 
 2. 确保已完成上述 Steam WebAPI 密钥配置步骤。
 
-3. （可选）配置数据库过期时间（单位：秒）。 该过期时间将用于生成你数据库的 version 字段，计算方式为数据库创建时的时间戳 + 设定时长。这会影响 RimSort 提示数据库过期的时机，默认值为 1 周。注意：此设置位于 `数据库（Databases）` 页。
+3. （可选）配置数据库过期时间（单位：秒）。 该过期时间将用于生成你数据库的 version 字段，计算方式为数据库创建时的时间戳 + 设定时长。这会影响 RimSort 提示数据库过期的时机，默认值为 `0`（即不设过期时间；例如，`604800` 表示 7 天）。注意：此设置位于 `数据库构建器（DB Builder）` 页。
 
 4. 根据需求进行配置。（请参考前面的 [选项](#选项) 一节）
 

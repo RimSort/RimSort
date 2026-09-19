@@ -25,7 +25,7 @@ The RimSort CLI is designed for users who need to automate RimSort functionality
 - **Requires no display server** - Perfect for Docker containers, remote servers, and CI/CD pipelines
 - **Provides structured exit codes** - Enables reliable error handling in scripts and automation
 - **Supports environment variables** - Securely configure credentials without exposing them in command history
-- **Works without Qt dependencies** - Lightweight operation with minimal system requirements
+- **Does not launch the GUI** - Operates headlessly without opening any windows (PySide6 is still imported by the codebase, but no graphical interface is instantiated)
 
 Currently available commands:
 
@@ -70,7 +70,7 @@ Required
 {: .label .label-red }
 
 {: .important }
-For detailed instructions on obtaining your Steam WebAPI key, see the [DB Builder guide](db-builder#how-to-obtain-your-steam-webapi-key-for-use-with-with-db-builder-dynamicquery).
+For detailed instructions on obtaining your Steam WebAPI key, see the [DB Builder guide](db-builder#how-to-obtain-your-steam-webapi-key-for-use-with-the-db-builder).
 
 {: .warning}
 You need to own RimWorld on Steam for this to work. You may also need to have spent at least $5 USD on your Steam account to have general access to the Steam WebAPI to utilize Steamworks API (for DLC dependency data).
@@ -129,7 +129,7 @@ The command cannot find a valid API key. Provide it via:
 
 ##### **`Error: Invalid Steam WebAPI key! Key must be 32 characters`**
 
-Your API key is not the correct length. Check your key at [https://steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Common issue: extra spaces or newlines when copying the key.
+Your API key is not the correct length (the error message also shows the length that was received, e.g. `(got 20)`). Check your key at [https://steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Common issue: extra spaces or newlines when copying the key.
 
 ##### **`Error: Cannot update non-existent database`**
 
