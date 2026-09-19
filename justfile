@@ -107,8 +107,13 @@ typecheck:
 pyright:
     uv run python -m pyright -p pyproject.toml .
 
-# Run ruff fixes
-ruff: ruff-fix ruff-format-fix
+# Run ruff lint checks (ruff check)
+ruff:
+    uv run ruff check {{ruff_config}} .
+
+# Check code for formatting issues (ruff format --check)
+ruff-format:
+    uv run ruff format {{ruff_config}} --check .
 
 # Check and automatically fix linting issues (ruff check --fix)
 ruff-fix:
@@ -120,11 +125,28 @@ ruff-format-fix:
 
 # Check Markdown documentation for issues (markdownlint-cli2)
 markdownlint:
-    npx markdownlint-cli2@latest
+    npx --yes markdownlint-cli2@0.23.2
 
 # Fix Markdown documentation issues (markdownlint-cli2 --fix)
 markdownlint-fix:
-    npx markdownlint-cli2@latest --fix
+    npx --yes markdownlint-cli2@0.23.2 --fix
+
+# Check shell script formatting (shfmt, fails on any differences)
+[unix]
+shfmt:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mapfile -t sh_files < <(fd -e sh --exclude .venv --exclude submodules)
+    if [ ${#sh_files[@]} -eq 0 ]; then
+        echo "shfmt: no shell scripts found"
+        exit 0
+    fi
+    # shfmt -l prints files whose formatting differs and exits 1 if any exist
+    shfmt -l "${sh_files[@]}"
+
+[windows]
+shfmt:
+    $env:PATH = "$env:PATH;$env:LOCALAPPDATA\RimSortTools"; $files = @(fd -e sh --exclude .venv --exclude submodules); if ($files.Count -eq 0) { Write-Output "shfmt: no shell scripts found" } else { shfmt -l $files }
 
 # Automatically fix shell script formatting issues (shfmt)
 [unix]
@@ -137,16 +159,16 @@ shfmt-fix:
 
 # Run copy/paste detection (jscpd) using the project's .jscpd.json config
 jscpd:
-    npx --yes jscpd@latest . --config .jscpd.json
+    npx --yes jscpd@5.3.0 . --config .jscpd.json
 
 # Run all code quality checks: super-linter + typecheck + pyright
 [unix]
 check: super-lint typecheck pyright
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Run all code quality checks available on Windows: typecheck + pyright + jscpd + markdownlint + deferred-import guard
+# Run all code quality checks available on Windows: typecheck + pyright + ruff + ruff-format + jscpd + markdownlint + shfmt + deferred-import guard
 [windows]
-check: typecheck pyright jscpd markdownlint deferred-imports
+check: typecheck pyright ruff ruff-format jscpd markdownlint shfmt deferred-imports
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Check for new function-local from app/ imports (circular-import regression guard)
@@ -155,7 +177,7 @@ deferred-imports:
 
 # Automatically fix linting and formatting issues, then verify the markdown check passes
 # (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes + markdownlint check)
-fix: ruff shfmt-fix markdownlint-fix markdownlint
+fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix markdownlint
     @echo "Auto-fixes applied!"
 
 # Run full CI pipeline locally: all quality checks + tests with coverage
