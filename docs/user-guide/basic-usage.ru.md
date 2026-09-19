@@ -30,6 +30,7 @@ lang: ru
 ## Импорт списка модов
 
 - **File → Open mod list** — RimWorld XML / `.rml` / `.rws` и JSON-экспорт RimSort
+- **File → Append Mod List...** — добавить к текущему активному списку моды из выбранного файла, которых ещё нет в списке
 - **Troubleshooting → Import** — запись в `ModsConfig.xml` (XML и JSON)
 
 ## Сортировка и сохранение
@@ -39,3 +40,5 @@ lang: ru
 ## Внешние базы данных
 
 Релизы не включают Steam DB и Community Rules — их нужно скачать или собрать. См. [базы данных](/ru/user-guide/databases).
+
+Помимо Steam DB и правил, RimSort поддерживает и другие опциональные базы: **Use This Instead** (альтернативы устаревшим/несовместимым модам), **No Version Warning** (моды без предупреждений о версии) и **RimWorld Versions** (используется функцией Download RimWorld).

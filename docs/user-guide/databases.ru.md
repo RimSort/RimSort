@@ -44,6 +44,10 @@ RimSort использует внешние базы для сортировки
 
 Steam DB — дополнительные зависимости из Workshop. Статическая БД даёт данные без скачивания каждого мода.
 
+## RimWorld Versions Database
+
+БД версий RimWorld (`rimworld_versions.json`, источник — [репозиторий rimworld-versions](https://github.com/bukforks/rimworld-versions)) отслеживает доступные версии RimWorld и их депоты. RimSort использует её для функции **Download RimWorld Version** в меню `Download` — скачивание конкретной версии RimWorld из Steam. Как и другие БД, источник настраивается на странице `Databases` в настройках.
+
 ## Git в RimSort
 
 ### _**Нужен**_ [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)

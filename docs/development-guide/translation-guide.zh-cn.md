@@ -25,7 +25,7 @@ lang: zh-cn
 RimSort 使用 Qt 翻译系统，包含以下组件：
 
 - **`.ts` 文件**：源翻译文件（XML 格式），供翻译者编辑
-- **`.qm` 文件**：编译后的二进制翻译文件，供应用程序使用（通常作为构建产物生成，不提交；但本项目当前也会提交以确保用户下载后可直接使用翻译功能）
+- **`.qm` 文件**：应用程序使用的编译后二进制翻译文件。由 `just i18n-compile`（以及 CI）生成，并**会提交**到代码库。
 - **QTranslator**：Qt 的翻译引擎，加载和应用翻译
 
 ## 项目结构
@@ -42,7 +42,8 @@ RimSort/
 │   ├── ja_JP.ts      # 日语
 │   ├── pt_BR.ts      # 巴西葡萄牙语
 │   ├── ru_RU.ts      # 俄语
-│   └── tr_TR.ts      # 土耳其语
+│   ├── tr_TR.ts      # 土耳其语
+│   └── ko_KR.ts      # 韩语
 └── app/
     └── controllers/
         └── language_controller.py  # 语言管理
@@ -51,7 +52,7 @@ RimSort/
 ## 构建翻译文件
 
 翻译源文件（`.ts`）必须编译为二进制 `.qm` 文件，应用程序才能加载它们。
-`.qm` 文件不会提交到代码库中——它们作为构建产物生成。
+编译后的 `.qm` 文件**会提交**到代码库，这样用户无需重新编译即可直接从检出或发行版使用翻译。开发期间它们由 `just i18n-compile` 或 `just dev-setup`（重新）生成。
 
 ### 编译翻译
 
@@ -83,7 +84,7 @@ just i18n-update
 |----------|----------|------|
 | `en_US` | English | 完整（源语言） |
 | `zh_CN` | 简体中文 | 完整 |
-| `zh_TW` | 正體中文 | 进行中 |
+| `zh_TW` | 正體中文 | 完整 |
 | `fr_FR` | Français（法语） | 完整 |
 | `de_DE` | Deutsch（德语） | 完整 |
 | `es_ES` | Español（西班牙语） | 完整 |
@@ -91,6 +92,7 @@ just i18n-update
 | `pt_BR` | Português（巴西葡萄牙语） | 完整 |
 | `ru_RU` | Русский（俄语） | 完整 |
 | `tr_TR` | Türkçe（土耳其语） | 完整 |
+| `ko_KR` | 한국어（韩语） | 完整 |
 
 ## 翻译助手工具
 
@@ -245,7 +247,7 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
    - 选择"检查翻译完整性"查看需要翻译的内容
    - 选择"自动翻译缺失字符串"使用 AI 自动填充
    - 选择"完整流程"一次性更新、翻译和编译
-5. **提交代码**：提交 `.ts` 文件（`.qm` 文件会自动生成）
+5. **提交代码**：提交 `.ts` 和 `.qm` 文件（`.qm` 文件也会由 `just i18n-compile` 和 CI 自动生成，并会提交到代码库）
 
 ### 选项 2：命令行模式
 
@@ -255,7 +257,7 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
 4. **编辑翻译**：找到 `type="unfinished"` 的条目进行翻译
 5. **自动翻译剩余字符串**（可选）：运行 `python translation_helper.py auto-translate YOUR_LANGUAGE --service google`
 6. **编译测试**：运行 `python translation_helper.py compile YOUR_LANGUAGE`
-7. **提交代码**：提交 `.ts` 文件（`.qm` 文件会自动生成）
+7. **提交代码**：提交 `.ts` 和 `.qm` 文件（`.qm` 文件也会由 `just i18n-compile` 和 CI 自动生成，并会提交到代码库）
 
 详细步骤请参考下面的完整指南。
 
@@ -345,7 +347,11 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
        "de_DE": "Deutsch",
        "zh_CN": "简体中文",
        "ja_JP": "日本語",
-       "pt_BR": "Português (Brasil)",  # 添加新语言条目
+       "ru_RU": "Русский",
+       "tr_TR": "Türkçe",
+       "pt_BR": "Português (Brasil)",
+       "zh_TW": "正體中文",
+       "ko_KR": "한국어",  # 添加新语言条目
    }
    ```
 
@@ -516,15 +522,19 @@ python translation_helper.py stats
 
 1. **提交更改**：
 
-   ```bash
-   # 仅添加翻译源文件（.qm 文件会自动生成）
-   git add locales/YOUR_LANGUAGE.ts
-   # 如果添加了新语言，也要更新语言控制器
-   git add app/controllers/language_controller.py
-   git commit -m "添加/更新 [语言名称] 翻译"
-   ```
+    ```bash
+    # 添加翻译文件（.ts 源文件以及编译后的 .qm 文件，两者都会提交）
+    git add locales/YOUR_LANGUAGE.ts
+    git add locales/YOUR_LANGUAGE.qm
+    # 如果添加了新语言，也要更新语言控制器
+    git add app/controllers/language_controller.py
+    git commit -m "添加/更新 [语言名称] 翻译"
+    ```
 
-   **注意**：只需提交 `.ts` 源文件。编译后的 `.qm` 文件是构建产物，由 `just i18n-compile` 自动生成。
+    **注意**：
+    1. 编译会在 `locales/` 目录中生成对应的 `.qm` 文件。
+    2. `.qm` 文件与 `.ts` 文件一起**提交**到代码库，这样用户无需重新编译即可直接从检出或发行版使用翻译。它们由 `just i18n-compile`、`just dev-setup` 和 CI（重新）生成。
+    3. 始终先运行 `just i18n-update` 再运行 `just i18n-compile`，并同时提交 `.ts` 和 `.qm` 文件的更改。
 
 2. **推送到你的 fork**：
 

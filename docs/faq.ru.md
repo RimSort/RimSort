@@ -35,7 +35,7 @@ CR DB задаёт порядок загрузки модов по правил�
 
 ## Как включить интеграцию со Steam-клиентом?
 
-**Settings → Advanced → Enable Steam client integration**.
+**Settings → Locations → Enable Steam client integration**.
 
 ## Ошибка `Could not initialize Steam API` при запуске игры
 

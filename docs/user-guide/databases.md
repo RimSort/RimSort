@@ -43,6 +43,10 @@ The No Version Warning database (`ModIdsToFix.xml`) is an external database that
 
 The Steam Workshop Database (Steam DB) is primarily used to provide additional dependency data. This information can only be gathered by crawling the Steam Workshop and downloading the workshop mods to parse mod data. By having a static database, users do not need to have these mods downloaded in order to access this information.
 
+## RimWorld Versions Database
+
+The RimWorld Versions Database (`rimworld_versions.json`, sourced from the [rimworld-versions repository](https://github.com/bukforks/rimworld-versions)) tracks available RimWorld game versions alongside their depots. RimSort uses it for the **Download RimWorld Version** feature under the `Download` menu, which lets you download a specific RimWorld version from Steam. Like the other databases, its source can be configured under `Databases` in the settings panel.
+
 ## Working with databases via RimSort Git integration
 
 ### _**Prerequisite:**_ Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for your respective platform.

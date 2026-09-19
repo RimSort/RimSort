@@ -53,7 +53,7 @@ RimSort 是社区主导的 [RimWorld](https://rimworldgame.com/) Mod 管理及�
   - 与 Steam 客户端交互，并提供 Steam API 游戏启动功能
 - 分享日志至 [0x0.st](http://0x0.st/)
 - 分享 Mod 列表至 [Rentry.co](https://rentry.co/)
-- [todds DDS 编码器](https://github.com/joseasoler/todds)
+- [todds DDS 编码器](https://github.com/todds-encoder/todds)
   - 使用 3 种预设优化您的纹理
 - 调用 Steam 浏览器，允许您通过 SteamCMD 和 Steam 客户端下载 Mod
   - 无需在 Steam 拥有 Rimworld 也可从创意工坊下载 Mod

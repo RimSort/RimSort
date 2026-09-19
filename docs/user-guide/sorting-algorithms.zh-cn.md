@@ -16,9 +16,22 @@ RimSort 默认提供两种排序算法来对激活的 Mod 列表排序。自 `v1
 
 ---
 
+## 分层排序
+
+无论选择哪种算法，RimSort **都**不会对整个激活 Mod 列表做单次遍历排序。相反，`Sorter` 会先将激活列表划分为四个层级，用所选算法独立对每个层级的子图排序，然后按层级顺序拼接结果：
+
+- **层级 0** — Core、Harmony、Prepatcher、官方 RimWorld DLC，以及所有递归依赖于它们的 Mod。
+- **层级 1** — 已知框架 Mod（如 Universum、Vanilla Expanded Framework、XMLExtensions），以及带有 `loadTop`（强制排序至列表顶部）标记的 Mod，加上它们的递归依赖项。
+- **层级 2** — 其他所有 Mod。
+- **层级 3** — 带有 `loadBottom`（强制排序至列表底部）标记的 Mod，以及递归依赖于它们的 Mod。
+
+这意味着你通过规则编辑器或社区规则数据库定义的 `loadTop` / `loadBottom` 规则并不会直接重排 Mod，而是将 Mod 路由到更高或更低的层级。带有 `loadTop` 标记的 Mod 总是排在任何未标记 Mod 的_之前_，带有 `loadBottom` 标记的 Mod 总是排在任何未标记 Mod 的_之后_。
+
+---
+
 ## 字母顺序排序算法
 
-第一种算法，`字母顺序排序（Alphabetical）`，采用更简单的方法进行合理排序。该方法在将 Mod 列表分层后按字母顺序排列。
+第一种算法，`字母顺序排序（Alphabetical）`，采用更简单的方法进行合理排序。在每个层级内，该方法在应用规则之前先按字母顺序排列你的 Mod。
 
 该算法大致遵循 [RimPy 自动排序 Wiki](https://github.com/rimpy-custom/RimPy/wiki/Autosorting) 中描述的步骤：
 

@@ -30,7 +30,7 @@ _**NOTE:**_ DB Builder has some "soft requirements". If you are not a RimWorld S
 - You may need to have spent at least $5 USD on your Steam account to have general access to Steam WebAPI. This is a big part of how RimSort builds the full picture of mod dependency metadata, as well as some other things.
 - In order to utilize SteamWorks, you also need to own RimWorld on Steam. This is required for Steam to allow access to certain mechanisms over the SteamWorks API.
 
-### How to obtain your Steam WebAPI key for use with with DB Builder DynamicQuery
+### How to obtain your Steam WebAPI key for use with the DB Builder
 
 1. Open Steam's [API Key signup page.](https://steamcommunity.com/login/home/?goto=%2Fdev%2Fapikey) It requires a Steam account and a domain name to register it to, but I've found the actual domain you use does not seem to matter:
 
@@ -92,7 +92,7 @@ If you choose to update, the existing database will be loaded into memory and up
 
 2. Ensure you have followed the steps above to configure your Steam WebAPI key!
 
-3. Optionally configure your database expiry in seconds. This is the expiry in seconds used for the "version" key in your database. This is an epoch timestamp set at the current time of your database creation + the expiry duration. This will have an effect on when RimSort will warn you about the database being out of date. Default is 1 week. Note, this setting is under the `Databases` page.
+3. Optionally configure your database expiry in seconds. This is the expiry in seconds used for the "version" key in your database. This is an epoch timestamp set at the current time of your database creation + the expiry duration. This will have an effect on when RimSort will warn you about the database being out of date. The default is `0`, which disables expiry (for example, `604800` means 7 days). Note, this setting is under the `DB Builder` page.
 
 4. Select the settings you prefer. See the previous section [Options](#options) for more details and recommendations.
 

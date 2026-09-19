@@ -116,7 +116,7 @@ RimSort 使用 [PySide6](https://pypi.org/project/PySide6/) 模块以及多个�
 
 ### 纹理优化（todds）
 
-- RimSort 使用 [todds](https://github.com/joseasoler/todds) 作为纹理优化的依赖项。该工具已随 RimSort 发布版本打包。如果你从源码构建/运行 RimSort，需要将 todds 的二进制文件放置在以下路径：
+- RimSort 使用 [todds](https://github.com/todds-encoder/todds) 作为纹理优化的依赖项。该工具已随 RimSort 发布版本打包。如果你从源码构建/运行 RimSort，需要将 todds 的二进制文件放置在以下路径：
   - Linux/Mac：`./todds/todds`
   - Windows：`.\todds\todds.exe`
 
