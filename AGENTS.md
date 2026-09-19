@@ -36,17 +36,19 @@ Never run `uv lock --upgrade` (== `just update`) as part of a task — dependenc
 
 ## Code Quality (MUST pass before finishing)
 
-`just check` runs the quality gate (Windows: mypy `typecheck`, `pyright`, `jscpd`, `deferred-imports`; Unix adds super-linter which also covers ruff, ruff-format, markdownlint, shfmt, gitleaks, checkov). `just fix` auto-fixes ruff check/format, shfmt, and markdownlint.
+`just check` runs the quality gate (Windows: `typecheck`, `pyright`, `ruff`, `ruff-format`, `jscpd`, `markdownlint`, `shfmt`, `deferred-imports`; Unix adds super-linter, which covers the same plus bash, json, yaml, github-actions, checkov, and gitleaks). `just fix` auto-fixes ruff check/format, shfmt, and markdownlint.
 
 | Command | Purpose |
 | --- | --- |
+| `just ruff` | Ruff lint check (`ruff check`, config in `pyproject.toml`) |
+| `just ruff-format` | Ruff format check (`ruff format --check`) |
 | `just ruff-fix` / `just ruff-format-fix` | Ruff lint/format auto-fix (config in `pyproject.toml`) |
 | `just typecheck` | mypy against `pyproject.toml` |
 | `just pyright` | pyright (standard mode) against `pyproject.toml` |
 | `just jscpd` | Copy-paste detection — CI enforces **0% duplication** (config in `.jscpd.json`). If code repeats, extract a shared helper. |
 | `just deferred-imports` | Guard against new function-local `from app…` imports (see Traps) |
 | `just markdownlint` | Markdown lint for `docs/**` and root `*.md` (rules in `.markdownlint.json`; options in `.markdownlint-cli2.jsonc`) |
-| `just shfmt` | Shell script formatting |
+| `just shfmt` | Shell script formatting (fails when any script would be reformatted) |
 
 Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or the full `just check`, then `just test`) and get everything green before declaring a change complete. CI runs ruff, ruff-format, mypy, pyright, jscpd, gitleaks, markdownlint, and pytest on ubuntu/macos/windows.
 

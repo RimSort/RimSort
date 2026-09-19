@@ -9,6 +9,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Lint
@@ -32,7 +36,7 @@ jobs:
           persist-credentials: true
 
       - name: Setup Python
-        uses: actions/setup-python@main
+        uses: actions/setup-python@v7
         with:
           python-version-file: "pyproject.toml"
 
