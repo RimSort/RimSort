@@ -1,0 +1,45 @@
+{%- comment -%}
+  Localized override of just-the-docs 0.12.0 sidebar.html: the main navigation
+  include must be cached per active language, otherwise jekyll-polyglot's
+  parallel language builds share a single include_cached entry and render the
+  wrong language's sidebar.
+{%- endcomment -%}
+
+{%- comment -%}
+  Include as: {%- include components/sidebar.html -%}
+  Depends on: page(?), site.
+  Results in: HTML for the side bar.
+  Includes:
+    title.html, components/site_nav.html, nav_footer_custom.html
+  Overwrites:
+    nav_footer_custom.
+  Should not be cached, because nav_footer_custom.html might depend on page.
+{%- endcomment -%}
+
+<header class="side-bar">
+  <div class="site-header">
+    <a href="{{ '/' | relative_url }}" class="site-title lh-tight">{% include title.html %}</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  {% include_cached components/site_nav.html lang=site.active_lang %}
+
+  {%- comment -%}
+    note: nav_footer_custom and/or this "site footer" appear in components/footer.html for the mobile view.
+  {%- endcomment -%}
+
+  <!-- jscpd:ignore-start -->
+  <div class="d-md-block d-none site-footer">
+  {% capture nav_footer_custom %}
+    {%- include nav_footer_custom.html -%}
+  {% endcapture %}
+  {% if nav_footer_custom != "" %}
+    {{ nav_footer_custom }}
+  {% else %}
+    This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+  {% endif %}
+  </div>
+<!-- jscpd:ignore-end -->
+</header>
