@@ -30,6 +30,10 @@ RimSort 不是恶意软件，可以安全使用。你可以放心忽略任何杀
 
 对于 **_macOS_**，我们需要向苹果支付类似的年费才能在 macOS 上签名应用程序。目前，Mac 用户可以使用 [这个临时解决方案](https://rimsort.github.io/RimSort/zh-cn/user-guide/downloading-and-installing#macos)。除了向苹果支付费用外，我们在 macOS 上没有其他方案解决这个问题。
 
+## 内置更新器失败时如何手动更新 RimSort？
+
+关闭 RimSort，然后从 [RimSort 发布页面](https://github.com/RimSort/RimSort/releases) 下载与您的版本类型（稳定版或前瞻版）、操作系统和 CPU 架构匹配的最新版本。不要使用 `Code > Download ZIP`，因为该归档包含的是源码而非可运行的分发包。请将压缩包形式的发行版解压到新的空文件夹中，而不要与旧安装合并；在 macOS 上，替换现有 `RimSort.app`；在 Linux 上，替换 AppImage，并用 `chmod +x RimSort-*.AppImage` 赋予新文件执行权限。在删除旧程序文件之前，请先启动新版本。您的设置及其他 RimSort 数据单独存储在操作系统的应用程序数据目录中，请保留该目录。平台相关的安装说明请参阅 [下载和安装](https://rimsort.github.io/RimSort/zh-cn/user-guide/downloading-and-installing)。
+
 ## 游戏路径在哪里？
 
 游戏路径和其他位置设置位于设置面板中的 `位置（Locations）` 下。
