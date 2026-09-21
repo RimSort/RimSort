@@ -54,7 +54,7 @@ jobs:
         run: mv .venv /home/runner/work/_temp/_github_workflow
 
       - name: Super-linter
-        uses: super-linter/super-linter/slim@v8.6.0 # x-release-please-version
+        uses: super-linter/super-linter/slim@v8.7.0 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,7 +83,12 @@ jobs:
           PYTHON_RUFF_FORMAT_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
           FILTER_REGEX_EXCLUDE: "LICENSE.md|super-linter-output/|github_conf/|setup_.*_script\\.js"
-          IGNORE_GITIGNORED_FILES: true
+          # super-linter v8.7.0 bundles jscpd 5, which drops the --gitignore
+          # CLI flag that super-linter adds when this is true. jscpd 5 skips
+          # gitignored files on its own (see .jscpd.json), and the per-file
+          # file list only contains tracked files (USE_FIND_ALGORITHM=false),
+          # so disabling this doesn't change which files other linters see.
+          IGNORE_GITIGNORED_FILES: false
           # Set your fix mode variables to true
           FIX_PYTHON_RUFF: true
           FIX_PYTHON_RUFF_FORMAT: true

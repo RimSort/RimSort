@@ -1,5 +1,6 @@
 {
     "threshold": 0,
+    "gitignore": true,
     "ignore": [
         "**/submodules/**",
         "**/.git/**",
