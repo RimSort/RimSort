@@ -280,6 +280,86 @@ class TestFindAppImageAsset:
 
 
 # ---------------------------------------------------------------------------
+# _check_needs_elevation (AppImage)
+# ---------------------------------------------------------------------------
+
+
+def _elevation_manager() -> UpdateManager:
+    """Build a mock UpdateManager with the real _check_needs_elevation bound."""
+    mgr = MagicMock(spec=UpdateManager)
+    mgr._system = "Linux"
+    mgr._elevation_needed = None
+    mgr._check_needs_elevation = UpdateManager._check_needs_elevation.__get__(mgr)
+    return mgr
+
+
+def _run_as_appimage(
+    monkeypatch: pytest.MonkeyPatch,
+    appimage_dir: Path,
+    application_folder: Path,
+) -> None:
+    """Point $APPIMAGE at a file in appimage_dir and stub out the FUSE mount."""
+    appimage = appimage_dir / "RimSort.AppImage"
+    appimage.touch()
+    monkeypatch.setenv("APPIMAGE", str(appimage))
+    monkeypatch.setattr(AppInfo, "application_folder", application_folder)
+
+
+class TestCheckNeedsElevationAppImage:
+    def test_no_elevation_when_appimage_dir_writable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        _run_as_appimage(monkeypatch, tmp_path, tmp_path / "fuse_mount")
+
+        assert _elevation_manager()._check_needs_elevation() is False
+
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="chmod on directories does not restrict write access on Windows",
+    )
+    def test_elevation_when_appimage_dir_not_writable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        read_only = tmp_path / "read_only"
+        read_only.mkdir()
+        _run_as_appimage(monkeypatch, read_only, tmp_path)
+        read_only.chmod(0o555)
+
+        try:
+            assert _elevation_manager()._check_needs_elevation() is True
+        finally:
+            read_only.chmod(0o755)
+
+    def test_no_elevation_when_application_folder_writable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.delenv("APPIMAGE", raising=False)
+        monkeypatch.setattr(AppInfo, "application_folder", tmp_path)
+
+        assert _elevation_manager()._check_needs_elevation() is False
+
+    def test_elevation_when_application_folder_not_writable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.delenv("APPIMAGE", raising=False)
+        monkeypatch.setattr(AppInfo, "application_folder", tmp_path / "missing")
+
+        assert _elevation_manager()._check_needs_elevation() is True
+
+    def test_result_is_cached(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        _run_as_appimage(monkeypatch, tmp_path, tmp_path / "fuse_mount")
+        mgr = _elevation_manager()
+        assert mgr._check_needs_elevation() is False
+
+        monkeypatch.delenv("APPIMAGE")
+        monkeypatch.setattr(AppInfo, "application_folder", tmp_path / "missing")
+
+        assert mgr._check_needs_elevation() is False
+
+
+# ---------------------------------------------------------------------------
 # _prepare_appimage_update
 # ---------------------------------------------------------------------------
 
