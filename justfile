@@ -47,6 +47,10 @@ superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.7.0"
 # resolve imports. Env is kept identical to .github/workflows/lint.yml.
 # Note: super-linter v8.7.0 rejects mixing VALIDATE_*=true/false, so this list
 # stays all-true (opt-in mode; unlisted linters are disabled).
+# IGNORE_GITIGNORED_FILES=false: super-linter v8.7.0 bundles jscpd 5, which
+# dropped the --gitignore CLI flag that super-linter adds when this is true.
+# jscpd 5 skips gitignored files on its own (see .jscpd.json), and the
+# per-file file list only contains tracked files (USE_FIND_ALGORITHM=false).
 [unix]
 super-lint:
     #!/usr/bin/env bash
@@ -91,7 +95,7 @@ super-lint:
         -e PYTHON_RUFF_FORMAT_CONFIG_FILE=pyproject.toml \
         -e PYTHON_MYPY_CONFIG_FILE=pyproject.toml \
         -e FILTER_REGEX_EXCLUDE="LICENSE.md|super-linter-output/|github_conf/|setup_.*_script\\.js" \
-        -e IGNORE_GITIGNORED_FILES=true \
+        -e IGNORE_GITIGNORED_FILES=false \
         -e FIX_PYTHON_RUFF=true \
         -e FIX_PYTHON_RUFF_FORMAT=true \
         -e GITHUB_ACTIONS_COMMAND_ARGS='-ignore '\''unknown permission scope '"'""attestations'"'"'\''' \
