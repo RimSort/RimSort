@@ -39,13 +39,13 @@ test-coverage: dev-setup
 # ═══════════════════════════════════════════════════════════════════════════
 
 # Container image for super-linter (matches CI version)
-superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.6.0"
+superlinter_image := "ghcr.io/super-linter/super-linter:slim-v8.7.0"
 
 # Run super-linter locally via container (ruff, ruff-format, mypy, jscpd,
 # bash/shellcheck, shfmt, json, yaml, markdown, checkov, gitleaks,
 # github-actions). Pyright runs natively because it needs the local venv to
 # resolve imports. Env is kept identical to .github/workflows/lint.yml.
-# Note: super-linter v8.6.0 rejects mixing VALIDATE_*=true/false, so this list
+# Note: super-linter v8.7.0 rejects mixing VALIDATE_*=true/false, so this list
 # stays all-true (opt-in mode; unlisted linters are disabled).
 [unix]
 super-lint:
