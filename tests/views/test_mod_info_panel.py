@@ -1,10 +1,15 @@
+from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 from PySide6.QtCore import Qt
 
-from app.views.mod_info_panel import ClickablePathLabel
+from app.models.metadata.metadata_structure import ListedMod
+from app.models.settings import Settings
+from app.utils.generic import format_file_size
+from app.views.mod_info_panel import ClickablePathLabel, ModInfoPanel
 
 
 @pytest.fixture
@@ -222,3 +227,83 @@ def test_mouse_press_event_no_path(
     label.setPath("")
     qtbot.mouseClick(label, Qt.MouseButton.LeftButton)
     mock_open.assert_not_called()
+
+
+@pytest.fixture
+def panel(
+    qapp: Any,
+    mock_metadata_controller: MagicMock,
+) -> Generator[ModInfoPanel, None, None]:
+    """Build a real ModInfoPanel with a mocked metadata controller.
+
+    Args:
+        qapp: Qt application fixture.
+        mock_metadata_controller: Mocked metadata controller singleton.
+
+    Yields:
+        A fully-constructed ModInfoPanel, cleaned up after the test.
+    """
+    info_panel = ModInfoPanel(
+        settings=Settings(),
+        metadata_controller=mock_metadata_controller,
+    )
+    yield info_panel
+    info_panel.shutdown_folder_size_worker()
+
+
+def test_folder_size_updates_asynchronously(
+    panel: ModInfoPanel,
+    qtbot: Any,
+    tmp_path: Path,
+    mock_metadata_controller: MagicMock,
+) -> None:
+    """Test that the folder size label is filled from a background thread."""
+    (tmp_path / "file.txt").write_bytes(b"abc")
+    mod = ListedMod(name="Test Mod")
+    mod.mod_path = Path(str(tmp_path))
+    mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+
+    panel._set_folder_size_info(str(tmp_path))
+    assert panel.mod_info_folder_size_value.text() == "Calculating..."
+    qtbot.waitUntil(
+        lambda: panel.mod_info_folder_size_value.text() != "Calculating...",
+        timeout=5000,
+    )
+    assert panel.mod_info_folder_size_value.text() == format_file_size(3)
+
+
+def test_folder_size_error_shows_not_available(
+    panel: ModInfoPanel,
+    qtbot: Any,
+    tmp_path: Path,
+    mock_metadata_controller: MagicMock,
+    monkeypatch: Any,
+) -> None:
+    """Test that a folder size computation failure reports a fallback text."""
+    mod = ListedMod(name="Test Mod")
+    mod.mod_path = Path(str(tmp_path))
+    mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+
+    def raise_error(_uuid: str) -> int:
+        raise OSError("boom")
+
+    monkeypatch.setattr("app.sort.mod_sorting.path_to_folder_size", raise_error)
+    panel._set_folder_size_info(str(tmp_path))
+    qtbot.waitUntil(
+        lambda: panel.mod_info_folder_size_value.text() != "Calculating...",
+        timeout=5000,
+    )
+    assert panel.mod_info_folder_size_value.text() == "Not available"
+
+
+def test_stale_folder_size_results_are_ignored(panel: ModInfoPanel) -> None:
+    """Test that results for a previously displayed mod are discarded."""
+    panel._current_uuid = "modB"
+    panel._folder_size_request_id = 10
+    panel.mod_info_folder_size_value.setText("Start")
+    panel._on_folder_size_result("modA", 10, 12345)
+    assert panel.mod_info_folder_size_value.text() == "Start"
+    panel._on_folder_size_result("modB", 9, 12345)
+    assert panel.mod_info_folder_size_value.text() == "Start"
+    panel._on_folder_size_result("modB", 10, 12345)
+    assert panel.mod_info_folder_size_value.text() == format_file_size(12345)

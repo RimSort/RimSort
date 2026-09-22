@@ -1,10 +1,15 @@
 """Tests for app.sort.mod_sorting -- inactive mods list sorting helpers."""
 
+import os
+import sys
 from collections.abc import Generator
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from PySide6.QtTest import QSignalSpy
 
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -13,6 +18,7 @@ from app.models.metadata.metadata_structure import (
 )
 from app.sort.mod_sorting import (
     DEFAULT_REVERSE_FLAGS,
+    FolderSizeRequestWorker,
     ModsPanelSortKey,
     _build_sort_key_map,
     get_cached_metadata_for_batch,
@@ -386,6 +392,143 @@ class TestGetDirSize:
         ):
             result = get_dir_size(str(tmp_path))
         assert result == 0
+
+
+def _make_dir_link(link: Path, target: Path) -> None:
+    """Create a directory junction (Windows) or directory symlink (POSIX).
+
+    :param link: The link/junction path to create.
+    :param target: The directory the link points to.
+    """
+    if sys.platform == "win32":
+        from _winapi import CreateJunction
+
+        CreateJunction(str(target), str(link))
+    else:
+        os.symlink(str(target), str(link), target_is_directory=True)
+
+
+# ---------------------------------------------------------------------------
+# get_dir_size -- link/junction cycle handling
+# ---------------------------------------------------------------------------
+
+
+class TestGetDirSizeLinkHandling:
+    def test_junction_cycle_terminates(self, tmp_path: Path) -> None:
+        mod = tmp_path / "mod"
+        mod.mkdir()
+        (mod / "file.txt").write_bytes(b"abc")
+        _make_dir_link(mod / "loop", mod)
+        assert get_dir_size(str(mod)) == 3
+
+    def test_linked_directory_not_traversed(self, tmp_path: Path) -> None:
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        (outside / "big.bin").write_bytes(b"x" * 100)
+        mod = tmp_path / "mod"
+        mod.mkdir()
+        (mod / "own.txt").write_bytes(b"own")
+        _make_dir_link(mod / "link", outside)
+        assert get_dir_size(str(mod)) == 3
+
+    def test_visited_realpath_guards_symmetric_cycle(self, tmp_path: Path) -> None:
+        a = tmp_path / "a"
+        b = tmp_path / "b"
+        a.mkdir()
+        b.mkdir()
+        a_file = a / "contents.bin"
+
+        class _FakeEntry:
+            def __init__(self, path: Path, is_dir: bool, size: int = 0) -> None:
+                self.path = str(path)
+                self._is_dir = is_dir
+                self._size = size
+
+            def is_dir(self) -> bool:
+                return self._is_dir
+
+            def is_file(self) -> bool:
+                return not self._is_dir
+
+            def is_symlink(self) -> bool:
+                return False
+
+            def stat(self) -> SimpleNamespace:
+                return SimpleNamespace(st_size=self._size)
+
+        def fake_scan(current: str) -> list[_FakeEntry]:
+            current_path = Path(current)
+            if current_path == a:
+                return [
+                    _FakeEntry(a_file, is_dir=False, size=7),
+                    _FakeEntry(b, is_dir=True),
+                ]
+            if current_path == b:
+                return [_FakeEntry(a, is_dir=True)]
+            return [_FakeEntry(a, is_dir=True)]
+
+        with patch(
+            "app.sort.mod_sorting.scanpath",
+            side_effect=fake_scan,
+        ):
+            assert get_dir_size(str(tmp_path)) == 7
+
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="file symlinks require elevated privileges"
+    )
+    def test_symlinked_file_not_followed(self, tmp_path: Path) -> None:
+        real = tmp_path / "real.txt"
+        real.write_bytes(b"x" * 50)
+        os.symlink(real, tmp_path / "link.txt")
+        assert get_dir_size(str(tmp_path)) == 50
+
+
+class TestFolderSizeRequestWorker:
+    def test_result_emitted_for_valid_folder(
+        self, tmp_path: Path, mock_metadata_controller: Any
+    ) -> None:
+        mod = _make_listed_mod(str(tmp_path))
+        mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+        (tmp_path / "file.txt").write_bytes(b"abc")
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.result)
+        worker.requested.emit(str(tmp_path), 7)
+        assert spy.count() == 1
+        uuid, request_id, size = spy.at(0)
+        assert uuid == str(tmp_path)
+        assert request_id == 7
+        assert size == 3
+
+    def test_error_emitted_when_size_fails(
+        self, tmp_path: Path, mock_metadata_controller: Any, monkeypatch: Any
+    ) -> None:
+        mod = _make_listed_mod(str(tmp_path))
+        mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+
+        def raise_error(_uuid: str) -> int:
+            raise OSError("boom")
+
+        monkeypatch.setattr("app.sort.mod_sorting.path_to_folder_size", raise_error)
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.error)
+        worker.requested.emit(str(tmp_path), 3)
+        assert spy.count() == 1
+        uuid, request_id = spy.at(0)
+        assert uuid == str(tmp_path)
+        assert request_id == 3
+
+    def test_result_zero_when_metadata_missing(
+        self, tmp_path: Path, mock_metadata_controller: Any
+    ) -> None:
+        mock_metadata_controller.mods_metadata = {}
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.result)
+        worker.requested.emit(str(tmp_path), 1)
+        assert spy.count() == 1
+        uuid, request_id, size = spy.at(0)
+        assert uuid == str(tmp_path)
+        assert request_id == 1
+        assert size == 0
 
 
 # ---------------------------------------------------------------------------

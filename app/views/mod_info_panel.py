@@ -5,7 +5,7 @@ from re import match
 from typing import Any
 
 from loguru import logger
-from PySide6.QtCore import QCoreApplication, Qt
+from PySide6.QtCore import QCoreApplication, QObject, Qt, QThread, Signal
 from PySide6.QtGui import QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -24,7 +24,7 @@ from app.models.image_label import ImageLabel
 from app.models.metadata.metadata_db import Base
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ScenarioMod
 from app.models.settings import Settings
-from app.sort.mod_sorting import path_to_folder_size
+from app.sort.mod_sorting import FolderSizeRequestWorker
 from app.utils.app_info import AppInfo
 from app.utils.aux_db_utils import auxdb_get_mod_tags
 from app.utils.custom_list_widget_item import CustomListWidgetItem
@@ -105,6 +105,19 @@ class ClickablePathLabel(QLabel):
         super().mousePressEvent(event)
 
 
+class _FolderSizeSignalHub(QObject):
+    """
+    Thread-affinity anchor routing background folder size signals to the GUI thread.
+
+    Lives on the main thread, so signals re-emitted through it are delivered
+    via queued connections and the connected callbacks always run on the GUI
+    thread.
+    """
+
+    result = Signal(str, int, int)
+    error = Signal(str, int)
+
+
 class ModInfoPanel:
     """
     This class controls the layout and functionality for the
@@ -126,6 +139,16 @@ class ModInfoPanel:
         # Used to keep track of which mod items notes we are viewing/editing
         # This is set when a mod is clicked on
         self.current_mod_item: CustomListWidgetItem | None = None
+
+        # Folder size background worker state
+        self._folder_size_thread: QThread | None = None
+        self._folder_size_worker: FolderSizeRequestWorker | None = None
+        self._folder_size_hub = _FolderSizeSignalHub()
+        self._folder_size_hub.result.connect(self._on_folder_size_result)
+        self._folder_size_hub.error.connect(self._on_folder_size_error)
+        self._folder_size_request_id = 0
+        self._folder_size_shutdown_hooked = False
+        self._current_uuid: str | None = None
 
         # Base layout type
         self.panel = QVBoxLayout()
@@ -704,13 +727,72 @@ class ModInfoPanel:
             self.mod_info_tags_value.setToolTip("")
 
     def _set_folder_size_info(self, uuid: str) -> None:
-        """Set folder size information using optimized calculation."""
-        try:
-            size_bytes = path_to_folder_size(uuid)
-            self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
-        except Exception as e:
-            logger.error(f"Error calculating folder size for UUID {uuid}: {e}")
+        """Request the mod folder size in a background worker thread.
+
+        The folder size is computed off the GUI thread so a large (or
+        pathological) mod folder can never block the UI when the mod is
+        clicked. The label is updated asynchronously once the size is ready.
+
+        :param uuid: UUID (path) of the mod to display.
+        """
+        self._current_uuid = uuid
+        self.mod_info_folder_size_value.setText(self.tr("Calculating..."))
+        self._ensure_folder_size_worker()
+        self._folder_size_request_id += 1
+        worker = self._folder_size_worker
+        if worker is None:
             self.mod_info_folder_size_value.setText("Not available")
+            return
+        worker.requested.emit(uuid, self._folder_size_request_id)
+
+    def _ensure_folder_size_worker(self) -> None:
+        """Lazily create the background folder size worker thread."""
+        if self._folder_size_thread is not None:
+            return
+        thread = QThread()
+        thread.setObjectName("FolderSizeRequestWorker")
+        worker = FolderSizeRequestWorker()
+        worker.moveToThread(thread)
+        worker.result.connect(self._folder_size_hub.result)
+        worker.error.connect(self._folder_size_hub.error)
+        thread.start()
+        self._folder_size_thread = thread
+        self._folder_size_worker = worker
+        if not self._folder_size_shutdown_hooked:
+            app = QCoreApplication.instance()
+            if app is not None:
+                app.aboutToQuit.connect(self.shutdown_folder_size_worker)
+                self._folder_size_shutdown_hooked = True
+
+    def shutdown_folder_size_worker(self) -> None:
+        """Stop the folder size worker thread and free its resources."""
+        thread = self._folder_size_thread
+        worker = self._folder_size_worker
+        self._folder_size_thread = None
+        self._folder_size_worker = None
+        self._folder_size_request_id += 1
+        if worker is not None:
+            worker.result.disconnect(self._folder_size_hub.result)
+            worker.error.disconnect(self._folder_size_hub.error)
+            worker.deleteLater()
+        if thread is not None:
+            thread.quit()
+            thread.wait(5000)
+            thread.deleteLater()
+
+    def _on_folder_size_result(
+        self, uuid: str, request_id: int, size_bytes: int
+    ) -> None:
+        """Apply a folder size result if it matches the currently displayed mod."""
+        if request_id != self._folder_size_request_id or uuid != self._current_uuid:
+            return
+        self.mod_info_folder_size_value.setText(format_file_size(size_bytes))
+
+    def _on_folder_size_error(self, uuid: str, request_id: int) -> None:
+        """Report a folder size failure if it matches the current request."""
+        if request_id != self._folder_size_request_id or uuid != self._current_uuid:
+            return
+        self.mod_info_folder_size_value.setText("Not available")
 
     def _set_timestamp_info(
         self, timestamp: int | None, label: QLabel, field_name: str
@@ -975,6 +1057,9 @@ class ModInfoPanel:
 
         :param uuid: UUID (path) of the mod to display
         """
+        self._current_uuid = uuid
+        # Invalidate any in-flight folder size request from a previous mod
+        self._folder_size_request_id += 1
         mod = self.metadata_controller.get_mod(uuid)
         if mod is None:
             return
