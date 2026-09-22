@@ -492,6 +492,9 @@ class UpdateManager(QObject):
         Check if elevation is needed for the update process.
         Caches the result to avoid redundant system calls.
 
+        On Linux AppImages the application folder is a read-only FUSE mount,
+        so the directory containing the .AppImage file is checked instead.
+
         Returns:
             bool: True if elevation is needed, False otherwise
         """
