@@ -36,8 +36,8 @@ lang: ru
 
 ### Панель правил (слева)
 
-- **About.xml (loadAfter)** — после этого мода
-- **About.xml (loadBefore)** — перед этим модом
+- **About.xml (loadAfter)** — моды, после которых загружается этот мод
+- **About.xml (loadBefore)** — моды, перед которыми загружается этот мод
 - **About.xml (incompatibilitiesWith)** — несовместимые
 
 - **Community Rules (loadAfter/loadBefore/incompatibilitiesWith)** — правила сообщества

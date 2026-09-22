@@ -40,8 +40,8 @@ lang: zh-cn
 
 此面板显示当前选中 Mod 的规则，按规则类型组织：
 
-- **About.xml（loadAfter）**：此 Mod 后加载的 Mod
-- **About.xml（loadBefore）**：此 Mod 前加载的 Mod
+- **About.xml（loadAfter）**：此 Mod 在其后加载的 Mod
+- **About.xml（loadBefore）**：此 Mod 在其前加载的 Mod
 - **About.xml（incompatibilitiesWith）**：与此 Mod 不兼容的 Mod
 
 - **社区规则（loadAfter/loadBefore/incompatibilitiesWith）**：社区定义的规则
@@ -80,8 +80,8 @@ lang: zh-cn
 
 1. 在 Mod 列表中找到目标 Mod（使用搜索过滤）
 2. 将 Mod 从列表拖拽到其中一个规则面板：
-   - 拖拽到 "loadAfter" 以使拖拽的 Mod 在当前 Mod 后加载
-   - 拖拽到 "loadBefore" 以使拖拽的 Mod 在当前 Mod 前加载
+   - 拖拽到 "loadAfter" 以使拖拽的 Mod 在当前 Mod 前加载
+   - 拖拽到 "loadBefore" 以使拖拽的 Mod 在当前 Mod 后加载
    - 拖拽到 "incompatibilitiesWith" 以标记 Mod 为不兼容
 3. 出现提示时，输入解释此规则原因的注释
 4. 新规则将出现在规则表格中
