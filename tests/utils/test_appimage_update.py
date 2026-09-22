@@ -13,6 +13,10 @@ import pytest
 from app.utils.app_info import AppInfo
 from app.utils.update_utils import UpdateManager
 
+# Root bypasses file permission checks, so the read-only permission tests only
+# apply to non-root POSIX users.
+RUNNING_AS_ROOT = hasattr(os, "geteuid") and os.geteuid() == 0
+
 # ---------------------------------------------------------------------------
 # AppInfo detection
 # ---------------------------------------------------------------------------
@@ -314,8 +318,8 @@ class TestCheckNeedsElevationAppImage:
         assert _elevation_manager()._check_needs_elevation() is False
 
     @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="chmod on directories does not restrict write access on Windows",
+        sys.platform == "win32" or RUNNING_AS_ROOT,
+        reason="directory permission checks are bypassed on Windows and as root",
     )
     def test_elevation_when_appimage_dir_not_writable(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
