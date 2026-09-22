@@ -511,10 +511,15 @@ class UpdateManager(QObject):
                 self._elevation_needed = True
                 return True
         else:
-            # For non-Windows, use the original check
-            self._elevation_needed = not os.access(
-                AppInfo().application_folder, os.W_OK
+            # An AppImage's application_folder is the read-only FUSE mount; the
+            # update replaces the .AppImage file in its own directory instead.
+            appimage_path = AppInfo().appimage_path
+            install_folder = (
+                appimage_path.parent
+                if appimage_path is not None
+                else AppInfo().application_folder
             )
+            self._elevation_needed = not os.access(install_folder, os.W_OK)
             return self._elevation_needed
 
     def _is_in_protected_path(self) -> bool:
