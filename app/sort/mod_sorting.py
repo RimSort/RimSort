@@ -1,6 +1,7 @@
 import os
 import time
 from enum import Enum
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal, Slot
@@ -220,16 +221,46 @@ def path_to_mod_updated(
     return 0
 
 
+def _entry_is_link(entry: Any) -> bool:
+    """Return True when a directory entry is a symlink or junction.
+
+    On Windows, junctions carry FILE_ATTRIBUTE_REPARSE_POINT but are not
+    reported by os.path.islink(), so reparse-point entries must be detected
+    explicitly to keep directory walks from following cyclic junctions.
+
+    :param entry: A directory entry yielded by scanpath().
+    :return: True if the entry is a link that must not be traversed.
+    """
+    is_reparse_point = getattr(entry, "is_reparse_point", None)
+    if callable(is_reparse_point):
+        return bool(is_reparse_point())
+    is_symlink = getattr(entry, "is_symlink", None)
+    if callable(is_symlink):
+        try:
+            if is_symlink():
+                return True
+        except OSError:
+            pass
+    return os.path.isjunction(entry.path)
+
+
 def get_dir_size(path: str) -> int:
     total = 0
     stack = [path]
+    visited = {os.path.normcase(os.path.realpath(path))}
     while stack:
         current = stack.pop()
         try:
             for entry in scanpath(current):
+                if _entry_is_link(entry):
+                    continue
                 if entry.is_file():
                     total += entry.stat().st_size
                 elif entry.is_dir():
+                    resolved = os.path.normcase(os.path.realpath(entry.path))
+                    if resolved in visited:
+                        continue
+                    visited.add(resolved)
                     stack.append(entry.path)
         except OSError:
             pass  # Skip file

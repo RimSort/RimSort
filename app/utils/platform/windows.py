@@ -31,12 +31,16 @@ class Win32DirEntry:
         self.size = (find_data.nFileSizeHigh << 32) + find_data.nFileSizeLow
         self._dwFileAttributes = find_data.dwFileAttributes
         self.FILE_ATTRIBUTE_DIRECTORY = 0x10
+        self.FILE_ATTRIBUTE_REPARSE_POINT = 0x400
 
     def is_dir(self) -> bool:
         return bool(self._dwFileAttributes & self.FILE_ATTRIBUTE_DIRECTORY)
 
     def is_file(self) -> bool:
         return not self.is_dir()
+
+    def is_reparse_point(self) -> bool:
+        return bool(self._dwFileAttributes & self.FILE_ATTRIBUTE_REPARSE_POINT)
 
     def stat(self) -> Any:
         _Win32StatResult = namedtuple("_Win32StatResult", ["st_size"])
