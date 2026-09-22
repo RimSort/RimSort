@@ -951,6 +951,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             except (
                 requests.exceptions.Timeout,
                 requests.exceptions.ConnectionError,
+                requests.exceptions.ChunkedEncodingError,
                 requests.exceptions.HTTPError,
             ) as e:
                 if not last_error_desc:

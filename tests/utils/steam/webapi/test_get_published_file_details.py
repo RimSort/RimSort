@@ -1,6 +1,7 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 import requests
 
 from app.utils.steam.webapi.wrapper import (
@@ -81,13 +82,26 @@ class TestGetPublishedFileDetailsRetry:
         assert mock_post.call_count == 2
         mock_sleep.assert_called_once_with(1)  # 2^0 = 1s backoff
 
+    @pytest.mark.parametrize(
+        "error",
+        [
+            requests.exceptions.ConnectionError("Connection refused"),
+            requests.exceptions.ChunkedEncodingError(
+                "Connection broken: IncompleteRead(0 bytes read, 141 more expected)"
+            ),
+        ],
+    )
     @patch("app.utils.steam.webapi.wrapper.sleep")
     @patch("app.utils.steam.webapi.wrapper.http.post")
     def test_retries_on_connection_error_then_succeeds(
-        self, mock_post: MagicMock, mock_sleep: MagicMock
+        self,
+        mock_post: MagicMock,
+        mock_sleep: MagicMock,
+        error: requests.exceptions.RequestException,
     ) -> None:
+        """First attempt fails with a transient connection error, second succeeds."""
         mock_post.side_effect = [
-            requests.exceptions.ConnectionError("Connection refused"),
+            error,
             _make_mock_response(200, VALID_RESPONSE_JSON),
         ]
         metadata, failed_pfids, _errors = ISteamRemoteStorage_GetPublishedFileDetails(
