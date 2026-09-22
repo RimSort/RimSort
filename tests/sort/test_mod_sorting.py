@@ -5,9 +5,11 @@ import sys
 from collections.abc import Generator
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from PySide6.QtTest import QSignalSpy
 
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
@@ -16,6 +18,7 @@ from app.models.metadata.metadata_structure import (
 )
 from app.sort.mod_sorting import (
     DEFAULT_REVERSE_FLAGS,
+    FolderSizeRequestWorker,
     ModsPanelSortKey,
     _build_sort_key_map,
     get_cached_metadata_for_batch,
@@ -478,6 +481,54 @@ class TestGetDirSizeLinkHandling:
         real.write_bytes(b"x" * 50)
         os.symlink(real, tmp_path / "link.txt")
         assert get_dir_size(str(tmp_path)) == 50
+
+
+class TestFolderSizeRequestWorker:
+    def test_result_emitted_for_valid_folder(
+        self, tmp_path: Path, mock_metadata_controller: Any
+    ) -> None:
+        mod = _make_listed_mod(str(tmp_path))
+        mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+        (tmp_path / "file.txt").write_bytes(b"abc")
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.result)
+        worker.requested.emit(str(tmp_path), 7)
+        assert spy.count() == 1
+        uuid, request_id, size = spy.at(0)
+        assert uuid == str(tmp_path)
+        assert request_id == 7
+        assert size == 3
+
+    def test_error_emitted_when_size_fails(
+        self, tmp_path: Path, mock_metadata_controller: Any, monkeypatch: Any
+    ) -> None:
+        mod = _make_listed_mod(str(tmp_path))
+        mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+
+        def raise_error(_uuid: str) -> int:
+            raise OSError("boom")
+
+        monkeypatch.setattr("app.sort.mod_sorting.path_to_folder_size", raise_error)
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.error)
+        worker.requested.emit(str(tmp_path), 3)
+        assert spy.count() == 1
+        uuid, request_id = spy.at(0)
+        assert uuid == str(tmp_path)
+        assert request_id == 3
+
+    def test_result_zero_when_metadata_missing(
+        self, tmp_path: Path, mock_metadata_controller: Any
+    ) -> None:
+        mock_metadata_controller.mods_metadata = {}
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.result)
+        worker.requested.emit(str(tmp_path), 1)
+        assert spy.count() == 1
+        uuid, request_id, size = spy.at(0)
+        assert uuid == str(tmp_path)
+        assert request_id == 1
+        assert size == 0
 
 
 # ---------------------------------------------------------------------------

@@ -2967,6 +2967,10 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Calculating...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Path:</source>
         <translation type="unfinished"></translation>
     </message>
