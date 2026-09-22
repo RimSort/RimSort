@@ -39,8 +39,8 @@ The Rule Editor window is divided into several sections:
 
 This panel shows the rules for the currently selected mod, organized by rule type:
 
-- **About.xml (loadAfter)**: Mods that must load after this mod
-- **About.xml (loadBefore)**: Mods that must load before this mod
+- **About.xml (loadAfter)**: Mods that this mod must load after
+- **About.xml (loadBefore)**: Mods that this mod must load before
 - **About.xml (incompatibilitiesWith)**: Mods that are incompatible with this mod
 
 - **Community Rules (loadAfter/loadBefore/incompatibilitiesWith)**: Community-defined rules
@@ -79,8 +79,8 @@ A table displaying all rules for the current mod with the following columns:
 
 1. Find the target mod in the mods list (use search if needed)
 2. Drag the mod from the list to one of the rule panels:
-   - Drop on "loadAfter" to make the dragged mod load after the current mod
-   - Drop on "loadBefore" to make the dragged mod load before the current mod
+   - Drop on "loadAfter" to make the dragged mod load before the current mod
+   - Drop on "loadBefore" to make the dragged mod load after the current mod
    - Drop on "incompatibilitiesWith" to mark the mods as incompatible
 3. When prompted, enter a comment explaining why this rule exists
 4. The new rule will appear in the rules table
