@@ -216,7 +216,7 @@ clean:
 
 [windows]
 clean:
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue build, dist, *.egg-info, .pytest_cache, .mypy_cache, .ruff_cache, htmlcov, .coverage, coverage.xml, junit
+    Get-ChildItem -Force | Where-Object { $_.Name -in @("build", "dist", ".pytest_cache", ".mypy_cache", ".ruff_cache", "htmlcov", ".coverage", "coverage.xml", "junit") -or $_.Name -like "*.egg-info" } | Remove-Item -Recurse -Force
     Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
 
 # ═══════════════════════════════════════════════════════════════════════════
