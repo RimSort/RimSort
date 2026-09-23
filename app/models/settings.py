@@ -422,22 +422,42 @@ class Settings(QObject):
                 else:
                     # There was nothing to mitigate, so don't save the model to the file
                     mitigations = False
-                # Parse data from settings.json into the model
-                self._from_dict(data)
-                # Validate Steam integration configuration after loading
-                config_fixed = self._validate_steam_integration_config()
-                # Save the model to the file if there were mitigations or config fixes
-                if mitigations or config_fixed:
-                    self.save()
-                else:
-                    # Update .backup only if no mitigations/config fixing took place
-                    # This might prevent overwriting a good/better backup
-                    self.update_backup()
+            # The settings file handle is closed at this point. The forced save
+            # below must run outside the ``with`` block: on Windows, replacing a
+            # file that is still open for reading fails with
+            # ``PermissionError [WinError 5]`` (see #2317/#2323).
+            # Parse data from settings.json into the model
+            self._from_dict(data)
+            # Validate Steam integration configuration after loading
+            config_fixed = self._validate_steam_integration_config()
+            # Save the model to the file if there were mitigations or config fixes
+            if mitigations or config_fixed:
+                self._save_after_load()
+            else:
+                # Update .backup only if no mitigations/config fixing took place
+                # This might prevent overwriting a good/better backup
+                self.update_backup()
 
         except FileNotFoundError:
-            self.save()
+            self._save_after_load()
         except JSONDecodeError:
             self.handle_corrupted_settings()
+
+    def _save_after_load(self) -> None:
+        """Persist settings during ``load()`` without aborting startup.
+
+        Load-time mitigation and Steam integration validation can trigger a
+        save. If that write fails (for example the settings file is read-only
+        or locked by another process) the in-memory configuration is still
+        usable, so the failure is logged and startup continues instead of
+        crashing. A later save retries the write.
+
+        :return: None
+        """
+        try:
+            self.save()
+        except OSError as e:
+            logger.error(f"Failed to save settings during load: {e}")
 
     def save(self) -> None:
         if self.debug_logging_enabled:
