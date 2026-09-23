@@ -3037,6 +3037,10 @@ Please select your preferred mod variant in the table below. You can also open e
         <source>None</source>
         <translation>Нет</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>Расчет...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>

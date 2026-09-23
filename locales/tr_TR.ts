@@ -3034,6 +3034,10 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <source>None</source>
         <translation>Hiçbiri</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>Hesaplanıyor...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>

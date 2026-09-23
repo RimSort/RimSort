@@ -3033,6 +3033,10 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
         <source>None</source>
         <translation>没有任何</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>正在计算...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>

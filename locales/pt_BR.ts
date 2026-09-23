@@ -3033,6 +3033,10 @@ Selecione a variante do mod que prefere na tabela abaixo. Também pode abrir cad
         <source>None</source>
         <translation>Nenhum</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>Calculando...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>

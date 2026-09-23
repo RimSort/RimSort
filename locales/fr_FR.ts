@@ -3032,6 +3032,10 @@ Veuillez sélectionner votre variante de mod préférée dans le tableau ci-dess
         <source>None</source>
         <translation>Aucun</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>Calculateur...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
