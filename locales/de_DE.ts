@@ -3032,6 +3032,10 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
         <source>None</source>
         <translation>Keiner</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>Berechnen...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>

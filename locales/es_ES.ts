@@ -3033,6 +3033,10 @@ Seleccione su variante de mod de Mod en la tabla a continuación. También puede
         <source>None</source>
         <translation>Ninguno</translation>
     </message>
+    <message>
+        <source>Calculating...</source>
+        <translation>Calculador...</translation>
+    </message>
 </context>
 <context>
     <name>ModListItemInner</name>
