@@ -193,9 +193,10 @@ ci: check test-coverage
 # ═══════════════════════════════════════════════════════════════════════════
 
 # Install all dependencies (including dev and build groups) after ensuring
-# git submodules are initialized.
+# git submodules are initialized. `uv sync` creates/reuses `.venv` itself:
+# a fresh one if missing, or the existing one without rewriting `python.exe`,
+# which avoids failing when that file is locked by another process (os error 32).
 dev-setup: submodules-init
-    uv venv --allow-existing
     uv sync --locked --dev --group build
     just i18n-compile  # not a dependency — must run after uv sync so pyside6-lrelease is available
 
