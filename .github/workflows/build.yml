@@ -217,10 +217,10 @@ jobs:
       - name: Create MSI Package
         if: matrix.platform == 'Windows'
         run: |
-          dotnet tool install --global wix --version 7.0.0-rc.1
+          dotnet tool install --global wix --version 7.0.0
           wix eula accept wix7
-          wix extension add WixToolset.UI.wixext/7.0.0-rc.1
-          wix extension add WixToolset.Util.wixext/7.0.0-rc.1
+          wix extension add WixToolset.UI.wixext/7.0.0
+          wix extension add WixToolset.Util.wixext/7.0.0
 
           # Absolute paths for license and build output
           $AbsoluteLicensePath = Resolve-Path "packaging\EULA.rtf" -ErrorAction Stop
