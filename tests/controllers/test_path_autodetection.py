@@ -1,5 +1,8 @@
+import functools
 import json
 import platform
+import tempfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
@@ -27,6 +30,31 @@ def _setup_steam_root(tmp_path: Path, subdir: str) -> Path:
 def _make_service() -> PathAutodetectService:
     """Create a PathAutodetectService (no __init__ setup needed)."""
     return PathAutodetectService()
+
+
+def require_symlinks() -> Callable[..., Any]:
+    """Decorator skipping tests when symlink creation is unavailable.
+
+    Windows requires elevated privileges or Developer Mode to create symlinks,
+    so this skips rather than failing in environments that forbid it.
+    """
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> None:
+            try:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    link = Path(tmpdir) / "link"
+                    target = Path(tmpdir) / "target"
+                    link.symlink_to(target)
+            except (OSError, NotImplementedError) as exc:
+                pytest.skip(f"symlinks unsupported on this platform: {exc}")
+            else:
+                func(*args, **kwargs)
+
+        return cast(Callable[..., Any], wrapper)
+
+    return decorator
 
 
 class TestFindSteamRoot:
@@ -421,6 +449,7 @@ class TestLooksLikeRimworldDir:
     def test_rejects_missing_directory(self, tmp_path: Path) -> None:
         assert not _make_service()._looks_like_rimworld_dir(tmp_path / "missing")
 
+    @require_symlinks()
     def test_rejects_symlinked_directory(self, tmp_path: Path) -> None:
         real_dir = tmp_path / "real"
         real_dir.mkdir()
@@ -461,6 +490,7 @@ class TestIterShallowDirs:
 
         assert found == ["visible"]
 
+    @require_symlinks()
     def test_skips_symlinked_dirs_without_following(self, tmp_path: Path) -> None:
         outside_target = tmp_path / "outside" / "target"
         outside_target.mkdir(parents=True)
@@ -741,6 +771,7 @@ class TestNonSteamLinuxGameSearch:
 
         assert result[0] == steam_root / "steamapps" / "common" / "RimWorld"
 
+    @require_symlinks()
     def test_symlinked_game_dir_not_detected(self, tmp_path: Path) -> None:
         real_game = self._make_game_dir(tmp_path / "elsewhere" / "game")
         (tmp_path / "GOG Games").mkdir(parents=True)
