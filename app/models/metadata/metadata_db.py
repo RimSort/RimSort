@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -56,7 +58,9 @@ class AuxMetadataEntry(Base):
     )
 
     outdated: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
-    db_time_touched = Column(DateTime, default=func.now(), onupdate=func.now())
+    db_time_touched: Mapped[datetime | None] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
 
     tags: Mapped[list["TagsEntry"]] = relationship(
         secondary=tags_table, back_populates="mods"
