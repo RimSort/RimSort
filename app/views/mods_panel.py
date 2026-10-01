@@ -5146,8 +5146,10 @@ class ModsPanel(QWidget):
 
         # TODO: Allow user to set fuzzy threshold?
         fuzz_threshold = 80 if len(pattern) > 5 else 70
-        matching_paths = set()
+        matching_paths = set[str]()
         for path, note in rows:
+            path = cast(str, path)
+            note = cast(str | None, note)
             note = (note or "").lower()
 
             score = fuzz.partial_ratio(pattern, note)
