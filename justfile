@@ -150,7 +150,7 @@ shfmt:
 
 [windows]
 shfmt:
-    $env:PATH = "$env:PATH;$env:LOCALAPPDATA\RimSortTools"; $files = @(fd -e sh --exclude .venv --exclude submodules); if ($files.Count -eq 0) { Write-Output "shfmt: no shell scripts found" } else { shfmt -l $files }
+    $env:PATH = "$env:PATH;$env:LOCALAPPDATA\RimSortTools"; $files = @(fd -e sh --exclude .venv --exclude submodules); if ($files.Count -eq 0) { Write-Output "shfmt: no shell scripts found" } else { shfmt -l $files; if ($LASTEXITCODE -ne 0) { exit 1 } }
 
 # Automatically fix shell script formatting issues (shfmt)
 [unix]
@@ -180,7 +180,7 @@ deferred-imports:
     uv run python check_deferred_imports.py
 
 # Automatically fix linting and formatting issues, then verify the markdown check passes
-# (ruff-fix + ruff-format-fix + shfmt -w + markdown fixes + markdownlint check)
+# (ruff-fix + ruff-format-fix + shfmt -w + markdownlint-fix + markdownlint check)
 fix: ruff-fix ruff-format-fix shfmt-fix markdownlint-fix markdownlint
     @echo "Auto-fixes applied!"
 
