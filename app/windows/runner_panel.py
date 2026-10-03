@@ -95,6 +95,10 @@ class RunnerPanel(QWidget):
         self._steamcmd_log_partial: str = ""
         self._steamcmd_console_log_path: str = ""
 
+        # Progress carried across sequential phases so the bar only moves
+        # forward instead of restarting at 0 for each one
+        self._progress_offset: int = 0
+
         # Set up UI components
         self._setup_text_display()
         self._setup_buttons()
@@ -355,10 +359,17 @@ class RunnerPanel(QWidget):
         # Configure progress bar if needed
         if progress_bar is not None:
             self.progress_bar.show()
-            self.progress_bar.setValue(0)
-            if progress_bar > 0 and "steamcmd" in command:
-                self.progress_bar.setRange(0, progress_bar)
+            if progress_bar > 0:
+                # Carry the progress already made by earlier phases so the bar
+                # advances continuously rather than snapping back to zero
+                self._progress_offset = self.progress_bar.value()
+                self.progress_bar.setRange(0, self._progress_offset + progress_bar)
                 self.progress_bar.setFormat("%v/%m")
+                self.progress_bar.setValue(self._progress_offset)
+            else:
+                # Todds reports its own totals; only rewind to the carried
+                # offset and leave the range for _handle_todds_output to set
+                self.progress_bar.setValue(self._progress_offset)
 
         # Display command being executed (unless in dry run mode)
         if not self.todds_dry_run_support:
@@ -591,8 +602,10 @@ class RunnerPanel(QWidget):
         """
         match = search(r"Progress: (\d+)/(\d+)", line)
         if match:
-            self.progress_bar.setRange(0, int(match.group(2)))
-            self.progress_bar.setValue(int(match.group(1)))
+            self.progress_bar.setRange(
+                self._progress_offset, self._progress_offset + int(match.group(2))
+            )
+            self.progress_bar.setValue(self._progress_offset + int(match.group(1)))
             return True
         return False
 
@@ -609,8 +622,10 @@ class RunnerPanel(QWidget):
         )
         if match:
             _operation, _pagination, start, end = match.groups()
-            self.progress_bar.setRange(0, int(end))
-            self.progress_bar.setValue(int(start))
+            self.progress_bar.setRange(
+                self._progress_offset, self._progress_offset + int(end)
+            )
+            self.progress_bar.setValue(self._progress_offset + int(start))
             return True
         return self._handle_todds_output(line)
 

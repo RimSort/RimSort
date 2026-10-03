@@ -208,16 +208,7 @@ class TestRunnerPanelSteamcmdLogTail:
         mock_process = MagicMock()
         mock_qprocess.return_value = mock_process
 
-        panel = RunnerPanel.__new__(RunnerPanel)
-        panel.system = "Linux"
-        panel.todds_dry_run_support = False
-        panel.process_last_command = ""
-        panel.process_last_args = []
-        panel.restart_process_button = MagicMock()
-        panel.kill_process_button = MagicMock()
-        panel.progress_bar = MagicMock()
-        panel.message = MagicMock()  # type: ignore[method-assign]
-        panel._steamcmd_console_log_path = ""
+        panel = _make_execute_panel(current_value=0, offset=0)
 
         steamcmd_home = tmp_path / "home"
         panel.execute(
@@ -389,3 +380,81 @@ class TestSteamcmdDownloadSucceededSignal:
 
         assert received == []
         assert panel.steamcmd_download_tracking == ["123"]
+
+
+def _make_progress_panel() -> Any:
+    panel = RunnerPanel.__new__(RunnerPanel)
+    panel.progress_bar = MagicMock()
+    panel.progress_bar.value.return_value = 0
+    panel._progress_offset = 0
+    return panel
+
+
+def _make_execute_panel(current_value: int, offset: int) -> Any:
+    """Build a panel with just enough state for RunnerPanel.execute()."""
+    panel = RunnerPanel.__new__(RunnerPanel)
+    panel.system = "Linux"
+    panel.todds_dry_run_support = False
+    panel.process_last_command = ""
+    panel.process_last_args = []
+    panel.restart_process_button = MagicMock()
+    panel.kill_process_button = MagicMock()
+    panel.progress_bar = MagicMock()
+    panel.progress_bar.value.return_value = current_value
+    panel.message = MagicMock()  # type: ignore[method-assign]
+    panel._steamcmd_console_log_path = ""
+    panel._progress_offset = offset
+    return panel
+
+
+class TestProgressOffset:
+    """The bar must only ever move forward across sequential phases."""
+
+    def test_fresh_panel_starts_at_zero(self, qapp: Any) -> None:
+        assert RunnerPanel()._progress_offset == 0
+
+    def test_todds_output_applies_offset(self) -> None:
+        panel = _make_progress_panel()
+        panel._progress_offset = 100
+
+        assert panel._handle_todds_output("Progress: 5/20") is True
+
+        panel.progress_bar.setRange.assert_called_once_with(100, 120)
+        panel.progress_bar.setValue.assert_called_once_with(105)
+
+    def test_query_output_applies_offset(self) -> None:
+        panel = _make_progress_panel()
+        panel._progress_offset = 40
+
+        consumed = panel._handle_query_output(
+            "IPublishedFileService/QueryFiles page [10/50]"
+        )
+
+        assert consumed is True
+        panel.progress_bar.setRange.assert_called_once_with(40, 90)
+        panel.progress_bar.setValue.assert_called_once_with(50)
+
+    @patch("app.windows.runner_panel.QProcess")
+    def test_execute_carries_previous_progress_forward(
+        self, mock_qprocess: MagicMock
+    ) -> None:
+        mock_qprocess.return_value = MagicMock()
+        panel = _make_execute_panel(current_value=30, offset=0)
+
+        panel.execute("/steamcmd/steamcmd.sh", ['+runscript "s.txt"'], 10)
+
+        assert panel._progress_offset == 30
+        panel.progress_bar.setRange.assert_called_once_with(0, 40)
+        panel.progress_bar.setValue.assert_called_with(30)
+
+    @patch("app.windows.runner_panel.QProcess")
+    def test_execute_without_total_keeps_offset_and_range(
+        self, mock_qprocess: MagicMock
+    ) -> None:
+        mock_qprocess.return_value = MagicMock()
+        panel = _make_execute_panel(current_value=0, offset=55)
+
+        panel.execute("/todds/todds", ["-p", "list.txt"], -1)
+
+        panel.progress_bar.setRange.assert_not_called()
+        panel.progress_bar.setValue.assert_called_once_with(55)
