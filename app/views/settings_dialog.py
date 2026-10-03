@@ -1104,6 +1104,9 @@ This basically preserves your mod coloring, user notes etc. for this many second
         db_expiry_group_layout.addWidget(database_expiry_label)
 
         self.database_expiry = self._style_line_edit(QLineEdit())
+        self.database_expiry.setValidator(
+            QIntValidator(0, 999999999, self.database_expiry)
+        )
         db_expiry_group_layout.addWidget(self.database_expiry)
 
     def _do_internal_tools_tab(self) -> None:

@@ -57,7 +57,10 @@ class DatabaseBuilderTabController(BaseTabController):
             self.dialog.db_builder_update_instead_of_overwriting_checkbox.isChecked()
         )
         self.settings.steam_apikey = self.dialog.db_builder_steam_api_key.text()
-        self.settings.database_expiry = int(self.dialog.database_expiry.text())
+        try:
+            self.settings.database_expiry = int(self.dialog.database_expiry.text())
+        except ValueError:
+            self.settings.database_expiry = 0
 
     # --- Action button handlers ---
 
