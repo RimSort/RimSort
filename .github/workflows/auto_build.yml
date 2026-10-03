@@ -26,7 +26,7 @@ jobs:
     outputs:
       app_changed: ${{ steps.check.outputs.app_changed }}
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check for app-relevant changes
