@@ -17,9 +17,9 @@ class SystemInfo:
         >>> print(info.architecture)
     """
 
-    _instance: "None | SystemInfo" = None
-    _operating_system: "None | SystemInfo.OperatingSystem" = None
-    _architecture: "None | SystemInfo.Architecture" = None
+    _instance: None | SystemInfo = None
+    _operating_system: None | SystemInfo.OperatingSystem = None
+    _architecture: None | SystemInfo.Architecture = None
 
     @unique
     class OperatingSystem(Enum):
@@ -51,7 +51,7 @@ class SystemInfo:
         X64 = auto()
         ARM64 = auto()
 
-    def __new__(cls) -> "SystemInfo":  # noqa: PYI034
+    def __new__(cls) -> SystemInfo:  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `SystemInfo` class.
         """

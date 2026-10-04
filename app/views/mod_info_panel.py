@@ -836,7 +836,7 @@ class ModInfoPanel:
                 external_times.append(
                     f"Created: {dt_created.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
-            except (ValueError, OSError, OverflowError):
+            except ValueError, OSError, OverflowError:
                 external_times.append("Created: Invalid")
 
         if external_time_updated is not None and external_time_updated > 0:
@@ -845,7 +845,7 @@ class ModInfoPanel:
                 external_times.append(
                     f"Updated: {dt_updated.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
-            except (ValueError, OSError, OverflowError):
+            except ValueError, OSError, OverflowError:
                 external_times.append("Updated: Invalid")
 
         if internal_time_updated is not None and internal_time_updated > 0:
@@ -854,7 +854,7 @@ class ModInfoPanel:
                 external_times.append(
                     f"Steam Updated: {dt_int_updated.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
-            except (ValueError, OSError, OverflowError):
+            except ValueError, OSError, OverflowError:
                 external_times.append("Steam Updated: Invalid")
 
         if external_times:

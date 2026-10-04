@@ -17,7 +17,7 @@ def main_content(
     mock_settings_controller: MagicMock,
     mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
-) -> Generator[MainContent, None, None]:
+) -> Generator[MainContent]:
     QObject.__setattr__(
         mock_settings_controller.settings,
         "active_mods_dividers",

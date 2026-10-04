@@ -179,7 +179,7 @@ class TranslationConfig:
     use_cache: bool = True
 
     @classmethod
-    def from_dict(cls, config_dict: dict[str, Any]) -> "TranslationConfig":
+    def from_dict(cls, config_dict: dict[str, Any]) -> TranslationConfig:
         """Create TranslationConfig from a dictionary.
 
         Args:
@@ -1084,7 +1084,7 @@ def get_source_keys_from_file(source_file: Path) -> set[str]:
         return set()
 
 
-def get_source_keys(unfinished: list["UnfinishedItem"]) -> dict[str, list[str]]:
+def get_source_keys(unfinished: list[UnfinishedItem]) -> dict[str, list[str]]:
     """Get source keys grouped by context from unfinished items."""
     result: dict[str, list[str]] = {}
     for item in unfinished:

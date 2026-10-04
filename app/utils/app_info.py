@@ -23,9 +23,9 @@ class AppInfo:
         >>> print(app_info.app_storage_folder)
     """
 
-    _instance: "None | AppInfo" = None
+    _instance: None | AppInfo = None
 
-    def __new__(cls) -> "AppInfo":  # noqa: PYI034
+    def __new__(cls) -> AppInfo:  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `AppInfo` class.
         """

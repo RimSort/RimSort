@@ -440,7 +440,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
     def _process_groups(
         self, groups: dict[str, list[ModGroupItem]]
-    ) -> Generator[tuple[int, str, list[ModGroupItem], int], None, None]:
+    ) -> Generator[tuple[int, str, list[ModGroupItem], int]]:
         """
         Process and yield each group to the table.
 
@@ -585,7 +585,7 @@ class UseThisInsteadPanel(BaseModsPanel):
             )
         return False, None, None
 
-    def _create_replacement_mod_info(self, mod_replacement: Any) -> "ModInfo":
+    def _create_replacement_mod_info(self, mod_replacement: Any) -> ModInfo:
         """
         Create ModInfo for a replacement mod.
 
@@ -674,7 +674,7 @@ class UseThisInsteadPanel(BaseModsPanel):
 
     def _add_mod_row(
         self,
-        mod_info: "ModInfo",
+        mod_info: ModInfo,
         additional_items: list[QStandardItem] | None = None,
         default_checkbox_state: bool = False,
     ) -> None:

@@ -90,7 +90,7 @@ def _is_steam_running() -> bool:
                     if name and name.lower() in steam_indicators:
                         logger.debug(f"Found Steam process: {name}")
                         return True
-                except (psutil.AccessDenied, psutil.NoSuchProcess):
+                except psutil.AccessDenied, psutil.NoSuchProcess:
                     continue
 
             if attempt < 4:

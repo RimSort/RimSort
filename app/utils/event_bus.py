@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QPushButton, QWidget
@@ -22,7 +21,7 @@ class EventBus(QObject):
         Since this is a singleton class, multiple instantiations will return the same object.
     """
 
-    _instance: Union[None, "EventBus"] = None
+    _instance: None | EventBus = None
 
     # Menu bar signals
     do_open_mod_list = Signal()
@@ -143,7 +142,7 @@ class EventBus(QObject):
     do_toggle_translation_status = Signal(bool)
     do_auto_add_translations = Signal()
 
-    def __new__(cls) -> "EventBus":  # noqa: PYI034
+    def __new__(cls) -> EventBus:  # noqa: PYI034
         """
         Create a new instance or return the existing singleton instance of the `EventBus` class.
 

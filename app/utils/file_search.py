@@ -31,7 +31,7 @@ class FileSearch:
         root_paths: list[str],
         options: dict[str, Any],
         result_callback: Callable[[str, str, str], None] | None = None,
-    ) -> Generator[dict[str, str], None, None]:
+    ) -> Generator[dict[str, str]]:
         """
         Perform a search for files containing the specified text.
 
@@ -61,7 +61,7 @@ class FileSearch:
         root_paths: list[str],
         options: dict[str, Any],
         result_callback: Callable[..., None] | None = None,
-    ) -> Generator[dict[str, str] | tuple[str, str, str], None, None]:
+    ) -> Generator[dict[str, str] | tuple[str, str, str]]:
         """
         Generic search method that handles all search types.
 
@@ -156,7 +156,7 @@ class FileSearch:
 
     def _read_file_in_chunks(
         self, file_path: str, chunk_size: int = 1024 * 1024
-    ) -> Generator[str, None, None]:
+    ) -> Generator[str]:
         """
         Read a file in chunks to handle large files efficiently.
 
@@ -182,7 +182,7 @@ class FileSearch:
         self, search_type: str
     ) -> Callable[
         [str, list[str], dict[str, Any], Callable[[str, str, str], None] | None],
-        Generator[tuple[str, str, str], None, None],
+        Generator[tuple[str, str, str]],
     ]:
         """
         Factory method to create specialized search methods.
@@ -199,7 +199,7 @@ class FileSearch:
             root_paths: list[str],
             options: dict[str, Any],
             result_callback: Callable[[str, str, str], None] | None = None,
-        ) -> Generator[tuple[str, str, str], None, None]:
+        ) -> Generator[tuple[str, str, str]]:
             # Apply search-type specific options
             search_options = options.copy()
             search_options["return_dict"] = False

@@ -385,7 +385,7 @@ class PathAutodetectService:
                 logger.warning("Heroic GOG metadata file is too large; skipping")
                 return None
             metadata: object = json.loads(metadata_file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+        except OSError, ValueError:
             logger.warning(
                 "Failed to read Heroic GOG metadata; skipping", exc_info=True
             )

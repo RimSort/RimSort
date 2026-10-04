@@ -9,7 +9,7 @@ import webbrowser
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, Optional, cast, overload
+from typing import Any, Literal, cast, overload
 
 from loguru import logger
 from PySide6.QtCore import (
@@ -124,13 +124,13 @@ class MainContent(QObject):
     and their dependencies.
     """
 
-    _instance: Optional["MainContent"] = None
+    _instance: MainContent | None = None
 
     disable_enable_widgets_signal = Signal(bool)
     status_signal = Signal(str)
     stop_watchdog_signal = Signal()
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "MainContent":  # noqa: PYI034
+    def __new__(cls, *args: Any, **kwargs: Any) -> MainContent:  # noqa: PYI034
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -355,7 +355,7 @@ class MainContent(QObject):
         self._refresh_in_progress: bool = False
 
     @classmethod
-    def instance(cls, *args: Any, **kwargs: Any) -> "MainContent":
+    def instance(cls, *args: Any, **kwargs: Any) -> MainContent:
         if cls._instance is None:
             cls._instance = cls(*args, **kwargs)
         elif args or kwargs:
@@ -2187,7 +2187,7 @@ class MainContent(QObject):
         if self.steam_browser is not None:
             try:
                 self.steam_browser.destroyed.disconnect(self._on_steam_browser_restore)
-            except (TypeError, RuntimeError):
+            except TypeError, RuntimeError:
                 pass
             self._workshop_restore_target = restore_target
             assert self.steam_browser.web_view is not None

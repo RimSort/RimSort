@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QEventLoop, QObject, Slot
@@ -27,7 +27,7 @@ class DatabaseBuilder(QObject):
     and comparison operations.
     """
 
-    _instance: Optional["DatabaseBuilder"] = None
+    _instance: DatabaseBuilder | None = None
 
     # Database builder modes
     MODE_NO_LOCAL = "no_local"
@@ -37,7 +37,7 @@ class DatabaseBuilder(QObject):
     # RimWorld Workshop appid
     RIMWORLD_APPID = 294100
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "DatabaseBuilder":  # noqa: PYI034
+    def __new__(cls, *args: Any, **kwargs: Any) -> DatabaseBuilder:  # noqa: PYI034
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance

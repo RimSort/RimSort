@@ -39,7 +39,7 @@ def _read_enabled_official_ids(path: Path) -> tuple[set[str], bool]:
             if package_id in _OFFICIAL_PACKAGE_IDS:
                 package_ids.add(package_id)
         return package_ids, False
-    except (OSError, ElementTree.ParseError, ValueError):
+    except OSError, ElementTree.ParseError, ValueError:
         return set(), True
 
 

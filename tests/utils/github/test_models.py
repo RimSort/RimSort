@@ -12,7 +12,7 @@ from app.utils.github.models import (
 
 
 @pytest.fixture
-def instance_session() -> Generator[Session, None, None]:
+def instance_session() -> Generator[Session]:
     """Session for the per-instance DB (aux_metadata + github_mods)."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)

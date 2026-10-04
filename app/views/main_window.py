@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
         set_instance: Callable[[Instance], None],
         show_settings_dialog: Callable[..., None],
         metadata_controller: MetadataController,
-        settings_dialog: "SettingsDialog | None" = None,
+        settings_dialog: SettingsDialog | None = None,
         debug_mode: bool = False,
     ) -> None:
         """

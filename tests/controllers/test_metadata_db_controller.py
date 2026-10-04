@@ -8,7 +8,7 @@ from app.models.metadata.metadata_db import AuxMetadataEntry, TagsEntry
 
 
 @pytest.fixture()
-def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
+def temp_db(tmp_path: Path) -> Generator[AuxMetadataController]:
     db_path = tmp_path / "test_metadata.db"
     controller = AuxMetadataController(db_path)
     yield controller

@@ -20,7 +20,7 @@ DATA_DIR = Path(__file__).parent.parent / "data" / "startup_impact"
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache() -> Generator[None, None, None]:
+def _clear_cache() -> Generator[None]:
     invalidate_startup_impact_cache()
     yield
     invalidate_startup_impact_cache()

@@ -310,7 +310,7 @@ class ModlistHistoryPanel(QDialog):
             return
         try:
             self._service.set_note(snap.path, note.strip())
-        except (OSError, ValueError):
+        except OSError, ValueError:
             logger.exception("Failed to write snapshot note")
             dialogue.show_warning(
                 title=self.tr("Could not save note"),

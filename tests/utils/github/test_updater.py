@@ -13,7 +13,7 @@ from app.utils.github.updater import UpdateAvailable, check_for_updates
 
 
 @pytest.fixture
-def db_session() -> Generator[Session, None, None]:
+def db_session() -> Generator[Session]:
     """Combined session: instance tables + cache tables in one in-memory DB for test convenience."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
