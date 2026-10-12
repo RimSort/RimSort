@@ -10,6 +10,7 @@ from app.controllers.settings_controller import SettingsController
 from app.controllers.settings_tabs.locations_tab_controller import (
     LocationsTabController,
 )
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.system_info import SystemInfo
 from app.views.settings_dialog import SettingsDialog
 from tests.game_layout_fixtures import make_game_install
@@ -83,13 +84,22 @@ def test_local_mods_validation_accepts_sibling_and_workaround_symlink(
     assert controller._validate_local_mods_location(str(link)) == (True, "")
 
 
+@pytest.mark.parametrize(
+    ("system_name", "layout"),
+    [("Linux", "linux"), ("Windows", "windows"), ("Darwin", "mac-sibling")],
+)
 def test_unresolved_content_keeps_explicit_existing_local_folder(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    system_name: str,
+    layout: str,
 ) -> None:
-    game = tmp_path / "RimWorld"
-    game.mkdir()
-    (game / "RimWorld").write_bytes(b"game")
-    (game / "RimWorld").chmod(0o755)
+    monkeypatch.setattr("platform.system", lambda: system_name)
+    install = make_game_install(tmp_path / "RimWorld", layout)
+    (install.content_root / "Version.txt").unlink()
+    (install.data_path / "Core/About/About.xml").unlink()
+    game = install.launch_location
+    assert resolve_game_layout(game) is None
     local = tmp_path / "SelectedMods"
     local.mkdir()
     controller = _controller(game)
