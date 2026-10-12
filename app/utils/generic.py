@@ -20,6 +20,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
+from app.services.game_layout_service import find_game_executable, resolve_game_layout
 from app.utils import http
 from app.utils.launch_command_parser import parse_launch_command
 from app.utils.platform.windows import scanpath_win32
@@ -248,43 +249,8 @@ def get_executable_path(game_install_path: Path) -> str | None:
     :param game_install_path: Path to the game folder.
     :return: Executable path as string or None if not found.
     """
-    system_name = platform.system()
-
-    # Define platform-specific executable checks
-    platform_checks = {
-        "Darwin": lambda p: str(p) if p.suffix == ".app" and p.is_dir() else None,
-        "Linux": lambda p: next(
-            (
-                str(exe)
-                for exe in [
-                    p / "RimWorldLinux64",
-                    p / "RimWorldLinux",
-                    p / "RimWorldWin64.exe",
-                    p / "RimWorldWin.exe",
-                ]
-                if exe.exists()
-                and (
-                    not exe.name.startswith("RimWorldLinux") or os.access(exe, os.X_OK)
-                )
-            ),
-            None,
-        ),
-        "Windows": lambda p: next(
-            (
-                str(exe)
-                for exe in [p / "RimWorldWin64.exe", p / "RimWorldWin.exe"]
-                if exe.exists()
-            ),
-            None,
-        ),
-    }
-
-    check_func = platform_checks.get(system_name)
-    if check_func:
-        return check_func(game_install_path)
-    else:
-        logger.error(f"Unsupported platform for game launch: {system_name}")
-        return None
+    executable = find_game_executable(game_install_path, platform.system())
+    return str(executable) if executable is not None else None
 
 
 def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
@@ -294,7 +260,8 @@ def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
 
     This function initializes the Steamworks API to be used by the RimWorld game.
 
-    The game will be launched with the game install path being the working directory.
+    Linux/Windows use the validated content root as cwd, or the executable's parent
+    when content is unresolved. macOS retains the selected bundle's open behavior.
 
     :param game_install_path: is a path to the game folder
     :param run_args: a launch command string with optional Steam-style
@@ -349,10 +316,16 @@ def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
         f"Launching the game with subprocess.Popen(): `{executable_path}` "
         f"with env_vars: {list(env_vars.keys())}, wrappers: {wrapper_commands}, args: {game_args}"
     )
+    cwd = game_install_path
+    if platform.system() != "Darwin":
+        layout = resolve_game_layout(game_install_path)
+        cwd = (
+            layout.content_root if layout is not None else Path(executable_path).parent
+        )
     pid, popen_args = launch_process(
         executable_path,
         game_args,
-        str(game_install_path),
+        str(cwd),
         env_vars=env_vars,
         wrapper_commands=wrapper_commands,
     )

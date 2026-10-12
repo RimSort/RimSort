@@ -11,6 +11,7 @@ from loguru import logger
 from PySide6.QtCore import QCoreApplication, QObject
 
 from app.models.instance import Instance
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DEFAULT_INSTANCE_NAME,
@@ -104,7 +105,8 @@ class InstanceController(QObject):
         """Get game data folder path or None if not configured."""
         if not instance.game_folder:
             return None
-        return Path(instance.game_folder) / "Data"
+        layout = resolve_game_layout(Path(instance.game_folder))
+        return layout.data_path if layout is not None else None
 
     @staticmethod
     def get_local_mods_path(instance: Instance) -> Path | None:

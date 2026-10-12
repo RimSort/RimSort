@@ -18,6 +18,7 @@ from app.models.settings import Settings
 from app.utils.system_info import SystemInfo
 from app.views import main_content_panel as mcp_module
 from app.views.main_content_panel import MainContent
+from tests.game_layout_fixtures import make_game_install
 
 
 @pytest.fixture
@@ -43,6 +44,8 @@ def _make_gog_layout(tmp_path: Path) -> tuple[Path, Path]:
     """Create an existing game bundle (with Mods) and a config directory."""
     game_dir = tmp_path / "RimWorld.app"
     (game_dir / "Mods").mkdir(parents=True)
+    (game_dir / "Data").mkdir()
+    (game_dir / "Version.txt").write_text("1.6.4871")
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     return game_dir, config_dir
@@ -84,6 +87,23 @@ def _patch_missing_autodetect(
         tmp_path / "no_config",
         tmp_path / "no_ws",
     )
+
+
+def test_autofill_uses_sibling_content_mods(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    empty_instance_main_content: tuple[MainContent, Instance, Settings],
+) -> None:
+    mc, instance, _settings = empty_instance_main_content
+    install = make_game_install(tmp_path / "RimWorld", "mac-sibling")
+    config = tmp_path / "Config"
+    config.mkdir()
+    _patch_autodetect(
+        monkeypatch, install.launch_location, config, tmp_path / "missing_ws"
+    )
+    assert mc._autodetect_missing_essential_paths()
+    assert instance.game_folder == str(install.launch_location)
+    assert instance.local_folder == str(install.mods_path)
 
 
 class TestSilentEssentialAutodetect:
@@ -160,24 +180,33 @@ class TestSilentEssentialAutodetect:
         )
         save_mock.assert_not_called()
 
-    def test_never_overwrites_existing_values(
+    @pytest.mark.parametrize("resolved", [True, False])
+    def test_never_mixes_retained_game_with_detected_mods(
         self,
         monkeypatch: pytest.MonkeyPatch,
         tmp_path: Path,
         empty_instance_main_content: tuple[MainContent, Instance, Settings],
+        resolved: bool,
     ) -> None:
         mc, instance, settings = empty_instance_main_content
-        instance.game_folder = "/manually/chosen/game"
-        game_dir, config_dir = _make_gog_layout(tmp_path)
-        _patch_autodetect(monkeypatch, game_dir, config_dir, tmp_path / "ws")
+        selected = make_game_install(tmp_path / "Selected", "linux")
+        if not resolved:
+            (selected.content_root / "Version.txt").unlink()
+            (selected.data_path / "Core/About/About.xml").unlink()
+        detected = make_game_install(tmp_path / "Detected", "mac-sibling")
+        instance.game_folder = str(selected.launch_location)
+        config_dir = tmp_path / "Config"
+        config_dir.mkdir()
+        _patch_autodetect(
+            monkeypatch, detected.launch_location, config_dir, tmp_path / "ws"
+        )
         monkeypatch.setattr(settings, "save", Mock())
 
         mc._autodetect_missing_essential_paths()
 
-        # Existing value must win over the auto-detected one
-        assert instance.game_folder == "/manually/chosen/game"
+        assert instance.game_folder == str(selected.launch_location)
         assert instance.config_folder == str(config_dir)
-        assert instance.local_folder == str(game_dir / "Mods")
+        assert instance.local_folder == (str(selected.mods_path) if resolved else "")
 
     def test_no_fill_when_detected_paths_do_not_exist(
         self,
@@ -244,6 +273,8 @@ class TestEssentialCheckUsesAutodetect:
         mc, instance, settings = empty_instance_main_content
         game_dir = tmp_path / "RimWorld.app"
         (game_dir / "Mods").mkdir(parents=True)
+        (game_dir / "Data").mkdir()
+        (game_dir / "Version.txt").write_text("1.6.4871")
         _patch_autodetect(
             monkeypatch,
             game_dir,

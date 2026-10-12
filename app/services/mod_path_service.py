@@ -3,37 +3,35 @@
 from pathlib import Path
 
 from app.models.instance import Instance
+from app.services.game_layout_service import resolve_game_layout
 
 
 def get_mod_paths(instance: Instance) -> list[str]:
-    """Get the mod paths for the given instance.
-
-    Returns the game Data folder, local folder, and workshop folder
-    as string paths.
-    """
-    return [
-        str(Path(instance.game_folder) / "Data"),
-        str(Path(instance.local_folder)),
-        str(Path(instance.workshop_folder)),
-    ]
+    """Return validated game Data, local and workshop search locations."""
+    layout = (
+        resolve_game_layout(Path(instance.game_folder))
+        if instance.game_folder
+        else None
+    )
+    paths = [str(layout.data_path)] if layout is not None else []
+    paths.extend(p for p in (instance.local_folder, instance.workshop_folder) if p)
+    return paths
 
 
 def resolve_data_source(instance: Instance, path: str) -> str | None:
-    """Resolve the data source for the provided path string.
-
-    :param instance: The active game instance
-    :param path: The file path to resolve
-    :return: ``"expansion"``, ``"local"``, ``"workshop"``, or ``None``
-    """
-    sanitized_path = Path(path)
-    game_data = Path(instance.game_folder) / "Data"
-    local = Path(instance.local_folder)
-    workshop = Path(instance.workshop_folder)
-
-    if sanitized_path.parent == game_data:
+    """Identify the source of a mod from its containing directory."""
+    parent = Path(path).parent
+    layout = (
+        resolve_game_layout(Path(instance.game_folder))
+        if instance.game_folder
+        else None
+    )
+    if layout is not None and parent == layout.data_path:
         return "expansion"
-    elif sanitized_path.parent == local:
-        return "local"
-    elif sanitized_path.parent == workshop:
-        return "workshop"
+    for name, folder in (
+        ("local", instance.local_folder),
+        ("workshop", instance.workshop_folder),
+    ):
+        if folder and parent == Path(folder):
+            return name
     return None

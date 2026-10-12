@@ -78,7 +78,15 @@ def main_content(
     )
     # Patch _do_save to capture calls
     save_calls: list[bool] = []
-    monkeypatch.setattr(mc, "_do_save", lambda: save_calls.append(True))
+
+    def save_stub() -> bool:
+        save_calls.append(True)
+        return True
+
+    monkeypatch.setattr(mc, "_do_save", save_stub)
+    monkeypatch.setattr(
+        mc, "_confirm_direct_launch", lambda game_path: True, raising=False
+    )
     # Mock check_if_essential_paths_are_set to return True
     monkeypatch.setattr(
         mc, "check_if_essential_paths_are_set", lambda prompt=True: True

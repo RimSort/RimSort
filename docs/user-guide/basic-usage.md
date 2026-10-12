@@ -34,6 +34,16 @@ You can enter the settings panel from the main menu bar using `File > Settings..
 
 At a minimum, the paths for the RimWorld install directory, RimWorld Config directory, and Local Mods need to be set. All other settings are optional for basic operations, but certain features may be inoperable.
 
+### RimWorld 1.7 Game and Content Locations
+
+RimWorld 1.7 uses new executable names: `RimWorld` on Linux, `RimWorld.exe` on Windows, and `RimWorld.app` on macOS. RimSort also recognizes the older executable names. If old and new executable files coexist in the selected Windows or Linux directory, the new name takes precedence; on Linux, a native executable takes precedence over a Windows executable used through Wine or Proton. Native Linux executables must have execute permission.
+
+On Windows and Linux, select the installation directory. On macOS, select the game’s `.app` bundle. Depending on the installation layout, `Data`, `Mods`, and `Version.txt` may be inside the bundle or beside it in the enclosing game directory. RimSort checks the selected location first, then the immediate parent of an existing `.app` bundle. It selects one content directory identified by `Data` and a version or Core metadata marker; it does not combine files from different locations or search arbitrary ancestors.
+
+Keep the selected bundle as **Game Location** and use the detected content directory’s `Mods` folder as **Local Mods**. There is no need to create a `Mods` symlink inside the bundle. If an existing workaround symlink points to the correct `Mods` directory, RimSort accepts it without changing the link. Cloning a split-layout installation copies the resolved game content directory, including the selected bundle, rather than copying only the bundle.
+
+If the executable is valid but the content directory cannot be identified, Settings accepts the game location with a diagnostic. An explicitly selected, existing local-mods directory is retained. Check the locations listed in the diagnostic: missing content prevents reliable version and official-module discovery. These discovery rules cover both macOS layouts; a different installation layout should be inspected rather than worked around by moving files.
+
 ## Mod info panel
 
 The left side of the main window. Displays general information from a selected mod, with its preview image if found.
@@ -41,6 +51,14 @@ The left side of the main window. Displays general information from a selected m
 ## Mod lists
 
 Certain errors/warnings are produced based on dependency presence, incompatibilities, load rules, and any potential updates found.
+
+### Saving and Launching with Incomplete Content Discovery
+
+Before saving, RimSort checks that Core was discovered as valid official content and that official DLC enabled in the existing `ModsConfig.xml` was also discovered. A matching package ID in a local or Workshop mod does not substitute for official content from the selected `Data` directory. An unreadable or malformed existing mod list also triggers a warning because its enabled DLC cannot be checked reliably.
+
+**Cancel** is the default. Cancel, Escape, or closing the warning leaves the file and saved/restore state unchanged. **Save anyway** explicitly writes the proposed active list; it does not reinsert Core or missing DLC. Intentionally disabling a DLC that was successfully discovered does not trigger this discovery warning. `knownExpansions` retains its existing behavior and is not an activation list.
+
+For a direct launch with a valid executable but unresolved content, RimSort offers a separate **Run anyway** confirmation, again with **Cancel** as the default. This does not repair content discovery or change the configured paths. Launching through the Steam protocol remains available when Steam Client Integration is enabled. If **Save and Run** is selected, a canceled or failed save stops the launch, including texture optimization and Steam app-ID file changes.
 
 ## External Metadata
 

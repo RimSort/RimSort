@@ -25,6 +25,7 @@ from app.models.metadata.metadata_structure import (
     SteamDbEntryBlacklist,
 )
 from app.models.settings import Instance, Settings
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
@@ -183,7 +184,8 @@ class MetadataController(QObject):
         game_path = _get_path(active_instance.game_folder)
 
         if local_mods_path is None and game_path is not None:
-            local_mods_path = game_path / "Mods"
+            layout = resolve_game_layout(game_path)
+            local_mods_path = layout.local_mods_path if layout is not None else None
 
         self.metadata_mediator.community_rules_path = cr_path
         self.metadata_mediator.steam_db_path = steam_db_path

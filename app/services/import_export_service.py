@@ -301,7 +301,7 @@ class ImportExportService:
         mods_config_data = generate_rimworld_mods_list(
             self.metadata_controller.game_version, active_mods
         )
-        json_to_xml_write(mods_config_data, mods_config_path)
+        json_to_xml_write(mods_config_data, mods_config_path, raise_errs=True)
         return mods_config_path
 
     def import_from_file(
