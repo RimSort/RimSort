@@ -51,6 +51,28 @@ def _get_parent_if_constrain_enabled(parent: QWidget | None = None) -> QWidget |
     return parent
 
 
+def confirm_content_discovery_override(
+    title: str,
+    text: str,
+    action_text: str,
+    details: str,
+    parent: QWidget | None = None,
+) -> bool:
+    """Require an explicit action; cancellation and window dismissal never override."""
+    dialogue = QMessageBox(_get_parent_if_constrain_enabled(parent))
+    dialogue.setWindowTitle(title)
+    dialogue.setIcon(QMessageBox.Icon.Warning)
+    dialogue.setTextFormat(Qt.TextFormat.PlainText)
+    dialogue.setText(text)
+    dialogue.setDetailedText(details)
+    dialogue.setStandardButtons(QMessageBox.StandardButton.Cancel)
+    action = dialogue.addButton(action_text, QMessageBox.ButtonRole.AcceptRole)
+    dialogue.setDefaultButton(QMessageBox.StandardButton.Cancel)
+    dialogue.setEscapeButton(QMessageBox.StandardButton.Cancel)
+    dialogue.exec()
+    return dialogue.clickedButton() is action
+
+
 def show_dialogue_conditional(
     title: str | None = None,
     text: str | None = None,

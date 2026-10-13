@@ -19,6 +19,7 @@ from app.models.metadata.metadata_structure import (
     ListedMod,
     SteamDbSchema,
 )
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.xml import xml_path_to_json
 
 
@@ -82,9 +83,12 @@ class MetadataMediator:
 
     @property
     def game_modules_path(self) -> Path:
-        if self.game_path is not None:
-            return self.game_path / "Data"
-        raise ValueError("Game path is not set")
+        layout = (
+            resolve_game_layout(self.game_path) if self.game_path is not None else None
+        )
+        if layout is not None:
+            return layout.data_path
+        raise ValueError("Game content location could not be resolved")
 
     @property
     def game_version(self) -> str:
@@ -182,6 +186,17 @@ class MetadataMediator:
             About.xml lookup. When False, require exact "About/About.xml" path.
         """
 
+        self._mods_metadata = {}
+        self._game_version = "Unknown"
+        layout = (
+            resolve_game_layout(self.game_path) if self.game_path is not None else None
+        )
+        if layout is None:
+            logger.warning(
+                "Game content location could not be resolved; skipping refresh"
+            )
+            return
+
         for path in {self.local_mods_path, self.game_path}:
             if path is None or not path.exists() or not path.is_dir():
                 logger.warning(
@@ -214,7 +229,7 @@ class MetadataMediator:
         for search_path in (
             self.workshop_mods_path,
             self.local_mods_path,
-            self.game_modules_path,
+            layout.data_path,
         ):
             if search_path is None:
                 continue
@@ -244,7 +259,7 @@ class MetadataMediator:
                 mod_path_batch,
                 self.game_version,
                 self.local_mods_path,
-                self.game_path,
+                layout.content_root,
                 self.workshop_mods_path,
                 self.user_rules,
                 self.community_rules,
@@ -271,7 +286,11 @@ class MetadataMediator:
             self._game_version = "Unknown"
             return False
 
-        version_file_path = str(self.game_path / "Version.txt")
+        layout = resolve_game_layout(self.game_path)
+        if layout is None:
+            self._game_version = "Unknown"
+            return False
+        version_file_path = str(layout.version_path)
         if os.path.exists(version_file_path):
             try:
                 with open(version_file_path, encoding="utf-8") as f:

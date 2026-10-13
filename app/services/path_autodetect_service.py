@@ -3,13 +3,18 @@
 import fnmatch
 import json
 import os
-import re
 import sys
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
 from loguru import logger
 
+from app.services.game_layout_service import (
+    LINUX_EXECUTABLES,
+    WINDOWS_EXECUTABLES,
+    has_game_version_file,
+    resolve_game_layout,
+)
 from app.utils.generic import find_steam_rimworld, get_path_up_to_string
 from app.utils.win_find_steam import find_steam_folder
 
@@ -40,17 +45,7 @@ class PathAutodetectService:
     """
 
     _VERSION_FILE_NAME = "Version.txt"
-    # RimWorld Version.txt content, e.g. "1.6.4871 rev573"
-    _VERSION_RE = re.compile(r"^\d+\.\d+")
-    # Known game executables on Linux. RimWorldLinux64 ships with current
-    # Steam and GOG builds; RimWorldLinux is the legacy name. The .exe names
-    # cover Wine/Proton installs of the Windows build.
-    _LINUX_GAME_EXECUTABLES = (
-        "RimWorldLinux64",
-        "RimWorldLinux",
-        "RimWorldWin64.exe",
-        "RimWorldWin.exe",
-    )
+    _LINUX_GAME_EXECUTABLES = LINUX_EXECUTABLES
     # GOG Galaxy (Windows) records installed games under this registry key;
     # each game gets a subkey named by its numeric ID with an install "path"
     # and, depending on the Galaxy version, an "exe"/"EXE" value.
@@ -538,17 +533,17 @@ class PathAutodetectService:
         :param path: Candidate game directory.
         :return: True when the version marker is present and parsable.
         """
-        version_file = path / cls._VERSION_FILE_NAME
-        if not version_file.is_file() or version_file.is_symlink():
+        return has_game_version_file(path, allow_symlink=False)
+
+    @classmethod
+    def _looks_like_executable_dir(
+        cls, path: Path, executables: tuple[str, ...]
+    ) -> bool:
+        if not path.is_dir() or path.is_symlink():
             return False
-        try:
-            with version_file.open("r", encoding="utf-8", errors="replace") as f:
-                head = f.read(256)
-        except OSError:
-            return False
-        lines = head.splitlines()
-        first_line = lines[0].strip() if lines else ""
-        return bool(cls._VERSION_RE.match(first_line))
+        return cls._has_parsable_version_file(path) or any(
+            (path / name).is_file() for name in executables
+        )
 
     @classmethod
     def _looks_like_rimworld_dir(cls, path: Path) -> bool:
@@ -562,11 +557,7 @@ class PathAutodetectService:
         :param path: Candidate directory.
         :return: True when RimWorld content markers are present.
         """
-        if not path.is_dir() or path.is_symlink():
-            return False
-        if cls._has_parsable_version_file(path):
-            return True
-        return any((path / exe).is_file() for exe in cls._LINUX_GAME_EXECUTABLES)
+        return cls._looks_like_executable_dir(path, cls._LINUX_GAME_EXECUTABLES)
 
     @classmethod
     def _looks_like_rimworld_windows_dir(cls, path: Path) -> bool:
@@ -580,13 +571,7 @@ class PathAutodetectService:
         :param path: Candidate directory.
         :return: True when RimWorld content markers are present.
         """
-        if not path.is_dir() or path.is_symlink():
-            return False
-        if cls._has_parsable_version_file(path):
-            return True
-        return (path / "RimWorldWin64.exe").is_file() or (
-            path / "RimWorldWin.exe"
-        ).is_file()
+        return cls._looks_like_executable_dir(path, WINDOWS_EXECUTABLES)
 
     @classmethod
     def _looks_like_rimworld_mac_app(cls, path: Path) -> bool:
@@ -605,7 +590,11 @@ class PathAutodetectService:
             return False
         # Ludeon macOS bundles ship the game content at the bundle root.
         has_ludeon_layout = (path / "Data").is_dir() and (path / "Mods").is_dir()
-        return has_ludeon_layout or (path / cls._VERSION_FILE_NAME).is_file()
+        return (
+            has_ludeon_layout
+            or (path / cls._VERSION_FILE_NAME).is_file()
+            or resolve_game_layout(path) is not None
+        )
 
     @classmethod
     def _iter_shallow_dirs(cls, root: Path, max_depth: int) -> Iterator[Path]:

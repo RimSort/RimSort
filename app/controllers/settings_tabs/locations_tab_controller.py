@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from app.controllers.settings_tabs.base_tab_controller import BaseTabController
 from app.models.settings import Settings
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.constants import DEFAULT_INSTANCE_NAME
 from app.utils.generic import platform_specific_open
 from app.utils.system_info import SystemInfo
@@ -189,7 +190,9 @@ class LocationsTabController(BaseTabController):
             )
             return None
 
-        dialog.local_mods_folder_location.setText(str(result / "Mods"))
+        layout = resolve_game_layout(result)
+        if layout is not None:
+            dialog.local_mods_folder_location.setText(str(layout.local_mods_path))
         self._path_selected_callback(str(result))
         return str(result)
 

@@ -8,6 +8,7 @@ from PySide6.QtCore import QCoreApplication
 
 from app.controllers.metadata_controller import MetadataController
 from app.models.settings import Settings
+from app.services.game_layout_service import resolve_game_layout
 from app.services.import_export_service import ImportExportService
 from app.services.mod_list_parser import ModListFormatError
 from app.utils.acf_utils import cleanup_orphaned_workshop_items
@@ -335,6 +336,19 @@ class TroubleshootingController:
             self.show_location_warning()
             return
 
+        layout = resolve_game_layout(Path(self.game_location))
+        if layout is None:
+            show_warning(
+                title=self.translate(
+                    "TroubleshootingController", "Game content not found"
+                ),
+                text=self.translate(
+                    "TroubleshootingController",
+                    "Cannot clear local mods until the game content location is resolved.",
+                ),
+            )
+            return
+
         if not show_dialogue_conditional(
             title=self.translate("TroubleshootingController", "Confirm Clear"),
             text=self.translate(
@@ -346,8 +360,7 @@ class TroubleshootingController:
             return
 
         # delete mods folder
-        game_dir = Path(self.game_location)
-        mods_dir = game_dir / "Mods"
+        mods_dir = layout.local_mods_path
         if mods_dir.exists():
             try:
                 rmtree(mods_dir)

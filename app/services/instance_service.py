@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from shutil import copytree, rmtree
@@ -15,6 +16,7 @@ from app.controllers.instance_controller import (
 )
 from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.settings import Settings
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.app_info import AppInfo
 from app.utils.constants import (
     DEFAULT_INSTANCE_NAME,
@@ -32,6 +34,29 @@ from app.views.dialogue import (
     show_fatal_error,
     show_warning,
 )
+
+
+@dataclass(frozen=True)
+class CloneGamePaths:
+    source_root: Path
+    target_root: Path
+    target_game_location: Path
+    target_local_mods: Path
+
+
+def _get_clone_game_paths(
+    source_game_location: Path, target_instance_dir: Path
+) -> CloneGamePaths | None:
+    layout = resolve_game_layout(source_game_location)
+    if layout is None:
+        return None
+    target_root = target_instance_dir / layout.content_root.name
+    return CloneGamePaths(
+        layout.content_root,
+        target_root,
+        target_root / source_game_location.relative_to(layout.content_root),
+        target_root / "Mods",
+    )
 
 
 class InstanceService:
@@ -480,9 +505,7 @@ class InstanceService:
         existing_instance = self.settings.instances[existing_instance_name]
 
         existing_instance_game_folder = existing_instance.game_folder
-        game_folder_name = os.path.split(existing_instance_game_folder)[1]
         existing_instance_local_folder = existing_instance.local_folder
-        local_folder_name = os.path.split(existing_instance_local_folder)[1]
         existing_instance_workshop_folder = existing_instance.workshop_folder
         existing_instance_config_folder = existing_instance.config_folder
         existing_instance_run_args = existing_instance.run_args
@@ -513,6 +536,21 @@ class InstanceService:
                     new_instance_name, existing_instance_folder_override
                 )
             )
+            clone_paths = _get_clone_game_paths(
+                Path(existing_instance_game_folder), Path(new_instance_path)
+            )
+            if clone_paths is None:
+                show_warning(
+                    title=QCoreApplication.translate(
+                        "InstanceService", "Game content not found"
+                    ),
+                    text=QCoreApplication.translate(
+                        "InstanceService",
+                        "Cannot clone this instance until its game content location is resolved.",
+                    ),
+                    details=existing_instance_game_folder,
+                )
+                return
             answer = BinaryChoiceDialog(
                 title=f"Clone instance [{existing_instance_name}]",
                 text=f"Would you like to clone instance [{existing_instance_name}]"
@@ -534,10 +572,8 @@ class InstanceService:
                 f"{existing_instance_run_args if existing_instance_run_args else '&lt;None&gt;'}<br>",
             )
             if answer.exec_is_positive():
-                target_game_folder = str(Path(new_instance_path) / game_folder_name)
-                target_local_folder = str(
-                    Path(new_instance_path) / game_folder_name / local_folder_name
-                )
+                target_game_folder = str(clone_paths.target_game_location)
+                target_local_folder = str(clone_paths.target_local_mods)
                 target_workshop_folder = ""
                 target_config_folder = str(
                     Path(new_instance_path) / "InstanceData" / "Config"
@@ -546,18 +582,22 @@ class InstanceService:
                     str(AppInfo().theme_data_folder / "default-icons" / "rimworld.gif"),
                     partial(
                         InstanceService.clone_essential_paths,
-                        existing_instance_game_folder,
-                        target_game_folder,
+                        str(clone_paths.source_root),
+                        str(clone_paths.target_root),
                         existing_instance_config_folder,
                         target_config_folder,
                     ),
                     f"Cloning RimWorld game / config folders from [{existing_instance_name}]"
                     f" to [{new_instance_name}] instance...",
                 )
-                local_folder_in_game = (
-                    str(Path(existing_instance_game_folder) / local_folder_name)
-                    == existing_instance_local_folder
-                )
+                try:
+                    local_folder_in_game = bool(
+                        existing_instance_local_folder
+                    ) and Path(existing_instance_local_folder).samefile(
+                        clone_paths.source_root / "Mods"
+                    )
+                except OSError:
+                    local_folder_in_game = False
                 if existing_instance_local_folder and not local_folder_in_game:  # noqa: SIM102
                     if os.path.exists(existing_instance_local_folder) and os.path.isdir(
                         existing_instance_local_folder

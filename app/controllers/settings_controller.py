@@ -23,6 +23,10 @@ from app.controllers.settings_tabs import (
 )
 from app.controllers.theme_controller import ThemeController
 from app.models.settings import Instance, Settings
+from app.services.game_layout_service import (
+    get_game_content_candidates,
+    resolve_game_layout,
+)
 from app.services.http_download_service import HttpDownloadService
 from app.services.mod_path_service import get_mod_paths, resolve_data_source
 from app.services.path_autodetect_service import PathAutodetectService
@@ -244,10 +248,10 @@ class SettingsController(QObject):
             return False, self.tr(
                 "The selected game folder does not contain a valid RimWorld executable.<br><br>"
                 "Please select a valid game location.<br><br>"
-                "Windows: RimWorldWin64.exe or RimWorldWin.exe<br><br>"
-                "Mac: RimworldMac.app<br><br>"
-                "Linux: RimWorldLinux64 or RimWorldLinux<br><br>"
-                "RimWorldWin64.exe or RimWorldWin.exe if you using windows version of the game on Linux"
+                "Windows: RimWorld.exe, RimWorldWin64.exe or RimWorldWin.exe<br><br>"
+                "Mac: RimWorld.app or RimWorldMac.app<br><br>"
+                "Linux: RimWorld, RimWorldLinux64 or RimWorldLinux<br><br>"
+                "RimWorld.exe, RimWorldWin64.exe or RimWorldWin.exe for Windows builds on Linux"
             )
         return True, ""
 
@@ -278,20 +282,38 @@ class SettingsController(QObject):
         game_folder = self.settings.instances[
             self.settings.current_instance
         ].game_folder
+        layout = resolve_game_layout(Path(game_folder)) if game_folder else None
         local_path = Path(local_folder)
         is_game_mods_folder = False
         if local_path.is_dir():
+            if layout is None:
+                return True, ""
             try:
-                is_game_mods_folder = local_path.samefile(Path(game_folder) / "Mods")
+                is_game_mods_folder = local_path.samefile(layout.local_mods_path)
             except OSError:
                 is_game_mods_folder = False
         if not is_game_mods_folder:
             return False, self.tr(
                 "The selected local mods folder location is not a valid directory.<br><br>"
                 "Please select a valid folder for local mods.<br><br>"
-                "The local mods folder should be a 'Mods' subfolder within the game folder."
+                "The local mods folder should be the 'Mods' subfolder within the game content directory."
             )
         return True, ""
+
+    def _warn_unresolved_game_content(self, game_folder: str) -> None:
+        if game_folder and resolve_game_layout(Path(game_folder)) is None:
+            show_warning(
+                title=self.tr("Game content not found"),
+                text=self.tr(
+                    "The game executable is valid, but RimSort could not locate its content."
+                ),
+                information=self.tr(
+                    "Version and mod discovery are incomplete. Check the game content paths."
+                ),
+                details="\n".join(
+                    str(p) for p in get_game_content_candidates(Path(game_folder))
+                ),
+            )
 
     @Slot()
     def _on_global_ok_button_clicked(self) -> None:
@@ -350,6 +372,7 @@ class SettingsController(QObject):
             return
 
         # If all validations pass, save settings and close dialog
+        self._warn_unresolved_game_content(game_folder_text)
         self.settings.save()
         self.settings_dialog.close()
         self.theme_controller.set_font(
@@ -417,12 +440,18 @@ class SettingsController(QObject):
                 self.settings_dialog.steam_mods_folder_location,
                 "workshop mods",
             ),
-            _PathGroup(
-                os_paths[0] / "Mods",
-                self.settings_dialog.local_mods_folder_location,
-                "local mods",
-            ),
         ]
+        selected_game = self.settings_dialog.game_location.text()
+        effective_game = Path(selected_game) if selected_game else os_paths[0]
+        layout = resolve_game_layout(effective_game)
+        if layout is not None:
+            path_groups.append(
+                _PathGroup(
+                    layout.local_mods_path,
+                    self.settings_dialog.local_mods_folder_location,
+                    "local mods",
+                )
+            )
 
         for i, group in enumerate(path_groups):
             if group.folder.exists():

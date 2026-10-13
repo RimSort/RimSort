@@ -11,6 +11,7 @@ from app.models.instance import Instance
 from app.models.settings import Settings
 from app.utils.steam.steamfiles.wrapper import dict_to_acf
 from app.views.troubleshooting_dialog import TroubleshootingDialog
+from tests.game_layout_fixtures import make_game_install
 
 
 @pytest.fixture
@@ -25,6 +26,8 @@ def setup_test_environment(tmp_path: Path) -> tuple[Path, Path, Path]:
     steam_mods_dir.mkdir()
 
     (game_dir / "Mods").mkdir()
+    (game_dir / "Data").mkdir()
+    (game_dir / "Version.txt").write_text("1.6.4871")
     (config_dir / "ModsConfig.xml").write_text("<ModsConfigData></ModsConfigData>")
     (config_dir / "Prefs.xml").write_text("<PrefsData></PrefsData>")
 
@@ -51,6 +54,62 @@ def troubleshooting_controller(
     controller = TroubleshootingController(settings, dialog)
 
     return controller, game_dir, config_dir, steam_mods_dir
+
+
+def test_clear_mods_targets_sibling_content(
+    tmp_path: Path,
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
+    controller, _game, config, _workshop = troubleshooting_controller
+    install = make_game_install(tmp_path / "RimWorld", "mac-sibling")
+    controller.settings.instances[
+        controller.settings.current_instance
+    ].game_folder = str(install.launch_location)
+    mod = install.mods_path / "local-mod.txt"
+    mod.write_text("local")
+    with patch(
+        "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+        return_value=True,
+    ):
+        controller._on_clear_mods_button_clicked()
+    assert not mod.exists()
+    assert install.mods_path.is_dir()
+    assert (install.data_path / "Core" / "About" / "About.xml").exists()
+    assert (config / "ModsConfig.xml").exists()
+
+
+def test_unresolved_clear_mods_does_not_delete_or_overwrite(
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
+    controller, game, config, _workshop = troubleshooting_controller
+    rmtree(game / "Data")
+    mod = game / "Mods" / "keep.txt"
+    mod.write_text("keep")
+    original = (config / "ModsConfig.xml").read_bytes()
+    with patch(
+        "app.controllers.troubleshooting_controller.show_dialogue_conditional",
+        return_value=True,
+    ):
+        controller._on_clear_mods_button_clicked()
+    assert mod.read_text() == "keep"
+    assert (config / "ModsConfig.xml").read_bytes() == original
+
+
+def test_game_deletion_does_not_expand_from_bundle_to_parent(
+    tmp_path: Path,
+    troubleshooting_controller: tuple[TroubleshootingController, Path, Path, Path],
+) -> None:
+    controller, _game, _config, _workshop = troubleshooting_controller
+    install = make_game_install(tmp_path / "RimWorld", "mac-sibling")
+    controller.settings.instances[
+        controller.settings.current_instance
+    ].game_folder = str(install.launch_location)
+    sentinel = install.content_root / "keep.txt"
+    sentinel.write_text("keep")
+    controller._delete_game_files()
+    assert sentinel.read_text() == "keep"
+    assert (install.data_path / "Core" / "About" / "About.xml").exists()
+    assert install.mods_path.exists()
 
 
 class TestGameFilesRecovery:

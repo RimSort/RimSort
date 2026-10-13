@@ -89,13 +89,21 @@ def test_byversion_off_ignores_incompatible(
 # ── prefer_versioned=True (default) — version matches ─────────────────
 
 
+@pytest.mark.parametrize(
+    ("target_version", "version_key"),
+    [("1.5.1234", "v1.5"), ("1.7.4976 rev1043", "v1.7")],
+)
 def test_byversion_on_suppresses_base_when_version_matches(
     mod_data_with_both_base_and_versioned: dict[str, Any],
+    target_version: str,
+    version_key: str,
 ) -> None:
     """When prefer_versioned is True and version matches, use ONLY versioned, suppress base."""
+    versioned = mod_data_with_both_base_and_versioned["loadAfterByVersion"]
+    versioned[version_key] = versioned.pop("v1.5")
     rules = create_base_rules(
         mod_data_with_both_base_and_versioned,
-        target_version="1.5.1234",
+        target_version=target_version,
         prefer_versioned=True,
     )
     # Versioned should be present
@@ -195,16 +203,23 @@ def test_byversion_on_empty_incompatible_suppresses_base() -> None:
 # ── No matching version — falls back to base ─────────────────────────
 
 
-def test_byversion_on_no_matching_version_falls_back_to_base() -> None:
-    """When prefer_versioned is True but no matching version key, fall back to base."""
+@pytest.mark.parametrize(
+    ("target_version", "older_key"),
+    [("1.5.1234", "v1.4"), ("1.7.4976 rev1043", "v1.6")],
+)
+def test_byversion_on_no_matching_version_falls_back_to_base(
+    target_version: str,
+    older_key: str,
+) -> None:
+    """No matching entry falls back to base, never another version's metadata."""
     mod_data = {
         "loadAfter": {"li": ["base.mod.a"]},
         "loadAfterByVersion": {
-            "v1.4": {"li": ["old.version.mod"]},
+            older_key: {"li": ["old.version.mod"]},
         },
     }
     rules = create_base_rules(
-        mod_data, target_version="1.5.1234", prefer_versioned=True
+        mod_data, target_version=target_version, prefer_versioned=True
     )
     assert "base.mod.a" in rules.load_after
     assert "old.version.mod" not in rules.load_after

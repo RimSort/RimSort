@@ -25,6 +25,7 @@ from app.models.metadata.metadata_structure import (
     ScenarioMod,
     SteamDbSchema,
 )
+from app.services.game_layout_service import resolve_game_layout
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID, RIMWORLD_DLC_METADATA
 
 # Import pygit2 through the SSL-safe loader so libgit2's TLS certificate
@@ -394,8 +395,12 @@ def _set_mod_type(
         return mod
 
     parent_path = mod.mod_path.parent
-    rimworld_expansion_path = rimworld_path / Path("Data")
-    if parent_path == rimworld_expansion_path:
+    layout = (
+        resolve_game_layout(rimworld_path)
+        if parent_path.name.casefold() == "data"
+        else None
+    )
+    if layout is not None and parent_path == layout.data_path:
         mod.mod_type = ModType.LUDEON
     elif parent_path == workshop_path:
         mod.mod_type = ModType.STEAM_WORKSHOP
