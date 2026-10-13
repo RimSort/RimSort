@@ -18,7 +18,7 @@ class AdvancedTabController(BaseTabController):
             self.dialog.show_save_comparison_indicators_checkbox.toggled.connect(
                 self._on_toggle_show_save_comparison_indicators
             )
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             logger.warning(
                 "show_save_comparison_indicators_checkbox not available for signal wiring"
             )
@@ -36,7 +36,7 @@ class AdvancedTabController(BaseTabController):
             self.dialog.show_save_comparison_indicators_checkbox.setChecked(
                 self.settings.show_save_comparison_indicators
             )
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             logger.warning(
                 "show_save_comparison_indicators_checkbox not available for view update"
             )

@@ -64,7 +64,7 @@ def _make_about_xml_mod(
 
 
 @pytest.fixture
-def metadata_controller_mock() -> Generator[MagicMock, None, None]:
+def metadata_controller_mock() -> Generator[MagicMock]:
     with patch("app.utils.mod_utils.MetadataController.instance") as mock_instance:
         mock = MagicMock()
         p1 = str(Path("/path/to/mod1"))
@@ -143,7 +143,7 @@ class TestFilterEligibleModsForUpdate:
     """Tests for filter_eligible_mods_for_update."""
 
     @pytest.fixture(autouse=True)
-    def _mock_controller(self) -> Generator[None, None, None]:
+    def _mock_controller(self) -> Generator[None]:
         """Mock MetadataController.instance() for all tests."""
         with patch("app.utils.mod_utils.MetadataController.instance") as mock_instance:
             mock = MagicMock()

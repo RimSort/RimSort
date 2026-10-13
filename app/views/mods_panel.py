@@ -538,7 +538,7 @@ class ModListItemInner(QWidget):
                 dt_fs = datetime.fromtimestamp(fs_time_val)  # noqa: DTZ006
                 formatted_time = dt_fs.strftime("%Y-%m-%d %H:%M:%S")
                 last_touched_line = f"Filesystem Modified: {formatted_time}"
-            except (ValueError, OSError, OverflowError):
+            except ValueError, OSError, OverflowError:
                 last_touched_line = "Filesystem Modified: Invalid timestamp"
         else:
             last_touched_line = "Filesystem Modified: Not available"
@@ -3529,7 +3529,7 @@ class ModListWidget(QListWidget):
                     self.settings.current_instance
                 ].config_folder
                 startup_impact_report = load_startup_impact_report(cfg_path)
-            except (KeyError, AttributeError):
+            except KeyError, AttributeError:
                 startup_impact_report = None
 
         for uuid, mod_errors in package_id_to_errors.items():

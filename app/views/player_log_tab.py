@@ -925,7 +925,7 @@ class PlayerLogTab(QWidget):
         """Start or stop real-time monitoring of the player log file."""
 
         class PlayerLogEventHandler(FileSystemEventHandler, QObject):
-            def __init__(self, parent: "PlayerLogTab") -> None:
+            def __init__(self, parent: PlayerLogTab) -> None:
                 FileSystemEventHandler.__init__(self)
                 QObject.__init__(self)
                 self._parent = parent

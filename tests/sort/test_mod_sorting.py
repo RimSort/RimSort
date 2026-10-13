@@ -63,7 +63,7 @@ def _make_listed_mod(
 
 
 @pytest.fixture(autouse=True)
-def _clear_folder_size_cache() -> Generator[None, None, None]:
+def _clear_folder_size_cache() -> Generator[None]:
     """Clear the module-level folder size cache between tests."""
     yield
     from app.sort.mod_sorting import _FOLDER_SIZE_CACHE

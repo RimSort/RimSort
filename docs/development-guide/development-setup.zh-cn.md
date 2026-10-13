@@ -43,7 +43,7 @@ RimSort 目前支持 Windows、macOS 和 Linux，不过我们目前仅为 Ubuntu
 **必需：**
 
 - [git](https://git-scm.com/)
-- [Python](https://python.org/) 3.12（如需，可通过 uv 安装）
+- [Python](https://python.org/) 3.14（如需，可通过 uv 安装）
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [just](https://just.systems/man/en/installation.html) — 用于开发命令的任务运行器
 

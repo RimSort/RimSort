@@ -292,7 +292,7 @@ Before starting translation work, you need to prepare the following:
 
 1. **Development Environment** (Required)
    - Set up the project development environment following the [Development Setup Guide](development-setup.md)
-   - This includes installing Python 3.12, PySide6, and project dependencies
+   - This includes installing Python 3.14, PySide6, and project dependencies
 
 2. **Translation Editor**
    - **Recommended**: Text editor with XML syntax highlighting (VS Code, Sublime Text, Notepad++, etc.)

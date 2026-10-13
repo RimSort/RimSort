@@ -24,7 +24,7 @@ from app.views.settings_dialog import SettingsDialog
 
 
 @pytest.fixture
-def mock_settings() -> Generator[MagicMock, None, None]:
+def mock_settings() -> Generator[MagicMock]:
     with (
         patch("app.models.settings.Settings.load") as _,
         patch("app.models.settings.Settings.save") as _,
@@ -67,7 +67,7 @@ def mock_active_instance() -> MagicMock:
 
 
 @pytest.fixture()
-def temp_db(tmp_path: Path) -> Generator[AuxMetadataController, None, None]:
+def temp_db(tmp_path: Path) -> Generator[AuxMetadataController]:
     db_path = tmp_path / "test_metadata.db"
     controller = AuxMetadataController(db_path)
     yield controller

@@ -10,7 +10,7 @@ from app.models.settings import Settings
 
 
 @pytest.fixture()
-def _mock_settings_deps() -> Generator[None, None, None]:
+def _mock_settings_deps() -> Generator[None]:
     """Patch QApplication and AppInfo so Settings() can be instantiated in tests."""
     with (
         patch("app.models.settings.QApplication") as mock_qapp,

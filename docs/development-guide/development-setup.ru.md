@@ -43,7 +43,7 @@ RimSort в настоящее время работает на Windows, MacOS и
 **Обязательно:**
 
 - [git](https://git-scm.com/)
-- [Python](https://python.org/) 3.12 (можно установить через uv, если хотите)
+- [Python](https://python.org/) 3.14 (можно установить через uv, если хотите)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [just](https://just.systems/man/en/installation.html) — запуск задач разработки
 

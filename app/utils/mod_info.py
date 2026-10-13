@@ -41,7 +41,7 @@ class ModInfo:
             self.name = UNKNOWN  # Set to UNKNOWN if empty, but allow it
 
     @classmethod
-    def from_metadata(cls, key: str | None, metadata: dict[str, Any]) -> "ModInfo":
+    def from_metadata(cls, key: str | None, metadata: dict[str, Any]) -> ModInfo:
         """Create ModInfo from metadata dictionary."""
         try:
             name = cls._parse_name(metadata)
@@ -127,7 +127,7 @@ class ModInfo:
         installed_status: str = "",
         acf_time_touched: int | None = None,
         external_time_updated: int | None = None,
-    ) -> "ModInfo":
+    ) -> ModInfo:
         """Create ModInfo from a typed ListedMod object.
 
         :param mod: The ListedMod (or AboutXmlMod) to convert

@@ -4,14 +4,14 @@
 
 RimSort is a free and open-source multi-platform mod manager and sorter for RimWorld. It reads RimWorld `About.xml` metadata, sorts mod lists using graph/topological algorithms plus community/user rules databases, and integrates with the Steam Workshop (via SteamworksPy and SteamCMD), Git mods, and optional static metadata databases (`SteamDB`, `Community Rules`).
 
-- **Stack:** Python `==3.12.*` (pinned in `pyproject.toml`), PySide6 6.11 / Qt6 GUI, Nuitka 4.x packaging, [uv](https://docs.astral.sh/uv/) for deps, [just](https://just.systems/) task runner. Targets Windows, macOS, and Linux — no platform-locked code without a guard.
+- **Stack:** Python `==3.14.*` (pinned in `pyproject.toml`), PySide6 6.11 / Qt6 GUI, Nuitka 4.x packaging, [uv](https://docs.astral.sh/uv/) for deps, [just](https://just.systems/) task runner. Targets Windows, macOS, and Linux — no platform-locked code without a guard.
 - **Architecture:** pragmatic MVC under `app/` (`views` = PySide6 widgets, `controllers` = glue/logic, `models` = data classes, `services` = reusable operations, `utils` = helpers, `sort` = ordering algorithms, `windows` = top-level dialogs, `cli` = `build-db` etc.). Tests in `tests/` mirror the `app/` layout.
 
 ## Setup
 
 - Clone with submodules: `git clone --recurse-submodules https://github.com/RimSort/RimSort`
 - If submodules are missing: `git submodule update --init --recursive`
-- Prerequisites: git, Python 3.12, [uv](https://docs.astral.sh/uv/), [just](https://just.systems/). Full `just check` also needs Node/npx (jscpd, markdownlint) and shfmt.
+- Prerequisites: git, Python 3.14, [uv](https://docs.astral.sh/uv/), [just](https://just.systems/). Full `just check` also needs Node/npx (jscpd, markdownlint) and shfmt.
 - `just dev-setup` — creates venv, `uv sync --locked --dev --group build`, compiles locales. Do this first.
 - `just install-hooks` — installs the pre-commit hook (runs `just check` before every commit; requires `just` and `pwsh` on PATH).
 - Always use the local venv via `uv run ...` — never activate the venv manually or use a bare `pytest`/`ruff`.

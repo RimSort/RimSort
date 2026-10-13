@@ -233,7 +233,7 @@ def test_mouse_press_event_no_path(
 def panel(
     qapp: Any,
     mock_metadata_controller: MagicMock,
-) -> Generator[ModInfoPanel, None, None]:
+) -> Generator[ModInfoPanel]:
     """Build a real ModInfoPanel with a mocked metadata controller.
 
     Args:

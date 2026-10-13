@@ -9,7 +9,7 @@ from app.utils.app_info import AppInfo
 
 
 @pytest.fixture(autouse=True)
-def _reset_app_info_singleton() -> Generator[None, None, None]:
+def _reset_app_info_singleton() -> Generator[None]:
     """Reset AppInfo singleton between tests so __init__ re-runs."""
     original = AppInfo._instance
     AppInfo._instance = None

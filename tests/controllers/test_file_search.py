@@ -97,7 +97,7 @@ def setup_test_controller(test_dir: str, mods: set[str]) -> MagicMock:
 
 
 @pytest.fixture
-def setup_test_files(request: pytest.FixtureRequest) -> Generator[str, None, None]:
+def setup_test_files(request: pytest.FixtureRequest) -> Generator[str]:
     """Set up test files and clean up after test"""
     # create main directories
     mods_dir = Path(tempfile.gettempdir()) / "Mods"

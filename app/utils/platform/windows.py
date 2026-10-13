@@ -47,7 +47,7 @@ class Win32DirEntry:
         return _Win32StatResult(self.size)
 
 
-def scanpath_win32(path: Path | str) -> Generator[Win32DirEntry, None, None]:
+def scanpath_win32(path: Path | str) -> Generator[Win32DirEntry]:
     """Windows-specific scanpath implementation using Win32 API."""
     if sys.platform != "win32":
         return
