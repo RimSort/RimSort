@@ -114,7 +114,7 @@ class _FolderSizeSignalHub(QObject):
     thread.
     """
 
-    result = Signal(str, int, int)
+    result = Signal(str, int, object)
     error = Signal(str, int)
 
 

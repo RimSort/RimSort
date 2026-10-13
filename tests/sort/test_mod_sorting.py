@@ -499,6 +499,25 @@ class TestFolderSizeRequestWorker:
         assert request_id == 7
         assert size == 3
 
+    def test_result_emits_folder_size_above_signed_32_bit_limit(
+        self, tmp_path: Path, mock_metadata_controller: Any
+    ) -> None:
+        mod = _make_listed_mod(str(tmp_path))
+        mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+        large_size = 2**31
+        large_file = tmp_path / "large-mod-asset.bin"
+        with large_file.open("wb") as file:
+            file.seek(large_size - 1)
+            file.write(bytes(1))
+
+        worker = FolderSizeRequestWorker()
+        spy = QSignalSpy(worker.result)
+
+        worker.requested.emit(str(tmp_path), 7)
+
+        assert spy.count() == 1
+        assert spy.at(0) == [str(tmp_path), 7, large_size]
+
     def test_error_emitted_when_size_fails(
         self, tmp_path: Path, mock_metadata_controller: Any, monkeypatch: Any
     ) -> None:
