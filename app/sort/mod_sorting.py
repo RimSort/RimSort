@@ -562,7 +562,7 @@ class FolderSizeRequestWorker(QObject):
     """
 
     requested = Signal(str, int)
-    result = Signal(str, int, int)
+    result = Signal(str, int, object)
     error = Signal(str, int)
 
     def __init__(self) -> None:

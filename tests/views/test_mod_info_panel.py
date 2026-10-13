@@ -272,6 +272,31 @@ def test_folder_size_updates_asynchronously(
     assert panel.mod_info_folder_size_value.text() == format_file_size(3)
 
 
+def test_folder_size_above_signed_32_bit_limit_updates_asynchronously(
+    panel: ModInfoPanel,
+    qtbot: Any,
+    tmp_path: Path,
+    mock_metadata_controller: MagicMock,
+) -> None:
+    large_size = 2**31
+    large_file = tmp_path / "large-mod-asset.bin"
+    with large_file.open("wb") as file:
+        file.seek(large_size - 1)
+        file.write(bytes(1))
+
+    mod = ListedMod(name="Large Mod")
+    mod.mod_path = Path(str(tmp_path))
+    mock_metadata_controller.mods_metadata = {str(tmp_path): mod}
+
+    panel._set_folder_size_info(str(tmp_path))
+    qtbot.waitUntil(
+        lambda: panel.mod_info_folder_size_value.text() != "Calculating...",
+        timeout=5000,
+    )
+
+    assert panel.mod_info_folder_size_value.text() == format_file_size(large_size)
+
+
 def test_folder_size_error_shows_not_available(
     panel: ModInfoPanel,
     qtbot: Any,
