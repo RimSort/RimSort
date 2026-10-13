@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Download artifact from previous run
         if: ${{ github.event.inputs.run_id != null }}
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
           run-id: ${{ github.event.inputs.run_id }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Download artifact from current run
         if: ${{ github.event.inputs.run_id == null }}
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           pattern: ${{ matrix.env.ARTIFACT_KEY_GLOB }}
 
@@ -72,7 +72,7 @@ jobs:
 
       - name: Download AppImage artifact
         if: matrix.platform == 'Ubuntu-22.04'
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           pattern: "${{ matrix.platform }}_${{ matrix.arch }}_appimage"
           path: appimage-test
