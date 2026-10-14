@@ -228,9 +228,13 @@
           platforms = [ "x86_64-linux" ];
         };
       });
+
+      supported = lib.meta.availableOn pkgs.stdenv.hostPlatform appPkg;
     in
     {
-      packages = {
+      # meta.platforms refuses evaluation elsewhere; don't advertise outputs
+      # that `nix flake check --all-systems` cannot evaluate.
+      packages = lib.optionalAttrs supported {
         rimsort = appPkg;
         default = appPkg;
       };
@@ -243,7 +247,7 @@
             meta.description = appPkg.meta.description;
           };
         in
-        {
+        lib.optionalAttrs supported {
           inherit rimsort;
           default = rimsort;
         };
