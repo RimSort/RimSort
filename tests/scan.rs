@@ -1321,10 +1321,11 @@ fn diagnostics_are_ordered_independently_of_creation_order() {
         sequences.push(diagnostic_sequence(&result, &local));
     }
 
-    let mut paths: Vec<&String> = sequences[0].iter().map(|entry| &entry.0).collect();
+    let paths: Vec<&String> = sequences[0].iter().map(|entry| &entry.0).collect();
     let sorted = {
-        paths.sort();
-        paths.clone()
+        let mut sorted = paths.clone();
+        sorted.sort();
+        sorted
     };
     assert_eq!(
         sequences[0], sequences[1],
