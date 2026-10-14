@@ -42,9 +42,15 @@ def matches_wrapped_program(
 
     The program may be a launcher wrapper (e.g. the Nix steam-run FHS
     launcher via RIMSORT_LAUNCH_PREFIX) that receives the real executable
-    as one of its arguments instead of running it directly.
+    as one of its arguments instead of running it directly. Arguments match
+    by file name only: data paths such as todds targets inside the SteamCMD
+    workshop folder must not identify the process as SteamCMD.
     """
-    return program_name in program or any(program_name in arg for arg in args)
+    if program_name in program:
+        return True
+    return any(
+        program_name in arg.replace("\\", "/").rsplit("/", 1)[-1] for arg in args
+    )
 
 
 class RunnerPanel(QWidget):

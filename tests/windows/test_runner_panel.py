@@ -4,6 +4,7 @@ from re import compile
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 from PySide6.QtCore import QProcess
 
 from app.utils.event_bus import EventBus
@@ -296,30 +297,38 @@ class TestRunnerPanelSteamcmdLogTail:
 
         mock_timer.start.assert_called_once()
 
-    def test_is_process_running_matches_program(self) -> None:
+    @pytest.mark.parametrize(
+        ("program", "args", "is_steamcmd"),
+        [
+            pytest.param("/usr/bin/steamcmd", ["+quit"], True, id="program"),
+            # A wrapper (e.g. Nix steam-run) receives the real executable
+            # as an argument.
+            pytest.param(
+                "/nix/store/x-steam-run/bin/steam-run",
+                ["/steamcmd/steamcmd.sh", '+runscript "script.txt"'],
+                True,
+                id="wrapped-executable",
+            ),
+            # todds optimizing the SteamCMD workshop folder is not SteamCMD.
+            pytest.param(
+                "/opt/RimSort/todds/todds",
+                ["-p", "/data/steamcmd/steamapps/workshop/content/294100"],
+                False,
+                id="data-path-argument",
+            ),
+        ],
+    )
+    def test_is_process_running_identifies_steamcmd(
+        self, program: str, args: list[str], is_steamcmd: bool
+    ) -> None:
         panel = RunnerPanel.__new__(RunnerPanel)
         panel.process = MagicMock()
         panel.process.state.return_value = QProcess.ProcessState.Running
-        panel.process.program.return_value = "/usr/bin/steamcmd"
-        panel.process.arguments.return_value = ["+quit"]
+        panel.process.program.return_value = program
+        panel.process.arguments.return_value = args
 
-        assert panel._is_process_running("steamcmd") is True
-        assert panel._is_process_running("todds") is False
-
-    def test_is_process_running_matches_wrapped_executable_in_args(self) -> None:
-        """The program may be a wrapper (e.g. Nix steam-run) that receives the
-        real executable as an argument."""
-        panel = RunnerPanel.__new__(RunnerPanel)
-        panel.process = MagicMock()
-        panel.process.state.return_value = QProcess.ProcessState.Running
-        panel.process.program.return_value = "/nix/store/x-steam-run/bin/steam-run"
-        panel.process.arguments.return_value = [
-            "/steamcmd/steamcmd.sh",
-            '+runscript "script.txt"',
-        ]
-
-        assert panel._is_process_running("steamcmd") is True
-        assert panel._is_process_running("todds") is False
+        assert panel._is_process_running("steamcmd") is is_steamcmd
+        assert panel._is_process_running("todds") is not is_steamcmd
 
     def test_restart_reuses_process_environment(self, tmp_path: Path) -> None:
         panel = RunnerPanel.__new__(RunnerPanel)
