@@ -132,7 +132,6 @@ def nix_launch_prefix(monkeypatch: pytest.MonkeyPatch) -> str:
 
 
 @pytest.fixture
-def fresh_event_bus() -> Generator[None, None, None]:
 def fresh_event_bus() -> Generator[None]:
     """Reset the EventBus singleton so each test gets a clean instance."""
     from app.utils.event_bus import EventBus

@@ -6,8 +6,8 @@
   perSystem =
     { pkgs, ... }:
     let
-      # Explicit pin; pyproject requires-python is ==3.12.*
-      python = pkgs.python312;
+      # Explicit pin; pyproject requires-python is ==3.14.*
+      python = pkgs.python314;
 
       # 1. Load workspace (pyproject.toml + uv.lock at eval time)
       workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
