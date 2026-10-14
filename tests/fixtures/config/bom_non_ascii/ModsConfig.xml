@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- RimWorld skrev den här listan — 模式 -->
+<ModsConfigData>
+  <version>1.5.4104 rev435</version>
+  <activeMods>
+    <li>ludeon.rimworld</li>
+    <li>Åsa.Übermod_steam</li>
+    <li>Älytön.模式</li>
+  </activeMods>
+  <knownExpansions>
+    <li>ludeon.rimworld</li>
+  </knownExpansions>
+</ModsConfigData>

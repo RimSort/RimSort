@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.5.4104 rev435</version>
+  <activeMods>
+    <li>ludeon.rimworld</li>
+    <li>Ludeon.RimWorld.Royalty</li>
+    <!-- added by hand, kept on purpose -->
+    <li>brrainz.harmony</li>
+    <li>unresolved.mod_steam</li>
+  </activeMods>
+  <knownExpansions>
+    <li>ludeon.rimworld</li>
+    <li>ludeon.rimworld.royalty</li>
+  </knownExpansions>
+</ModsConfigData>
