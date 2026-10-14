@@ -1,0 +1,4 @@
+# Shell scripts must stay LF in the working tree on every platform: shfmt
+# rejects CRLF, so a Windows checkout under core.autocrlf=true would otherwise
+# fail `just shfmt` on every run for reasons unrelated to formatting.
+*.sh text eol=lf

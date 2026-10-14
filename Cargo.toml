@@ -1,0 +1,11 @@
+[package]
+name = "rimsort-rust"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+slint = "1.16.0"
+
+[build-dependencies]
+slint-build = "1.16.0"
