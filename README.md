@@ -34,7 +34,7 @@ The first build downloads and compiles dependencies.
 | `just fmt` | Format Rust source | `cargo fmt --all` |
 | `just lint` | Clippy, denying warnings | `cargo clippy --locked --workspace --all-targets -- -D warnings` |
 | `just test` | Run workspace tests | `cargo test --locked --workspace` |
-| `just check` | Check formatting, lint, then test | `cargo fmt --all -- --check`, then the lint and test commands above |
+| `just check` | Check formatting, lint, test, then compile | `cargo fmt --all -- --check`, then the lint and test commands above, then `cargo build --locked` |
 | `just build` | Build a native release executable | `cargo build --locked --release` |
 
 `just check` does not rewrite formatting. Release executables are written to
@@ -42,13 +42,13 @@ The first build downloads and compiles dependencies.
 
 Dependencies are resolved from the tracked lockfile. Rust stable and hosted runner
 images can change, so this is not a bit-for-bit reproducible build guarantee.
-The application is currently a minimal window; the test harness has no behavioral
-tests yet. Compilation and tests do not prove a visible window or game operations.
+The UI is currently a minimal window. Workspace tests cover metadata behavior;
+compilation and those tests do not prove a visible window or game operations.
 
 ## CI and downloadable builds
 
 The **Rust CI** GitHub Actions workflow runs on pull requests, pushes to
-`feature/rust-rewrite-foundation`, and manual dispatch. Update the push branch
+`rewrite/rust`, and manual dispatch. Update the push branch
 filter when integrating this workflow onto another branch.
 
 Formatting runs once on Linux. Clippy, tests, and native release builds run on
