@@ -15,25 +15,8 @@
 { lib, inputs, ... }:
 {
   perSystem =
-    { config, system, ... }:
+    { config, pkgs, ... }:
     let
-      # Shadow the module `pkgs` for this part only: the packaged app
-      # legitimately touches proprietary bits (steam-run FHS env, valve SDK
-      # libsteam_api.so). nixpkgs marks those unfree, so building rimsort
-      # requires an allowUnfree predicate. Scope it to this part: only steam
-      # and rimsort itself are allowed through; hooks/devshell keep the
-      # gated package set.
-      pkgs = import inputs.nixpkgs {
-        inherit system;
-        config.allowUnfreePredicate =
-          pkg:
-          builtins.elem (lib.getName pkg) [
-            "rimsort"
-            "rimsort-tests"
-            "steam"
-            "steam-unwrapped"
-          ];
-      };
       inherit (config.rimsortPython)
         appEnv
         devEnv
