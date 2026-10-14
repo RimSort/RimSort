@@ -65,8 +65,17 @@
           pysideSystemDeps = commonQtSystemLibs ++ [ pkgs.libxkbfile ];
         in
         lib.mapAttrs (
-          _name: drv:
+          name: drv:
           drv.overrideAttrs (old: {
+            # pyside_tool resolves PySide6/__init__.py through its symlink into
+            # the pyside6 store path, which lacks the tool binaries (they ship
+            # in essentials); the unresolved venv directory has both.
+            postInstall =
+              old.postInstall or ""
+              + lib.optionalString (name == "pyside6-essentials") ''
+                substituteInPlace $out/${python.sitePackages}/PySide6/scripts/pyside_tool.py \
+                  --replace-fail "Path(ref_mod.__file__).resolve().parent" "Path(ref_mod.__file__).parent"
+              '';
             buildInputs =
               old.buildInputs or [ ]
               ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux (pysideQtDeps ++ pysideSystemDeps);
