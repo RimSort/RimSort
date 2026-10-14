@@ -31,11 +31,16 @@ nix run github:RimSort/RimSort#rimsort   # run the packaged app
 nix build github:RimSort/RimSort#rimsort # build only
 ```
 
-For development, the flake provides a pure shell with the locked dev environment (pytest, mypy, pyright, ruff) and auto-installed pre-commit hooks:
+NixOS and home-manager configurations can add `overlays.default` to `nixpkgs.overlays` and install `pkgs.rimsort`; it is built from the flake's pinned nixpkgs, which already allows the bundled Steamworks SDK. Without flakes, `nix-build` and `nix-shell` work through `default.nix` / `shell.nix`.
+
+For development, the flake provides a pure shell with the locked dev environment (pytest, mypy, pyright, ruff) and auto-installed pre-commit hooks (skipped when `just install-hooks` set `core.hooksPath`). The `just` recipes and `uv run` use the Nix environment inside it:
 
 ```sh
 nix develop
+just test
 ```
+
+With [direnv](https://direnv.net/) (and ideally [nix-direnv](https://github.com/nix-community/nix-direnv)), `direnv allow` loads the shell automatically when Nix is installed and falls back to the uv `.venv` otherwise; set `RIMSORT_NO_NIX=1` or use `.envrc.local` to opt out.
 
 See `flake.nix` and `nix/parts/` for the plumbing.
 
