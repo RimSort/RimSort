@@ -11,6 +11,19 @@
 //! active list a user reads always has one entry per configured entry and no
 //! token is quietly dropped or renamed.
 //!
+//! # Record order
+//!
+//! The catalog owns the sequence it was given: [`Catalog::mods`] returns the
+//! scanner's records in exactly the order they were passed to
+//! [`Catalog::new`], and a repeated [`ModId`] is an error rather than a
+//! deduplication. Nothing here re-sorts the whole record list, so the scanner
+//! is responsible for handing over a stable canonical-identity order.
+//!
+//! Only the copy groups and resolution are independent of that input order:
+//! sorting happens once per package id at construction, by source preference,
+//! then natural path order, then the raw path, so shuffling the input cannot
+//! move a copy.
+//!
 //! # Looking a token up
 //!
 //! [`Catalog::resolve_token`] normalises the token through
@@ -18,14 +31,16 @@
 //! and lowercasing — and reads one trailing `_steam` off the normalised text.
 //!
 //! - A bare token prefers `Official`, `Local`, `SteamCMD`, `Git`, `Workshop`.
-//! - A `_steam` token prefers `Workshop`, `SteamCMD`, `Git`, `Local` and never
+//! - A `_steam` token prefers `Workshop`, `Local`, `SteamCMD`, `Git` and never
 //!   falls back to game `Data` content.
 //! - `_steam` is only ever read from the end: `a_steam_b` stays part of the
 //!   identity. No other qualifier (`_git`, `_local`) is invented here.
 //! - Copies that tie on source order compare by natural path component order,
 //!   so `mod2` precedes `mod10`, and only then by the raw canonical path. Digit
-//!   runs compare by significant-digit count and then as text, and are never
-//!   parsed, so an absurdly long version segment cannot overflow.
+//!   runs compare by significant-digit count and then as bytes, and are never
+//!   parsed, so an absurdly long version segment cannot overflow. The same rule
+//!   reads every component, valid UTF-8 or not, because a comparator that
+//!   changes representation per pair is not a total order.
 //!
 //! Records whose metadata is unusable are kept, listed by
 //! [`Catalog::copies`] and retrievable by [`Catalog::get`], but they never
@@ -36,9 +51,11 @@
 //! Resolution picks the preferred copy; it does not forbid the others, and they
 //! stay inspectable. A `ModsConfig.xml` `<li>` carries only a package id — plus
 //! the trailing marker already spent on source preference — so it cannot name
-//! which of several same-stem physical copies to load. Which copy that preference
-//! order selects therefore has to be confirmed by the owner before any save or
-//! session work writes it back out.
+//! which of several same-stem physical copies to load. The owner has confirmed
+//! that the later session work rejects a physically unencodable copy choice up
+//! front instead of encoding a silent pick; that restriction belongs to session
+//! and save, not to this catalog, which keeps every copy reachable and every
+//! unresolved token preservable.
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -142,15 +159,15 @@ fn default_rank(source: Source) -> u8 {
     }
 }
 
-/// Qualified (`_steam`) source preference: `Workshop`, `SteamCMD`, `Git`,
-/// `Local`. Game `Data` content cannot answer a qualified token, so it has no
+/// Qualified (`_steam`) source preference: `Workshop`, `Local`, `SteamCMD`,
+/// `Git`. Game `Data` content cannot answer a qualified token, so it has no
 /// rank and is never a fallback.
 fn qualified_rank(source: Source) -> Option<u8> {
     match source {
         Source::Workshop => Some(0),
-        Source::SteamCmd => Some(1),
-        Source::Git => Some(2),
-        Source::Local => Some(3),
+        Source::Local => Some(1),
+        Source::SteamCmd => Some(2),
+        Source::Git => Some(3),
         Source::Official => None,
     }
 }
@@ -194,33 +211,38 @@ fn path_order(a: &Path, b: &Path) -> Ordering {
     }
 }
 
-/// Natural order of one path component, on the raw operating-system text.
+/// Natural order of one path component, over its raw encoded bytes.
 ///
-/// A component that is not valid UTF-8 still has to be ordered, and ordering it
-/// by its raw bytes keeps `mod2` before `mod10` the same way; the lossy display
-/// form is never consulted, because it is not an identity.
+/// Every component goes through the same algorithm, valid UTF-8 or not: a
+/// comparator that compares valid pairs naturally and any invalid pair by raw
+/// text is not a total order at all. With `mod2`, `mod10` and `mod1` plus an
+/// undecodable byte that gives `mod2 < mod10`, `mod10 < mod1\xFF` and
+/// `mod1\xFF < mod2`, so the sorted copy order would depend on the order the
+/// records happened to arrive in. `OsStr::as_encoded_bytes` is the byte form of
+/// the identity itself, so no path is dropped and lossy display text is never
+/// consulted.
 fn component_order(a: &std::ffi::OsStr, b: &std::ffi::OsStr) -> Ordering {
-    match (a.to_str(), b.to_str()) {
-        (Some(a), Some(b)) => natural_cmp(a, b),
-        _ => a.cmp(b),
-    }
+    natural_cmp(a.as_encoded_bytes(), b.as_encoded_bytes())
 }
 
-/// Natural order of two texts: equal-length digit runs compare as numbers,
-/// everything else compares as text.
+/// Natural order of two byte runs: a run of ASCII digits compares as the number
+/// it spells, any other run compares as the bytes it is.
 ///
 /// A digit run is never parsed into a number, so a forty-digit version in a
 /// directory name cannot overflow anything: a run with more significant digits
-/// is the larger one.
-fn natural_cmp(a: &str, b: &str) -> Ordering {
+/// is the larger one. Runs only break at an ASCII digit boundary, which is
+/// never inside a multi-byte UTF-8 sequence, and byte order is the same as text
+/// order for the ASCII digits themselves, so valid names keep comparing the way
+/// they did.
+fn natural_cmp(a: &[u8], b: &[u8]) -> Ordering {
     let mut left = a;
     let mut right = b;
     loop {
-        match (left, right) {
-            ("", "") => return Ordering::Equal,
-            ("", _) => return Ordering::Less,
-            (_, "") => return Ordering::Greater,
-            _ => {}
+        match (left.is_empty(), right.is_empty()) {
+            (true, true) => return Ordering::Equal,
+            (true, false) => return Ordering::Less,
+            (false, true) => return Ordering::Greater,
+            (false, false) => {}
         }
         let (left_run, left_rest) = split_run(left);
         let (right_run, right_rest) = split_run(right);
@@ -237,29 +259,38 @@ fn natural_cmp(a: &str, b: &str) -> Ordering {
     }
 }
 
-/// The leading run of `text`, which is either all ASCII digits or no digits at
-/// all, and whatever follows it.
-fn split_run(text: &str) -> (&str, &str) {
-    let digits = text
-        .as_bytes()
-        .first()
-        .is_some_and(|byte| byte.is_ascii_digit());
-    let end = text
-        .bytes()
+/// The leading run of `bytes`, which is either all ASCII digits or holds no
+/// ASCII digit at all, and whatever follows it.
+fn split_run(bytes: &[u8]) -> (&[u8], &[u8]) {
+    let digits = bytes.first().is_some_and(u8::is_ascii_digit);
+    let end = bytes
+        .iter()
         .position(|byte| byte.is_ascii_digit() != digits)
-        .unwrap_or(text.len());
-    text.split_at(end)
+        .unwrap_or(bytes.len());
+    bytes.split_at(end)
 }
 
-fn is_digits(run: &str) -> bool {
-    !run.is_empty() && run.as_bytes().iter().all(u8::is_ascii_digit)
+fn is_digits(run: &[u8]) -> bool {
+    !run.is_empty() && run.iter().all(u8::is_ascii_digit)
 }
 
-/// Compares two digit runs by value without converting them to a number.
-fn number_cmp(a: &str, b: &str) -> Ordering {
-    let a = a.trim_start_matches('0');
-    let b = b.trim_start_matches('0');
+/// Compares two ASCII digit runs by value, without converting either one to a
+/// number: fewer significant digits is the smaller value, and equal-length runs
+/// compare digit by digit.
+fn number_cmp(a: &[u8], b: &[u8]) -> Ordering {
+    let a = without_leading_zeros(a);
+    let b = without_leading_zeros(b);
     a.len().cmp(&b.len()).then_with(|| a.cmp(b))
+}
+
+/// The same digits with every leading zero removed, so `0002` and `2` are one
+/// number and the raw path tie decides between their directories.
+fn without_leading_zeros(run: &[u8]) -> &[u8] {
+    let end = run
+        .iter()
+        .position(|byte| *byte != b'0')
+        .unwrap_or(run.len());
+    &run[end..]
 }
 
 /// The installed copies, indexed by directory identity and by package id.
@@ -272,6 +303,10 @@ pub struct Catalog {
 
 impl Catalog {
     /// Takes the ordered physical records the scanner produced.
+    ///
+    /// The given sequence is what [`Catalog::mods`] returns: the catalog never
+    /// re-sorts the record list, so the scanner owns the presentation order of
+    /// rows. Only copy order and token resolution are independent of it.
     ///
     /// A [`ModId`] identifies a directory, so the same one twice is a
     /// contradictory input; it is reported rather than deduplicated, because
@@ -335,6 +370,9 @@ impl Catalog {
     }
 
     /// Every physical record, in the order the scanner listed them.
+    ///
+    /// This is the input sequence, unchanged: no global sort is imposed on the
+    /// records, and a row is never dropped or merged.
     #[must_use]
     pub fn mods(&self) -> &[ModMetadata] {
         &self.records
@@ -455,6 +493,10 @@ impl<'catalog> Iterator for Copies<'catalog> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.positions.next().map(|&index| &self.records[index])
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.positions.size_hint()
     }
 }
 

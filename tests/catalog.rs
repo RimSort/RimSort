@@ -22,14 +22,18 @@ fn package(raw: &str) -> PackageId {
     PackageId::normalize(raw).unwrap_or_else(|| panic!("{raw:?} must normalize to a package id"))
 }
 
+/// Usable metadata declaring `package_id`; the name is decoration here.
+fn usable_metadata(package_id: &str) -> ParsedMetadata {
+    ParsedMetadata {
+        package_id: Some(package(package_id)),
+        name: Some(package_id.to_string()),
+        ..ParsedMetadata::default()
+    }
+}
+
 /// One installed copy with usable metadata.
 fn record(path: &str, source: Source, package_id: &str) -> ModMetadata {
-    let parsed = ParsedMetadata {
-        package_id: Some(package(package_id)),
-        name: Some(format!("{package_id} at {path}")),
-        ..ParsedMetadata::default()
-    };
-    ModMetadata::new(mod_id(path), source, parsed)
+    ModMetadata::new(mod_id(path), source, usable_metadata(package_id))
 }
 
 /// One installed copy read from inline `About.xml` bytes.
@@ -185,6 +189,47 @@ fn offers_no_copies_for_a_package_id_nothing_declares() {
 }
 
 #[test]
+fn copies_reports_the_same_exact_size_to_size_hint_as_to_len() {
+    let mut mods = Vec::new();
+    every_source(&mut mods, "multi.mod");
+    let catalog = catalog(mods);
+    let multi = package("multi.mod");
+
+    let mut copies = catalog.copies(&multi);
+    assert_eq!(copies.len(), 5);
+    assert_eq!(
+        copies.size_hint(),
+        (5, Some(5)),
+        "an ExactSizeIterator promises an exact hint"
+    );
+
+    copies.next().expect("the preferred copy");
+    assert_eq!(copies.len(), 4);
+    assert_eq!(
+        copies.size_hint(),
+        (4, Some(4)),
+        "the hint tracks consumption"
+    );
+
+    assert_eq!(copies.by_ref().count(), 4);
+    assert_eq!(copies.len(), 0);
+    assert_eq!(
+        copies.size_hint(),
+        (0, Some(0)),
+        "an exhausted group says so"
+    );
+
+    let mut empty = catalog.copies(&package("nobody.declares.this"));
+    assert_eq!(empty.len(), 0);
+    assert_eq!(
+        empty.size_hint(),
+        (0, Some(0)),
+        "an unknown id is exactly empty"
+    );
+    assert_eq!(empty.next(), None);
+}
+
+#[test]
 fn resolves_a_bare_token_to_the_preferred_copy_by_normalised_package_id() {
     let catalog = catalog(vec![
         record("/workshop/7777", Source::Workshop, "brrainz.harmony"),
@@ -254,6 +299,8 @@ fn walks_the_qualified_preference_list_down_from_workshop() {
     let steamcmd = record("/steamcmd/multi", Source::SteamCmd, "multi.mod");
 
     for (installed, expected) in [
+        // Workshop wins when it is there; otherwise Local, then SteamCMD, then
+        // Git, and game Data is never a fallback.
         (
             vec![
                 official.clone(),
@@ -261,10 +308,14 @@ fn walks_the_qualified_preference_list_down_from_workshop() {
                 git.clone(),
                 steamcmd.clone(),
             ],
+            mod_id("/mods/local/multi"),
+        ),
+        (
+            vec![official.clone(), git.clone(), steamcmd.clone()],
             mod_id("/steamcmd/multi"),
         ),
         (
-            vec![official.clone(), local.clone(), git.clone()],
+            vec![official.clone(), git.clone()],
             mod_id("/mods/git/multi"),
         ),
         (
@@ -495,6 +546,206 @@ fn compares_long_digit_runs_without_a_numeric_limit() {
         ],
         "digit runs compare by length then text, so no segment has to fit an integer"
     );
+}
+
+/// A canonical directory identity built from raw bytes, so a component can hold
+/// a byte that is not valid UTF-8. Unix names are byte strings, which is where
+/// such a directory can really come from.
+#[cfg(unix)]
+fn mod_id_bytes(path: &[u8]) -> ModId {
+    use std::os::unix::ffi::OsStringExt;
+    let name = std::ffi::OsString::from_vec(path.to_vec());
+    ModId::new(std::path::PathBuf::from(name))
+}
+
+/// One usable Workshop copy whose directory name is raw bytes, under
+/// `/workshop/`. The identity is a hand-authored absolute path and no directory
+/// is ever created or read.
+#[cfg(unix)]
+fn raw_workshop_copy(name: &[u8], package_id: &str) -> ModMetadata {
+    let mut path = b"/workshop/".to_vec();
+    path.extend_from_slice(name);
+    ModMetadata::new(
+        mod_id_bytes(&path),
+        Source::Workshop,
+        usable_metadata(package_id),
+    )
+}
+
+/// Three copies sharing one package id and source, whose last component is
+/// `mod2`, `mod10`, and `mod1` followed by a byte no UTF-8 text can contain.
+/// Ordering them is only well-defined if one comparison rule covers every pair.
+#[cfg(unix)]
+#[test]
+fn orders_a_mixed_encoding_triple_the_same_way_in_every_permutation() {
+    let two = raw_workshop_copy(b"mod2", "multi.mod");
+    let ten = raw_workshop_copy(b"mod10", "multi.mod");
+    let invalid = raw_workshop_copy(b"mod1\xff", "multi.mod");
+    // `mod1` is one digit run long for the invalid name, so its number is the
+    // smallest of the three; the trailing byte only breaks a tie that never
+    // comes up.
+    let expected = vec![invalid.id.clone(), two.id.clone(), ten.id.clone()];
+    let preferred = expected[0].clone();
+
+    for arrangement in permutations(&[two.clone(), ten.clone(), invalid.clone()]) {
+        let catalog = catalog(arrangement);
+        assert_eq!(
+            catalog.mods().len(),
+            3,
+            "three directories are three records"
+        );
+        assert_eq!(
+            copy_ids(catalog.copies(&package("multi.mod"))),
+            expected,
+            "the copy order must not depend on the order the records arrived in"
+        );
+        assert_eq!(
+            resolved_id(&catalog.resolve_token("multi.mod")),
+            preferred,
+            "a bare token has to pick the same copy in every arrangement"
+        );
+        assert_eq!(
+            resolved_id(&catalog.resolve_token("multi.mod_steam")),
+            preferred,
+            "and so does a qualified one"
+        );
+    }
+}
+
+/// A wider mixed set, whose leading-zero name ties numerically with `mod2` so
+/// the raw path has to break that tie, orders the same way in all 24 inputs.
+#[cfg(unix)]
+#[test]
+fn orders_mixed_and_zero_padded_components_consistently() {
+    let invalid = raw_workshop_copy(b"mod1\xfe", "multi.mod");
+    let padded = raw_workshop_copy(b"mod002", "multi.mod");
+    let two = raw_workshop_copy(b"mod2", "multi.mod");
+    let ten = raw_workshop_copy(b"mod10", "multi.mod");
+    let expected = vec![
+        invalid.id.clone(),
+        padded.id.clone(),
+        two.id.clone(),
+        ten.id.clone(),
+    ];
+
+    let records = [invalid.clone(), padded.clone(), two.clone(), ten.clone()];
+    for arrangement in permutations(&records) {
+        let catalog = catalog(arrangement);
+        assert_eq!(
+            copy_ids(catalog.copies(&package("multi.mod"))),
+            expected,
+            "`mod002` and `mod2` are the same number, so the raw path breaks that tie"
+        );
+        assert_eq!(
+            resolved_id(&catalog.resolve_token("multi.mod")),
+            invalid.id.clone()
+        );
+    }
+}
+
+/// Every arrangement of `records`, for order-independence fixtures.
+fn permutations<T: Clone>(records: &[T]) -> Vec<Vec<T>> {
+    if records.len() < 2 {
+        return vec![records.to_vec()];
+    }
+    let mut arrangements = Vec::new();
+    for index in 0..records.len() {
+        let mut rest = records.to_vec();
+        let first = rest.remove(index);
+        for tail in permutations(&rest) {
+            let mut arrangement = vec![first.clone()];
+            arrangement.extend(tail);
+            arrangements.push(arrangement);
+        }
+    }
+    arrangements
+}
+
+/// Digit runs order naturally whether or not the rest of the name is valid
+/// UTF-8; an invalid byte is a byte, not a licence to fall back to text order.
+#[cfg(unix)]
+#[test]
+fn orders_digit_runs_in_invalid_components_naturally_too() {
+    let two = raw_workshop_copy(b"mod2\xff", "multi.mod");
+    let ten = raw_workshop_copy(b"mod10\xff", "multi.mod");
+    let catalog = catalog(vec![ten.clone(), two.clone()]);
+
+    assert_eq!(
+        copy_ids(catalog.copies(&package("multi.mod"))),
+        vec![two.id.clone(), ten.id.clone()],
+        "2 still precedes 10 when the name carries a byte that is not UTF-8"
+    );
+    assert_eq!(
+        resolved_id(&catalog.resolve_token("multi.mod")),
+        two.id.clone()
+    );
+}
+
+/// Two directories that display identically are still two records, because the
+/// display form is not an identity.
+#[cfg(unix)]
+#[test]
+fn keeps_two_paths_that_display_identically_as_two_records() {
+    let last = raw_workshop_copy(b"shared\xfe", "multi.mod");
+    let max = raw_workshop_copy(b"shared\xff", "multi.mod");
+    assert_eq!(
+        last.id.to_string(),
+        max.id.to_string(),
+        "both names collapse to the same replacement character when displayed"
+    );
+
+    let catalog = catalog(vec![max.clone(), last.clone()]);
+
+    assert_eq!(catalog.mods().len(), 2);
+    assert!(
+        catalog.get(&last.id).is_some() && catalog.get(&max.id).is_some(),
+        "each raw directory stays addressable"
+    );
+    assert_eq!(
+        copy_ids(catalog.copies(&package("multi.mod"))),
+        vec![last.id.clone(), max.id.clone()],
+        "0xfe precedes 0xff, and neither row is folded into the other"
+    );
+}
+
+/// A leading zero is a natural tie, not a decision: a later component still has
+/// to be compared naturally instead of dropping straight to the raw path.
+#[test]
+fn leading_zero_components_tie_naturally_and_let_a_later_component_decide() {
+    let padded_ten = record("/workshop/v01/mod10", Source::Workshop, "multi.mod");
+    let plain_two = record("/workshop/v1/mod2", Source::Workshop, "multi.mod");
+
+    for arrangement in [
+        vec![padded_ten.clone(), plain_two.clone()],
+        vec![plain_two.clone(), padded_ten.clone()],
+    ] {
+        let catalog = catalog(arrangement);
+        assert_eq!(
+            copy_ids(catalog.copies(&package("multi.mod"))),
+            vec![plain_two.id.clone(), padded_ten.id.clone()],
+            "`v01` and `v1` are the same number, so `mod2` before `mod10` decides"
+        );
+    }
+}
+
+/// When every component ties naturally the raw canonical path is the final,
+/// deterministic tiebreak.
+#[test]
+fn naturally_equal_paths_are_ordered_by_the_raw_canonical_path() {
+    let padded = record("/workshop/v01/mod2", Source::Workshop, "multi.mod");
+    let plain = record("/workshop/v1/mod2", Source::Workshop, "multi.mod");
+
+    for arrangement in [
+        vec![padded.clone(), plain.clone()],
+        vec![plain.clone(), padded.clone()],
+    ] {
+        let catalog = catalog(arrangement);
+        assert_eq!(
+            copy_ids(catalog.copies(&package("multi.mod"))),
+            vec![padded.id.clone(), plain.id.clone()],
+            "both directories name the same numbers, so the raw path breaks the tie"
+        );
+    }
 }
 
 #[test]
