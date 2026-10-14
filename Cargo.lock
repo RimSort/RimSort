@@ -3665,8 +3665,10 @@ dependencies = [
 name = "rimsort-rust"
 version = "0.1.0"
 dependencies = [
+ "quick-xml",
  "slint",
  "slint-build",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

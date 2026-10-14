@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>version.key.case</packageId>
+  <name>Version Key Case</name>
+  <loadAfter>
+    <li>base.after</li>
+  </loadAfter>
+  <loadAfterByVersion>
+    <vv1.5>
+      <li>double.prefix.entry</li>
+    </vv1.5>
+    <V1.5>
+      <li>upper.prefix.entry</li>
+    </V1.5>
+  </loadAfterByVersion>
+</ModMetaData>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>list.items</packageId>
+  <name>List Items</name>
+  <author>Solo Author</author>
+  <authors>
+    <li>First Author</li>
+    <li>Second Author</li>
+  </authors>
+  <description>A plain description.</description>
+  <supportedVersions>
+    <li>1.4</li>
+    <li>1.5</li>
+  </supportedVersions>
+  <loadBefore>
+    <li>before.only</li>
+  </loadBefore>
+  <loadAfter>
+    <li>after.one</li>
+    <li>after.two</li>
+    <li>after.one</li>
+  </loadAfter>
+  <incompatibleWith>
+    <li>incompat.one</li>
+    <li>incompat.two</li>
+  </incompatibleWith>
+  <url>https://example.invalid/list-items</url>
+  <modVersion>1.2.3</modVersion>
+  <modIconPath>Mods/list.items/Icon.png</modIconPath>
+  <steamAppId>1149640</steamAppId>
+  <notAField>ignored text</notAField>
+</ModMetaData>

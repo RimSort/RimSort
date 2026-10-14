@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>desc.version</packageId>
+  <name>Description By Version</name>
+  <description>Base description</description>
+  <descriptionsByVersion>
+    <v1.4>Old description</v1.4>
+    <v1.5>Versioned description</v1.5>
+  </descriptionsByVersion>
+</ModMetaData>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>dep.diagnostics</packageId>
+  <name>Dependency Diagnostics</name>
+  <modDependencies>
+    <li>
+      <packageId>dup.dep</packageId>
+    </li>
+    <li>
+      <packageId>DUP.DEP</packageId>
+      <displayName>Second Spelling</displayName>
+    </li>
+    <li>
+      <displayName>Headless Dep</displayName>
+    </li>
+    <li></li>
+  </modDependencies>
+</ModMetaData>

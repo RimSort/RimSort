@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>wrapperless.list</packageId>
+  <name>Wrapperless List</name>
+  <loadAfter>
+    <packageId>needed.mod</packageId>
+  </loadAfter>
+  <loadBefore>
+    <li>listed.before</li>
+    <!-- A blank entry carries no requirement. -->
+    <li></li>
+  </loadBefore>
+</ModMetaData>

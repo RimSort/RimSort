@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>entities.mod</packageId>
+  <name>Tom &amp; Jerry</name>
+  <description>A &lt;tag&gt; &quot;quote&quot; &#8212; dash with &amp; again</description>
+  <loadAfter>
+    <li>a&amp;b</li>
+  </loadAfter>
+</ModMetaData>

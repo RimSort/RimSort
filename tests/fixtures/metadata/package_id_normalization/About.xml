@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>  Author.Mod  </packageId>
+  <name>Normalization Probe</name>
+  <loadAfter>
+    <li>Other.Mod</li>
+    <li>  THIRD.mod  </li>
+    <li>other.MOD</li>
+  </loadAfter>
+  <incompatibleWith>
+    <li>Incompat.Mod</li>
+  </incompatibleWith>
+</ModMetaData>

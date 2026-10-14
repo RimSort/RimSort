@@ -5,7 +5,9 @@ edition = "2024"
 build = "build.rs"
 
 [dependencies]
+quick-xml = "0.41.0"
 slint = "1.16.0"
+thiserror = "2.0.21"
 
 [build-dependencies]
 slint-build = "1.16.0"

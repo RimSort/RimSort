@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>nonmatching.version</packageId>
+  <name>Non-matching Version</name>
+  <loadAfter>
+    <li>base.after</li>
+  </loadAfter>
+  <loadAfterByVersion>
+    <v1.4>
+      <li>old.after</li>
+    </v1.4>
+  </loadAfterByVersion>
+  <incompatibleWith>
+    <li>base.incompat</li>
+  </incompatibleWith>
+  <incompatibleWithByVersion>
+    <v1.4>
+      <li>old.incompat</li>
+    </v1.4>
+  </incompatibleWithByVersion>
+  <modDependencies>
+    <li>
+      <packageId>base.dep</packageId>
+      <displayName>Base Dep</displayName>
+    </li>
+  </modDependencies>
+  <modDependenciesByVersion>
+    <v1.4>
+      <li>
+        <packageId>old.dep</packageId>
+        <displayName>Old Dep</displayName>
+      </li>
+    </v1.4>
+  </modDependenciesByVersion>
+</ModMetaData>

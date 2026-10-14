@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>plain.entries</packageId>
+  <name>Plain Entries</name>
+  <modDependencies>
+    <packageId>wrapped.dep</packageId>
+    <displayName>Wrapped Dep</displayName>
+  </modDependencies>
+  <incompatibleWith>plain.incompat</incompatibleWith>
+  <loadAfter>
+    <li>normal.entry</li>
+  </loadAfter>
+</ModMetaData>

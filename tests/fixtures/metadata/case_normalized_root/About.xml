@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modmetadata>
+  <PackageID>Case.Normalized</PackageID>
+  <Name>Case Normalized</Name>
+  <Description>Root and child names are matched regardless of case.</Description>
+  <SupportedVersions>
+    <LI>1.5</LI>
+  </SupportedVersions>
+  <LoadAfter>
+    <li>Some.Mod</li>
+  </LoadAfter>
+  <ModDependencies>
+    <li>
+      <PackageID>Wants.Dep</PackageID>
+      <DisplayName>Wants Dep</DisplayName>
+      <AlternativePackageIds>
+        <li>Wants.Alt</li>
+      </AlternativePackageIds>
+    </li>
+  </ModDependencies>
+</modmetadata>

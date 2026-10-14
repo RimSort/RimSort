@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>force.empty.override</packageId>
+  <name>Force Load With Empty Override</name>
+  <loadAfter>
+    <li>base.after</li>
+  </loadAfter>
+  <loadAfterByVersion>
+    <v1.5/>
+  </loadAfterByVersion>
+  <forceLoadAfter>
+    <li>force.after</li>
+  </forceLoadAfter>
+  <loadBefore>
+    <li>base.before</li>
+  </loadBefore>
+  <loadBeforeByVersion>
+    <v1.5/>
+  </loadBeforeByVersion>
+  <forceLoadBefore>
+    <li>force.before</li>
+  </forceLoadBefore>
+</ModMetaData>

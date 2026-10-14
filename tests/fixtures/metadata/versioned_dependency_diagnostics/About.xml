@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>versioned.deps</packageId>
+  <name>Versioned Dependency Diagnostics</name>
+  <modDependencies>
+    <li>
+      <packageId>base.dep</packageId>
+    </li>
+  </modDependencies>
+  <modDependenciesByVersion>
+    <v1.5>
+      <li>
+        <displayName>Versioned Headless</displayName>
+      </li>
+      <li>
+        <packageId>versioned.dup</packageId>
+      </li>
+      <li>
+        <packageId>VERSIONED.DUP</packageId>
+      </li>
+      <li>
+        <packageId>versioned.alts</packageId>
+        <alternativePackageIds>
+          <li>
+            <packageId>markup.alt</packageId>
+          </li>
+        </alternativePackageIds>
+      </li>
+    </v1.5>
+  </modDependenciesByVersion>
+</ModMetaData>

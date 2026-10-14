@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>invalid.fields</packageId>
+  <name>Invalid Field Values</name>
+  <supportedVersions>
+    <li>1.5</li>
+    <li>nightly</li>
+  </supportedVersions>
+  <steamAppId>not-a-number</steamAppId>
+  <loadAfter>
+    <li>
+      <packageId>markup.entry</packageId>
+    </li>
+  </loadAfter>
+</ModMetaData>

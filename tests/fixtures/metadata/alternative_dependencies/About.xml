@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>alt.deps</packageId>
+  <name>Alternative Dependencies</name>
+  <modDependencies>
+    <li>
+      <packageId>Primary.Dep</packageId>
+      <displayName>Primary Dep</displayName>
+      <workshopUrl>https://example.invalid/workshop/12345</workshopUrl>
+      <alternativePackageIds>
+        <li>alt.one</li>
+        <li> ALT.TWO </li>
+      </alternativePackageIds>
+    </li>
+    <li>
+      <packageId>no.alts</packageId>
+    </li>
+  </modDependencies>
+</ModMetaData>
