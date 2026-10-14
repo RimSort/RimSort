@@ -12,7 +12,12 @@
 # - Qt env vars are set explicitly on the wrapper: the PySide6 wheel bundles
 #   its own Qt, which must not be wrapped against nixpkgs' qtbase
 #   (version skew).
-{ lib, inputs, ... }:
+{
+  lib,
+  inputs,
+  withSystem,
+  ...
+}:
 {
   perSystem =
     { config, pkgs, ... }:
@@ -264,4 +269,15 @@
 
       checks.pytest = pytestDrv;
     };
+
+  # For NixOS / home-manager configurations:
+  #   nixpkgs.overlays = [ rimsort.overlays.default ];
+  flake.overlays.default =
+    _final: prev:
+    withSystem prev.stdenv.hostPlatform.system (
+      { config, ... }:
+      {
+        inherit (config.packages) rimsort;
+      }
+    );
 }
