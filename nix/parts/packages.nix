@@ -57,10 +57,11 @@
       # trees copy the working state like every other nix build), but flake
       # git-tree sources drop gitlink contents and SteamworksPy is a runtime
       # import (from steamworks import STEAMWORKS resolves against it). We
-      # are the repo, so its tree comes from self, while the submodule
-      # contents are fetched at the repo's own pinned revisions and overlaid
-      # back into submodules/. Update the pins below when the repo's
-      # submodule pins move (compare `git submodule status`).
+      # are the repo, so its tree comes from self, while the SteamworksPy
+      # contents are fetched at the repo's own pinned revision and overlaid
+      # back into submodules/. steamfiles is not fetched: it comes from
+      # uv.lock. Update the pin below when the repo's submodule pin moves
+      # (compare `git submodule status`).
       submoduleSrcs = pkgs.linkFarm "rimsort-submodules" [
         {
           name = "SteamworksPy";
@@ -69,15 +70,6 @@
             repo = "SteamworksPy";
             rev = "7b35e08ed33055b15e6581fce7fc65da3e3e3e53";
             hash = "sha256-3abd5W/6sDjIWfhBK8JqPgLmBHwGdjEmKr29laWPF5Y=";
-          };
-        }
-        {
-          name = "steamfiles";
-          path = pkgs.fetchFromGitHub {
-            owner = "RimSort";
-            repo = "steamfiles";
-            rev = "18bb08d5ff8b0e36d4cc14453deaf58d721339e4";
-            hash = "sha256-CRzX4mKvBVYC0ayu2bq6aAzhAWPW0m737cw1gfBRj7U=";
           };
         }
       ];
