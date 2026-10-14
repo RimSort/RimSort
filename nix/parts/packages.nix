@@ -112,7 +112,10 @@
       # SteamCMD run inside the Steam runtime FHS env)
       steam-run = (pkgs.steam.override { privateTmp = false; }).run;
 
-      # PySide6 wheels bundle their own Qt; it still dlopens system libs
+      # PySide6 wheels bundle their own Qt; it still dlopens system libs.
+      # LD_LIBRARY_PATH is required: the wheels' RUNPATH also points at the
+      # nixpkgs Qt used for patchelf, which would otherwise mix in.
+      qtLdLibraryPath = qtLdLibraryPathFor appEnv;
       qtWrapperFlags = lib.optionals pkgs.stdenv.hostPlatform.isLinux [
         "--set"
         "QT_QPA_PLATFORM_PLUGIN_PATH"
@@ -120,8 +123,24 @@
         "--prefix"
         "LD_LIBRARY_PATH"
         ":"
-        (qtLdLibraryPathFor appEnv)
+        qtLdLibraryPath
       ];
+
+      # The game and SteamCMD must resolve libraries from the Steam runtime,
+      # not RimSort's Qt closure: strip exactly the entries the wrapper
+      # prepended and keep anything else (the user's own value, or one set
+      # through RimSort's game environment variables).
+      launchPrefix = pkgs.writeShellApplication {
+        name = "rimsort-launch";
+        text = ''
+          case "''${LD_LIBRARY_PATH-}" in
+          "${qtLdLibraryPath}") unset LD_LIBRARY_PATH ;;
+          "${qtLdLibraryPath}":*) export LD_LIBRARY_PATH="''${LD_LIBRARY_PATH#"${qtLdLibraryPath}":}" ;;
+          esac
+          unset QT_QPA_PLATFORM_PLUGIN_PATH
+          exec ${steam-run}/bin/steam-run "$@"
+        '';
+      };
 
       # Tests run against the shipped (unpatched) runtime files plus the
       # tests. Only the network-dependent tests are skipped, like the
@@ -211,7 +230,7 @@
             --chdir $out/lib/rimsort \
             --set PYTHONPATH $out/lib/rimsort \
             --set RIMSORT_DISABLE_UPDATER 1 \
-            --set RIMSORT_LAUNCH_PREFIX ${steam-run}/bin/steam-run \
+            --set RIMSORT_LAUNCH_PREFIX ${lib.getExe launchPrefix} \
             --set RIMSORT_TODDS_PATH ${pkgs.todds}/bin/todds \
             ${lib.escapeShellArgs qtWrapperFlags}
         '';
