@@ -34,7 +34,12 @@
             "steam-unwrapped"
           ];
       };
-      inherit (config.rimsortPython) appEnv qtLdLibraryPathFor qtPluginPathFor;
+      inherit (config.rimsortPython)
+        appEnv
+        devEnv
+        qtLdLibraryPathFor
+        qtPluginPathFor
+        ;
 
       # Both derivations below ship GPL code plus the valve SDK blob.
       licenses = with lib.licenses; [
@@ -111,9 +116,10 @@
         pname = "rimsort-tests";
         inherit version src;
 
-        nativeBuildInputs = [ appEnv ] ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.xvfb ];
+        nativeBuildInputs = [ devEnv ];
 
         dontBuild = true;
+        doCheck = true;
 
         preCheck = ''
           export HOME=$(mktemp -d)
@@ -122,7 +128,7 @@
 
         checkPhase = ''
           runHook preCheck
-          ${appEnv}/bin/pytest \
+          ${devEnv}/bin/pytest \
             --doctest-modules --no-qt-log -s \
             --ignore=tests/models/metadata/test_metadata_factory.py \
             --ignore=tests/utils/test_privatebin.py
