@@ -413,7 +413,8 @@ impl ModMetadata {
 ///
 /// Later tasks extend this enum with the remaining shared-interface variants
 /// (conflict/stale results and process launch) once code produces them; the
-/// variants here cover the metadata seam plus filesystem reads for its callers.
+/// variants here cover the metadata and settings seams plus the filesystem
+/// operations their callers perform.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The XML document is not well-formed.
@@ -434,8 +435,12 @@ pub enum Error {
     /// A version string is not a numeric major/minor release.
     #[error("invalid game version {value:?}: {reason}")]
     InvalidGameVersion { value: String, reason: String },
-    /// A file could not be read.
-    #[error("failed to read {path}: {source}")]
+    /// A value is unusable for the operation that received it, keeping which
+    /// operation or file rejected it and why.
+    #[error("invalid input in {context}: {message}")]
+    InvalidInput { context: String, message: String },
+    /// A filesystem operation on a path did not complete.
+    #[error("filesystem error for {path}: {source}")]
     Io {
         path: PathBuf,
         source: std::io::Error,
