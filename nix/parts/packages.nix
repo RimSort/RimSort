@@ -36,7 +36,7 @@
         valveSDK
       ];
 
-      # Release parity (forgetful pattern): the default identifies the source
+      # Release parity: the default identifies the source
       # revision, a release injects the real tag:
       #   RIMSORT_VERSION=v1.2.3 nix build --impure
       # (builtins.getEnv returns "" in pure evaluation)

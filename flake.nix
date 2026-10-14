@@ -46,8 +46,8 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      # x86_64-darwin intentionally omitted (deprecated in nixpkgs), matching the
-      # forgetful flake. Windows stays out: the app targets it, Nix does not.
+      # x86_64-darwin intentionally omitted (deprecated in nixpkgs)
+      # Windows stays out: the app targets it, Nix does not.
       systems = [
         "x86_64-linux"
         "aarch64-linux"
