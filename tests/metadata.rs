@@ -86,6 +86,10 @@ fn inline_error(label: &str, xml: &str) -> Error {
 const ENVELOPE_ROOT: &str =
     "<ModMetaData><packageId>envelope.mod</packageId><name>Envelope</name></ModMetaData>";
 
+/// The same document with a declaration at the very first byte, which is the
+/// only position an XML declaration is legal in.
+const DECLARED_ENVELOPE: &str = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ModMetaData><packageId>envelope.mod</packageId></ModMetaData>";
+
 #[test]
 fn normalizes_package_ids() {
     let parsed = parse("package_id_normalization", &target("1.5.1234"));
@@ -828,9 +832,8 @@ fn misplaced_or_repeated_declaration_is_an_error() {
 #[test]
 fn legal_whitespace_and_comments_around_the_root_are_accepted() {
     let declared = parse_inline(
-        "declaration, comments and whitespace around the root",
-        r#"
-<?xml version="1.0" encoding="utf-8"?>
+        "declaration first, comments and whitespace around the root",
+        r#"<?xml version="1.0" encoding="utf-8"?>
 <!-- leading comment -->
 <ModMetaData>
   <packageId>envelope.mod</packageId>
@@ -843,9 +846,11 @@ fn legal_whitespace_and_comments_around_the_root_are_accepted() {
     assert_eq!(declared.name.as_deref(), Some("Envelope"));
 
     let undeclared = parse_inline(
-        "no declaration at all",
-        r#"<!-- leading comment -->
+        "no declaration, leading whitespace and comments",
+        r#"
+<!-- leading comment -->
 <ModMetaData><packageId>envelope.mod</packageId></ModMetaData>
+   	
 "#,
     );
     assert_eq!(package_id(&undeclared), Some("envelope.mod"));
@@ -860,6 +865,44 @@ fn legal_whitespace_and_comments_around_the_root_are_accepted() {
         "only the omitted name is reported, got {:?}",
         diagnostic_report(&undeclared)
     );
+}
+
+#[test]
+fn whitespace_before_the_declaration_is_an_error() {
+    for leading in ["\n", " ", "\t", "\r\n"] {
+        let error = inline_error(
+            "declaration preceded by whitespace",
+            &format!("{leading}{DECLARED_ENVELOPE}"),
+        );
+        assert!(
+            matches!(error, Error::XmlSyntax { ref message, .. } if message.contains("declaration")),
+            "an XML declaration must start the document, got {error}"
+        );
+    }
+}
+
+#[test]
+fn non_xml_whitespace_outside_the_root_element_is_an_error() {
+    // XML exterior whitespace is only space, tab, carriage return and line feed.
+    for spacing in ["\u{a0}", "\u{2003}", "\u{3000}"] {
+        let leading = inline_error(
+            "unsupported spacing before the root",
+            &format!("{spacing}{ENVELOPE_ROOT}"),
+        );
+        assert!(
+            matches!(leading, Error::XmlSyntax { .. }),
+            "{spacing:?} cannot surround the root element, got {leading}"
+        );
+
+        let trailing = inline_error(
+            "unsupported spacing after the root",
+            &format!("{ENVELOPE_ROOT}{spacing}"),
+        );
+        assert!(
+            matches!(trailing, Error::XmlSyntax { .. }),
+            "{spacing:?} cannot follow the root element, got {trailing}"
+        );
+    }
 }
 
 #[test]
@@ -911,7 +954,7 @@ fn malformed_attribute_is_an_error() {
 fn valid_attribute_values_are_accepted() {
     let parsed = parse_inline(
         "escaped attribute values",
-        r#"<ModMetaData xmlns:x="http://example.invalid" note="a &amp; b &#8212;" flag='true'>
+        r#"<ModMetaData xmlns:x="http://example.invalid" note="a &amp; b &#8212;" less="a &lt; b" flag='true'>
   <packageId>attrs.mod</packageId>
   <name x:nil="false">Attributes</name>
 </ModMetaData>"#,
@@ -921,6 +964,27 @@ fn valid_attribute_values_are_accepted() {
         parsed.name.as_deref(),
         Some("Attributes"),
         "attributes are validated but not read as values"
+    );
+}
+
+#[test]
+fn literal_angle_bracket_in_an_attribute_value_is_an_error() {
+    let root = inline_error(
+        "literal < in a root attribute",
+        r#"<ModMetaData note="a<b"><packageId>attrs.mod</packageId></ModMetaData>"#,
+    );
+    assert!(
+        matches!(root, Error::XmlSyntax { ref message, .. } if message.contains("attribute")),
+        "a literal `<` is forbidden in an attribute value, got {root}"
+    );
+
+    let nested = inline_error(
+        "literal < in an ignored child attribute",
+        r#"<ModMetaData><packageId>attrs.mod</packageId><unknown note="a<b"/></ModMetaData>"#,
+    );
+    assert!(
+        matches!(nested, Error::XmlSyntax { ref message, .. } if message.contains("attribute")),
+        "attributes of ignored elements are checked the same way, got {nested}"
     );
 }
 

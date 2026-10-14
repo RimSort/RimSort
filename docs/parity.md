@@ -83,17 +83,29 @@ Each row is a deliberate choice, not an oversight. The reference is
    declarations, undeclared entity references, character data or CDATA outside
    the root element, entity references outside the root, illegal comments,
    misplaced or repeated XML declarations, a second root element, unclosed
-   elements, and duplicate, malformed or entity-bearing attributes — including on
-   elements whose fields are ignored. Nothing is resolved externally, so a mod
-   file cannot make the application read another file.
+   elements, and duplicate, malformed, entity-bearing or literal-`<` attributes —
+   including on elements whose fields are ignored. Nothing is resolved externally,
+   so a mod file cannot make the application read another file.
+   Two envelope rules are stricter than a permissive Unicode read: outside the
+   root only the four XML whitespace characters (space, tab, CR, LF) may appear,
+   so U+00A0 and similar spacing is character data and an error rather than
+   silently dropped text; and any exterior text at all, even legal whitespace,
+   consumes the single position an XML declaration may occupy, so a declaration
+   must start at the first byte. A declaration-free document may still begin with
+   whitespace and comments.
    Tests: `dtd_declarations_are_rejected`, `undefined_entity_references_are_rejected`,
    `text_outside_the_root_element_is_an_error`,
    `cdata_and_references_outside_the_root_element_are_errors`,
+   `non_xml_whitespace_outside_the_root_element_is_an_error`,
    `malformed_comment_is_an_error`, `misplaced_or_repeated_declaration_is_an_error`,
+   `whitespace_before_the_declaration_is_an_error`,
    `duplicate_attributes_are_an_error`, `attribute_entity_reference_is_an_error`,
-   `malformed_attribute_is_an_error`, `unexpected_root_is_an_error`.
+   `malformed_attribute_is_an_error`, `literal_angle_bracket_in_an_attribute_value_is_an_error`,
+   `unexpected_root_is_an_error`, `second_root_element_is_an_error`.
    Legal controls: `legal_whitespace_and_comments_around_the_root_are_accepted`,
    `valid_attribute_values_are_accepted`.
+   Whitespace trimming inside an element (`XmlElement::text`, `PackageId::normalize`)
+   stays Unicode-based because it normalizes a value, not the document envelope.
 6. **Case-insensitive element names at every level.** The reference lowercases
    only the top-level key before reading `modmetadata`, so child spellings such
    as `PackageID` or `LI` are silently ignored. The rewrite matches every field

@@ -39,7 +39,9 @@ impl XmlElement {
     }
 
     /// Concatenated character data of this element, with the outer whitespace
-    /// of the whole run trimmed.
+    /// of the whole run trimmed. This is value normalization inside an element,
+    /// not the document envelope: the rules next to the root element are
+    /// stricter than Unicode trimming.
     #[must_use]
     pub fn text(&self) -> &str {
         self.text.trim()
@@ -73,8 +75,9 @@ impl XmlElement {
 
 /// Parses XML bytes into the document's single root element.
 ///
-/// Outside the root only whitespace, comments, processing instructions and one
-/// leading declaration are legal, so stray content cannot be dropped silently.
+/// Outside the root only XML whitespace, comments, processing instructions and
+/// one declaration at the very first position are legal, so stray content cannot
+/// be dropped silently.
 pub fn parse_document(bytes: &[u8]) -> Result<XmlElement, Error> {
     let mut reader = Reader::from_reader(bytes);
     // Comments are ignored as content but still have to be legal XML.
@@ -115,7 +118,14 @@ pub fn parse_document(bytes: &[u8]) -> Result<XmlElement, Error> {
                 let decoded = decoded_text(text.decode(), &open)?;
                 match open.last_mut() {
                     Some(current) => current.text.push_str(&decoded),
-                    None if decoded.trim().is_empty() => {}
+                    // Outside the root only XML's four whitespace characters are
+                    // legal, and any of them still consumes the single position an
+                    // XML declaration may occupy.
+                    None if is_xml_whitespace(&decoded) => {
+                        if !decoded.is_empty() {
+                            prolog_used = true;
+                        }
+                    }
                     None => {
                         return Err(syntax_error(
                             &open,
@@ -225,6 +235,15 @@ fn syntax_error(open: &[XmlElement], message: impl Into<String>) -> Error {
     }
 }
 
+/// True when `text` contains only the four characters XML allows between markup:
+/// space, tab, carriage return and line feed. Unlike `str::trim`, this rejects
+/// U+00A0 and other Unicode spacing, which are character data here and therefore
+/// malformed next to the root element.
+fn is_xml_whitespace(text: &str) -> bool {
+    text.chars()
+        .all(|ch| matches!(ch, ' ' | '\t' | '\r' | '\n'))
+}
+
 /// Reads an element's declared name and validates its attributes, even on
 /// elements whose fields we ignore: a duplicated or malformed attribute, or a
 /// DTD entity smuggled into an attribute value, must not pass silently. The
@@ -236,6 +255,15 @@ fn validate_element(start: &BytesStart<'_>, open: &[XmlElement]) -> Result<Strin
 
     for attribute in start.attributes() {
         let attribute = attribute.map_err(|source| syntax_error(open, source.to_string()))?;
+        // A literal `<` is forbidden in an attribute value before any entity
+        // normalization, so a `<` decoded from `&lt;` stays legal.
+        if attribute.value.contains(&b'<') {
+            let key = String::from_utf8_lossy(attribute.key.as_ref());
+            return Err(syntax_error(
+                open,
+                format!("attribute {key:?} contains a literal '<'"),
+            ));
+        }
         attribute
             .normalized_value(XmlVersion::Implicit1_0)
             .map_err(|source| match source {
