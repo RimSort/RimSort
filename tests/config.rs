@@ -168,17 +168,12 @@ fn accepts_empty_active_mods_in_both_writings() {
 fn retains_empty_entries_with_a_diagnostic() {
     let snapshot = parse_inline(
         "empty entries",
-        "<ModsConfigData><activeMods><li/>\n<li></li><li>   </li><li>real.mod</li></activeMods></ModsConfigData>",
+        "<ModsConfigData><activeMods><li/>\n<li>   </li><li>real.mod</li></activeMods></ModsConfigData>",
     );
 
     assert_eq!(
         snapshot.active_tokens,
-        [
-            String::new(),
-            String::new(),
-            "   ".to_string(),
-            "real.mod".to_string(),
-        ],
+        [String::new(), "   ".to_string(), "real.mod".to_string()],
         "no entry disappears and no spacing is invented"
     );
     assert_eq!(
@@ -186,7 +181,6 @@ fn retains_empty_entries_with_a_diagnostic() {
         [
             ConfigDiagnostic::EmptyToken { index: 0 },
             ConfigDiagnostic::EmptyToken { index: 1 },
-            ConfigDiagnostic::EmptyToken { index: 2 },
         ],
         "every entry without non-whitespace text is reported where it sits"
     );
@@ -635,7 +629,7 @@ fn loads_an_empty_list_fixture_and_preserves_the_rest() {
 }
 
 #[test]
-fn reports_a_repeated_blank_entry_only_as_many_empties() {
+fn reports_repeated_blank_entries_as_empty_and_repeated() {
     let snapshot = parse_inline(
         "blank duplicates",
         "<ModsConfigData><activeMods><li/><li></li><li>x</li></activeMods></ModsConfigData>",
@@ -651,8 +645,77 @@ fn reports_a_repeated_blank_entry_only_as_many_empties() {
         [
             ConfigDiagnostic::EmptyToken { index: 0 },
             ConfigDiagnostic::EmptyToken { index: 1 },
+            ConfigDiagnostic::RepeatedToken {
+                token: String::new(),
+                first_index: 0,
+                index: 1,
+            },
         ],
-        "blank entries have no identity to repeat, so only emptiness is reported"
+        "an exact repeat of a blank entry is reported as empty and as a repeat, in that order"
+    );
+}
+
+#[test]
+fn reports_repeated_whitespace_entries_as_exact_repeats() {
+    let snapshot = parse_inline(
+        "same whitespace repeats",
+        "<ModsConfigData><activeMods><li> </li><li> </li></activeMods></ModsConfigData>",
+    );
+
+    assert_eq!(
+        snapshot.diagnostics,
+        [
+            ConfigDiagnostic::EmptyToken { index: 0 },
+            ConfigDiagnostic::EmptyToken { index: 1 },
+            ConfigDiagnostic::RepeatedToken {
+                token: " ".to_string(),
+                first_index: 0,
+                index: 1,
+            },
+        ],
+        "the identical spacing string repeats, and the token keeps its own spaces"
+    );
+}
+
+#[test]
+fn does_not_report_different_blank_strings_as_repeats() {
+    let snapshot = parse_inline(
+        "different blanks",
+        "<ModsConfigData><activeMods><li> </li><li>\t</li></activeMods></ModsConfigData>",
+    );
+
+    assert_eq!(
+        snapshot.diagnostics,
+        [
+            ConfigDiagnostic::EmptyToken { index: 0 },
+            ConfigDiagnostic::EmptyToken { index: 1 },
+        ],
+        "distinct spacing strings are distinct decoded tokens"
+    );
+}
+
+#[test]
+fn repeated_entries_point_at_the_original_first_index() {
+    let snapshot = parse_inline(
+        "triple repeat",
+        "<ModsConfigData><activeMods><li>x.mod</li><li>y.mod</li><li>x.mod</li><li>x.mod</li></activeMods></ModsConfigData>",
+    );
+
+    assert_eq!(
+        snapshot.diagnostics,
+        [
+            ConfigDiagnostic::RepeatedToken {
+                token: "x.mod".to_string(),
+                first_index: 0,
+                index: 2,
+            },
+            ConfigDiagnostic::RepeatedToken {
+                token: "x.mod".to_string(),
+                first_index: 0,
+                index: 3,
+            },
+        ],
+        "every later copy names the original first occurrence, not the copy before it"
     );
 }
 
@@ -955,6 +1018,60 @@ fn reads_only_the_roots_own_version() {
     assert_eq!(
         snapshot.version, None,
         "a version inside another field is not this config's version"
+    );
+}
+
+#[test]
+fn reads_the_root_version_without_trimming_its_own_text() {
+    let snapshot = parse_inline(
+        "padded version before the list",
+        "<ModsConfigData><version>  future &amp; beta  </version><activeMods><li>a.mod</li></activeMods></ModsConfigData>",
+    );
+
+    assert_eq!(
+        snapshot.version.as_deref(),
+        Some("  future & beta  "),
+        "version display text is the element's own decoded characters, padding included"
+    );
+}
+
+#[test]
+fn reads_a_version_written_after_the_active_list() {
+    let snapshot = parse_inline(
+        "padded version after the list",
+        "<ModsConfigData><activeMods><li>a.mod</li></activeMods><version>  1.6 &amp; beyond  </version></ModsConfigData>",
+    );
+
+    assert_eq!(
+        snapshot.version.as_deref(),
+        Some("  1.6 & beyond  "),
+        "locating the active list does not stop the config from reading a later version field"
+    );
+    assert_eq!(
+        spanned(&snapshot),
+        b"<activeMods><li>a.mod</li></activeMods>",
+        "and the span still covers exactly the list element"
+    );
+}
+
+#[test]
+fn the_first_root_version_wins_even_when_it_is_blank() {
+    let spaced = parse_inline(
+        "blank then written",
+        "<ModsConfigData><version>   </version><version>1.5</version><activeMods><li>a.mod</li></activeMods></ModsConfigData>",
+    );
+    let self_closing = parse_inline(
+        "self-closing then written",
+        "<ModsConfigData><version/><version>1.5</version><activeMods><li>a.mod</li></activeMods></ModsConfigData>",
+    );
+
+    assert_eq!(
+        spaced.version, None,
+        "the first root-level version is the config's version, so a blank one is not skipped"
+    );
+    assert_eq!(
+        self_closing.version, None,
+        "and a self-closing first version is blank too"
     );
 }
 
