@@ -198,6 +198,9 @@
           # AppInfo resolves themes/, locales/, libs/, submodules/ as siblings
           # of the app package, so the relative layout is part of the interface.
           cp -r ./* $out/lib/rimsort/
+          # The store is read-only: without precompiled bytecode every start
+          # recompiles the whole app in memory.
+          ${appEnv}/bin/python -m compileall -q $out/lib/rimsort/app $out/lib/rimsort/submodules
 
           # AppInfo reads the displayed version from version.xml (the release
           # workflow writes it for the other builds)
