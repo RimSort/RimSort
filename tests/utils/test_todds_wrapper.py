@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.utils.todds.wrapper import ToddsInterface
 
 
@@ -92,3 +94,67 @@ class TestToddsExecute:
         runner.execute.assert_not_called()
         runner.message.assert_called_once()
         assert "ERROR" in runner.message.call_args[0][0]
+
+
+class TestToddsEnvOverride:
+    """RIMSORT_TODDS_PATH lets packagers (e.g. Nix) point at a system todds
+    instead of the one bundled next to the application folder."""
+
+    def test_env_override_used_instead_of_bundled_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        system_todds = tmp_path / "nix" / "bin" / "todds"
+        system_todds.parent.mkdir(parents=True)
+        system_todds.touch()
+        monkeypatch.setenv("RIMSORT_TODDS_PATH", str(system_todds))
+
+        ti = ToddsInterface(preset="optimized")
+        runner = MagicMock()
+        runner.todds_dry_run_support = False
+
+        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
+            mock_app_info.return_value.application_folder = tmp_path
+            ti.execute_todds_cmd("/some/target", runner)
+
+        runner.execute.assert_called_once()
+        assert runner.execute.call_args[0][0] == str(system_todds)
+        mock_app_info.assert_not_called()
+
+    def test_env_override_missing_binary_reports_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(
+            "RIMSORT_TODDS_PATH", str(tmp_path / "nix" / "bin" / "todds")
+        )
+
+        ti = ToddsInterface(preset="optimized")
+        runner = MagicMock()
+        runner.todds_dry_run_support = False
+
+        ti.execute_todds_cmd("/some/target", runner)
+
+        runner.execute.assert_not_called()
+        runner.message.assert_called_once()
+        assert "ERROR" in runner.message.call_args[0][0]
+
+    def test_empty_env_falls_back_to_bundled_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import platform
+
+        monkeypatch.setenv("RIMSORT_TODDS_PATH", "")
+        exe_name = "todds.exe" if platform.system() == "Windows" else "todds"
+        todds_bin = tmp_path / "todds" / exe_name
+        todds_bin.parent.mkdir(parents=True)
+        todds_bin.touch()
+
+        ti = ToddsInterface(preset="optimized")
+        runner = MagicMock()
+        runner.todds_dry_run_support = False
+
+        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
+            mock_app_info.return_value.application_folder = tmp_path
+            ti.execute_todds_cmd("/some/target", runner)
+
+        runner.execute.assert_called_once()
+        assert runner.execute.call_args[0][0] == str(todds_bin)

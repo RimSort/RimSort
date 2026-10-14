@@ -22,6 +22,23 @@ For macOS, make sure you grab the appropriate release per your CPU (x86_64 is fo
 
 Check the [wiki][Wiki] for more detailed instructions.
 
+### Nix
+
+RimSort ships a Nix flake (Linux). It builds the app from `uv.lock`, so the packaged app runs the exact locked dependencies:
+
+```sh
+nix run github:RimSort/RimSort#rimsort   # run the packaged app
+nix build github:RimSort/RimSort#rimsort # build only
+```
+
+For development, the flake provides a pure shell with the locked dev environment (pytest, mypy, pyright, ruff) and auto-installed pre-commit hooks:
+
+```sh
+nix develop
+```
+
+See `flake.nix` and `nix/parts/` for the plumbing.
+
 ## Contributing
 
 Bugs and feature requests are tracked in the [Issues][Issues] section of this repo. If you run into a bug or have a feature suggestion, feel free to create an Issue here yourself!

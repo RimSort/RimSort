@@ -123,6 +123,15 @@ def mock_app_info(
 
 
 @pytest.fixture
+def nix_launch_prefix(monkeypatch: pytest.MonkeyPatch) -> str:
+    """Simulate the Nix wrapper: RIMSORT_LAUNCH_PREFIX set on Linux."""
+    prefix = "/nix/store/x-steam-run/bin/steam-run"
+    monkeypatch.setenv("RIMSORT_LAUNCH_PREFIX", prefix)
+    monkeypatch.setattr("app.utils.generic.platform.system", lambda: "Linux")
+    return prefix
+
+
+@pytest.fixture
 def fresh_event_bus() -> Generator[None, None, None]:
     """Reset the EventBus singleton so each test gets a clean instance."""
     from app.utils.event_bus import EventBus

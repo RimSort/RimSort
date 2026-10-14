@@ -244,6 +244,83 @@ class TestRunnerPanelSteamcmdLogTail:
         assert process_environment.value("HOME") == str(tmp_path / "home")
         mock_process.start.assert_called_once()
 
+    @patch("app.windows.runner_panel.QProcess")
+    def test_next_steamcmd_batch_applies_launch_prefix(
+        self,
+        mock_qprocess: MagicMock,
+        nix_launch_prefix: str,
+    ) -> None:
+        """With RIMSORT_LAUNCH_PREFIX set (Nix steam-run FHS launcher), the
+        follow-up batches must go through the prefix like the first batch."""
+        mock_process = MagicMock()
+        mock_qprocess.return_value = mock_process
+
+        panel = RunnerPanel.__new__(RunnerPanel)
+        panel._pending_steamcmd_batches = [["12345"]]
+        panel._steamcmd_batch_index = 1
+        panel._steamcmd_wrapper = MagicMock()
+        panel._steamcmd_wrapper._build_download_script.return_value = "/tmp/script.txt"
+        panel._steamcmd_executable = "/steamcmd/steamcmd.sh"
+        panel._steamcmd_environment = None
+        panel.message = MagicMock()  # type: ignore[method-assign]
+
+        panel._start_next_steamcmd_batch()
+
+        mock_process.setProgram.assert_called_once_with(nix_launch_prefix)
+        mock_process.setArguments.assert_called_once_with(
+            ["/steamcmd/steamcmd.sh", '+runscript "/tmp/script.txt"']
+        )
+        mock_process.start.assert_called_once()
+
+    @patch("app.windows.runner_panel.QProcess")
+    def test_execute_starts_log_tail_for_wrapped_steamcmd(
+        self, mock_qprocess: MagicMock, tmp_path: Path
+    ) -> None:
+        """SteamCMD behind a launcher (e.g. Nix steam-run) still gets the
+        console log tail: the executable is an argument, not the program."""
+        mock_qprocess.return_value = MagicMock()
+        mock_timer = MagicMock()
+
+        panel = _make_execute_panel(current_value=0, offset=0)
+        panel._steamcmd_console_log_path = str(tmp_path / "console_log.txt")
+        panel._steamcmd_log_timer = None
+        panel._steamcmd_log_offset = 0
+        panel._steamcmd_log_partial = ""
+
+        with patch("app.windows.runner_panel.QTimer", return_value=mock_timer):
+            panel.execute(
+                "/nix/store/x-steam-run/bin/steam-run",
+                ["/steamcmd/steamcmd.sh", '+runscript "script.txt"'],
+                3,
+            )
+
+        mock_timer.start.assert_called_once()
+
+    def test_is_process_running_matches_program(self) -> None:
+        panel = RunnerPanel.__new__(RunnerPanel)
+        panel.process = MagicMock()
+        panel.process.state.return_value = QProcess.ProcessState.Running
+        panel.process.program.return_value = "/usr/bin/steamcmd"
+        panel.process.arguments.return_value = ["+quit"]
+
+        assert panel._is_process_running("steamcmd") is True
+        assert panel._is_process_running("todds") is False
+
+    def test_is_process_running_matches_wrapped_executable_in_args(self) -> None:
+        """The program may be a wrapper (e.g. Nix steam-run) that receives the
+        real executable as an argument."""
+        panel = RunnerPanel.__new__(RunnerPanel)
+        panel.process = MagicMock()
+        panel.process.state.return_value = QProcess.ProcessState.Running
+        panel.process.program.return_value = "/nix/store/x-steam-run/bin/steam-run"
+        panel.process.arguments.return_value = [
+            "/steamcmd/steamcmd.sh",
+            '+runscript "script.txt"',
+        ]
+
+        assert panel._is_process_running("steamcmd") is True
+        assert panel._is_process_running("todds") is False
+
     def test_restart_reuses_process_environment(self, tmp_path: Path) -> None:
         panel = RunnerPanel.__new__(RunnerPanel)
         panel.process_last_command = "/steamcmd/steamcmd.sh"

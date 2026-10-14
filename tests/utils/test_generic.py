@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.utils.generic import (
+    apply_launch_prefix,
     check_valid_http_git_url,
     extract_git_dir_name,
     extract_git_user_or_org,
@@ -75,3 +78,54 @@ class TestRestartApplication:
             restart_application()
 
             mock_popen.assert_called_once_with(["C:\\RimSort\\RimSort.exe", "--extra"])
+
+
+class TestApplyLaunchPrefix:
+    """Cover RIMSORT_LAUNCH_PREFIX handling for packaged builds that must
+    launch executables inside an FHS environment (e.g. Nix steam-run)."""
+
+    def test_unset_returns_launch_unchanged(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("RIMSORT_LAUNCH_PREFIX", raising=False)
+
+        assert apply_launch_prefix("/games/RimWorld", ["-a"]) == (
+            "/games/RimWorld",
+            ["-a"],
+        )
+
+    def test_blank_value_is_ignored(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("RIMSORT_LAUNCH_PREFIX", "   ")
+
+        assert apply_launch_prefix("/games/RimWorld", ["-a"]) == (
+            "/games/RimWorld",
+            ["-a"],
+        )
+
+    def test_prefix_prepended_on_linux(self, nix_launch_prefix: str) -> None:
+        program, args = apply_launch_prefix("/games/RimWorld", ["-logfile", "x"])
+
+        assert program == nix_launch_prefix
+        assert args == ["/games/RimWorld", "-logfile", "x"]
+
+    def test_multiword_prefix_is_shell_split(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("RIMSORT_LAUNCH_PREFIX", "run --env='A B' --")
+        monkeypatch.setattr("app.utils.generic.platform.system", lambda: "Linux")
+
+        program, args = apply_launch_prefix("/games/RimWorld", [])
+
+        assert program == "run"
+        assert args == ["--env=A B", "--", "/games/RimWorld"]
+
+    def test_ignored_on_non_linux(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv(
+            "RIMSORT_LAUNCH_PREFIX", "/nix/store/x-steam-run/bin/steam-run"
+        )
+        monkeypatch.setattr("app.utils.generic.platform.system", lambda: "Windows")
+
+        assert apply_launch_prefix("/games/RimWorld", ["-a"]) == (
+            "/games/RimWorld",
+            ["-a"],
+        )

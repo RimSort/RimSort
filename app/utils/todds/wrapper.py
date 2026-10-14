@@ -106,11 +106,20 @@ class ToddsInterface:
         :param todds_arguments: list of todds args to be passed to the todds executable
         """
 
-        if self.system == "Windows":
-            todds_executable = "todds.exe"
+        # Packagers (e.g. Nix) can point RimSort at a system-provided todds
+        # instead of the bundled one shipped next to the application folder.
+        env_todds_path = os.getenv("RIMSORT_TODDS_PATH", "").strip()
+        if env_todds_path:
+            todds_exe_path = env_todds_path
+            logger.info(f"Using RIMSORT_TODDS_PATH override: {todds_exe_path}")
         else:
-            todds_executable = "todds"
-        todds_exe_path = str(AppInfo().application_folder / "todds" / todds_executable)
+            if self.system == "Windows":
+                todds_executable = "todds.exe"
+            else:
+                todds_executable = "todds"
+            todds_exe_path = str(
+                AppInfo().application_folder / "todds" / todds_executable
+            )
         logger.info("Checking for todds...")
         if os.path.exists(todds_exe_path):
             logger.info(f"Found todds executable at: {todds_exe_path}")
