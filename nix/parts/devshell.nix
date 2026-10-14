@@ -16,9 +16,13 @@ _: {
         ++ config.pre-commit.settings.enabledPackages;
 
         env = {
-          # uv must not shadow the Nix environment
+          # uv must not shadow the Nix environment: `uv run` resolves to the
+          # locked devEnv instead of provisioning its own venv
           UV_NO_SYNC = "1";
           UV_PYTHON_DOWNLOADS = "never";
+          UV_PROJECT_ENVIRONMENT = "${devEnv}";
+          # just recipes skip `uv sync` (the env is read-only)
+          RIMSORT_NIX_SHELL = "1";
         }
         // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           # the PySide6 wheel's Qt dlopens system libs at runtime
@@ -30,8 +34,8 @@ _: {
           unset PYTHONPATH
           export QT_QPA_PLATFORM_PLUGIN_PATH=${qtPluginPathFor devEnv}
           echo "RimSort dev shell (Nix). Python tools come from uv.lock via uv2nix." 1>&2
-          echo "Run the app: python -m app --dev   (not: uv run python -m app)" 1>&2
-          echo "Tests:       pytest --doctest-modules --no-qt-log -s   (just targets call uv run; use bare tools here)" 1>&2
+          echo "Run the app: python -m app --dev   (or: just run)" 1>&2
+          echo "Tests:       just test" 1>&2
           echo "Deps:        uv add <pkg> && uv lock   (lock only; Nix rebuilds from it)" 1>&2
         '';
       };

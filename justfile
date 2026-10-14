@@ -196,6 +196,18 @@ ci: check test-coverage
 # git submodules are initialized. `uv sync` creates/reuses `.venv` itself:
 # a fresh one if missing, or the existing one without rewriting `python.exe`,
 # which avoids failing when that file is locked by another process (os error 32).
+# In the Nix dev shell (RIMSORT_NIX_SHELL) the environment is built from
+# uv.lock by Nix and is read-only, so the sync step is skipped there.
+[unix]
+dev-setup: submodules-init
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "${RIMSORT_NIX_SHELL:-}" ]; then
+        uv sync --locked --dev --group build
+    fi
+    just i18n-compile  # not a dependency — must run after uv sync so pyside6-lrelease is available
+
+[windows]
 dev-setup: submodules-init
     uv sync --locked --dev --group build
     just i18n-compile  # not a dependency — must run after uv sync so pyside6-lrelease is available
