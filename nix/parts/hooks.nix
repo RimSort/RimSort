@@ -2,7 +2,8 @@
 # Mirrors the `just check` gate: the Python linters run from the locked devEnv
 # venv so hook versions match uv.lock exactly, and mypy resolves app imports
 # through the same environment (stubs are locked dev deps).
-_: {
+{ lib, ... }:
+{
   perSystem =
     { config, pkgs, ... }:
     let
@@ -46,7 +47,7 @@ _: {
           pass_filenames = false;
         };
 
-        # Shell / Markdown (repo configs are discovered by the tools)
+        # Shell (repo configs are discovered by the tools)
         shellcheck.enable = true;
         shfmt = {
           enable = true;
@@ -54,7 +55,15 @@ _: {
           # simplify default rewrites pre-existing repo scripts.
           settings.simplify = false;
         };
-        markdownlint.enable = true;
+
+        # Mirror `just markdownlint`: the hook passes an explicit config, so
+        # feed it .markdownlint.json and the globs of .markdownlint-cli2.jsonc.
+        markdownlint = {
+          enable = true;
+          settings.configuration = lib.importJSON ../../.markdownlint.json;
+          files = "^(docs/.*|[^/]*)\\.md$";
+          excludes = [ "^LICENSE\\.md$" ];
+        };
 
         # Repo CI guard: no new function-local `import app...` without ALLOWED
         deferred-imports = {
