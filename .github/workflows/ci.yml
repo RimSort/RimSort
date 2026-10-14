@@ -1,0 +1,130 @@
+name: Rust CI
+
+on:
+  pull_request:
+  push:
+    branches: [feature/rust-rewrite-foundation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  format:
+    name: Rust formatting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  native:
+    name: Native (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+          - os: macos-15
+            target: aarch64-apple-darwin
+    env:
+      TARGET: ${{ matrix.target }}
+      BUILD_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential pkg-config libfontconfig1-dev libxkbcommon-dev
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          components: clippy
+          targets: ${{ matrix.target }}
+      - name: Cache check dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: . -> target/check
+          cache-bin: false
+          shared-key: ${{ matrix.os }}-${{ matrix.target }}-check
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feature/rust-rewrite-foundation' }}
+      - name: Clippy
+        env:
+          CARGO_TARGET_DIR: target/check
+        run: cargo clippy --locked --workspace --all-targets --target ${{ matrix.target }} -- -D warnings
+      - name: Tests
+        env:
+          CARGO_TARGET_DIR: target/check
+        run: cargo test --locked --workspace --target ${{ matrix.target }}
+      - name: Cache release dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: . -> target/build
+          cache-bin: false
+          shared-key: ${{ matrix.os }}-${{ matrix.target }}-release
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feature/rust-rewrite-foundation' }}
+      - name: Release build
+        env:
+          CARGO_TARGET_DIR: target/build
+        run: cargo build --locked --release --target ${{ matrix.target }}
+      - name: Package Unix executable
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="rimsort-rust-$TARGET-$BUILD_SHA"
+          stage="$RUNNER_TEMP/package/$name"
+          executable="target/build/$TARGET/release/rimsort-rust"
+          test -x "$executable"
+          mkdir -p "$stage" dist
+          cp "$executable" LICENSE.md "$stage/"
+          cp docs/build-artifacts.md "$stage/BUILD-NOTES.md"
+          {
+            printf '\n## Build metadata\n\nCommit: %s\n\nTarget: %s\n\n' "$BUILD_SHA" "$TARGET"
+            rustc --version
+          } >> "$stage/BUILD-NOTES.md"
+          tar -czf "dist/$name.tar.gz" -C "$RUNNER_TEMP/package" "$name"
+      - name: Package Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $name = "rimsort-rust-$env:TARGET-$env:BUILD_SHA"
+          $stage = Join-Path $env:RUNNER_TEMP "package/$name"
+          $executable = "target/build/$env:TARGET/release/rimsort-rust.exe"
+          if (!(Test-Path -PathType Leaf $executable)) { throw "Missing executable: $executable" }
+          New-Item -ItemType Directory -Force $stage, 'dist' | Out-Null
+          Copy-Item $executable, 'LICENSE.md' -Destination $stage
+          Copy-Item 'docs/build-artifacts.md' -Destination "$stage/BUILD-NOTES.md"
+          $compiler = rustc --version
+          if ($LASTEXITCODE -ne 0) { throw 'Could not determine compiler version' }
+          Add-Content "$stage/BUILD-NOTES.md" "`n## Build metadata`n`nCommit: $env:BUILD_SHA`n`nTarget: $env:TARGET`n`n$compiler"
+          Compress-Archive -Path $stage -DestinationPath "dist/$name.zip"
+      - name: Upload build archive
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rimsort-rust-${{ matrix.target }}-${{ github.sha }}
+          path: dist/rimsort-rust-*
+          if-no-files-found: error
+          retention-days: 14
