@@ -48,14 +48,22 @@
         valveSDK
       ];
 
-      # Release parity (forgetful pattern): default dev version, release
-      # injects the real tag: RIMSORT_VERSION=v1.2.3 nix build --impure
+      # Release parity (forgetful pattern): the default identifies the source
+      # revision, a release injects the real tag:
+      #   RIMSORT_VERSION=v1.2.3 nix build --impure
+      # (builtins.getEnv returns "" in pure evaluation)
+      commit = inputs.self.rev or inputs.self.dirtyRev or "unknown";
       version =
         let
-          r = builtins.tryEval (builtins.getEnv "RIMSORT_VERSION");
-          e = if r.success then r.value else "";
+          env = builtins.getEnv "RIMSORT_VERSION";
+          rev = inputs.self.shortRev or inputs.self.dirtyShortRev or null;
         in
-        if e != "" then e else "0.0.0+dev";
+        if env != "" then
+          env
+        else if rev != null then
+          "0.0.0+git.${rev}"
+        else
+          "0.0.0+dev";
 
       # Packaged source tree WITH submodule contents, always pure.
       # inputs.self.outPath materializes the repo (gitignore-aware; dirty
@@ -183,6 +191,15 @@
           # AppInfo resolves themes/, locales/, libs/, submodules/ as siblings
           # of the app package, so the relative layout is part of the interface.
           cp -r ./* $out/lib/rimsort/
+
+          # AppInfo reads the displayed version from version.xml (the release
+          # workflow writes it for the other builds)
+          cat > $out/lib/rimsort/version.xml <<EOF
+          <version>
+            <version>${version}</version>
+            <commit>${commit}</commit>
+          </version>
+          EOF
 
           install -D ./themes/default-icons/AppIcon_a.png \
             $out/share/icons/hicolor/512x512/apps/rimsort.png
