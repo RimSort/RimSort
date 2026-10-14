@@ -644,6 +644,7 @@ fn orders_mixed_and_zero_padded_components_consistently() {
 }
 
 /// Every arrangement of `records`, for order-independence fixtures.
+#[cfg(unix)]
 fn permutations<T: Clone>(records: &[T]) -> Vec<Vec<T>> {
     if records.len() < 2 {
         return vec![records.to_vec()];
