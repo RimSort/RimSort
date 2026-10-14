@@ -973,23 +973,47 @@ fn a_published_file_id_marker_under_a_non_directory_about_invents_no_source() {
     let folder = add_mod(&install.local_root, "1234567890", "steamcmd.mod");
     fs::remove_dir_all(folder.join("About")).expect("remove the About folder");
     touch(&folder.join("About"), "not a folder\n");
+    let marker = canon(&folder).join("About").join("PublishedFileId.txt");
+    // Probe what this operating system actually reports for a path whose parent
+    // is a file, instead of assuming the answer: a `NotFound` reads as absence,
+    // any other failure is a marker whose presence has to be confirmed.
+    let probed = fs::read(&marker)
+        .err()
+        .unwrap_or_else(|| panic!("{} must not be readable", marker.display()));
 
     let result = install.scanned();
 
-    // `About` being a file makes the marker read fail without confirming that
-    // any marker is there, so the folder stays Local instead of becoming a
-    // download, while the failure is still reported with its path and cause.
+    // Either way the folder stays Local rather than becoming a download: an
+    // unconfirmed marker cannot claim a SteamCMD id, and neither can absence.
     assert_eq!(
         found(&result),
         BTreeMap::from([(canon(&folder), (Source::Local, false))])
     );
-    let marker = canon(&folder).join("About").join("PublishedFileId.txt");
-    let diagnostic = diagnostic_for(&result, &marker);
-    assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
-    assert!(
-        !diagnostic.message.is_empty(),
-        "the actual cause must be kept"
-    );
+    let reported: Vec<&ScanDiagnostic> = result
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.path == marker)
+        .collect();
+    if probed.kind() == io::ErrorKind::NotFound {
+        assert!(
+            reported.is_empty(),
+            "absence must not be reported as an unreadable marker: {:?}",
+            result.diagnostics
+        );
+    } else {
+        assert_eq!(
+            reported.len(),
+            1,
+            "an unreadable marker must be reported where it is: {:?}",
+            result.diagnostics
+        );
+        assert_eq!(reported[0].severity, DiagnosticSeverity::Error);
+        assert!(
+            !reported[0].message.is_empty(),
+            "the actual cause must be kept: {:?}",
+            result.diagnostics
+        );
+    }
     let reason = unreadable_reason(row(&result, &canon(&folder)));
     assert!(!reason.is_empty(), "the unreadable About stays inspectable");
 }
