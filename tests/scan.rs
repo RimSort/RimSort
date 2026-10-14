@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use rimsort_rust::domain::types::{
@@ -24,7 +25,10 @@ fn version(text: &str) -> GameVersion {
 
 /// A temporary install: `game/` with a separate `game/Mods/Data` content root,
 /// `Local Mods/` and `Workshop/` beside it. The three roots are distinct
-/// directories because the settings fields are distinct.
+/// directories because the settings fields are distinct, and the official
+/// `Data` folder is created up front because it is a required part of the
+/// installation: a scan of a valid layout must not depend on the scanner
+/// tolerating a missing official root.
 struct Install {
     temp: TempDir,
     game_root: PathBuf,
@@ -245,10 +249,13 @@ fn diagnostic_for<'a>(result: &'a ScanResult, path: &Path) -> &'a ScanDiagnostic
     matching[0]
 }
 
-/// The path and message of an [`Error::Io`], failing for any other variant.
-fn io_failure(error: &Error) -> (PathBuf, String) {
+/// The path, [`std::io::ErrorKind`] and message of an [`Error::Io`], failing for
+/// any other variant. Tests assert the error kind rather than the English
+/// sentence an operating system happens to print for it, which is not part of
+/// the scanner contract and is not portable.
+fn io_failure(error: &Error) -> (PathBuf, io::ErrorKind, String) {
     match error {
-        Error::Io { path, source } => (path.clone(), source.to_string()),
+        Error::Io { path, source } => (path.clone(), source.kind(), source.to_string()),
         other => panic!("expected a filesystem error, got {other}"),
     }
 }
@@ -261,6 +268,40 @@ fn input_failure(error: &Error) -> (String, String) {
         Error::InvalidInput { context, message } => (context.clone(), message.clone()),
         other => panic!("expected an invalid-input error, got {other}"),
     }
+}
+
+/// Diagnostics as `(fixture-relative path, operation, severity, message)`, so
+/// two installs created in different orders can be compared even though each
+/// one lives under its own temporary folder.
+#[cfg(unix)]
+fn diagnostic_sequence(
+    result: &ScanResult,
+    root: &Path,
+) -> Vec<(String, String, DiagnosticSeverity, String)> {
+    result
+        .diagnostics
+        .iter()
+        .map(|diagnostic| {
+            let path = diagnostic
+                .path
+                .strip_prefix(root)
+                .unwrap_or_else(|error| {
+                    panic!(
+                        "{} is not under {}: {error}",
+                        diagnostic.path.display(),
+                        root.display()
+                    )
+                })
+                .display()
+                .to_string();
+            (
+                path,
+                diagnostic.operation.clone(),
+                diagnostic.severity,
+                diagnostic.message.clone(),
+            )
+        })
+        .collect()
 }
 
 /// Every path in the tree with its kind and bytes, for read-only assertions.
@@ -509,11 +550,16 @@ fn a_nonexistent_required_root_keeps_the_filesystem_failure() {
     let mut settings = install.settings();
     settings.local_mods_root = Some(absent.clone());
 
-    let (path, message) = io_failure(&scan_error(&settings));
+    let (path, kind, message) = io_failure(&scan_error(&settings));
     assert_eq!(path, absent);
+    assert_eq!(
+        kind,
+        io::ErrorKind::NotFound,
+        "the actual filesystem cause must be kept: {message}"
+    );
     assert!(
-        message.contains("No such file") || message.contains("not found"),
-        "the actual cause must be kept: {message}"
+        !message.is_empty(),
+        "the cause must stay readable to a caller"
     );
 }
 
@@ -533,19 +579,70 @@ fn a_required_root_that_is_a_file_is_a_clear_error() {
 }
 
 #[test]
-fn a_missing_data_folder_keeps_the_scan_usable_and_reports_it() {
+fn a_missing_data_folder_aborts_the_scan_and_creates_nothing() {
     let install = Install::new();
     fs::remove_dir_all(&install.data_root).expect("remove the Data folder");
-    let local = add_mod(&install.local_root, "my-mod", "author.my-mod");
+    add_mod(&install.local_root, "my-mod", "author.my-mod");
+    let expected_data = canon(&install.content_root).join("Data");
+    let before = snapshot(install.root());
 
-    let result = install.scanned();
+    let (path, kind, message) = io_failure(&scan_error(&install.settings()));
 
     assert_eq!(
-        found(&result),
-        BTreeMap::from([(canon(&local), (Source::Local, true))])
+        path, expected_data,
+        "the failure must name the official Data root"
     );
-    let diagnostic = diagnostic_for(&result, &canon(&install.content_root).join("Data"));
-    assert_eq!(diagnostic.severity, DiagnosticSeverity::Warning);
+    assert_eq!(
+        kind,
+        io::ErrorKind::NotFound,
+        "the actual cause must be kept: {message}"
+    );
+    assert!(
+        !install.data_root.exists(),
+        "a scan never creates the folder it is missing"
+    );
+    assert_eq!(
+        snapshot(install.root()),
+        before,
+        "the aborted scan must still have written nothing"
+    );
+}
+
+#[test]
+fn a_data_folder_that_is_a_file_is_a_clear_error() {
+    let install = Install::new();
+    fs::remove_dir_all(&install.data_root).expect("remove the Data folder");
+    let data_file = install.content_root.join("Data");
+    touch(&data_file, "not a folder\n");
+    add_mod(&install.local_root, "my-mod", "author.my-mod");
+
+    let (context, message) = input_failure(&scan_error(&install.settings()));
+    let text = format!("{context}: {message}");
+    assert!(
+        text.contains("Data"),
+        "the error must name the official Data root: {text}"
+    );
+    assert!(text.contains("not a directory"), "unexpected error: {text}");
+}
+
+#[cfg(unix)]
+#[test]
+fn a_data_folder_that_cannot_be_resolved_keeps_the_filesystem_failure() {
+    let install = Install::new();
+    fs::remove_dir_all(&install.data_root).expect("remove the Data folder");
+    let link = install.content_root.join("Data");
+    std::os::unix::fs::symlink(&link, &link).expect("self-referential Data link");
+    add_mod(&install.local_root, "my-mod", "author.my-mod");
+
+    let (path, kind, message) = io_failure(&scan_error(&install.settings()));
+
+    assert_eq!(path, link, "the failure must name the Data path");
+    assert_ne!(
+        kind,
+        io::ErrorKind::NotFound,
+        "a resolution failure is not a missing folder: {message}"
+    );
+    assert!(!message.is_empty(), "the cause must be kept");
 }
 
 #[test]
@@ -820,7 +917,7 @@ fn a_mismatched_published_file_id_marker_is_checked_after_the_git_marker() {
 }
 
 #[test]
-fn an_unreadable_published_file_id_marker_is_reported_and_not_promoted() {
+fn a_directory_shaped_published_file_id_marker_is_reported_and_stays_steamcmd() {
     let install = Install::new();
     let folder = add_mod(&install.local_root, "1234567890", "steamcmd.mod");
     // A deterministic unreadable marker: the path is a folder, not a file.
@@ -829,27 +926,87 @@ fn an_unreadable_published_file_id_marker_is_reported_and_not_promoted() {
 
     let result = install.scanned();
 
+    // The id could not be read, but the marker's presence was confirmed, so the
+    // folder is not reclassified as a hand-managed local mod.
     assert_eq!(
         found(&result),
-        BTreeMap::from([(canon(&folder), (Source::Local, true))])
+        BTreeMap::from([(canon(&folder), (Source::SteamCmd, true))])
     );
     let marker = canon(&folder).join("About").join("PublishedFileId.txt");
     let diagnostic = diagnostic_for(&result, &marker);
     assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
-    assert!(!diagnostic.message.is_empty());
+    assert!(!diagnostic.operation.is_empty());
+    assert!(
+        !diagnostic.message.is_empty(),
+        "the actual cause must be kept"
+    );
 }
 
 #[test]
-fn a_published_file_id_marker_that_is_not_text_is_reported_and_not_promoted() {
+fn an_unreadable_published_file_id_marker_beside_a_git_marker_is_classified_git() {
+    let install = Install::new();
+    let folder = add_mod(&install.local_root, "1234567890", "steamcmd.mod");
+    fs::create_dir_all(folder.join("About/PublishedFileId.txt"))
+        .expect("PublishedFileId.txt as a folder");
+    add_git_directory(&folder);
+
+    let result = install.scanned();
+
+    // No matching published id could be established, so the folder's own `.git`
+    // marker wins over the marker's confirmed presence.
+    assert_eq!(
+        found(&result),
+        BTreeMap::from([(canon(&folder), (Source::Git, true))])
+    );
+    let marker = canon(&folder).join("About").join("PublishedFileId.txt");
+    let diagnostic = diagnostic_for(&result, &marker);
+    assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
+    assert!(
+        !diagnostic.message.is_empty(),
+        "the actual cause must be kept"
+    );
+}
+
+#[test]
+fn a_published_file_id_marker_under_a_non_directory_about_invents_no_source() {
+    let install = Install::new();
+    let folder = add_mod(&install.local_root, "1234567890", "steamcmd.mod");
+    fs::remove_dir_all(folder.join("About")).expect("remove the About folder");
+    touch(&folder.join("About"), "not a folder\n");
+
+    let result = install.scanned();
+
+    // `About` being a file makes the marker read fail without confirming that
+    // any marker is there, so the folder stays Local instead of becoming a
+    // download, while the failure is still reported with its path and cause.
+    assert_eq!(
+        found(&result),
+        BTreeMap::from([(canon(&folder), (Source::Local, false))])
+    );
+    let marker = canon(&folder).join("About").join("PublishedFileId.txt");
+    let diagnostic = diagnostic_for(&result, &marker);
+    assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
+    assert!(
+        !diagnostic.message.is_empty(),
+        "the actual cause must be kept"
+    );
+    let reason = unreadable_reason(row(&result, &canon(&folder)));
+    assert!(!reason.is_empty(), "the unreadable About stays inspectable");
+}
+
+#[test]
+fn a_published_file_id_marker_that_is_not_text_is_reported_and_stays_steamcmd() {
     let install = Install::new();
     let folder = add_mod(&install.local_root, "1234567890", "steamcmd.mod");
     write_published_file_id_bytes(&folder, b"\xff\xfe1");
 
     let result = install.scanned();
 
+    // The file is demonstrably there, only undecodable, so presence still
+    // counts even though the id could not be read.
     assert_eq!(
         found(&result),
-        BTreeMap::from([(canon(&folder), (Source::Local, true))])
+        BTreeMap::from([(canon(&folder), (Source::SteamCmd, true))])
     );
     assert_eq!(result.diagnostics.len(), 1, "{:?}", result.diagnostics);
     assert!(result.diagnostics[0].path.ends_with("PublishedFileId.txt"));
@@ -991,6 +1148,53 @@ fn two_aliases_for_one_directory_stay_one_row() {
 
 #[cfg(unix)]
 #[test]
+fn two_aliases_of_one_folder_with_an_unreadable_marker_are_reported_once() {
+    let install = Install::new();
+    let real = add_mod(&install.local_root, "1234567890", "steamcmd.mod");
+    fs::create_dir_all(real.join("About/PublishedFileId.txt"))
+        .expect("PublishedFileId.txt as a folder");
+    std::os::unix::fs::symlink(&real, install.local_root.join("first")).expect("first symlink");
+    std::os::unix::fs::symlink(&real, install.local_root.join("second")).expect("second symlink");
+
+    let result = install.scanned();
+
+    // Aliases collapse onto one canonical folder before it is classified, so one
+    // marker is read once and reported once.
+    assert_eq!(
+        found(&result),
+        BTreeMap::from([(canon(&real), (Source::SteamCmd, true))])
+    );
+    assert_eq!(result.diagnostics.len(), 1, "{:?}", result.diagnostics);
+    assert!(result.diagnostics[0].path.ends_with("PublishedFileId.txt"));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_local_alias_of_official_content_never_reads_local_markers() {
+    let install = Install::new();
+    let core = add_mod(&install.data_root, "Core", "ludeon.rimworld");
+    // Markers that would classify the folder locally, and report themselves, if
+    // an already-claimed official folder were inspected a second time.
+    fs::create_dir_all(core.join("About/PublishedFileId.txt"))
+        .expect("PublishedFileId.txt as a folder");
+    add_git_directory(&core);
+    std::os::unix::fs::symlink(&core, install.local_root.join("Core-alias")).expect("symlink");
+
+    let result = install.scanned();
+
+    assert_eq!(
+        found(&result),
+        BTreeMap::from([(canon(&core), (Source::Official, true))])
+    );
+    assert!(
+        result.diagnostics.is_empty(),
+        "the official claim is authoritative, so its local markers are irrelevant: {:?}",
+        result.diagnostics
+    );
+}
+
+#[cfg(unix)]
+#[test]
 fn a_local_root_that_is_the_data_folder_keeps_one_official_row() {
     let install = Install::new();
     let core = add_mod(&install.data_root, "Core", "ludeon.rimworld");
@@ -1065,5 +1269,52 @@ fn a_symlink_to_a_file_is_not_a_mod_candidate() {
     assert_eq!(
         found(&result),
         BTreeMap::from([(canon(&good), (Source::Local, true))])
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn diagnostics_are_ordered_independently_of_creation_order() {
+    let mut sequences: Vec<Vec<(String, String, DiagnosticSeverity, String)>> = Vec::new();
+    for names in [
+        ["alpha-dangling", "zed-dangling"],
+        ["zed-dangling", "alpha-dangling"],
+    ] {
+        let install = Install::new();
+        let good = add_mod(&install.local_root, "good", "good.mod");
+        let local = canon(&install.local_root);
+        for name in names.iter() {
+            std::os::unix::fs::symlink(local.join("nowhere"), local.join(name))
+                .unwrap_or_else(|error| panic!("cannot link {name}: {error}"));
+        }
+
+        let result = install.scanned();
+
+        assert_eq!(
+            found(&result),
+            BTreeMap::from([(canon(&good), (Source::Local, true))])
+        );
+        sequences.push(diagnostic_sequence(&result, &local));
+    }
+
+    let mut paths: Vec<&String> = sequences[0].iter().map(|entry| &entry.0).collect();
+    let sorted = {
+        paths.sort();
+        paths.clone()
+    };
+    assert_eq!(
+        sequences[0], sequences[1],
+        "the whole diagnostic list must not depend on enumeration order"
+    );
+    assert_eq!(
+        paths, sorted,
+        "diagnostics must be returned in a deterministic order"
+    );
+    assert_eq!(
+        sequences[0]
+            .iter()
+            .map(|entry| (entry.1.as_str(), entry.2))
+            .collect::<Vec<_>>(),
+        vec![("resolve mod directory", DiagnosticSeverity::Error); 2]
     );
 }

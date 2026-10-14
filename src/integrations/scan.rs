@@ -11,6 +11,7 @@
 //! returned as data, and package-id duplication, source preference between
 //! copies and natural-resolution policy stay with the catalog builder.
 
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::ffi::OsStr;
 use std::fmt::{self};
@@ -41,6 +42,9 @@ const GIT_MARKER: &str = ".git";
 
 /// Subfolder of the content root holding official content.
 const DATA_FOLDER: &str = "Data";
+
+/// The setting a missing or unusable [`DATA_FOLDER`] is reported against.
+const OFFICIAL_ROOT_FIELD: &str = "content_root/Data";
 
 /// One problem outside a mod record: a root or a directory entry that cannot be
 /// turned into a mod at all.
@@ -116,18 +120,21 @@ pub struct ScanResult {
 
 /// Discovers the installed mod folders addressed by `settings`.
 ///
-/// `game_root`, `content_root` and `local_mods_root` are required, as is
-/// `target_version`; anything missing or not a directory is an error rather
-/// than an empty scan, because a scan of nothing looks identical to an install
-/// with no mods. `workshop_root` is optional: an absent folder leaves the rest
-/// of the scan usable with a path-aware diagnostic.
+/// `game_root`, `content_root`, `local_mods_root` and the official
+/// `content_root/Data` folder they imply are required, as is `target_version`;
+/// anything missing, unreadable or not a directory is an error rather than an
+/// empty scan, because a scan of nothing looks identical to an install with no
+/// mods and would be usable as a replacement. `workshop_root` is optional: an
+/// absent folder leaves the rest of the scan usable with a path-aware
+/// diagnostic.
 ///
 /// Official content comes from `content_root/Data`. Each root contributes only
-/// its direct subdirectories, canonicalised so that a symlinked alias of a
-/// folder or of a whole root collapses onto the one row it names. A folder whose
-/// `About.xml` cannot be read stays visible as an invalid row; a path that
-/// cannot be resolved at all is reported as a diagnostic, since there is no
-/// canonical identity to attach it to.
+/// its direct subdirectories, canonicalised and deduplicated so that a symlinked
+/// alias of a folder or of a whole root collapses onto the one row it names and
+/// is classified once. A folder whose `About.xml` cannot be read stays visible
+/// as an invalid row; a path that cannot be resolved at all is reported as a
+/// diagnostic, since there is no canonical identity to attach it to. Returned
+/// diagnostics are ordered independently of how the filesystem enumerated them.
 pub fn scan_install(settings: &Settings) -> Result<ScanResult, Error> {
     // The game root is validated up front even though the mod list is read from
     // the content root: a wrong install path is a settings mistake the user has
@@ -160,10 +167,13 @@ pub fn scan_install(settings: &Settings) -> Result<ScanResult, Error> {
         })
         .collect();
 
-    Ok(ScanResult {
-        mods,
-        diagnostics: discovery.diagnostics,
-    })
+    // Entry failures surface while the filesystem enumerates a root, so the
+    // whole diagnostic list is ordered here rather than left in whatever order
+    // `read_dir` happened to return.
+    let mut diagnostics = discovery.diagnostics;
+    diagnostics.sort_by(diagnostic_order);
+
+    Ok(ScanResult { mods, diagnostics })
 }
 
 /// Which root a mod directory was enumerated from: the root decides the source
@@ -190,6 +200,13 @@ impl Discovery {
     /// content takes its source from the root, so their markers are never read.
     fn scan_root(&mut self, root: &Path, kind: RootKind) -> Result<(), Error> {
         for directory in self.mod_directories(root)? {
+            if matches!(kind, RootKind::Local) && self.candidates.contains_key(&directory) {
+                // The official root is scanned first and already owns this
+                // canonical folder, so reading its local markers could only
+                // produce a source that cannot win, plus diagnostics about a
+                // classification that is never used.
+                continue;
+            }
             let source = match kind {
                 RootKind::Official => Source::Official,
                 RootKind::Workshop => Source::Workshop,
@@ -200,24 +217,20 @@ impl Discovery {
         Ok(())
     }
 
-    /// Official content lives in `content_root/Data`. A content root without
-    /// that folder is reported and skipped rather than failing the scan: the
-    /// local and Workshop folders are still worth reading.
+    /// Official content lives in `content_root/Data`, which is a required root:
+    /// with no readable `Data` folder there are no official records to return,
+    /// and a scan that quietly skipped it would look exactly like an
+    /// installation with no official content. Nothing is created here, so a
+    /// wrong content root stays a settings mistake the caller has to see.
     fn scan_official_root(&mut self, content_root: &Path) -> Result<(), Error> {
         let data_root = content_root.join(DATA_FOLDER);
-        if !data_root.is_dir() {
-            self.diagnostics.push(ScanDiagnostic::warning(
-                data_root,
-                "read official mod root",
-                "the content root has no Data folder, so official content was not scanned",
-            ));
-            return Ok(());
-        }
-        self.scan_root(&canonical_directory(&data_root)?, RootKind::Official)
+        let data_root = directory_root(OFFICIAL_ROOT_FIELD, &data_root)?;
+        self.scan_root(&data_root, RootKind::Official)
     }
 
-    /// Direct subdirectories of `root`, canonicalised and sorted. Plain files
-    /// and the `.git` metadata folder are not mod candidates; a symlink is
+    /// Direct subdirectories of `root`, canonicalised, sorted and deduplicated
+    /// so an alias is classified once whatever number of links name it. Plain
+    /// files and the `.git` metadata folder are not mod candidates; a symlink is
     /// resolved only far enough to name the directory it points at, never
     /// descended into.
     fn mod_directories(&mut self, root: &Path) -> Result<Vec<PathBuf>, Error> {
@@ -257,6 +270,7 @@ impl Discovery {
             }
         }
         directories.sort();
+        directories.dedup();
         Ok(directories)
     }
 
@@ -279,29 +293,34 @@ impl Discovery {
     /// Classifies one folder of a local mods root. A `PublishedFileId.txt`
     /// naming the folder is a SteamCMD download even when the folder also
     /// carries a `.git` marker, because SteamCMD has been observed to leave one
-    /// behind; otherwise the folder's own `.git` marker wins, then a bare
-    /// marker, then a hand-managed local mod. Parent folders are never
-    /// consulted, so an outer repository does not reclassify everything under it.
+    /// behind; otherwise the folder's own `.git` marker wins, then a marker whose
+    /// presence is confirmed, then a hand-managed local mod. Parent folders are
+    /// never consulted, so an outer repository does not reclassify everything
+    /// under it.
+    ///
+    /// A marker that cannot be read keeps the classification it proved: its id is
+    /// unknown, so no matching id can be claimed, but its presence still says the
+    /// folder was unpacked by a download tool. Only a marker whose presence
+    /// cannot be confirmed at all is treated as absent.
     fn classify_local(&mut self, directory: &Path) -> Source {
-        let marker = directory.join(ABOUT_FOLDER).join(PUBLISHED_FILE_ID_FILE);
-        let marker_id = match read_published_file_id(&marker) {
-            Ok(id) => id,
-            Err(error) => {
-                // An unreadable marker is reported and then treated as absent:
-                // no folder is promoted to a SteamCMD download on the strength
-                // of a file that could not be read.
-                self.report(&marker, "read PublishedFileId marker", &error);
-                None
-            }
-        };
+        let marker_path = directory.join(ABOUT_FOLDER).join(PUBLISHED_FILE_ID_FILE);
         let folder_name = directory.file_name().unwrap_or(OsStr::new(""));
-        if marker_id.as_deref().is_some_and(|id| id == folder_name) {
+        let marker = read_published_file_id(&marker_path);
+        match &marker {
+            Marker::Unreadable(reason) | Marker::Unconfirmed(reason) => {
+                self.report_message(&marker_path, "read PublishedFileId marker", reason.clone());
+            }
+            Marker::Absent | Marker::Readable(_) => {}
+        }
+        if matches!(&marker, Marker::Readable(id) if id.as_str() == folder_name) {
+            // A marker naming the folder wins even when the folder also carries
+            // a `.git` marker.
             return Source::SteamCmd;
         }
         if self.has_git_marker(directory) {
             return Source::Git;
         }
-        if marker_id.is_some() {
+        if matches!(marker, Marker::Readable(_) | Marker::Unreadable(_)) {
             return Source::SteamCmd;
         }
         Source::Local
@@ -324,8 +343,35 @@ impl Discovery {
     /// Reports an entry-level failure with the path that produced it, so one
     /// unreadable child never removes its siblings from the result.
     fn report(&mut self, path: &Path, operation: &str, error: &io::Error) {
+        self.report_message(path, operation, error.to_string());
+    }
+
+    /// Reports an entry-level failure whose cause is already spelled out, which
+    /// is how a partially read marker keeps its actual reason.
+    fn report_message(&mut self, path: &Path, operation: &str, message: String) {
         self.diagnostics
-            .push(ScanDiagnostic::error(path, operation, error.to_string()));
+            .push(ScanDiagnostic::error(path, operation, message));
+    }
+}
+
+/// Total order for the diagnostics a scan returns: path, then operation, then
+/// severity, then message. Entry failures are met during an unsorted
+/// enumeration, so ordering them at the boundary is what makes the whole result
+/// independent of how the filesystem chose to list a folder.
+fn diagnostic_order(left: &ScanDiagnostic, right: &ScanDiagnostic) -> Ordering {
+    left.path
+        .cmp(&right.path)
+        .then_with(|| left.operation.cmp(&right.operation))
+        .then_with(|| severity_rank(left.severity).cmp(&severity_rank(right.severity)))
+        .then_with(|| left.message.cmp(&right.message))
+}
+
+/// Errors before warnings: where one path and operation produced both, the
+/// failure should not sit behind a warning the reader has to scan past.
+fn severity_rank(severity: DiagnosticSeverity) -> u8 {
+    match severity {
+        DiagnosticSeverity::Error => 0,
+        DiagnosticSeverity::Warning => 1,
     }
 }
 
@@ -343,11 +389,20 @@ fn source_rank(source: Source) -> u8 {
 /// the same mod directories.
 fn required_root(field: &str, configured: Option<&Path>) -> Result<PathBuf, Error> {
     let path = configured.ok_or_else(|| not_configured(field))?;
-    match path.canonicalize() {
-        Ok(canonical) if canonical.is_dir() => Ok(canonical),
-        Ok(canonical) => Err(not_a_directory(field, path, &canonical)),
-        Err(error) => Err(io_error(path, error)),
+    directory_root(field, path)
+}
+
+/// A path that has to exist and be a directory. The filesystem checks are
+/// fallible on purpose: a path that cannot be resolved or read keeps its actual
+/// `std::io` cause and the path it happened to, while something that really is
+/// not a directory is the settings mistake the caller named.
+fn directory_root(field: &str, path: &Path) -> Result<PathBuf, Error> {
+    let canonical = path.canonicalize().map_err(|error| io_error(path, error))?;
+    let metadata = fs::metadata(&canonical).map_err(|error| io_error(&canonical, error))?;
+    if metadata.is_dir() {
+        return Ok(canonical);
     }
+    Err(not_a_directory(field, path, &canonical))
 }
 
 /// The Workshop root is optional: unset means nothing to scan and says so with
@@ -376,10 +431,6 @@ fn optional_workshop_root(
     }
 }
 
-fn canonical_directory(path: &Path) -> Result<PathBuf, Error> {
-    path.canonicalize().map_err(|error| io_error(path, error))
-}
-
 fn not_configured(field: &str) -> Error {
     Error::InvalidInput {
         context: format!("mod scan: {field}"),
@@ -405,22 +456,44 @@ fn io_error(path: &Path, source: io::Error) -> Error {
     }
 }
 
-/// Trimmed content of `About/PublishedFileId.txt`, or `None` when the marker is
-/// not there. A marker that is present but unreadable is an error: guessing a
-/// source from it would hide the failure.
-fn read_published_file_id(path: &Path) -> Result<Option<String>, io::Error> {
-    let bytes = match fs::read(path) {
-        Ok(bytes) => bytes,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
-        Err(error) => return Err(error),
-    };
-    let text = String::from_utf8(bytes).map_err(|error| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("PublishedFileId.txt is not text: {error}"),
-        )
-    })?;
-    Ok(Some(text.trim().to_string()))
+/// What reading a local folder's `About/PublishedFileId.txt` established, with
+/// presence kept apart from content.
+///
+/// A `NotFound` read is absence, including a link whose target is gone, matching
+/// the follow-the-link `exists()` check the reference classification uses. Any
+/// other read failure is confirmed by a second metadata check before it counts
+/// as a marker that is merely unreadable, so a racing delete or a path under a
+/// non-directory (an `About` that is a file) cannot invent a download.
+enum Marker {
+    /// Nothing is filed under that name.
+    Absent,
+    /// The marker is there and readable, holding this trimmed id.
+    Readable(String),
+    /// The marker is there but is not a readable PublishedFileId document;
+    /// `reason` is the actual filesystem or decoding cause.
+    Unreadable(String),
+    /// A read failed and no follow-up check could confirm the marker, so neither
+    /// its presence nor its id is known; `reason` carries both causes.
+    Unconfirmed(String),
+}
+
+/// Reads `About/PublishedFileId.txt` without guessing at anything it did not
+/// say. A marker that is present but unreadable keeps the failure visible as a
+/// reason instead of becoming an invented id.
+fn read_published_file_id(path: &Path) -> Marker {
+    match fs::read(path) {
+        Ok(bytes) => match String::from_utf8(bytes) {
+            Ok(text) => Marker::Readable(text.trim().to_string()),
+            Err(error) => Marker::Unreadable(format!("PublishedFileId.txt is not text: {error}")),
+        },
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Marker::Absent,
+        Err(error) => match fs::symlink_metadata(path) {
+            Ok(_) => Marker::Unreadable(error.to_string()),
+            Err(confirm) => Marker::Unconfirmed(format!(
+                "{error}; the marker could not be confirmed: {confirm}"
+            )),
+        },
+    }
 }
 
 /// Reads a mod folder's `About/About.xml`. A folder whose document is missing,
