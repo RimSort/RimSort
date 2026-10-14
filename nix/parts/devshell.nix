@@ -1,10 +1,12 @@
 # Pure Nix dev shell: the locked devEnv venv is the environment. Nix owns the
 # env; uv is lock-only here (uv add / uv lock), never env-provisioning.
-_: {
+{ lib, ... }:
+{
   perSystem =
     { config, pkgs, ... }:
     let
       inherit (config.rimsortPython) devEnv qtLdLibraryPathFor qtPluginPathFor;
+      hooks = config.pre-commit.settings;
     in
     {
       devShells.default = pkgs.mkShell {
@@ -13,7 +15,7 @@ _: {
           pkgs.uv
           pkgs.just
         ]
-        ++ config.pre-commit.settings.enabledPackages;
+        ++ hooks.enabledPackages;
 
         env = {
           # uv must not shadow the Nix environment: `uv run` resolves to the
@@ -30,7 +32,14 @@ _: {
         };
 
         shellHook = ''
-          ${config.pre-commit.shellHook}
+          # The git-hooks.nix installer unsets core.hooksPath; keep an explicit
+          # `just install-hooks` choice instead of silently replacing it.
+          if [ "$(${lib.getExe hooks.gitPackage} config --get core.hooksPath 2>/dev/null)" = ".githooks" ]; then
+            echo "core.hooksPath=.githooks (just install-hooks) kept; Nix pre-commit hooks not installed" 1>&2
+          else
+            ${hooks.installationScript}
+          fi
+          export PATH=${hooks.package}/bin:$PATH
           unset PYTHONPATH
           export QT_QPA_PLATFORM_PLUGIN_PATH=${qtPluginPathFor devEnv}
           echo "RimSort dev shell (Nix). Python tools come from uv.lock via uv2nix." 1>&2
