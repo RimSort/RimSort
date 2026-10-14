@@ -85,11 +85,13 @@
         mkdir $out
         cp -r ${inputs.self.outPath}/. $out/
         chmod -R u+w $out
-        # the self tree carries no submodules/ at all (gitlinks are dropped),
-        # so create the directory before overlaying the fetched contents
-        mkdir -p $out/submodules
+        # Depending on the Nix version the self tree has no submodules/ at all
+        # or empty gitlink directories; copy the contents into place instead
+        # of nesting below an existing directory.
         for sub in ${submoduleSrcs}/*; do
-          cp -r "$sub" "$out/submodules/$(basename "$sub")"
+          dest="$out/submodules/$(basename "$sub")"
+          mkdir -p "$dest"
+          cp -r "$sub/." "$dest/"
         done
         chmod -R u+w $out/submodules
       '';
