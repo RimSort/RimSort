@@ -81,13 +81,36 @@
               ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux (pysideQtDeps ++ pysideSystemDeps);
             # libraries, not Qt apps: build inputs trigger qtPreHook
             dontWrapQtApps = true;
-            # The Essentials/Addons wheels split the Qt libraries between them
-            # (addons wants libQt6Network, essentials wants libQt6WebEngineCore),
-            # so cross-wheel references cannot be build inputs without a cycle.
-            # Likewise exotic Qt SQL drivers (oracle/mimer) stay unresolved.
-            # Runtime resolution happens via $ORIGIN RUNPATH + the wrapper's
-            # LD_LIBRARY_PATH (qtRoot below).
-            autoPatchelfIgnoreMissingDeps = true;
+            # The Essentials/Addons wheels split the Qt and binding libraries
+            # between them (addons wants libpyside6/libshiboken6, essentials
+            # wants libQt6WebEngineCore), so cross-wheel references cannot be
+            # build inputs without a cycle; runtime resolution happens via the
+            # merged venv's $ORIGIN RUNPATH + the wrapper's LD_LIBRARY_PATH
+            # (qtRoot below). The other entries belong to optional plugins
+            # RimSort never loads (GTK3 platform theme, SQL drivers, smart
+            # cards, speech). Anything else missing fails the build.
+            autoPatchelfIgnoreMissingDeps = [
+              "libQt6*.so.6"
+              "libpyside6.abi3.so.*"
+              "libshiboken6.abi3.so.*"
+              # GTK3 platform theme
+              "libatk-1.0.so.0"
+              "libcairo-gobject.so.2"
+              "libcairo.so.2"
+              "libgdk-3.so.0"
+              "libgdk_pixbuf-2.0.so.0"
+              "libgtk-3.so.0"
+              "libpango-1.0.so.0"
+              "libpangocairo-1.0.so.0"
+              # Qt SQL drivers (Oracle, Firebird, Mimer, MySQL)
+              "libclntsh.so.*"
+              "libfbclient.so.2"
+              "libmimerapi.so"
+              "libmysqlclient.so.*"
+              # QtNfc, QtTextToSpeech
+              "libpcsclite.so.1"
+              "libspeechd.so.2"
+            ];
           })
         ) (lib.filterAttrs (name: _v: lib.strings.hasPrefix "pyside6" name) prev);
 
