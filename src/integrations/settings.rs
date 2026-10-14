@@ -127,7 +127,7 @@ impl From<&Settings> for SettingsWire {
 
 impl SettingsWire {
     /// Rebuilds the domain record, refusing a schema this build does not know
-    /// and a target version that is not a release.
+    /// and a target version that is not a release, naming the file for both.
     fn into_settings(self, path: &Path) -> Result<Settings, Error> {
         let Self {
             schema_version,
@@ -145,6 +145,13 @@ impl SettingsWire {
             return Err(unsupported_schema(path, schema_version));
         }
 
+        let target_version = target_version
+            .as_deref()
+            .map(|text| {
+                GameVersion::parse(text).map_err(|error| invalid_target_version(path, error))
+            })
+            .transpose()?;
+
         Ok(Settings {
             schema_version,
             game_root,
@@ -152,10 +159,7 @@ impl SettingsWire {
             config_path,
             local_mods_root,
             workshop_root,
-            target_version: target_version
-                .as_deref()
-                .map(GameVersion::parse)
-                .transpose()?,
+            target_version,
             executable_override,
             confirm_warnings,
         })
@@ -251,6 +255,19 @@ fn io_error(path: &Path, source: io::Error) -> Error {
     Error::Io {
         path: path.to_path_buf(),
         source,
+    }
+}
+
+/// Reports an unusable `target_version` with the settings file it came from,
+/// keeping the rejected text and the parser's own reason in the message. The
+/// version rules stay the domain's; only the reporting boundary adds context.
+fn invalid_target_version(path: &Path, error: Error) -> Error {
+    match error {
+        Error::InvalidGameVersion { value, reason } => Error::InvalidInput {
+            context: format!("settings file {}", path.display()),
+            message: format!("target version {value:?} is not usable: {reason}"),
+        },
+        other => other,
     }
 }
 

@@ -90,10 +90,12 @@ fn invalid_input(error: Error) -> (String, String) {
     }
 }
 
-fn invalid_game_version(error: Error) -> (String, String) {
-    match error {
-        Error::InvalidGameVersion { value, reason } => (value, reason),
-        other => panic!("expected an invalid game version error, got {other}"),
+/// The reason the domain parser gives for an unusable version text, which the
+/// settings boundary must carry into its own message.
+fn version_reason(text: &str) -> String {
+    match GameVersion::parse(text) {
+        Err(Error::InvalidGameVersion { reason, .. }) => reason,
+        other => panic!("version {text:?} must be rejected, got {other:?}"),
     }
 }
 
@@ -217,14 +219,37 @@ fn disabled_warning_confirmation_is_preserved() {
 fn configured_paths_are_never_validated_against_the_filesystem() {
     let temp = TempDir::new().expect("temporary directory");
     let path = temp_settings(&temp);
+    let game_root = temp.path().join("Rim 游戏 数据");
+    let local_mods_root = temp.path().join("Каталог модов Ω");
     let mut settings = configured();
-    settings.game_root = Some(PathBuf::from("/nowhere/RimWorld 数据"));
-    settings.local_mods_root = Some(PathBuf::from("/nowhere/Local Mods"));
+    settings.game_root = Some(game_root.clone());
+    settings.local_mods_root = Some(local_mods_root.clone());
+
+    assert!(
+        !game_root.exists(),
+        "{} must stay uncreated",
+        game_root.display()
+    );
+    assert!(
+        !local_mods_root.exists(),
+        "{} must stay uncreated",
+        local_mods_root.display()
+    );
 
     saved(&path, &settings);
+    let reloaded = loaded(&path);
 
-    assert_eq!(loaded(&path), settings);
-    assert!(!Path::new("/nowhere/RimWorld 数据").exists());
+    assert_eq!(reloaded, settings);
+    assert!(
+        !game_root.exists(),
+        "a settings roundtrip must not create {}",
+        game_root.display()
+    );
+    assert!(
+        !local_mods_root.exists(),
+        "a settings roundtrip must not create {}",
+        local_mods_root.display()
+    );
 }
 
 #[test]
@@ -344,25 +369,45 @@ fn a_zero_schema_version_is_rejected_and_left_untouched() {
 #[test]
 fn an_unusable_target_version_is_reported_with_its_value() {
     let temp = TempDir::new().expect("temporary directory");
-    let path = write_json(&temp, r#"{ "schema_version": 1, "target_version": "1" }"#);
+    let stored = r#"{ "schema_version": 1, "target_version": "1" }"#;
+    let path = write_json(&temp, stored);
 
-    let (value, reason) = invalid_game_version(load_error(&path));
+    let (context, message) = invalid_input(load_error(&path));
 
-    assert_eq!(value, "1");
-    assert!(!reason.is_empty());
+    assert!(
+        context.contains(path.to_str().expect("utf-8 temp path")),
+        "{context}"
+    );
+    assert!(message.contains("\"1\""), "{message}");
+    assert!(message.contains(&version_reason("1")), "{message}");
+    assert_eq!(raw(&path), stored);
 }
 
 #[test]
 fn a_non_numeric_target_version_is_rejected() {
     let temp = TempDir::new().expect("temporary directory");
-    let path = write_json(
-        &temp,
-        r#"{ "schema_version": 1, "target_version": "nightly" }"#,
-    );
+    let stored = r#"{ "schema_version": 1, "target_version": "nightly" }"#;
+    let path = write_json(&temp, stored);
 
-    let (value, _) = invalid_game_version(load_error(&path));
+    let (context, message) = invalid_input(load_error(&path));
 
-    assert_eq!(value, "nightly");
+    assert_eq!(context, format!("settings file {}", path.display()));
+    assert!(message.contains("\"nightly\""), "{message}");
+    assert_eq!(raw(&path), stored);
+}
+
+#[test]
+fn an_unusable_target_version_names_the_settings_file_it_came_from() {
+    let temp = TempDir::new().expect("temporary directory");
+    let stored = r#"{ "schema_version": 1, "target_version": "1.5." }"#;
+    let path = write_json(&temp, stored);
+
+    let (context, message) = invalid_input(load_error(&path));
+
+    assert_eq!(context, format!("settings file {}", path.display()));
+    assert!(message.contains("\"1.5.\""), "{message}");
+    assert!(message.contains(&version_reason("1.5.")), "{message}");
+    assert_eq!(raw(&path), stored);
 }
 
 #[test]
