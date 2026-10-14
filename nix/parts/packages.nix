@@ -1,7 +1,7 @@
-# Packaged app + checks. Source is the flake's own tree (self.outPath) with
-# the submodule contents overlaid from fetchFromGitHub at the repo's pinned
-# revs (flake git-tree sources drop gitlink contents and SteamworksPy is a
-# runtime import). Ships the desktop item with the self-updater disabled.
+# Packaged app + checks. Sources are filesets of the flake's own tree with
+# the SteamworksPy submodule overlaid from fetchFromGitHub at the repo's
+# pinned rev (flake git-tree sources drop gitlink contents and SteamworksPy is
+# a runtime import). Ships the desktop item with the self-updater disabled.
 # - Python environment comes from uv.lock via uv2nix (appEnv); steamfiles
 #   therefore comes from the lock, not the submodule build.
 # - The wrapper exports the app's RIMSORT_LAUNCH_PREFIX / RIMSORT_TODDS_PATH
@@ -65,16 +65,12 @@
         else
           "0.0.0+dev";
 
-      # Packaged source tree WITH submodule contents, always pure.
-      # inputs.self.outPath materializes the repo (gitignore-aware; dirty
-      # trees copy the working state like every other nix build), but flake
-      # git-tree sources drop gitlink contents and SteamworksPy is a runtime
-      # import (from steamworks import STEAMWORKS resolves against it). We
-      # are the repo, so its tree comes from self, while the SteamworksPy
-      # contents are fetched at the repo's own pinned revision and overlaid
-      # back into submodules/. steamfiles is not fetched: it comes from
-      # uv.lock. Update the pin below when the repo's submodule pin moves
-      # (compare `git submodule status`).
+      # Flake git-tree sources drop gitlink contents, but SteamworksPy is a
+      # runtime import (from steamworks import STEAMWORKS resolves against
+      # it). Its contents are fetched at the repo's own pinned revision and
+      # overlaid into submodules/ (mkSrc below); steamfiles is not fetched:
+      # it comes from uv.lock. Update the pin when the submodule moves (CI
+      # compares it with the gitlink).
       submoduleSrcs = pkgs.linkFarm "rimsort-submodules" [
         {
           name = "SteamworksPy";
@@ -86,20 +82,43 @@
           };
         }
       ];
-      src = pkgs.runCommand "rimsort-src" { } ''
-        mkdir $out
-        cp -r ${inputs.self.outPath}/. $out/
-        chmod -R u+w $out
-        # Depending on the Nix version the self tree has no submodules/ at all
-        # or empty gitlink directories; copy the contents into place instead
-        # of nesting below an existing directory.
-        for sub in ${submoduleSrcs}/*; do
-          dest="$out/submodules/$(basename "$sub")"
-          mkdir -p "$dest"
-          cp -r "$sub/." "$dest/"
-        done
-        chmod -R u+w $out/submodules
-      '';
+      # Only what the app reads at runtime (AppInfo resolves these as
+      # siblings of app/; SteamworksPy reads steam_appid.txt from the cwd), so
+      # doc or tooling edits do not rebuild the package.
+      runtimeFiles = lib.fileset.unions [
+        ../../app
+        ../../libs
+        ../../locales
+        ../../themes
+        ../../LICENSE.md
+        ../../setup_steam_recovery_script.js
+        ../../setup_web_channel_script.js
+        ../../steam_appid.txt
+      ];
+      testFiles = lib.fileset.unions [
+        runtimeFiles
+        ../../tests
+        ../../pyproject.toml
+        ../../translation_helper.py
+      ];
+      mkSrc =
+        name: fileset:
+        pkgs.runCommand name { } ''
+          cp -r ${
+            lib.fileset.toSource {
+              root = ../..;
+              inherit fileset;
+            }
+          } $out
+          chmod -R u+w $out
+          mkdir -p $out/submodules
+          for sub in ${submoduleSrcs}/*; do
+            cp -r "$sub/." "$out/submodules/$(basename "$sub")"
+          done
+          chmod -R u+w $out/submodules
+        '';
+      src = mkSrc "rimsort-src" runtimeFiles;
+      testSrc = mkSrc "rimsort-test-src" testFiles;
 
       # Launch prefix exported to the app via RIMSORT_LAUNCH_PREFIX (game +
       # SteamCMD run inside the Steam runtime FHS env)
@@ -116,13 +135,15 @@
         (qtLdLibraryPathFor appEnv)
       ];
 
-      # Tests run against the same (unpatched) source that ships in the
-      # package. Only the network-dependent tests are skipped, like the
+      # Tests run against the shipped (unpatched) runtime files plus the
+      # tests. Only the network-dependent tests are skipped, like the
       # nixpkgs package's disabledTestPaths; the hardcoded-executable tests
       # nixpkgs disables pass here because our sources are never patched.
       pytestDrv = pkgs.stdenv.mkDerivation {
-        pname = "rimsort-tests";
-        inherit version src;
+        # No version: a rev-based one would rerun the suite on every commit,
+        # even when the test inputs (testSrc, devEnv) are unchanged.
+        name = "rimsort-tests";
+        src = testSrc;
 
         nativeBuildInputs = [ devEnv ];
 
@@ -159,20 +180,6 @@
         inherit version src;
 
         __structuredAttrs = true;
-
-        # Copy the tree (writable). The repo vendors its own Steamworks
-        # libraries under libs/, refreshed by distribute.py at release
-        # time, and the app loads them from there via _libs.
-        unpackPhase = ''
-          runHook preUnpack
-
-          cp -r ${finalAttrs.src} source
-          chmod -R 755 source
-
-          runHook postUnpack
-        '';
-
-        sourceRoot = "source";
 
         nativeBuildInputs = [
           pkgs.makeBinaryWrapper
