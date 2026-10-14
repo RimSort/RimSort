@@ -13,7 +13,7 @@ class JavaScriptBridge(QObject):
     """
 
     def __init__(
-        self, browser_instance: "SteamBrowser", parent: QObject | None = None
+        self, browser_instance: SteamBrowser, parent: QObject | None = None
     ) -> None:
         super().__init__(parent)
         self._browser_instance = browser_instance

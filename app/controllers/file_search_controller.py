@@ -1,7 +1,7 @@
 import os
 import re
 import xml.etree.ElementTree as ET
-from typing import Any, Optional
+from typing import Any
 from xml.dom import minidom
 
 from charset_normalizer import from_bytes
@@ -413,8 +413,8 @@ class SearchWorker(QThread):
                 root = ET.fromstring(content)
 
                 def find_element_with_text(
-                    element: "ET.Element", search_text: str, case_sensitive: bool = True
-                ) -> Optional["ET.Element"]:
+                    element: ET.Element, search_text: str, case_sensitive: bool = True
+                ) -> ET.Element | None:
                     # Check element text
                     element_text = element.text or ""
                     if not case_sensitive:

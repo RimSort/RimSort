@@ -62,7 +62,7 @@ def main_content(
     mock_settings_controller: MagicMock,
     mock_metadata_controller: MagicMock,
     mock_steamcmd_interface: MagicMock,
-) -> Generator[tuple[MainContent, list[bool]], None, None]:
+) -> Generator[tuple[MainContent, list[bool]]]:
     """MainContent with a fake instance path and a stubbed essential-paths check."""
     from app.views.main_content_panel import MainContent
 

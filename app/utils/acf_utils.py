@@ -69,7 +69,7 @@ def load_acf_from_path(acf_path: str | Path) -> dict[str, Any]:
 
 
 def refresh_acf_metadata(
-    metadata_controller: "MetadataController",
+    metadata_controller: MetadataController,
     steamclient: bool = True,
     steamcmd: bool = True,
 ) -> None:
@@ -147,7 +147,7 @@ def parse_timeupdated(timeupdated_raw: Any) -> int | None:
         return None
     try:
         return int(timeupdated_raw)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -250,7 +250,7 @@ def _merge_workshop_items_from_sources(
 
 
 def get_acf_workshop_items(
-    metadata_controller: "MetadataController",
+    metadata_controller: MetadataController,
 ) -> tuple[list[tuple[str, str, int | None]], dict[str, Any], dict[str, Any]]:
     """
     Merge and deduplicate workshop items from both SteamCMD and Steam sources.
@@ -287,8 +287,8 @@ def get_acf_workshop_items(
 
 
 def load_and_merge_acf_data(
-    steamcmd_acf_path: "str | Path | None",
-    steam_acf_path: "str | Path | None",
+    steamcmd_acf_path: str | Path | None,
+    steam_acf_path: str | Path | None,
 ) -> tuple[list[tuple[str, str, int | None]], dict[str, Any], dict[str, Any]]:
     """
     Load ACF files from both sources and merge workshop item data.
@@ -363,7 +363,7 @@ def _extract_manifest_ids_and_remove_pfid(
 
 
 def steamcmd_purge_mods(
-    metadata_controller: "MetadataController",
+    metadata_controller: MetadataController,
     publishedfileids: set[str],
     auto_clear_enabled: bool = True,
 ) -> None:

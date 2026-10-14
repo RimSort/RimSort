@@ -30,7 +30,7 @@ class MetadataDbController:
 
 class AuxMetadataController(MetadataDbController):
     _instances: dict[
-        Path, "AuxMetadataController"
+        Path, AuxMetadataController
     ] = {}  # db_path : AuxMetadataController  # noqa: RUF012
 
     def __init__(self, db_path: Path) -> None:
@@ -106,7 +106,7 @@ class AuxMetadataController(MetadataDbController):
             conn.commit()
 
     @classmethod
-    def get_or_create_cached_instance(cls, db_path: Path) -> "AuxMetadataController":
+    def get_or_create_cached_instance(cls, db_path: Path) -> AuxMetadataController:
         """
         Get or create a cached instance of the controller.
         This cached controller is only for the specified db_path.

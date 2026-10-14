@@ -452,7 +452,7 @@ class AcfLogReader(BaseModsPanel):
                     timeupdated = item_data.get("timeupdated")
                     try:
                         timeupdated = int(timeupdated) if timeupdated else None
-                    except (ValueError, TypeError):
+                    except ValueError, TypeError:
                         timeupdated = None
                     entries.append((pfid, "SteamCMD", timeupdated))
                     seen_pfids.add(pfid)
@@ -472,7 +472,7 @@ class AcfLogReader(BaseModsPanel):
                         timeupdated = item_data.get("timeupdated")
                         try:
                             timeupdated = int(timeupdated) if timeupdated else None
-                        except (ValueError, TypeError):
+                        except ValueError, TypeError:
                             timeupdated = None
                         entries.append((pfid, "Steam", timeupdated))
                         seen_pfids.add(pfid)

@@ -61,7 +61,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           LINTER_RULES_PATH: .
           PYTHONPATH: "/github/workspace/:\
-            /github/workflow/.venv/lib/python3.12/site-packages"
+            /github/workflow/.venv/lib/python3.14/site-packages"
           VALIDATE_PYTHON_MYPY: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_PYTHON_RUFF_FORMAT: true

@@ -96,21 +96,19 @@ class GitOperationConfig:
         return self.notification_handler or DefaultNotificationHandler()
 
     @classmethod
-    def create_silent(cls) -> "GitOperationConfig":
+    def create_silent(cls) -> GitOperationConfig:
         """Create a config that suppresses error notifications."""
         return cls(notify_errors=False)
 
     @classmethod
-    def create_with_handler(
-        cls, handler: GitNotificationHandler
-    ) -> "GitOperationConfig":
+    def create_with_handler(cls, handler: GitNotificationHandler) -> GitOperationConfig:
         """Create a config with a specific notification handler."""
         return cls(notify_errors=True, notification_handler=handler)
 
     @classmethod
     def create_with_timeout(
         cls, fetch_timeout: int = 30, connection_timeout: int = 10
-    ) -> "GitOperationConfig":
+    ) -> GitOperationConfig:
         """Create a config with custom timeout values."""
         return cls(fetch_timeout=fetch_timeout, connection_timeout=connection_timeout)
 
@@ -350,7 +348,7 @@ def _handle_git_error(
 @contextmanager
 def git_repository(
     path: str | Path, config: GitOperationConfig | None = None
-) -> Generator[Repository | None, None, None]:
+) -> Generator[Repository | None]:
     """Context manager for automatic repository cleanup.
 
     Args:

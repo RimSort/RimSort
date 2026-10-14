@@ -30,7 +30,7 @@ from app.views import dialogue
 translate = QCoreApplication.translate
 
 
-def chunks(_list: list[Any], limit: int) -> Generator[list[Any], None, None]:
+def chunks(_list: list[Any], limit: int) -> Generator[list[Any]]:
     """
     Split list into chunks no larger than the configured limit
 
@@ -181,7 +181,7 @@ def delete_files_only_extension(directory: Path | str, extension: str) -> bool:
 
 def scanpath(
     path: Path | str,
-) -> Generator[os.DirEntry[str] | Any, None, None]:
+) -> Generator[os.DirEntry[str] | Any]:
     if sys.platform == "win32":
         try:
             yield from scanpath_win32(path)
@@ -803,7 +803,7 @@ def get_relative_time(timestamp: int) -> str:
             return f"{delta.seconds // 60} minutes ago"
         else:
             return "Just now"
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return "Invalid timestamp"
 
 
@@ -825,7 +825,7 @@ def format_time_display(timestamp: int | None) -> tuple[str, int | None]:
         abs_time = strftime("%Y-%m-%d %H:%M:%S", localtime(timestamp))
         rel_time = get_relative_time(timestamp)
         return f"{abs_time} | {rel_time}", timestamp
-    except (ValueError, TypeError, OSError):
+    except ValueError, TypeError, OSError:
         return "Invalid timestamp", None
 
 

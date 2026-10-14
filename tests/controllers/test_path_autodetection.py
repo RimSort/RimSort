@@ -1154,13 +1154,13 @@ class _FakeWinreg:
             self._subkeys: dict[str, Any] = subkeys
             self._values: dict[str, object] = values
 
-        def __enter__(self) -> "_FakeWinreg._Key":
+        def __enter__(self) -> _FakeWinreg._Key:
             return self
 
         def __exit__(self, *args: object) -> None:
             pass
 
-    def OpenKey(self, root: "str | _FakeWinreg._Key", path: str) -> "_FakeWinreg._Key":
+    def OpenKey(self, root: str | _FakeWinreg._Key, path: str) -> _FakeWinreg._Key:
         # winreg.OpenKey accepts either a predefined root key or an already
         # opened key; relative paths resolve against the latter's subkeys.
         node: dict[str, Any] = (
@@ -1180,14 +1180,14 @@ class _FakeWinreg:
         )
         return self._Key(node, values)
 
-    def EnumKey(self, key: "_FakeWinreg._Key", index: int) -> str:
+    def EnumKey(self, key: _FakeWinreg._Key, index: int) -> str:
         names = [n for n in key._subkeys if n != "__values__"]
         if index >= len(names):
             raise OSError("no more data")
         return names[index]
 
     def QueryValueEx(
-        self, key: "_FakeWinreg._Key", value_name: str
+        self, key: _FakeWinreg._Key, value_name: str
     ) -> tuple[object, str]:
         if value_name not in key._values:
             raise FileNotFoundError(value_name)

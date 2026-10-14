@@ -87,7 +87,7 @@ def _has_core_metadata(path: Path) -> bool:
             and (child.text or "").strip().casefold() == "ludeon.rimworld"
             for child in root
         )
-    except (OSError, ElementTree.ParseError, ValueError):
+    except OSError, ElementTree.ParseError, ValueError:
         return False
 
 

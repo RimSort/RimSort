@@ -350,7 +350,7 @@ def _get_path_to_updated_map(
 
 def _build_sort_key_map(
     paths: list[str],
-    key: "ModsPanelSortKey",
+    key: ModsPanelSortKey,
     cached_metadata: dict[str, ListedMod | None] | None = None,
     settings: Settings | None = None,
     path_to_color: dict[str, str] | None = None,

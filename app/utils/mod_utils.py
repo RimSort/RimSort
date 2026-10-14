@@ -169,7 +169,7 @@ def _format_timestamp(ts: int) -> str:
         return "N/A"
     try:
         return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")  # noqa: DTZ006
-    except (ValueError, OSError, OverflowError):
+    except ValueError, OSError, OverflowError:
         return f"<invalid:{ts}>"
 
 

@@ -10,7 +10,7 @@ from app.utils.github.models import CacheBase
 
 
 @pytest.fixture
-def cache_session() -> Generator[Session, None, None]:
+def cache_session() -> Generator[Session]:
     """Session for the global cache DB (github_release_cache)."""
     engine = create_engine("sqlite:///:memory:")
     CacheBase.metadata.create_all(engine)

@@ -42,7 +42,7 @@ Your OS needs to be one that PySide6 supports. As an example, we use the followi
 **Required:**
 
 - [git](https://git-scm.com/)
-- [Python](https://python.org/) 3.12 (Can be installed with uv if you'd like)
+- [Python](https://python.org/) 3.14 (Can be installed with uv if you'd like)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [just](https://just.systems/man/en/installation.html) — task runner for development commands
 

@@ -19,9 +19,9 @@ class GUIInfo:
     of the class exists throughout the application.
     """
 
-    _instance: "None | GUIInfo" = None
+    _instance: None | GUIInfo = None
 
-    def __new__(cls) -> "GUIInfo":  # noqa: PYI034
+    def __new__(cls) -> GUIInfo:  # noqa: PYI034
         """
         Ensure only one instance of GUIInfo is created (Singleton pattern).
 

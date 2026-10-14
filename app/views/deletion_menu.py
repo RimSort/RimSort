@@ -176,7 +176,7 @@ class ModDeletionMenu(QMenu):
                 try:
                     if any(Path(mod_path).rglob(f"*{self.DDS_EXTENSION}")):
                         return True
-                except (OSError, PermissionError):
+                except OSError, PermissionError:
                     continue
         return False
 

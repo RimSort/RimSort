@@ -62,7 +62,7 @@ class AuxMetadataEntry(Base):
         DateTime, default=func.now(), onupdate=func.now()
     )
 
-    tags: Mapped[list["TagsEntry"]] = relationship(
+    tags: Mapped[list[TagsEntry]] = relationship(
         secondary=tags_table, back_populates="mods"
     )
 

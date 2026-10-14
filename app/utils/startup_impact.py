@@ -58,7 +58,7 @@ IMPACT_HIGH_THRESHOLD_S = 5.0
 # mtime it was parsed at, so an updated file is re-parsed transparently.
 # Parse failures are cached as None per-mtime and retried when the file
 # changes.
-_report_cache: dict[str, tuple[float, "StartupImpactReport | None"]] = {}
+_report_cache: dict[str, tuple[float, StartupImpactReport | None]] = {}
 
 
 @dataclass(frozen=True)
@@ -118,7 +118,7 @@ def get_startup_impact_file_path(config_folder: str) -> Path:
     return Path(config_folder).parent / STARTUP_IMPACT_FILENAME
 
 
-def load_startup_impact_report(config_folder: str) -> "StartupImpactReport | None":
+def load_startup_impact_report(config_folder: str) -> StartupImpactReport | None:
     """Load the startup impact report for an instance, if one exists.
 
     Results are cached by file mtime: the file is only re-parsed after it
@@ -155,7 +155,7 @@ def format_impact(seconds: float) -> str:
     return f"{round(seconds * 1000)}ms"
 
 
-def _parse_report(path: str, mtime: float) -> "StartupImpactReport | None":
+def _parse_report(path: str, mtime: float) -> StartupImpactReport | None:
     data = xml_path_to_json(path)
     session = data.get("StartupImpactSession")
     if not isinstance(session, dict):

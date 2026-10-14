@@ -40,9 +40,9 @@ class SteamcmdInterface:
     Create SteamcmdInterface object to provide an interface for SteamCMD functionality
     """
 
-    _instance: "None | SteamcmdInterface" = None
+    _instance: None | SteamcmdInterface = None
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":  # noqa: PYI034
+    def __new__(cls, *args: Any, **kwargs: Any) -> SteamcmdInterface:  # noqa: PYI034
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -113,7 +113,7 @@ class SteamcmdInterface:
         )
 
     @classmethod
-    def instance(cls, *args: Any, **kwargs: Any) -> "SteamcmdInterface":
+    def instance(cls, *args: Any, **kwargs: Any) -> SteamcmdInterface:
         if cls._instance is None:
             cls._instance = cls(*args, **kwargs)
         elif args or kwargs:

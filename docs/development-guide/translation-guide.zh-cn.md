@@ -269,7 +269,7 @@ python translation_helper.py auto-translate zh_CN --service google --no-cache
 
 1. **开发环境**（必需）
    - 按照 [开发环境设置指南](development-setup.zh-cn.md) 配置项目开发环境
-   - 包括 Python 3.12、PySide6 以及项目依赖项的安装
+   - 包括 Python 3.14、PySide6 以及项目依赖项的安装
 
 2. **翻译编辑器**
    - **推荐**：支持 XML 语法高亮的文本编辑器（VS Code、Sublime Text、Notepad++ 等）
