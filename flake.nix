@@ -30,7 +30,16 @@
 
     git-hooks-nix = {
       url = "github:cachix/git-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-compat.follows = "flake-compat";
+      };
+    };
+
+    # default.nix / shell.nix entry points for nix-build and nix-shell
+    flake-compat = {
+      url = "github:NixOS/flake-compat";
+      flake = false;
     };
   };
 
