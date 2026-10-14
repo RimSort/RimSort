@@ -825,9 +825,9 @@ wheels = [
 
 [[package]]
 name = "nuitka"
-version = "4.2.2"
+version = "4.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/75/27/9fef9381e967c333c808d8b087ca2cca713d608647a638d962f34ea22a45/nuitka-4.2.2.tar.gz", hash = "sha256:29c1bfb6f53154e620b38cf6167cbb03f54043f6e08ef7d3f2d5080a95df7e0d", size = 4635975, upload-time = "2026-09-22T14:25:53.659Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/5f/ba7cb858da0c98c24f85c54454a5ea18f2b784f658a91531fa051b2f2ee9/nuitka-4.3.tar.gz", hash = "sha256:8b102c6bf30d9504e82e69674d396972729092b25cefa680e8fd05678fdfa30b", size = 4766934, upload-time = "2026-10-10T11:13:15.577Z" }
 
 [[package]]
 name = "packaging"
@@ -1386,7 +1386,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-build = [{ name = "nuitka", specifier = "==4.2.2" }]
+build = [{ name = "nuitka", specifier = "==4.3" }]
 dev = [
     { name = "googletrans", specifier = ">=4.0.0rc1" },
     { name = "lxml-stubs", specifier = ">=0.5.1" },
