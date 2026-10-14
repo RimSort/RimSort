@@ -263,13 +263,19 @@ pub enum DiagnosticKind {
     DuplicateDependency { package_id: PackageId },
     /// A `modDependencies` entry without a usable `packageId`.
     DependencyWithoutPackageId,
+    /// A discovered mod folder whose `About.xml` could not be read as mod
+    /// metadata: absent, unreadable or not a metadata document. The record
+    /// stays visible so the folder itself remains inspectable.
+    UnreadableAbout { reason: String },
 }
 
 impl DiagnosticKind {
     #[must_use]
     pub fn severity(&self) -> DiagnosticSeverity {
         match self {
-            Self::MissingPackageId | Self::EmptyPackageId => DiagnosticSeverity::Error,
+            Self::MissingPackageId | Self::EmptyPackageId | Self::UnreadableAbout { .. } => {
+                DiagnosticSeverity::Error
+            }
             Self::MissingName
             | Self::InvalidSupportedVersion { .. }
             | Self::InvalidSteamAppId { .. }
@@ -307,6 +313,9 @@ impl fmt::Display for DiagnosticKind {
             }
             Self::DependencyWithoutPackageId => {
                 formatter.write_str("a modDependencies entry has no packageId")
+            }
+            Self::UnreadableAbout { reason } => {
+                write!(formatter, "About.xml could not be read: {reason}")
             }
         }
     }
