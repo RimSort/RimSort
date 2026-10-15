@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
+from app.utils.generic import apply_launch_prefix
 from app.utils.steam.webapi.wrapper import (
     ISteamRemoteStorage_GetPublishedFileDetails,
 )
@@ -32,6 +33,24 @@ from app.views.dialogue import (
     show_dialogue_file,
     show_warning,
 )
+
+
+def matches_wrapped_program(
+    program_name: str, program: str, args: Sequence[str]
+) -> bool:
+    """Match a process by its program, or by the wrapped executable.
+
+    The program may be a launcher wrapper (e.g. the Nix steam-run FHS
+    launcher via RIMSORT_LAUNCH_PREFIX) that receives the real executable
+    as one of its arguments instead of running it directly. Arguments match
+    by file name only: data paths such as todds targets inside the SteamCMD
+    workshop folder must not identify the process as SteamCMD.
+    """
+    if program_name in program:
+        return True
+    return any(
+        program_name in arg.replace("\\", "/").rsplit("/", 1)[-1] for arg in args
+    )
 
 
 class RunnerPanel(QWidget):
@@ -375,7 +394,8 @@ class RunnerPanel(QWidget):
         if not self.todds_dry_run_support:
             self.message(f"\nExecuting command:\n{command} {' '.join(args)}\n\n")
 
-        if "steamcmd" in command and self._steamcmd_console_log_path:
+        is_steamcmd = matches_wrapped_program("steamcmd", command, args)
+        if is_steamcmd and self._steamcmd_console_log_path:
             self._start_steamcmd_log_tail()
 
         # Start the process
@@ -537,7 +557,9 @@ class RunnerPanel(QWidget):
             return False
         if self.process.state() != QProcess.ProcessState.Running:
             return False
-        return program_name in self.process.program()
+        return matches_wrapped_program(
+            program_name, self.process.program(), self.process.arguments()
+        )
 
     def _handle_steamcmd_output(self, line: str) -> bool:
         """
@@ -697,9 +719,12 @@ class RunnerPanel(QWidget):
         self.message(f"Compiled & using script: {script_path}")
 
         # Re-wire the finished signal before starting the new process.
+        program, script_args = apply_launch_prefix(
+            self._steamcmd_executable, [f'+runscript "{script_path}"']
+        )
         self.process = QProcess(self)
-        self.process.setProgram(self._steamcmd_executable)
-        self.process.setArguments([f'+runscript "{script_path}"'])
+        self.process.setProgram(program)
+        self.process.setArguments(script_args)
         self._apply_process_environment(self.process, self._steamcmd_environment)
         self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.process.readyReadStandardError.connect(self.handle_output)

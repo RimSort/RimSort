@@ -35,11 +35,11 @@ dependencies = [
 
 [tool.uv.sources]
 steamfiles = { git = "https://github.com/RimSort/steamfiles" }
+nuitka = { git = "https://github.com/Nuitka/Nuitka", tag = "4.3.1" }
 
 [dependency-groups]
 dev = [
     "googletrans>=4.0.0rc1",
-    "lxml-stubs>=0.5.1",
     "mypy>=1.20.2",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
@@ -63,7 +63,7 @@ dev = [
 ]
 
 build = [
-    "nuitka==4.3",
+    "nuitka==4.3.1",
 ]
 
 [tool.uv]
@@ -72,6 +72,15 @@ environments = [
     "sys_platform == 'linux'",
     "sys_platform == 'win32'",
 ]
+
+# Legacy setuptools projects (no pyproject.toml of their own). When uv builds
+# them without isolation (Nix, or --no-build-isolation installs), setuptools
+# is not injected and the legacy backend fails; declare it explicitly.
+[tool.uv.extra-build-dependencies]
+nuitka = ["setuptools"]
+protobuf3-to-dict = ["setuptools"]
+steam = ["setuptools"]
+steamfiles = ["setuptools"]
 
 [tool.mypy]
 disallow_any_generics = true

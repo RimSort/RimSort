@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QMessageBox
 from app.models.settings import Instance, Settings
 from app.utils import http, symlink
 from app.utils.event_bus import EventBus
-from app.utils.generic import handle_remove_read_only
+from app.utils.generic import apply_launch_prefix, handle_remove_read_only
 from app.utils.generic import rmtree as g_rmtree
 from app.views.dialogue import (
     BinaryChoiceDialog,
@@ -403,9 +403,12 @@ class SteamcmdInterface:
         script_path = self._build_download_script(first_batch)
         runner.message(f"Compiled & using script: {script_path}")
         runner._steamcmd_console_log_path = str(self.console_log_path)
+        program, script_args = apply_launch_prefix(
+            self.steamcmd, [f'+runscript "{script_path}"']
+        )
         runner.execute(
-            self.steamcmd,
-            [f'+runscript "{script_path}"'],
+            program,
+            script_args,
             total,
             environment=runner._steamcmd_environment,
         )

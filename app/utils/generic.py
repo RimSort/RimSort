@@ -1,5 +1,6 @@
 import os
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
@@ -253,6 +254,39 @@ def get_executable_path(game_install_path: Path) -> str | None:
     return str(executable) if executable is not None else None
 
 
+def apply_launch_prefix(executable_path: str, args: list[str]) -> tuple[str, list[str]]:
+    """
+    Prefix an executable launch with the ``RIMSORT_LAUNCH_PREFIX`` command, if set.
+
+    On Linux, packaged builds (e.g. Nix) may need real executables such as
+    RimWorld or SteamCMD to run inside an FHS environment. The packager sets
+    ``RIMSORT_LAUNCH_PREFIX`` to a launcher command (e.g. the path to
+    ``steam-run``), which is inserted directly before the executable:
+    ``<prefix> <executable> <args...>``. The value is split with shell-like
+    quoting, so multi-word prefixes are supported.
+
+    The prefix is ignored on macOS and Windows, where the mechanism does not
+    apply (macOS launches via the ``open`` command).
+
+    :param executable_path: path to the executable to launch
+    :param args: arguments for the executable
+    :return: tuple of (program to run, complete argument list)
+    """
+    raw_prefix = os.getenv("RIMSORT_LAUNCH_PREFIX", "").strip()
+    if not raw_prefix:
+        return executable_path, args
+    if platform.system() != "Linux":
+        logger.debug(
+            f"Ignoring RIMSORT_LAUNCH_PREFIX on non-Linux platform: {platform.system()}"
+        )
+        return executable_path, args
+    prefix = shlex.split(raw_prefix)
+    if not prefix:
+        return executable_path, args
+    logger.info(f"Applying RIMSORT_LAUNCH_PREFIX to launch: {prefix}")
+    return prefix[0], prefix[1:] + [executable_path, *args]
+
+
 def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
     """
     This function starts the Rimworld game process in it's own Process,
@@ -316,6 +350,7 @@ def launch_game_process(game_install_path: Path, run_args: str = "") -> None:
         f"Launching the game with subprocess.Popen(): `{executable_path}` "
         f"with env_vars: {list(env_vars.keys())}, wrappers: {wrapper_commands}, args: {game_args}"
     )
+    executable_path, game_args = apply_launch_prefix(executable_path, game_args)
     cwd = game_install_path
     if platform.system() != "Darwin":
         layout = resolve_game_layout(game_install_path)
