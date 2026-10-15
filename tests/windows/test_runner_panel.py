@@ -35,6 +35,19 @@ def _make_steamcmd_panel(tmp_path: Path, *, system: str = "Windows") -> Any:
     return panel
 
 
+def _make_pending_batch_panel(environment: dict[str, str] | None) -> Any:
+    """Build a panel with just enough state to start the next SteamCMD batch."""
+    panel = RunnerPanel.__new__(RunnerPanel)
+    panel._pending_steamcmd_batches = [["12345"]]
+    panel._steamcmd_batch_index = 1
+    panel._steamcmd_wrapper = MagicMock()
+    panel._steamcmd_wrapper._build_download_script.return_value = "/tmp/script.txt"
+    panel._steamcmd_executable = "/steamcmd/steamcmd.sh"
+    panel._steamcmd_environment = environment
+    panel.message = MagicMock()  # type: ignore[method-assign]
+    return panel
+
+
 class TestRunnerPanelSteamcmdLogging:
     @patch("app.windows.runner_panel.logger")
     def test_steamcmd_lines_logged_at_info(self, mock_logger: MagicMock) -> None:
@@ -230,14 +243,7 @@ class TestRunnerPanelSteamcmdLogTail:
         mock_process = MagicMock()
         mock_qprocess.return_value = mock_process
 
-        panel = RunnerPanel.__new__(RunnerPanel)
-        panel._pending_steamcmd_batches = [["12345"]]
-        panel._steamcmd_batch_index = 1
-        panel._steamcmd_wrapper = MagicMock()
-        panel._steamcmd_wrapper._build_download_script.return_value = "/tmp/script.txt"
-        panel._steamcmd_executable = "/steamcmd/steamcmd.sh"
-        panel._steamcmd_environment = {"HOME": str(tmp_path / "home")}
-        panel.message = MagicMock()  # type: ignore[method-assign]
+        panel = _make_pending_batch_panel({"HOME": str(tmp_path / "home")})
 
         panel._start_next_steamcmd_batch()
 
@@ -256,14 +262,7 @@ class TestRunnerPanelSteamcmdLogTail:
         mock_process = MagicMock()
         mock_qprocess.return_value = mock_process
 
-        panel = RunnerPanel.__new__(RunnerPanel)
-        panel._pending_steamcmd_batches = [["12345"]]
-        panel._steamcmd_batch_index = 1
-        panel._steamcmd_wrapper = MagicMock()
-        panel._steamcmd_wrapper._build_download_script.return_value = "/tmp/script.txt"
-        panel._steamcmd_executable = "/steamcmd/steamcmd.sh"
-        panel._steamcmd_environment = None
-        panel.message = MagicMock()  # type: ignore[method-assign]
+        panel = _make_pending_batch_panel(None)
 
         panel._start_next_steamcmd_batch()
 
