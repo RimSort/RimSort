@@ -636,7 +636,11 @@ fn a_data_folder_that_cannot_be_resolved_keeps_the_filesystem_failure() {
 
     let (path, kind, message) = io_failure(&scan_error(&install.settings()));
 
-    assert_eq!(path, link, "the failure must name the Data path");
+    assert_eq!(
+        path,
+        canon(&install.content_root).join("Data"),
+        "the failure must name the Data path"
+    );
     assert_ne!(
         kind,
         io::ErrorKind::NotFound,

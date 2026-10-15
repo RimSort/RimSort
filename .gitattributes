@@ -2,3 +2,7 @@
 # rejects CRLF, so a Windows checkout under core.autocrlf=true would otherwise
 # fail `just shfmt` on every run for reasons unrelated to formatting.
 *.sh text eol=lf
+
+# XML fixtures have byte-sensitive span assertions; Windows checkouts must not
+# rewrite their line endings. CRLF parsing is covered by explicit test inputs.
+tests/fixtures/**/*.xml text eol=lf
