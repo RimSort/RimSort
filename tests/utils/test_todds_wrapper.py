@@ -8,6 +8,33 @@ import pytest
 from app.utils.todds.wrapper import ToddsInterface
 
 
+def _touch_bundled_todds(application_folder: Path) -> Path:
+    """Create the platform-specific bundled todds executable."""
+    import platform
+
+    executable_name = "todds.exe" if platform.system() == "Windows" else "todds"
+    todds_binary = application_folder / "todds" / executable_name
+    todds_binary.parent.mkdir(parents=True, exist_ok=True)
+    todds_binary.touch()
+    return todds_binary
+
+
+def _execute_with_application_folder(
+    application_folder: Path,
+) -> tuple[MagicMock, MagicMock]:
+    """Execute todds against a mocked application folder."""
+    todds_interface = ToddsInterface(preset="optimized")
+    runner = MagicMock()
+    runner.todds_dry_run_support = False
+
+    with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
+        mock_app_info.return_value.application_folder = application_folder
+        todds_interface.execute_todds_cmd("/some/target", runner)
+
+    runner.execute.assert_called_once()
+    return runner, mock_app_info
+
+
 class TestToddsInterfaceInit:
     """Test ToddsInterface initialization with various parameter combinations."""
 
@@ -60,26 +87,12 @@ class TestToddsInterfaceInit:
 class TestToddsExecute:
     def test_execute_calls_runner_when_binary_exists(self, tmp_path: Path) -> None:
         """When todds binary exists, execute_todds_cmd calls runner.execute."""
-        import platform
+        todds_binary = _touch_bundled_todds(tmp_path)
 
-        todds_dir = tmp_path / "todds"
-        todds_dir.mkdir()
-        exe_name = "todds.exe" if platform.system() == "Windows" else "todds"
-        todds_bin = todds_dir / exe_name
-        todds_bin.touch()
+        runner, _ = _execute_with_application_folder(tmp_path)
 
-        ti = ToddsInterface(preset="optimized")
-
-        runner = MagicMock()
-        runner.todds_dry_run_support = False
-
-        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
-            mock_app_info.return_value.application_folder = tmp_path
-            ti.execute_todds_cmd("/some/target", runner)
-
-        runner.execute.assert_called_once()
         args = runner.execute.call_args
-        assert str(todds_bin) == args[0][0]
+        assert str(todds_binary) == args[0][0]
 
     def test_execute_shows_error_when_binary_missing(self, tmp_path: Path) -> None:
         """When todds binary is missing, execute_todds_cmd sends error message."""
@@ -108,15 +121,8 @@ class TestToddsEnvOverride:
         system_todds.touch()
         monkeypatch.setenv("RIMSORT_TODDS_PATH", str(system_todds))
 
-        ti = ToddsInterface(preset="optimized")
-        runner = MagicMock()
-        runner.todds_dry_run_support = False
+        runner, mock_app_info = _execute_with_application_folder(tmp_path)
 
-        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
-            mock_app_info.return_value.application_folder = tmp_path
-            ti.execute_todds_cmd("/some/target", runner)
-
-        runner.execute.assert_called_once()
         assert runner.execute.call_args[0][0] == str(system_todds)
         mock_app_info.assert_not_called()
 
@@ -140,21 +146,9 @@ class TestToddsEnvOverride:
     def test_empty_env_falls_back_to_bundled_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import platform
-
         monkeypatch.setenv("RIMSORT_TODDS_PATH", "")
-        exe_name = "todds.exe" if platform.system() == "Windows" else "todds"
-        todds_bin = tmp_path / "todds" / exe_name
-        todds_bin.parent.mkdir(parents=True)
-        todds_bin.touch()
+        todds_binary = _touch_bundled_todds(tmp_path)
 
-        ti = ToddsInterface(preset="optimized")
-        runner = MagicMock()
-        runner.todds_dry_run_support = False
+        runner, _ = _execute_with_application_folder(tmp_path)
 
-        with patch("app.utils.todds.wrapper.AppInfo") as mock_app_info:
-            mock_app_info.return_value.application_folder = tmp_path
-            ti.execute_todds_cmd("/some/target", runner)
-
-        runner.execute.assert_called_once()
-        assert runner.execute.call_args[0][0] == str(todds_bin)
+        assert runner.execute.call_args[0][0] == str(todds_binary)
