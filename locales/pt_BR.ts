@@ -47,6 +47,46 @@
         <translation>Não fazer nada e sair</translation>
     </message>
     <message>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation>Autor</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation>ID do pacote</translation>
+    </message>
+    <message>
+        <source>Published File Id</source>
+        <translation>ID do arquivo publicado</translation>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation>Versões compatíveis</translation>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation>Mod baixado</translation>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation>Atualizado no Workshop</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Origem</translation>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation>Caminho</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation>Página do Workshop</translation>
+    </message>
+    <message>
         <source>Open Page</source>
         <translation>Abrir página</translation>
     </message>
