@@ -523,7 +523,7 @@ class DatabaseBuilder(QObject):
             dialogue.show_warning(
                 title=self.tr("Save Error"),
                 text=self.tr("Failed to save merged database"),
-                information=self.tr(f"Error: {e}"),
+                information=self.tr("Error: {e}").format(e=e),
             )
 
     @Slot()

@@ -2160,7 +2160,9 @@ class MainContent(QObject):
                 dialogue.show_information(
                     title=self.tr("Reset SteamCMD ACF data file"),
                     text=self.tr(
-                        f"Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}"
+                        "Successfully deleted SteamCMD ACF data file: {steamcmd_appworkshop_acf_path}"
+                    ).format(
+                        steamcmd_appworkshop_acf_path=steamcmd_appworkshop_acf_path
                     ),
                     information=self.tr(
                         "ACF data file will be recreated when you download mods using steamcmd next time."

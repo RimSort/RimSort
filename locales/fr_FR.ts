@@ -142,8 +142,8 @@
         <translation>Importation incomplète</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>Les mods {len(failed_mods)} n'ont pas pu être importés en raison d'identifiants de package manquants. Cela peut arriver si vous n'avez pas téléchargé tous les mods.&lt;br&gt;&lt;br&gt;Essayez d'abord de vous abonner à la collection.</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>Les mods {count} n'ont pas pu être importés en raison d'identifiants de package manquants. Cela peut arriver si vous n'avez pas téléchargé tous les mods.&lt;br&gt;&lt;br&gt;Essayez d'abord de vous abonner à la collection.</translation>
     </message>
 </context>
 <context>
@@ -3030,8 +3030,8 @@ Veuillez sélectionner votre variante de mod préférée dans le tableau ci-dess
         <translation>Échec de la suppression de {result.failed_count} mod (s). Vérifiez les journaux pour plus de détails.</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>? {error_code} {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>? {error_code} {path} {error_message}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3064,6 +3064,10 @@ Veuillez sélectionner votre variante de mod préférée dans le tableau ci-dess
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>Confirmer la suppression et  {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3465,8 +3469,8 @@ Incompatibilities:</source>
         <translation>Sélectionnez la traduction</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>{len(translation_mods)} traduction(s) trouvée(s). Sélectionnez-en un à ouvrir :</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>{count} traduction(s) trouvée(s). Sélectionnez-en un à ouvrir :</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4550,8 +4554,8 @@ Alternative Dependencies:</source>
         <translation>Erreur de chargement des paramètres</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Si vous continuez, une sauvegarde du fichier corrompu sera enregistrée dans {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>Si vous continuez, une sauvegarde du fichier corrompu sera enregistrée dans {corrupted_path}.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4566,8 +4570,24 @@ Alternative Dependencies:</source>
         <translation>Échec de la récupération des paramètres</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort n'a pas réussi à récupérer vos paramètres à partir de la sauvegarde. Vous pourrez peut-être récupérer manuellement vos paramètres en restaurant "settings.json.backup" ou "settings.json.backup.old" de {AppInfo().settings_backups_folder} vers {self._settings_file}.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>RimSort n'a pas réussi à récupérer vos paramètres à partir de la sauvegarde. Vous pourrez peut-être récupérer manuellement vos paramètres en restaurant "settings.json.backup" ou "settings.json.backup.old" de {backups_folder} vers {settings_file}.</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

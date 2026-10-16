@@ -142,8 +142,8 @@
         <translation>Eksik içe aktarma</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>Eksik paket kimlikleri nedeniyle {len(failed_mods)} mod içe aktarılamadı. Tüm modları indirmediyseniz bu durum meydana gelebilir.&lt;br&gt;&lt;br&gt;Önce koleksiyona abone olmayı deneyin</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>Eksik paket kimlikleri nedeniyle {count} mod içe aktarılamadı. Tüm modları indirmediyseniz bu durum meydana gelebilir.&lt;br&gt;&lt;br&gt;Önce koleksiyona abone olmayı deneyin</translation>
     </message>
 </context>
 <context>
@@ -3032,8 +3032,8 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <translation>mod (lar) ı silemedi. Ayrıntılar için günlükleri kontrol edin. {result.failed_count}</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>'te {error_code} hata kodu ile gerçekleşti. {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>'te {error_code} hata kodu ile gerçekleşti. {path} {error_message}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3066,6 +3066,10 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>Silinmeyi onaylayın ve  {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3441,8 +3445,8 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <translation>Çeviri Seç</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>{len(translation_mods)} çeviri bulundu. Açmak için birini seçin:</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>{count} çeviri bulundu. Açmak için birini seçin:</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4552,8 +4556,8 @@ An alternative updated mod is recommended:
         <translation>Ayarlar Yükleme Hatası</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Devam ederseniz, bozuk dosyanın bir yedeği {AppInfo().settings_backups_folder / 'settings.json.corrupted'} klasörüne kaydedilecektir.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>Devam ederseniz, bozuk dosyanın bir yedeği {corrupted_path} klasörüne kaydedilecektir.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4568,8 +4572,24 @@ An alternative updated mod is recommended:
         <translation>Ayarları Kurtarma Başarısız Oldu</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort, ayarlarınızı yedeklemeden kurtaramadı. "settings.json.backup" veya "settings.json.backup.old" dosyasını {AppInfo().settings_backups_folder} konumundan {self._settings_file} konumuna geri yükleyerek ayarlarınızı manuel olarak kurtarabilirsiniz.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>RimSort, ayarlarınızı yedeklemeden kurtaramadı. "settings.json.backup" veya "settings.json.backup.old" dosyasını {backups_folder} konumundan {settings_file} konumuna geri yükleyerek ayarlarınızı manuel olarak kurtarabilirsiniz.</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

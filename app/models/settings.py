@@ -471,26 +471,34 @@ class Settings(QObject):
 
     def handle_corrupted_settings(self) -> None:
         use_old_backup = False
-        msg = "Your settings file seems to be corrupted and cannot be loaded. "
+        msg = self.tr("Your settings file seems to be corrupted and cannot be loaded.")
         if (AppInfo().settings_backups_folder / "settings.json.backup").exists():
-            msg += (
-                f"RimSort found a backup at {AppInfo().settings_backups_folder / 'settings.json.backup'}. "
-                "Do you want to attempt to recover your settings from this backup?"
+            msg += " " + self.tr(
+                "RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?"
+            ).format(
+                backup_path=AppInfo().settings_backups_folder / "settings.json.backup"
             )
         elif (AppInfo().settings_backups_folder / "settings.json.backup.old").exists():
-            msg += (
-                f"RimSort found an old backup at {AppInfo().settings_backups_folder / 'settings.json.backup.old'}. "
-                "Do you want to attempt to recover your settings from this backup?"
+            msg += " " + self.tr(
+                "RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?"
+            ).format(
+                backup_path=AppInfo().settings_backups_folder
+                / "settings.json.backup.old"
             )
             use_old_backup = True
         else:
-            msg += "No backup file was found, RimSort will reset your settings to defaults."
+            msg += " " + self.tr(
+                "No backup file was found, RimSort will reset your settings to defaults."
+            )
 
         dlg = BinaryChoiceDialog(
             title=self.tr("Settings Load Error"),
-            text=self.tr(msg),
+            text=msg,
             information=self.tr(
-                f"If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}."
+                "If you proceed, a backup of the corrupted file will be saved to {corrupted_path}."
+            ).format(
+                corrupted_path=AppInfo().settings_backups_folder
+                / "settings.json.corrupted"
             ),
             positive_text=self.tr("Proceed"),
             negative_text=self.tr("Exit RimSort"),
@@ -504,7 +512,10 @@ class Settings(QObject):
                     title=self.tr("Settings Recovery Failed"),
                     text=self.tr(
                         "RimSort failed to recover your settings from the backup. "
-                        f'You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.'
+                        'You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.'
+                    ).format(
+                        backups_folder=AppInfo().settings_backups_folder,
+                        settings_file=self._settings_file,
                     ),
                 ).exec()
         else:

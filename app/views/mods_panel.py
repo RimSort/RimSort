@@ -1630,8 +1630,8 @@ class ModListWidget(QListWidget):
 
         # Add label
         label = QLabel(
-            self.tr(
-                f"Found {len(translation_mods)} translation(s). Select one to open:"
+            self.tr("Found {count} translation(s). Select one to open:").format(
+                count=len(translation_mods)
             )
         )
         layout.addWidget(label)
@@ -5805,8 +5805,8 @@ class ModsPanel(QWidget):
             show_warning(
                 self.tr("Translations Added"),
                 self.tr(
-                    f"Successfully added {count} translation mods to the active list."
-                ),
+                    "Successfully added {count} translation mods to the active list."
+                ).format(count=count),
             )
 
             # Also update translation status indicators if enabled

@@ -122,7 +122,7 @@ class IgnoreJsonEditor(QDialog):
             QMessageBox.critical(
                 self,
                 self.tr("Error"),
-                self.tr(f"Failed to load ignored mods: {e}"),
+                self.tr("Failed to load ignored mods: {e}").format(e=e),
             )
 
     def _add_empty_placeholder(self) -> None:
@@ -172,7 +172,7 @@ class IgnoreJsonEditor(QDialog):
             QMessageBox.critical(
                 self,
                 self.tr("Error"),
-                self.tr(f"Error saving changes: {e}"),
+                self.tr("Error saving changes: {e}").format(e=e),
             )
 
     def _collect_remaining_mods(self) -> set[str]:

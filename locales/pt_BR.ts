@@ -142,8 +142,8 @@
         <translation>Importação incompleta</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>Não foi possível importar {len(failed_mods)} mods porque faltam IDs de pacote. Isso pode acontecer se você não tiver baixado todos os mods.&lt;br&gt;&lt;br&gt;Tente primeiro assinar a coleção.</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>Não foi possível importar {count} mods porque faltam IDs de pacote. Isso pode acontecer se você não tiver baixado todos os mods.&lt;br&gt;&lt;br&gt;Tente primeiro assinar a coleção.</translation>
     </message>
 </context>
 <context>
@@ -3034,12 +3034,12 @@ Selecione na tabela a variante de sua preferência. Você também pode abrir cad
         <translation>Falha ao excluir {result.failed_count} mod(s). Confira os logs para obter detalhes.</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.strerror or 'Unknown error'} ocorreu em {e.filename or mod_path} (código de erro {error_code}).</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>{error_message} ocorreu em {path} (código de erro {error_code}).</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
-        <translation>Você selecionou {selected_count} mod (s) para exclusão completa.</translation>
+        <translation>Mods selecionados para exclusão completa: {selected_count}.</translation>
     </message>
     <message>
         <source>&lt;br&gt;This operation will permanently delete the selected mod directories from the filesystem.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
@@ -3047,7 +3047,7 @@ Selecione na tabela a variante de sua preferência. Você também pode abrir cad
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for DDS texture deletion.</source>
-        <translation>Você selecionou {selected_count} mod (s) para exclusão de textura DDS.</translation>
+        <translation>Mods selecionados para exclusão de texturas DDS: {selected_count}.</translation>
     </message>
     <message>
         <source>&lt;br&gt;This operation will only delete optimized textures (.dds files) from the selected mods.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
@@ -3055,7 +3055,7 @@ Selecione na tabela a variante de sua preferência. Você também pode abrir cad
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for selective deletion.</source>
-        <translation>Você selecionou {selected_count} mod (s) para exclusão seletiva.</translation>
+        <translation>Mods selecionados para exclusão seletiva: {selected_count}.</translation>
     </message>
     <message>
         <source>&lt;br&gt;This operation will delete all mod files except for .dds texture files.&lt;br&gt;The .dds files will be preserved.&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
@@ -3067,7 +3067,11 @@ Selecione na tabela a variante de sua preferência. Você também pode abrir cad
     </message>
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
-        <translation>Confirme a deleção e  {action_capitalized}</translation>
+        <translation>Confirme a exclusão e {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation>Erro desconhecido</translation>
     </message>
 </context>
 <context>
@@ -3415,8 +3419,8 @@ Selecione na tabela a variante de sua preferência. Você também pode abrir cad
         <translation>Selecione Tradução</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>Encontradas {len(translation_mods)} tradução(ões). Selecione uma para abrir:</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>Encontradas {count} tradução(ões). Selecione uma para abrir:</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4561,8 +4565,8 @@ Um mod alternativo atualizado é recomendado:
         <translation>Erro ao carregar configurações</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Se você continuar, um backup do arquivo corrompido será salvo em {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>Se você continuar, um backup do arquivo corrompido será salvo em {corrupted_path}.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4577,8 +4581,24 @@ Um mod alternativo atualizado é recomendado:
         <translation>Falha na recuperação das configurações</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort não conseguiu recuperar suas configurações do backup. Você pode recuperar manualmente suas configurações restaurando "settings.json.backup" ou "settings.json.backup.old" de {AppInfo().settings_backups_folder} para {self._settings_file}.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>RimSort não conseguiu recuperar suas configurações do backup. Você pode recuperar manualmente suas configurações restaurando "settings.json.backup" ou "settings.json.backup.old" de {backups_folder} para {settings_file}.</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation>Parece que o arquivo de configurações está corrompido e não pode ser carregado.</translation>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation>O RimSort encontrou um backup em {backup_path}. Deseja tentar recuperar suas configurações a partir dele?</translation>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation>O RimSort encontrou um backup antigo em {backup_path}. Deseja tentar recuperar suas configurações a partir dele?</translation>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation>Nenhum backup foi encontrado. O RimSort restaurará as configurações padrão.</translation>
     </message>
 </context>
 <context>

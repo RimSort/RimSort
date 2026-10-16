@@ -153,4 +153,6 @@ class DownloadRimWorldDialog(QDialog):
                 ),
             )
         except Exception as e:
-            show_warning(self.tr("Error"), self.tr(f"Failed to start download: {e}"))
+            show_warning(
+                self.tr("Error"), self.tr("Failed to start download: {e}").format(e=e)
+            )

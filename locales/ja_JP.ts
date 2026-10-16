@@ -142,8 +142,8 @@
         <translation>不完全なインポート</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>パッケージ ID が見つからないため、{len(failed_mods)} 個の MOD をインポートできませんでした。これは、すべての MOD をダウンロードしていない場合に発生する可能性があります。&lt;br&gt;&lt;br&gt;まずコレクションに登録してみてください。</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>パッケージ ID が見つからないため、{count} 個の MOD をインポートできませんでした。これは、すべての MOD をダウンロードしていない場合に発生する可能性があります。&lt;br&gt;&lt;br&gt;まずコレクションに登録してみてください。</translation>
     </message>
 </context>
 <context>
@@ -3030,8 +3030,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>{result.failed_count} mod（s）を削除できませんでした。詳細については、ログを確認してください。</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>は、でエラーコード{error_code}で発生しました。 {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>は、でエラーコード{error_code}で発生しました。 {path} {error_message}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3064,6 +3064,10 @@ Please select your preferred mod variant in the table below. You can also open e
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>削除を確認し、{action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3411,8 +3415,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>翻訳を選択</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>{len(translation_mods)} 件の翻訳が見つかりました。開くものを 1 つ選択してください:</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>{count} 件の翻訳が見つかりました。開くものを 1 つ選択してください:</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4553,8 +4557,8 @@ Alternative Dependencies:</source>
         <translation>設定読み込みエラー</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>続行すると、破損したファイルのバックアップが {AppInfo().settings_backups_folder / 'settings.json.corrupted'} に保存されます。</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>続行すると、破損したファイルのバックアップが {corrupted_path} に保存されます。</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4569,8 +4573,24 @@ Alternative Dependencies:</source>
         <translation>設定の回復に失敗しました</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>rimSort はバックアップから設定を復元できませんでした。 「settings.json.backup」または「settings.json.backup.old」を {AppInfo().settings_backups_folder} から {self._settings_file} に復元することで、設定を手動で復元できる場合があります。</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>rimSort はバックアップから設定を復元できませんでした。 「settings.json.backup」または「settings.json.backup.old」を {backups_folder} から {settings_file} に復元することで、設定を手動で復元できる場合があります。</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
