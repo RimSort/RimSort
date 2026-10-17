@@ -1,0 +1,52 @@
+name: Nix Flake Check
+on:
+  # Unlike the reusable workflows pulled in by auto_build.yml, this gate is
+  # self-triggering: a broken flake should fail the PR on its own rather than
+  # depend on the artifact-build pipeline.
+  pull_request: null
+  workflow_call: null
+  workflow_dispatch: null
+  merge_group:
+  push:
+    branches:
+      - main
+      - master
+
+permissions: {}
+
+concurrency:
+  group: nix-flake-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flake-check:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The flake's filesets include the vendored submodules
+          # (steamworkspy, steamfiles) and libs/, so a shallow checkout
+          # without submodules cannot build.
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      # nix flake check builds and evaluates everything the flake exposes for
+      # this system: checks.pytest (the full suite in a pure Nix environment)
+      # and the pinned git-hooks.nix hooks (ruff, ruff-format, mypy, pyright,
+      # shellcheck, shfmt, markdownlint, deferred-imports,
+      # eventbus-subscribers), plus the packaged app itself.
+      #
+      # This is the same gate developers run locally through `just check`
+      # and the installed pre-commit hook, using tool versions pinned by
+      # uv.lock via uv2nix rather than whatever a CI action ships.
+      - name: Nix flake check
+        run: nix flake check --show-trace
