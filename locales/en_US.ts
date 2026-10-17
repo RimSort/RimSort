@@ -6141,6 +6141,22 @@ Please reach out to us for support at: {support_url}</source>
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GitHub&apos;s API rate limit has been reached</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>
