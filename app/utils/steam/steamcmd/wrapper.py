@@ -18,6 +18,10 @@ from app.utils import http, symlink
 from app.utils.event_bus import EventBus
 from app.utils.generic import apply_launch_prefix, handle_remove_read_only
 from app.utils.generic import rmtree as g_rmtree
+from app.utils.steam.steamcmd.executable_check import (
+    diagnose_steamcmd_executable,
+    multilib_hint,
+)
 from app.views.dialogue import (
     BinaryChoiceDialog,
     InformationBox,
@@ -723,6 +727,51 @@ class SteamcmdInterface:
 
         return False
 
+    def check_steamcmd_runnable(self, runner: RunnerPanel | None = None) -> bool:
+        """Verify an installed SteamCMD can actually execute on this host.
+
+        On Linux SteamCMD ships a 32-bit build that needs a 32-bit glibc
+        loader. Without it the launcher only says "cannot execute: required
+        file not found", naming no package. This inspects the binary instead
+        and, when the loader is missing, reports it together with the packages
+        that provide it on the host distro (#2475).
+
+        :param runner: Optional runner to write progress into.
+        :return: True when SteamCMD is runnable or cannot be judged, else False.
+        """
+        problem = diagnose_steamcmd_executable(
+            Path(self.steamcmd_install_path), system=self.system
+        )
+        if problem is None:
+            return True
+
+        hint = multilib_hint(problem.distro_id)
+        logger.error(
+            f"SteamCMD binary {problem.binary} requires {problem.missing_loader},"
+            f" which does not exist on this system. Suggested packages: {hint}"
+        )
+        if runner is not None:
+            runner.message(f"SteamCMD cannot run: missing {problem.missing_loader}")
+        show_warning(
+            title=self.translate(
+                "SteamcmdInterface", "SteamCMD cannot run on this system"
+            ),
+            text=self.translate(
+                "SteamcmdInterface",
+                "SteamCMD is installed but cannot be executed on this system.",
+            ),
+            information=self.translate(
+                "SteamcmdInterface",
+                "The SteamCMD binary needs a 32-bit system library that is not"
+                " installed:<br><b>{loader}</b><br><br>Install the 32-bit"
+                " runtime for your distribution, usually:<br><b>{hint}</b>",
+            ).format(loader=problem.missing_loader, hint=hint),
+            details=self.translate(
+                "SteamcmdInterface", "SteamCMD binary: {binary}"
+            ).format(binary=problem.binary),
+        )
+        return False
+
     def setup_steamcmd(
         self, symlink_source_path: str, reinstall: bool, runner: RunnerPanel
     ) -> None:
@@ -782,6 +831,12 @@ class SteamcmdInterface:
             if answer == QMessageBox.StandardButton.Yes:
                 runner.message(f"Reinstalling SteamCMD: {self.steamcmd_install_path}")
                 self.setup_steamcmd(symlink_source_path, True, runner)
+
+        # Nothing below can work if the binary itself cannot execute, and the
+        # download failure would otherwise surface as an opaque SteamCMD error.
+        if not self.check_steamcmd_runnable(runner):
+            return
+
         if installed:
             if not os.path.exists(self.steamcmd_content_path):
                 os.makedirs(self.steamcmd_content_path)
