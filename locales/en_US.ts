@@ -2780,6 +2780,14 @@ Select which missing dependencies to add to your active mods list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation type="unfinished"></translation>
     </message>

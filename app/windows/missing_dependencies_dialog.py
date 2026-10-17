@@ -47,6 +47,7 @@ class MissingDependenciesDialog(QDialog):
         self.selected_mods: set[str] = set()
         self.checkboxes: dict[str, QCheckBox] = {}
         self._dep_resolve: dict[str, DepResolveResult] = {}
+        self._deps_summary: dict[str, dict[str, set[str]]] = {}
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -66,6 +67,18 @@ class MissingDependenciesDialog(QDialog):
         description.setWordWrap(True)
         description.setObjectName("missingDepsDescription")
         main_layout.addWidget(description)
+
+        self.show_satisfied_checkbox = QCheckBox(self.tr("Show satisfied dependencies"))
+        self.show_satisfied_checkbox.setObjectName("showSatisfiedDepsCheckbox")
+        self.show_satisfied_checkbox.setChecked(False)
+        self.show_satisfied_checkbox.setToolTip(
+            self.tr(
+                "Show dependencies that are already fulfilled, "
+                "in addition to missing ones"
+            )
+        )
+        self.show_satisfied_checkbox.toggled.connect(self._on_show_satisfied_toggled)
+        main_layout.addWidget(self.show_satisfied_checkbox)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -122,6 +135,8 @@ class MissingDependenciesDialog(QDialog):
             Set of selected mod package IDs if user accepted, empty set otherwise.
         """
         self._dep_resolve = dep_resolve or {}
+        self._deps_summary = deps_summary
+        self.selected_mods.clear()
         self._populate_dependencies(deps_summary)
 
         self.setWindowModality(Qt.WindowModality.NonModal)
@@ -212,11 +227,16 @@ class MissingDependenciesDialog(QDialog):
         self.scroll_layout.addSpacing(5)
 
         # Sort mods alphabetically for consistent display
+        show_satisfied = self.show_satisfied_checkbox.isChecked()
         for mod_id in sorted(deps_summary.keys()):
             deps = deps_summary[mod_id]
             satisfied = deps.get("satisfied", set())
             local = deps.get("local", set())
             download = deps.get("download", set())
+
+            if not show_satisfied and not local and not download:
+                # Fully satisfied mod — nothing actionable, skip it
+                continue
 
             mod_name = self.metadata_controller.get_mod_name_from_package_id(mod_id)
 
@@ -241,7 +261,7 @@ class MissingDependenciesDialog(QDialog):
             self.scroll_layout.addWidget(header_label)
 
             # --- Satisfied deps (read-only) ---
-            if satisfied:
+            if show_satisfied and satisfied:
                 satisfied_label = QLabel(
                     self.tr("  ✅ Satisfied: ") + ", ".join(sorted(satisfied))
                 )
@@ -259,6 +279,7 @@ class MissingDependenciesDialog(QDialog):
                     checkbox.setToolTip(
                         self.tr("Available locally - add to active list")
                     )
+                    checkbox.setChecked(dep_id in self.selected_mods)
                     checkbox.stateChanged.connect(
                         partial(self._toggle_mod_selection, mod_id=dep_id)
                     )
@@ -278,6 +299,7 @@ class MissingDependenciesDialog(QDialog):
                     checkbox.setToolTip(
                         self.tr("Needs to be downloaded - requires SteamCMD")
                     )
+                    checkbox.setChecked(dep_id in self.selected_mods)
                     checkbox.stateChanged.connect(
                         partial(self._toggle_mod_selection, mod_id=dep_id)
                     )
@@ -352,9 +374,23 @@ class MissingDependenciesDialog(QDialog):
                 if w is not None:
                     w.setVisible(visible)
 
+    def _on_show_satisfied_toggled(self, _checked: bool) -> None:
+        """Re-render the dependency list when the satisfied-visibility toggle changes.
+
+        Selections are preserved: ``clear_dependencies`` keeps
+        ``selected_mods`` and re-created checkboxes restore their state.
+
+        :param _checked: New toggle state (unused, read from the checkbox).
+        """
+        self._populate_dependencies(self._deps_summary)
+
     def clear_dependencies(self) -> None:
         """
-        Clear all dependency widgets and reset selections.
+        Clear all dependency widgets.
+
+        Selections are intentionally kept so toggling the
+        satisfied-visibility checkbox does not lose the user's picks.
+        A new dialog session resets them in ``show_dialog``.
         """
         while self.scroll_layout.count():
             child = self.scroll_layout.takeAt(0)
@@ -364,7 +400,6 @@ class MissingDependenciesDialog(QDialog):
             if widget is not None:
                 widget.deleteLater()
         self.checkboxes.clear()
-        self.selected_mods.clear()
 
     def select_all(self) -> None:
         """

@@ -138,3 +138,89 @@ class TestMissingDependenciesDialogPopulate:
         hints = dialog.findChildren(QLabel, "missingWorkshopHint")
         assert len(hints) == 1
         assert "Workshop ID not found" in hints[0].text()
+
+
+_MIXED_DEPS_SUMMARY = {
+    "active.mixed": {
+        "satisfied": {"dep.done"},
+        "local": {"dep.local"},
+        "download": set(),
+    },
+    "active.clean": {
+        "satisfied": {"dep.other"},
+        "local": set(),
+        "download": set(),
+    },
+}
+
+_SATISFIED_ONLY_SUMMARY = {
+    "active.clean": {
+        "satisfied": {"dep.other"},
+        "local": set(),
+        "download": set(),
+    }
+}
+
+
+def _header_texts(dialog: MissingDependenciesDialog) -> list[str]:
+    return [label.text() for label in dialog.findChildren(QLabel, "modHeaderLabel")]
+
+
+class TestShowSatisfiedToggle:
+    def test_toggle_defaults_to_unchecked(
+        self, dialog: MissingDependenciesDialog
+    ) -> None:
+        assert not dialog.show_satisfied_checkbox.isChecked()
+
+    def test_fully_satisfied_mods_hidden_by_default(
+        self, dialog: MissingDependenciesDialog
+    ) -> None:
+        dialog._deps_summary = _MIXED_DEPS_SUMMARY
+        dialog._populate_dependencies(_MIXED_DEPS_SUMMARY)
+
+        headers = _header_texts(dialog)
+        assert any("active.mixed" in text for text in headers)
+        assert not any("active.clean" in text for text in headers)
+        assert dialog.findChildren(QLabel, "satisfiedDepLabel") == []
+        assert "dep.local" in dialog.checkboxes
+
+    def test_toggle_on_restores_full_overview(
+        self, dialog: MissingDependenciesDialog
+    ) -> None:
+        dialog._deps_summary = _MIXED_DEPS_SUMMARY
+        dialog._populate_dependencies(_MIXED_DEPS_SUMMARY)
+
+        dialog.show_satisfied_checkbox.setChecked(True)
+
+        headers = _header_texts(dialog)
+        assert any("active.mixed" in text for text in headers)
+        assert any("active.clean" in text for text in headers)
+        assert len(dialog.findChildren(QLabel, "satisfiedDepLabel")) == 2
+        assert "dep.local" in dialog.checkboxes
+
+    def test_selection_survives_toggle(self, dialog: MissingDependenciesDialog) -> None:
+        dialog._deps_summary = _MIXED_DEPS_SUMMARY
+        dialog._populate_dependencies(_MIXED_DEPS_SUMMARY)
+
+        dialog.checkboxes["dep.local"].setChecked(True)
+        dialog.show_satisfied_checkbox.setChecked(True)
+        dialog.show_satisfied_checkbox.setChecked(False)
+
+        assert "dep.local" in dialog.selected_mods
+        assert dialog.checkboxes["dep.local"].isChecked()
+
+    def test_all_satisfied_shows_fallback_and_toggle_reveals(
+        self, dialog: MissingDependenciesDialog
+    ) -> None:
+        dialog._deps_summary = _SATISFIED_ONLY_SUMMARY
+        dialog._populate_dependencies(_SATISFIED_ONLY_SUMMARY)
+
+        fallback = dialog.findChildren(QLabel, "noMissingDepsLabel")
+        assert len(fallback) == 1
+        assert "All dependencies are satisfied" in fallback[0].text()
+        assert dialog.findChildren(QLabel, "satisfiedDepLabel") == []
+
+        dialog.show_satisfied_checkbox.setChecked(True)
+
+        assert len(dialog.findChildren(QLabel, "satisfiedDepLabel")) == 1
+        assert any("active.clean" in text for text in _header_texts(dialog))
