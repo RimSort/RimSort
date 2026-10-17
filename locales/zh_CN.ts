@@ -47,6 +47,46 @@
         <translation>取消并退出</translation>
     </message>
     <message>
+        <source>Name</source>
+        <translation type="unfinished">名称</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">作者</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Published File Id</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished">路径</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Open Page</source>
         <translation>打开页面</translation>
     </message>
@@ -102,8 +142,8 @@
         <translation>导入未完成</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>由于缺少包 ID，无法导入 {len(failed_mods)} mod。如果您没有下载所有模组，则可能会发生这种情况。&lt;br&gt;&lt;br&gt;请先尝试订阅该合集</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>由于缺少包 ID，无法导入 {count} mod。如果您没有下载所有模组，则可能会发生这种情况。&lt;br&gt;&lt;br&gt;请先尝试订阅该合集</translation>
     </message>
 </context>
 <context>
@@ -2991,8 +3031,8 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
         <translation>无法删除 {result.failed_count} 个模组。检查日志以获取详细信息。</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>在 {e.filename or mod_path} 处发生 {e.strerror or 'Unknown error'}，错误代码为 {error_code}。</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>在 {path} 处发生 {error_message}，错误代码为 {error_code}。</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3025,6 +3065,10 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>确认删除和{action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3372,8 +3416,8 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
         <translation>选择翻译</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>找到 {len(translation_mods)} 翻译。选择一项打开：</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>找到 {count} 翻译。选择一项打开：</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4517,8 +4561,8 @@ Alternative Dependencies:</source>
         <translation>设置加载错误</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>如果继续，损坏文件的备份将保存到 {AppInfo().settings_backups_folder / 'settings.json.corrupted'}。</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>如果继续，损坏文件的备份将保存到 {corrupted_path}。</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4533,8 +4577,24 @@ Alternative Dependencies:</source>
         <translation>设置恢复失败</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort 无法从备份恢复您的设置。您可以通过将“settings.json.backup”或“settings.json.backup.old”从 {AppInfo().settings_backups_folder} 恢复到 {self._settings_file} 来手动恢复您的设置。</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>RimSort 无法从备份恢复您的设置。您可以通过将“settings.json.backup”或“settings.json.backup.old”从 {backups_folder} 恢复到 {settings_file} 来手动恢复您的设置。</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

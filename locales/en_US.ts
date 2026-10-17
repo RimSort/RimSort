@@ -47,6 +47,46 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Name</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">Author</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Published File Id</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Open Page</source>
         <translation type="unfinished"></translation>
     </message>
@@ -102,7 +142,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don&apos;t have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2976,7 +3016,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>{e.strerror or &apos;Unknown error&apos;} occurred at {e.filename or mod_path} with error code {error_code}.</source>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3010,6 +3050,10 @@ Please select your preferred mod variant in the table below. You can also open e
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3357,7 +3401,7 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
+        <source>Found {count} translation(s). Select one to open:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4494,7 +4538,7 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / &apos;settings.json.corrupted&apos;}.</source>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4510,8 +4554,24 @@ Alternative Dependencies:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring &quot;settings.json.backup&quot; or &quot;settings.json.backup.old&quot; from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring &quot;settings.json.backup&quot; or &quot;settings.json.backup.old&quot; from {backups_folder} to {settings_file}.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

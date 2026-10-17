@@ -9,7 +9,7 @@ from functools import partial
 from typing import Any, TypeVar
 
 from loguru import logger
-from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtCore import QCoreApplication, QEvent, QObject, Qt
 from PySide6.QtGui import QKeyEvent, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -1117,7 +1117,8 @@ class BaseModsPanel(QWidget):
                     continue
                 self._add_mod_row(mod_info)
 
-    def _get_standard_mod_columns(self) -> list[HeaderColumn]:
+    @staticmethod
+    def _get_standard_mod_columns() -> list[HeaderColumn]:
         """
         Get the standard list of columns for displaying mod information.
 
@@ -1125,16 +1126,16 @@ class BaseModsPanel(QWidget):
             List of standard column definitions.
         """
         return [
-            self.tr(self.COL_MOD_NAME),
-            self.tr(self.COL_AUTHOR),
-            self.tr(self.COL_PACKAGE_ID),
-            self.tr(self.COL_PUBLISHED_FILE_ID),
-            self.tr(self.COL_SUPPORTED_VERSIONS),
-            self.tr(self.COL_MOD_DOWNLOADED),
-            self.tr(self.COL_UPDATED_ON_WORKSHOP),
-            self.tr(self.COL_SOURCE),
-            self.tr(self.COL_PATH),
-            self.tr(self.COL_WORKSHOP_PAGE),
+            QCoreApplication.translate("BaseModsPanel", "Name"),
+            QCoreApplication.translate("BaseModsPanel", "Author"),
+            QCoreApplication.translate("BaseModsPanel", "Package ID"),
+            QCoreApplication.translate("BaseModsPanel", "Published File Id"),
+            QCoreApplication.translate("BaseModsPanel", "Supported Versions"),
+            QCoreApplication.translate("BaseModsPanel", "Mod Downloaded"),
+            QCoreApplication.translate("BaseModsPanel", "Updated on Workshop"),
+            QCoreApplication.translate("BaseModsPanel", "Source"),
+            QCoreApplication.translate("BaseModsPanel", "Path"),
+            QCoreApplication.translate("BaseModsPanel", "Workshop Page"),
         ]
 
     def _get_base_button_configs(self) -> list[ButtonConfig]:

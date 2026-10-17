@@ -170,10 +170,10 @@ class CollectionImport:
                         title=self.translate("CollectionImport", "Incomplete import"),
                         text=self.translate(
                             "CollectionImport",
-                            f"{len(failed_mods)} mods could not be imported due to missing package ids. "
+                            "{count} mods could not be imported due to missing package ids. "
                             "This may happen if you don't have all the mods downloaded.<br><br>"
                             "Try subscribing to the collection first",
-                        ),
+                        ).format(count=len(failed_mods)),
                         details="\n".join(failed_mods),
                     )
         except Exception as e:

@@ -47,6 +47,46 @@
         <translation>Ничего не делать и выйти</translation>
     </message>
     <message>
+        <source>Name</source>
+        <translation type="unfinished">Название</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">Автор</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Published File Id</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished">Путь</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Open Page</source>
         <translation>Открыть страницу</translation>
     </message>
@@ -102,8 +142,8 @@
         <translation>Неполный импорт</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>Не удалось импортировать моды ({len(failed_mods)} шт.) из-за отсутствующих идентификаторов пакета. Это может произойти, если у вас загружены не все моды.&lt;br&gt;&lt;br&gt;Попробуйте сначала подписаться на коллекцию</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>Не удалось импортировать моды ({count} шт.) из-за отсутствующих идентификаторов пакета. Это может произойти, если у вас загружены не все моды.&lt;br&gt;&lt;br&gt;Попробуйте сначала подписаться на коллекцию</translation>
     </message>
 </context>
 <context>
@@ -2995,8 +3035,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>Не удалось удалить {result.failed_count} мод(ов). Подробности см. в журналах.</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>возникла в {e.filename or mod_path}, код ошибки {error_code}. {e.strerror or 'Unknown error'}</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>возникла в {path}, код ошибки {error_code}. {error_message}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3029,6 +3069,10 @@ Please select your preferred mod variant in the table below. You can also open e
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>Подтвердите удаление и действие «{action_capitalized}»</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3376,8 +3420,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>Выберите перевод</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>Найдено переводов: {len(translation_mods)}. Выберите один, чтобы открыть:</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>Найдено переводов: {count}. Выберите один, чтобы открыть:</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4523,8 +4567,8 @@ Alternative Dependencies:</source>
         <translation>Ошибка загрузки настроек</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Если вы продолжите, резервная копия повреждённого файла будет сохранена в {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>Если вы продолжите, резервная копия повреждённого файла будет сохранена в {corrupted_path}.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4539,8 +4583,24 @@ Alternative Dependencies:</source>
         <translation>Не удалось восстановить настройки</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort не смог восстановить ваши настройки из резервной копии. Вы можете попытаться восстановить их вручную, скопировав «settings.json.backup» или «settings.json.backup.old» из {AppInfo().settings_backups_folder} в {self._settings_file}.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>RimSort не смог восстановить ваши настройки из резервной копии. Вы можете попытаться восстановить их вручную, скопировав «settings.json.backup» или «settings.json.backup.old» из {backups_folder} в {settings_file}.</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

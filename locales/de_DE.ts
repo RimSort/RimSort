@@ -47,6 +47,46 @@
         <translation>Nichts tun und verlassen</translation>
     </message>
     <message>
+        <source>Name</source>
+        <translation type="unfinished">Name</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">Autor</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Published File Id</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished">Weg</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Open Page</source>
         <translation>Seite öffnen</translation>
     </message>
@@ -102,8 +142,8 @@
         <translation>Unvollständiger Import</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>{len(failed_mods)} Mods konnten aufgrund fehlender Paket-IDs nicht importiert werden. Dies kann passieren, wenn Sie nicht alle Mods heruntergeladen haben.&lt;br&gt;&lt;br&gt;Versuchen Sie zunächst, die Sammlung zu abonnieren</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>{count} Mods konnten aufgrund fehlender Paket-IDs nicht importiert werden. Dies kann passieren, wenn Sie nicht alle Mods heruntergeladen haben.&lt;br&gt;&lt;br&gt;Versuchen Sie zunächst, die Sammlung zu abonnieren</translation>
     </message>
 </context>
 <context>
@@ -2990,8 +3030,8 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
         <translation>Nicht löschen {result.failed_count} mod (s).Überprüfen Sie die Protokolle für Details.</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>trat bei  mit dem Fehlercode {error_code} auf. {e.filename or mod_path} {e.strerror or 'Unknown error'}</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>trat bei  mit dem Fehlercode {error_code} auf. {path} {error_message}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3024,6 +3064,10 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>Bestätigen Sie die Löschung und {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3371,8 +3415,8 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
         <translation>Wählen Sie Übersetzung</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>{len(translation_mods)} Übersetzung(en) gefunden. Wählen Sie eine zum Öffnen aus:</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>{count} Übersetzung(en) gefunden. Wählen Sie eine zum Öffnen aus:</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4510,8 +4554,8 @@ Alternative Dependencies:</source>
         <translation>Fehler beim Laden der Einstellungen</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>Wenn Sie fortfahren, wird eine Sicherung der beschädigten Datei in {AppInfo().settings_backups_folder / 'settings.json.corrupted'} gespeichert.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>Wenn Sie fortfahren, wird eine Sicherung der beschädigten Datei in {corrupted_path} gespeichert.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4526,8 +4570,24 @@ Alternative Dependencies:</source>
         <translation>Wiederherstellung der Einstellungen fehlgeschlagen</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>RimSort konnte Ihre Einstellungen aus der Sicherung nicht wiederherstellen. Möglicherweise können Sie Ihre Einstellungen manuell wiederherstellen, indem Sie „settings.json.backup“ oder „settings.json.backup.old“ von {AppInfo().settings_backups_folder} in {self._settings_file} wiederherstellen.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>RimSort konnte Ihre Einstellungen aus der Sicherung nicht wiederherstellen. Möglicherweise können Sie Ihre Einstellungen manuell wiederherstellen, indem Sie „settings.json.backup“ oder „settings.json.backup.old“ von {backups_folder} in {settings_file} wiederherstellen.</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

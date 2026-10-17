@@ -1,6 +1,7 @@
 from typing import Any
 
 from loguru import logger
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import (
     QComboBox,
@@ -48,12 +49,12 @@ class MissingModsPrompt(BaseModsPanel):
                 + "\n\nPlease select your preferred mod variant in the table below. You can also open each variant in Steam/Web browser to verify."
             ),
             additional_columns=[
-                self.tr(self.COL_MOD_NAME),
-                self.tr(self.COL_PACKAGE_ID),
-                self.tr(self.COL_SUPPORTED_VERSIONS),
-                self.tr("# Variants"),
-                self.tr(self.COL_PUBLISHED_FILE_ID),
-                self.tr(self.COL_WORKSHOP_PAGE),
+                QCoreApplication.translate("BaseModsPanel", "Name"),
+                QCoreApplication.translate("BaseModsPanel", "Package ID"),
+                QCoreApplication.translate("BaseModsPanel", "Supported Versions"),
+                QCoreApplication.translate("MissingModsPrompt", "# Variants"),
+                QCoreApplication.translate("BaseModsPanel", "Published File Id"),
+                QCoreApplication.translate("BaseModsPanel", "Workshop Page"),
             ],
             metadata_controller=metadata_controller,
         )

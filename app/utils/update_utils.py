@@ -1210,8 +1210,8 @@ class UpdateManager(QObject):
                 title=self.tr("Update downloaded"),
                 text=self.tr("Do you want to proceed with the update?"),
                 information=self.tr(
-                    f"<br>Successfully retrieved latest release.<br>The update will be installed from: {update_source_path}"
-                ),
+                    "<br>Successfully retrieved latest release.<br>The update will be installed from: {update_source_path}"
+                ).format(update_source_path=update_source_path),
             )
 
             if answer != QMessageBox.StandardButton.Yes:

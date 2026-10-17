@@ -47,6 +47,46 @@
         <translation>아무것도 하지 않고 종료</translation>
     </message>
     <message>
+        <source>Name</source>
+        <translation type="unfinished">이름</translation>
+    </message>
+    <message>
+        <source>Author</source>
+        <translation type="unfinished">제작자</translation>
+    </message>
+    <message>
+        <source>Package ID</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Published File Id</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Supported Versions</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Mod Downloaded</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Updated on Workshop</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>Path</source>
+        <translation type="unfinished">경로</translation>
+    </message>
+    <message>
+        <source>Workshop Page</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <source>Open Page</source>
         <translation>페이지 열기</translation>
     </message>
@@ -102,8 +142,8 @@
         <translation>불완전한 가져오기</translation>
     </message>
     <message>
-        <source>{len(failed_mods)} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
-        <translation>패키지 ID 누락으로 인해 {len(failed_mods)} 모드를 가져올 수 없습니다. 모든 모드를 다운로드하지 않은 경우 이런 일이 발생할 수 있습니다.&lt;br&gt;&lt;br&gt;먼저 컬렉션을 구독해 보세요.</translation>
+        <source>{count} mods could not be imported due to missing package ids. This may happen if you don't have all the mods downloaded.&lt;br&gt;&lt;br&gt;Try subscribing to the collection first</source>
+        <translation>패키지 ID 누락으로 인해 {count} 모드를 가져올 수 없습니다. 모든 모드를 다운로드하지 않은 경우 이런 일이 발생할 수 있습니다.&lt;br&gt;&lt;br&gt;먼저 컬렉션을 구독해 보세요.</translation>
     </message>
 </context>
 <context>
@@ -2990,8 +3030,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>{result.failed_count}개의 모드를 삭제하지 못했습니다. 자세한 내용은 로그를 확인하세요.</translation>
     </message>
     <message>
-        <source>{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}.</source>
-        <translation>{e.filename or mod_path}에서 오류 코드 {error_code}가 발생했습니다: {e.strerror or 'Unknown error'}</translation>
+        <source>{error_message} occurred at {path} with error code {error_code}.</source>
+        <translation>{path}에서 오류 코드 {error_code}가 발생했습니다: {error_message}</translation>
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for complete deletion.</source>
@@ -3024,6 +3064,10 @@ Please select your preferred mod variant in the table below. You can also open e
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
         <translation>삭제를 확인하고 {action_capitalized}</translation>
+    </message>
+    <message>
+        <source>Unknown error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3371,8 +3415,8 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>번역 선택</translation>
     </message>
     <message>
-        <source>Found {len(translation_mods)} translation(s). Select one to open:</source>
-        <translation>{len(translation_mods)}개의 번역을 찾았습니다. 열 항목을 하나 선택해 주세요:</translation>
+        <source>Found {count} translation(s). Select one to open:</source>
+        <translation>{count}개의 번역을 찾았습니다. 열 항목을 하나 선택해 주세요:</translation>
     </message>
     <message>
         <source>Open</source>
@@ -4513,8 +4557,8 @@ Alternative Dependencies:</source>
         <translation>설정 로드 오류</translation>
     </message>
     <message>
-        <source>If you proceed, a backup of the corrupted file will be saved to {AppInfo().settings_backups_folder / 'settings.json.corrupted'}.</source>
-        <translation>계속하면 손상된 파일의 백업이 {AppInfo().settings_backups_folder / 'settings.json.corrupted'}에 저장됩니다.</translation>
+        <source>If you proceed, a backup of the corrupted file will be saved to {corrupted_path}.</source>
+        <translation>계속하면 손상된 파일의 백업이 {corrupted_path}에 저장됩니다.</translation>
     </message>
     <message>
         <source>Proceed</source>
@@ -4529,8 +4573,24 @@ Alternative Dependencies:</source>
         <translation>설정 복구에 실패했습니다</translation>
     </message>
     <message>
-        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {AppInfo().settings_backups_folder} to {self._settings_file}.</source>
-        <translation>rimSort가 백업에서 설정을 복원하지 못했습니다. {AppInfo().settings_backups_folder}에서 {self._settings_file}로 'settings.json.backup' 또는 'settings.json.backup.old'를 복원하여 설정을 수동으로 복구할 수 있습니다.</translation>
+        <source>RimSort failed to recover your settings from the backup. You may be able to manually recover your settings by restoring "settings.json.backup" or "settings.json.backup.old" from {backups_folder} to {settings_file}.</source>
+        <translation>rimSort가 백업에서 설정을 복원하지 못했습니다. {backups_folder}에서 {settings_file}로 'settings.json.backup' 또는 'settings.json.backup.old'를 복원하여 설정을 수동으로 복구할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Your settings file seems to be corrupted and cannot be loaded.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <source>No backup file was found, RimSort will reset your settings to defaults.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>

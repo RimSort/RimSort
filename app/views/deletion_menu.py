@@ -286,8 +286,8 @@ class ModDeletionMenu(QMenu):
             show_information(
                 title=self.tr("RimSort"),
                 text=self.tr(
-                    f"Successfully deleted {result.success_count} selected mods."
-                ),
+                    "Successfully deleted {result.success_count} selected mods."
+                ).format(result=result),
             )
 
             # Show failure message if any deletions failed
@@ -295,8 +295,8 @@ class ModDeletionMenu(QMenu):
                 show_warning(
                     title=self.tr("Deletion Incomplete"),
                     text=self.tr(
-                        f"Failed to delete {result.failed_count} mod(s). Check logs for details."
-                    ),
+                        "Failed to delete {result.failed_count} mod(s). Check logs for details."
+                    ).format(result=result),
                 )
 
         # Call completion callback if provided
@@ -567,7 +567,11 @@ class ModDeletionMenu(QMenu):
                 title=self.tr("Unable to delete mod"),
                 text=warning_text,
                 information=self.tr(
-                    f"{e.strerror or 'Unknown error'} occurred at {e.filename or mod_path} with error code {error_code}."
+                    "{error_message} occurred at {path} with error code {error_code}."
+                ).format(
+                    error_message=e.strerror or self.tr("Unknown error"),
+                    path=e.filename or mod_path,
+                    error_code=error_code,
                 ),
             )
             return False
@@ -578,8 +582,8 @@ class ModDeletionMenu(QMenu):
         self._perform_deletion_operation(
             confirmation_title=self.tr("Confirm Complete Deletion"),
             confirmation_text=self.tr(
-                f"You have selected {selected_count} mod(s) for complete deletion."
-            ),
+                "You have selected {selected_count} mod(s) for complete deletion."
+            ).format(selected_count=selected_count),
             confirmation_info=self.tr(
                 "<br>This operation will permanently delete the selected mod directories from the filesystem.<br><br>Do you want to proceed?"
             ),
@@ -592,8 +596,8 @@ class ModDeletionMenu(QMenu):
         self._perform_deletion_operation(
             confirmation_title=self.tr("Confirm DDS Deletion"),
             confirmation_text=self.tr(
-                f"You have selected {selected_count} mod(s) for DDS texture deletion."
-            ),
+                "You have selected {selected_count} mod(s) for DDS texture deletion."
+            ).format(selected_count=selected_count),
             confirmation_info=self.tr(
                 "<br>This operation will only delete optimized textures (.dds files) from the selected mods.<br><br>Do you want to proceed?"
             ),
@@ -617,8 +621,8 @@ class ModDeletionMenu(QMenu):
         self._perform_deletion_operation(
             confirmation_title=self.tr("Confirm Selective Deletion"),
             confirmation_text=self.tr(
-                f"You have selected {selected_count} mod(s) for selective deletion."
-            ),
+                "You have selected {selected_count} mod(s) for selective deletion."
+            ).format(selected_count=selected_count),
             confirmation_info=self.tr(
                 "<br>This operation will delete all mod files except for .dds texture files.<br>The .dds files will be preserved.<br><br>Do you want to proceed?"
             ),
@@ -750,17 +754,31 @@ class ModDeletionMenu(QMenu):
 
         selected_count = len(selected_mods)
         steam_count = len(steam_mods)
-        action_capitalized = self.tr(action).capitalize()
-        action_past = self.tr(action + "d")
+        action_capitalized = (
+            self.tr("resubscribe")
+            if action == "resubscribe"
+            else self.tr("unsubscribe")
+        ).capitalize()
+        action_past = (
+            self.tr("resubscribed")
+            if action == "resubscribe"
+            else self.tr("unsubscribed")
+        )
 
         if self._confirm_deletion(
-            self.tr(f"Confirm Deletion and {action_capitalized}"),
-            self.tr(
-                f"You have selected {selected_count} mod(s) for deletion.<br>{steam_count} of these are Steam Workshop mods that will also be {action_past}."
+            self.tr("Confirm Deletion and {action_capitalized}").format(
+                action_capitalized=action_capitalized
             ),
             self.tr(
-                f"<br>This operation will:<br>• Delete the selected mod directories from your filesystem<br>• {action_capitalized} Steam Workshop mods from your Steam account<br><br>Do you want to proceed?"
+                "You have selected {selected_count} mod(s) for deletion.<br>{steam_count} of these are Steam Workshop mods that will also be {action_past}."
+            ).format(
+                selected_count=selected_count,
+                steam_count=steam_count,
+                action_past=action_past,
             ),
+            self.tr(
+                "<br>This operation will:<br>• Delete the selected mod directories from your filesystem<br>• {action_capitalized} Steam Workshop mods from your Steam account<br><br>Do you want to proceed?"
+            ).format(action_capitalized=action_capitalized),
         ):
             # Synchronize remove_from_uuids with current selected mods before deletion
             self._sync_remove_from_uuids_with_selected_mods()
