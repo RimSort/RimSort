@@ -409,6 +409,50 @@ class TarExtractThread(QThread):
         self._should_abort = True
 
 
+# GitHub signals both its primary limit and its secondary (abuse) limit with a
+# 403, and 429 for the softer primary case. Only treat a 403 as a rate limit
+# when the body confirms it, so unrelated 403s keep the generic message.
+_RATE_LIMIT_MARKERS = ("rate limit", "abuse detection")
+
+
+def is_github_rate_limit_error(error: requests.RequestException) -> bool:
+    """Check whether a GitHub API failure was caused by rate limiting.
+
+    :param error: Exception raised by ``response.raise_for_status()``.
+    :return: True when GitHub refused the request because of a rate limit.
+    """
+    response = getattr(error, "response", None)
+    status = getattr(response, "status_code", None)
+    if status == 429:
+        return True
+    if status != 403:
+        return False
+
+    body = str(getattr(response, "text", "") or "").lower()
+    haystack = f"{body} {error!s}".lower()
+    return any(marker in haystack for marker in _RATE_LIMIT_MARKERS)
+
+
+def rate_limit_reset_clock(response: Any) -> str:
+    """Read GitHub's next-allowed-request time from a failed response.
+
+    :param response: The failed response, or None.
+    :return: Clock time as ``HH:MM``, or an empty string when unavailable.
+    """
+    if response is None:
+        return ""
+
+    headers = getattr(response, "headers", None)
+    reset = headers.get("X-RateLimit-Reset") if headers else None
+    if not reset:
+        return ""
+
+    try:
+        return datetime.fromtimestamp(int(reset)).strftime("%H:%M")
+    except TypeError, ValueError:
+        return ""
+
+
 class UpdateManager(QObject):
     update_progress = Signal(int, str)  # percent, message
     download_complete = Signal(bool, str)  # success, error_message
@@ -610,7 +654,7 @@ class UpdateManager(QObject):
         This method orchestrates the update process by delegating to focused sub-methods
         for better maintainability and testability.
         """
-        start_time = datetime.now()  # noqa: DTZ005
+        start_time = datetime.now()
         logger.info("Starting update check process...")
 
         try:
@@ -627,11 +671,11 @@ class UpdateManager(QObject):
             # Handle the update process
             self._handle_update_process(update_info)
 
-            total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
+            total_time = (datetime.now() - start_time).total_seconds()
             logger.info(f"Update check process completed in {total_time:.2f}s")
 
         except Exception as e:
-            total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
+            total_time = (datetime.now() - start_time).total_seconds()
             logger.exception(f"Update check failed after {total_time:.2f}s")
             dialogue.show_warning(
                 title=self.tr(ERR_UPDATE_FAILED_TITLE),
@@ -806,15 +850,21 @@ class UpdateManager(QObject):
         """
         Get the latest release information from GitHub API.
 
+        Authenticated with the user's GitHub token when one is configured,
+        since the unauthenticated limit is only 60 requests per hour per IP
+        and is easily exhausted behind shared or NAT'd networks (#2337).
+
         Args:
             needs_elevation: Whether elevation is needed (affects Windows asset selection)
 
         Returns:
             Dictionary containing version, tag_name, download_url, and is_msi flag, or None if failed
         """
+        token = getattr(self.settings, "github_token", "")
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
         try:
             # Use releases API for better asset information
-            response = http.get(GITHUB_API_URL, timeout=API_TIMEOUT)
+            response = http.get(GITHUB_API_URL, timeout=API_TIMEOUT, headers=headers)
             response.raise_for_status()
             release_data = response.json()
 
@@ -853,6 +903,35 @@ class UpdateManager(QObject):
                 "is_tar_gz": download_info.get("is_tar_gz", False),
             }
 
+        except requests.HTTPError as e:
+            if is_github_rate_limit_error(e):
+                logger.warning(f"GitHub API rate limit reached: {e}")
+                clock = rate_limit_reset_clock(getattr(e, "response", None))
+                reset = (
+                    self.tr("Requests will be accepted again {when}.").format(
+                        when=clock
+                    )
+                    if clock
+                    else ""
+                )
+                dialogue.show_warning(
+                    title=self.tr("RimSort Update Error"),
+                    text=self.tr("GitHub's API rate limit has been reached"),
+                    information=self.tr(
+                        "Too many requests were sent from your network, so GitHub"
+                        " declined this update check. Nothing is wrong with your"
+                        " installation.<br><br>{reset}<br><br>Adding a GitHub"
+                        " personal access token under Settings - Advanced raises"
+                        " the limit substantially and usually removes this."
+                    ).format(reset=reset),
+                )
+            else:
+                logger.warning(f"Failed to fetch release information: {e}")
+                dialogue.show_warning(
+                    title=self.tr(ERR_API_CONNECTION_TITLE),
+                    text=self.tr(ERR_API_CONNECTION_TEXT).format(error=str(e)),
+                )
+            return None
         except requests.RequestException as e:
             logger.warning(f"Failed to fetch release information: {e}")
             dialogue.show_warning(
@@ -1331,7 +1410,7 @@ class UpdateManager(QObject):
         downloaded_size = 0
         chunk_count = 0
         downloaded_since_last_emit = 0
-        start_time = datetime.now()  # noqa: DTZ005
+        start_time = datetime.now()
 
         if total_size <= 0:
             self.update_progress.emit(-1, "Downloading...")
@@ -1349,7 +1428,7 @@ class UpdateManager(QObject):
                 emit_update = downloaded_since_last_emit >= 512 * 1024
 
                 if emit_update:
-                    elapsed = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
+                    elapsed = (datetime.now() - start_time).total_seconds()
                     speed = downloaded_size / elapsed if elapsed > 0 else 0
 
                     if total_size > 0:
@@ -1369,7 +1448,7 @@ class UpdateManager(QObject):
 
                     downloaded_since_last_emit = 0  # reset counter
 
-        total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
+        total_time = (datetime.now() - start_time).total_seconds()
         avg_speed = len(content) / total_time if total_time > 0 else 0
         logger.debug(
             f"Downloaded {len(content)} bytes in {chunk_count} chunks over {total_time:.2f}s (avg speed: {avg_speed:.2f} B/s)"
@@ -1450,7 +1529,7 @@ class UpdateManager(QObject):
         """
         temp_base = (
             Path(gettempdir())
-            / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"  # noqa: DTZ005
+            / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         temp_base.mkdir(exist_ok=True)
         return temp_base
@@ -2431,7 +2510,7 @@ class UpdateManager(QObject):
         try:
             with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
                 lf.write(
-                    f"\n===== RimSort updater launched: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ({system}) =====\n"  # noqa: DTZ005
+                    f"\n===== RimSort updater launched: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ({system}) =====\n"
                 )
         except Exception:  # noqa: S110
             # Non-fatal; continue without preface
@@ -2568,7 +2647,7 @@ class UpdateManager(QObject):
         app_backup_folder = AppInfo().application_backups_folder
 
         # Generate backup ZIP filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # noqa: DTZ005
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_filename = f"RimSort_Backup_{timestamp}.zip"
         backup_path = app_backup_folder / backup_filename
 
