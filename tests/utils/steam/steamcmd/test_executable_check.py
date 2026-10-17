@@ -7,6 +7,7 @@ parser is exercised rather than trusted.
 """
 
 import struct
+import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -17,6 +18,14 @@ from PySide6.QtCore import QCoreApplication
 from app.utils.steam.steamcmd import executable_check as ec
 from app.utils.steam.steamcmd import wrapper
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+
+# SteamCMD only needs a 32-bit loader on Linux: the Windows and macOS builds
+# are native binaries, so this diagnostics path never runs elsewhere in
+# production and is not exercised on those platforms.
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux",
+    reason="SteamCMD multilib diagnostics are Linux-only",
+)
 
 _PT_INTERP = 3
 _PT_LOAD = 1
@@ -173,7 +182,7 @@ class TestDetectMissingLoader:
         assert missing == "/lib/ld-linux.so.2"
         assert (
             ec.detect_missing_loader(
-                binary, exists=lambda p: str(p) == "/lib32/ld-linux.so.2"
+                binary, exists=lambda p: p.as_posix() == "/lib32/ld-linux.so.2"
             )
             is None
         )
