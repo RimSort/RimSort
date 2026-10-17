@@ -5567,6 +5567,22 @@ Please choose one of the following options to proceed.</source>
         <source>&amp;Don&apos;t Ask Again</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SteamworksInterface</name>
