@@ -165,19 +165,24 @@ shfmt-fix:
 jscpd:
     npx --yes jscpd@5.3.0 . --config .jscpd.json
 
-# Run all code quality checks: super-linter + typecheck + pyright
+# Run all code quality checks: super-linter + typecheck + pyright + repo guards
 [unix]
-check: super-lint typecheck pyright
+check: super-lint typecheck pyright deferred-imports eventbus-subscribers
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
-# Run all code quality checks available on Windows: typecheck + pyright + ruff + ruff-format + jscpd + markdownlint + shfmt + deferred-import guard
+# Run all code quality checks available on Windows: typecheck + pyright + ruff + ruff-format + jscpd + markdownlint + shfmt + repo guards
 [windows]
-check: typecheck pyright ruff ruff-format jscpd markdownlint shfmt deferred-imports
+check: typecheck pyright ruff ruff-format jscpd markdownlint shfmt deferred-imports eventbus-subscribers
     @echo "Use 'just fix' to automatically fix linting and formatting issues!"
 
 # Check for new function-local from app/ imports (circular-import regression guard)
 deferred-imports:
     uv run python check_deferred_imports.py
+
+# Check that EventBus subscribers are Qt objects or explicitly retained
+# (an unretained plain-class subscriber is garbage collected and goes silent)
+eventbus-subscribers:
+    uv run python check_eventbus_subscribers.py
 
 # Automatically fix linting and formatting issues, then verify the markdown check passes
 # (ruff-fix + ruff-format-fix + shfmt -w + markdownlint-fix + markdownlint check)

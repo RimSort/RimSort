@@ -47,6 +47,7 @@ Never run `uv lock --upgrade` (== `just update`) as part of a task — dependenc
 | `just pyright` | pyright (standard mode) against `pyproject.toml` |
 | `just jscpd` | Copy-paste detection — CI enforces **0% duplication** (config in `.jscpd.json`). If code repeats, extract a shared helper. |
 | `just deferred-imports` | Guard against new function-local `from app…` imports (see Traps) |
+| `just eventbus-subscribers` | Guard against `EventBus` subscribers that aren't Qt objects or explicitly retained (see Traps) |
 | `just markdownlint` | Markdown lint for `docs/**` and root `*.md` (rules in `.markdownlint.json`; options in `.markdownlint-cli2.jsonc`) |
 | `just shfmt` | Shell script formatting (fails when any script would be reformatted) |
 
@@ -101,7 +102,7 @@ Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or 
 
 ## Definition of Done
 
-1. `just fix` + `just typecheck` + `just pyright` + `just deferred-imports` all pass (or full `just check`).
+1. `just fix` + `just typecheck` + `just pyright` + `just deferred-imports` + `just eventbus-subscribers` all pass (or full `just check`).
 2. `just test` passes (full suite).
 3. The diff contains no unrelated reformatting, comments, or scope creep.
 4. New translatable strings have been run through `just i18n-update` and `just i18n-compile`. (Note: the i18n rule in the AGENTS.md spec — run these and commit both `.ts`/`.qm`.)
@@ -109,6 +110,7 @@ Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or 
 ## Traps
 
 - **Deferred imports are judged, not banned:** `check_deferred_imports.py` fails on any *new* function-local `import app…` not in its `ALLOWED` set. Genuine circular-import fixes go in `ALLOWED`; start-up hot-path imports may stay deferred. If you add one, you must update `ALLOWED` or CI (`just deferred-imports`) fails.
+- **`EventBus` subscribers must be Qt objects or explicitly retained:** `EventBus` is a QObject singleton, so Qt keeps `QObject`/`QWidget` receivers alive — but it does **not** keep a bound method of a plain Python object alive. A plain class that connects its slots in `__init__` and is never retained gets garbage collected the moment its constructor returns, and its slots silently stop running: no log line, no exception. This broke every instance action for v1.6.0–v1.16.0 (#2539). Whoever constructs such a class must keep the reference (`self.foo = Foo(...)`), or make it a `QObject`. `check_eventbus_subscribers.py` (`just eventbus-subscribers`) fails on non-Qt subscribers not in its `ALLOWED` set — an entry there must name the owner holding the reference.
 - Never reformat code wholesale or add comments explaining what the code does — match surrounding style and only change what your feature touches.
 - Don't create new top-level data dirs/files under the repo root; app data goes through `AppInfo` (which tests redirect via `mock_app_info`).
 - Keep `docs/` edits lint-clean (markdownlint) and only touch `docs/index.md`/locale variants when truly needed.

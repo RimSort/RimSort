@@ -73,6 +73,16 @@
           pass_filenames = false;
         };
 
+        # Repo CI guard: EventBus subscribers must be Qt objects or retained.
+        # PySide6 does not keep bound-method receivers alive, so an unretained
+        # plain-class subscriber is collected and its slots go silent (#2539).
+        eventbus-subscribers = {
+          enable = true;
+          name = "eventbus-subscribers";
+          entry = "${venvBin}/python ./check_eventbus_subscribers.py";
+          pass_filenames = false;
+        };
+
         # Hygiene
         check-merge-conflicts.enable = true;
         detect-private-keys.enable = true;
