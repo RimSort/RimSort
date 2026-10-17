@@ -11,7 +11,8 @@ import gc
 import weakref
 from unittest.mock import MagicMock, patch
 
-from PySide6.QtWidgets import QApplication
+from loguru import logger
+from PySide6.QtWidgets import QApplication, QInputDialog
 
 from app.controllers.app_controller import AppController
 from app.services.instance_service import InstanceService
@@ -73,4 +74,38 @@ def test_app_controller_retains_instance_service(qapp: QApplication) -> None:
     service = getattr(controller, "instance_service", None)
     assert isinstance(service, InstanceService), (
         "AppController discarded the InstanceService; instance actions are dead"
+    )
+
+
+def test_retained_service_still_receives_events(qapp: QApplication) -> None:
+    """End-to-end: the service AppController keeps alive must handle signals.
+
+    Chains the two halves of the regression -- retention and delivery -- so a
+    future refactor that breaks either one fails here.
+
+    The real ``create_new_instance`` is exercised rather than a mock: patching
+    the class attribute would make PySide6 pin the *mock* as the receiver,
+    which stays alive independently of the service and would pass even when
+    the service itself was collected. Cancelling the name prompt makes the
+    real method log and return before touching settings.
+    """
+    controller = AppController.__new__(AppController)
+    controller.settings_controller = MagicMock()
+    controller.steamcmd_wrapper = MagicMock()
+
+    records: list[str] = []
+    sink_id = logger.add(lambda message: records.append(str(message)), level="DEBUG")
+    try:
+        controller.initialize_instance_service()
+        gc.collect()
+
+        with patch.object(
+            QInputDialog, "getText", staticmethod(lambda *args: ("", False))
+        ):
+            EventBus().do_create_new_instance.emit()
+    finally:
+        logger.remove(sink_id)
+
+    assert any("User cancelled operation" in record for record in records), (
+        "The retained InstanceService did not receive the emitted signal"
     )
