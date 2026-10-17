@@ -132,8 +132,15 @@ class AppController(QObject):
         )
 
     def initialize_instance_service(self) -> None:
-        """Initializes the instance service."""
-        InstanceService(
+        """Initializes the instance service.
+
+        The reference must be retained: InstanceService is a plain Python class
+        (not a QObject) that connects its slots to EventBus signals in
+        ``__init__``, and PySide6 does not keep bound-method receivers alive.
+        Dropping it here garbage collects the service and silently disconnects
+        every instance action (backup/restore/clone/create/delete).
+        """
+        self.instance_service = InstanceService(
             settings=self.settings_controller.settings,
             steamcmd_wrapper=self.steamcmd_wrapper,
         )
