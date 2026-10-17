@@ -448,7 +448,7 @@ def rate_limit_reset_clock(response: Any) -> str:
         return ""
 
     try:
-        return datetime.fromtimestamp(int(reset)).strftime("%H:%M")
+        return datetime.fromtimestamp(int(reset)).strftime("%H:%M")  # noqa: DTZ006
     except TypeError, ValueError:
         return ""
 
@@ -654,7 +654,7 @@ class UpdateManager(QObject):
         This method orchestrates the update process by delegating to focused sub-methods
         for better maintainability and testability.
         """
-        start_time = datetime.now()
+        start_time = datetime.now()  # noqa: DTZ005
         logger.info("Starting update check process...")
 
         try:
@@ -671,11 +671,11 @@ class UpdateManager(QObject):
             # Handle the update process
             self._handle_update_process(update_info)
 
-            total_time = (datetime.now() - start_time).total_seconds()
+            total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
             logger.info(f"Update check process completed in {total_time:.2f}s")
 
         except Exception as e:
-            total_time = (datetime.now() - start_time).total_seconds()
+            total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
             logger.exception(f"Update check failed after {total_time:.2f}s")
             dialogue.show_warning(
                 title=self.tr(ERR_UPDATE_FAILED_TITLE),
@@ -1410,7 +1410,7 @@ class UpdateManager(QObject):
         downloaded_size = 0
         chunk_count = 0
         downloaded_since_last_emit = 0
-        start_time = datetime.now()
+        start_time = datetime.now()  # noqa: DTZ005
 
         if total_size <= 0:
             self.update_progress.emit(-1, "Downloading...")
@@ -1428,7 +1428,7 @@ class UpdateManager(QObject):
                 emit_update = downloaded_since_last_emit >= 512 * 1024
 
                 if emit_update:
-                    elapsed = (datetime.now() - start_time).total_seconds()
+                    elapsed = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
                     speed = downloaded_size / elapsed if elapsed > 0 else 0
 
                     if total_size > 0:
@@ -1448,7 +1448,7 @@ class UpdateManager(QObject):
 
                     downloaded_since_last_emit = 0  # reset counter
 
-        total_time = (datetime.now() - start_time).total_seconds()
+        total_time = (datetime.now() - start_time).total_seconds()  # noqa: DTZ005
         avg_speed = len(content) / total_time if total_time > 0 else 0
         logger.debug(
             f"Downloaded {len(content)} bytes in {chunk_count} chunks over {total_time:.2f}s (avg speed: {avg_speed:.2f} B/s)"
@@ -1529,7 +1529,7 @@ class UpdateManager(QObject):
         """
         temp_base = (
             Path(gettempdir())
-            / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"  # noqa: DTZ005
         )
         temp_base.mkdir(exist_ok=True)
         return temp_base
@@ -2510,7 +2510,7 @@ class UpdateManager(QObject):
         try:
             with open(log_path, "a", encoding="utf-8", errors="ignore") as lf:
                 lf.write(
-                    f"\n===== RimSort updater launched: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ({system}) =====\n"
+                    f"\n===== RimSort updater launched: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ({system}) =====\n"  # noqa: DTZ005
                 )
         except Exception:  # noqa: S110
             # Non-fatal; continue without preface
@@ -2647,7 +2647,7 @@ class UpdateManager(QObject):
         app_backup_folder = AppInfo().application_backups_folder
 
         # Generate backup ZIP filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # noqa: DTZ005
         backup_filename = f"RimSort_Backup_{timestamp}.zip"
         backup_path = app_backup_folder / backup_filename
 

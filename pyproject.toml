@@ -102,7 +102,7 @@ ignore_missing_imports = true
  # Defaults to Black like
  line-length = 88
  indent-width = 4
- lint.extend-select = ["I"]
+ lint.extend-select = ["I", "DTZ"]
   # E402 (import not at top of file) is intentionally allowed: several standalone
   # test scripts do sys.path.insert(...) before importing app.* for direct runs.
   # BLE001 (blind except) is intentionally allowed: the app uses broad `except Exception`
