@@ -9,9 +9,11 @@
 #   the sources (tests run against the same unpatched tree).
 # - Steamworks libraries come from the repo's vendored libs/ (loaded from
 #   there via _libs); nothing is overlaid at the tree root.
-# - No Qt env vars on the wrapper: the PySide6 wheels resolve their own Qt
-#   libraries through RUNPATH and their plugins relative to PySide6, so
-#   nothing leaks into the game, SteamCMD or other child processes.
+# - The PySide6 wheels resolve their own Qt libraries through RUNPATH and
+#   their plugins relative to PySide6. The wrapper only unsets the host's
+#   QT_PLUGIN_PATH / QML2_IMPORT_PATH: plugins built against the system Qt
+#   (e.g. Plasma's Wayland shell integration and union style) fail to load
+#   into the wheel's Qt and break the Wayland platform plugin.
 {
   lib,
   inputs,
@@ -199,7 +201,9 @@
             --set PYTHONPATH $out/lib/rimsort \
             --set RIMSORT_DISABLE_UPDATER 1 \
             --set RIMSORT_LAUNCH_PREFIX ${steam-run}/bin/steam-run \
-            --set RIMSORT_TODDS_PATH ${pkgs.todds}/bin/todds
+            --set RIMSORT_TODDS_PATH ${pkgs.todds}/bin/todds \
+            --unset QT_PLUGIN_PATH \
+            --unset QML2_IMPORT_PATH
         '';
 
         desktopItems = [
