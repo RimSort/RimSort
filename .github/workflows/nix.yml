@@ -32,6 +32,16 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      # Lockfile policy, not a build check: the nixpkgs input must be
+      # NixOS-owned, on a supported ref, and less than 30 days old. The
+      # freshness half is kept by flake-update.yml's weekly bump PRs;
+      # fail-mode turns the report into a gate.
+      - name: Check Nix flake inputs
+        uses: DeterminateSystems/flake-checker-action@v14
+        with:
+          fail-mode: true
+          send-statistics: false
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
