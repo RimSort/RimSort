@@ -1,0 +1,73 @@
+name: Nix Flake Check
+on:
+  # Unlike the reusable workflows pulled in by auto_build.yml, this gate is
+  # self-triggering: a broken flake should fail the PR on its own rather than
+  # depend on the artifact-build pipeline.
+  pull_request: null
+  workflow_dispatch: null
+  merge_group:
+  push:
+    branches:
+      - main
+      - master
+
+permissions: {}
+
+concurrency:
+  group: nix-flake-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flake-check:
+    # The ruleset references required checks by name; keep this in sync with
+    # the branch protection settings when renaming.
+    name: Nix Flake Check
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # No submodules needed: Nix evaluates the flake from its own copy
+          # of the tree, which excludes submodule contents anyway; the
+          # package fetches SteamworksPy via fetchFromGitHub.
+          persist-credentials: false
+
+      # Lockfile policy, not a build check: the nixpkgs input must be
+      # NixOS-owned, on a supported ref, and less than 30 days old. The
+      # freshness half is kept by dependabot's nix ecosystem bump PRs;
+      # fail-mode turns the report into a gate.
+      - name: Check Nix flake inputs
+        uses: DeterminateSystems/flake-checker-action@v14
+        with:
+          fail-mode: true
+          send-statistics: false
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      # Read-only pull: no authToken, so this job can never publish. The
+      # cache is populated by nix-cache.yml on merges to main, which is
+      # what makes PR rebuilds fast.
+      - name: Pull from Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: rimsort
+
+      # nix flake check builds and evaluates everything the flake exposes for
+      # this system: checks.pytest (the full suite in a pure Nix environment),
+      # checks.package (the packaged app), and the pinned git-hooks.nix hooks
+      # (nixfmt, deadnix, statix, gitleaks, actionlint, check-json,
+      # check-yaml, checkov, ruff, ruff-format, mypy, pyright, shellcheck,
+      # shfmt, markdownlint, jscpd, deferred-imports, eventbus-subscribers).
+      #
+      # This is the same gate developers run locally through `just check`,
+      # using tool versions pinned by uv.lock via uv2nix and by nixpkgs
+      # rather than whatever a CI container image ships.
+      - name: Nix flake check
+        run: nix flake check --show-trace

@@ -24,6 +24,39 @@
         deadnix.enable = true;
         statix.enable = true;
 
+        # Security + workflow/structured-data validation. These used to run
+        # in the super-linter GitHub workflow (lint.yml); they live here now so
+        # one command verifies them locally and in CI, with versions pinned by
+        # nixpkgs rather than whatever a container image ships.
+        gitleaks = {
+          enable = true;
+          # Default scans only the staged set, which makes `nix flake check`
+          # (pre-commit --all-files) a no-op. Scan the whole tree instead, as
+          # super-linter's VALIDATE_ALL_CODEBASE did.
+          args = [
+            "dir"
+            "."
+            "--redact"
+            "--no-banner"
+          ];
+        };
+        actionlint.enable = true;
+        check-json.enable = true;
+        # Structural YAML parsing. Deliberately not `yamllint`: its default
+        # ruleset rejects this repo's existing workflows (80-col lines, the
+        # `on:` key, missing `---`), so it was never the check CI applied.
+        check-yaml.enable = true;
+
+        # IaC policy checks on the workflows (the framework this repo has).
+        # Needs the python3.14-ecdsa insecure-package permit in
+        # default.nix; keep that comment updated if this hook ever moves.
+        checkov = {
+          enable = true;
+          name = "checkov";
+          entry = "${lib.getExe pkgs.checkov} -d . --quiet --compact --framework github_actions";
+          pass_filenames = false;
+        };
+
         # Python: pinned to the lock, not to whatever nixpkgs carries
         ruff = {
           enable = true;
@@ -86,6 +119,20 @@
         # Hygiene
         check-merge-conflicts.enable = true;
         detect-private-keys.enable = true;
+      }
+      # Copy/paste detection, mirroring `just jscpd`, but via the
+      # flake-provided binary so the version and thresholds match
+      # `nix flake check` and CI instead of an npx download that cannot exec
+      # on NixOS. Whole-repo by nature: duplication is a property of the tree,
+      # not of a single file, hence pass_filenames = false. Declared only
+      # where tools.nix provides a derivation for the system.
+      // lib.optionalAttrs config.rimsortTools.jscpdSupported {
+        jscpd = {
+          enable = true;
+          name = "jscpd";
+          entry = "${config.rimsortTools.jscpdDrv}/bin/jscpd . --config .jscpd.json";
+          pass_filenames = false;
+        };
       };
 
       formatter = pkgs.writeShellScriptBin "fmt" ''

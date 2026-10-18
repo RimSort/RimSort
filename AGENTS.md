@@ -11,7 +11,7 @@ RimSort is a free and open-source multi-platform mod manager and sorter for RimW
 
 - Clone with submodules: `git clone --recurse-submodules https://github.com/RimSort/RimSort`
 - If submodules are missing: `git submodule update --init --recursive`
-- Prerequisites: git, Python 3.14, [uv](https://docs.astral.sh/uv/), [just](https://just.systems/). Full `just check` also needs Node/npx (jscpd, markdownlint) and shfmt.
+- Prerequisites: git, Python 3.14, [uv](https://docs.astral.sh/uv/), [just](https://just.systems/). The full Unix `just check` runs `nix flake check` (Nix required; skipped with a warning when absent). The Windows recipe additionally needs Node/npx (jscpd, markdownlint) and shfmt.
 - `just dev-setup` — creates venv, `uv sync --locked --dev --group build`, compiles locales. Do this first.
 - `just install-hooks` — installs the pre-commit hook (runs `just check` before every commit; requires `just` and `pwsh` on PATH).
 - Always use the local venv via `uv run ...` — never activate the venv manually or use a bare `pytest`/`ruff`.
@@ -36,7 +36,7 @@ Never run `uv lock --upgrade` (== `just update`) as part of a task — dependenc
 
 ## Code Quality (MUST pass before finishing)
 
-`just check` runs the quality gate (Windows: `typecheck`, `pyright`, `ruff`, `ruff-format`, `jscpd`, `markdownlint`, `shfmt`, `deferred-imports`; Unix adds super-linter, which covers the same plus bash, json, yaml, github-actions, checkov, and gitleaks). `just fix` auto-fixes ruff check/format, shfmt, and markdownlint.
+`just check` runs the quality gate (Windows: `typecheck`, `pyright`, `ruff`, `ruff-format`, `jscpd`, `markdownlint`, `shfmt`, `deferred-imports`; Unix runs `nix flake check` — the pinned git-hooks (nixfmt, deadnix, statix, gitleaks, actionlint, check-json, check-yaml, checkov, ruff, ruff-format, mypy, pyright, shellcheck, shfmt, markdownlint, jscpd, repo guards) plus pytest and the packaged app build — then the native type/repo guards). `just fix` auto-fixes ruff check/format, shfmt, and markdownlint.
 
 | Command | Purpose |
 | --- | --- |
@@ -51,7 +51,7 @@ Never run `uv lock --upgrade` (== `just update`) as part of a task — dependenc
 | `just markdownlint` | Markdown lint for `docs/**` and root `*.md` (rules in `.markdownlint.json`; options in `.markdownlint-cli2.jsonc`) |
 | `just shfmt` | Shell script formatting (fails when any script would be reformatted) |
 
-Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or the full `just check`, then `just test`) and get everything green before declaring a change complete. CI runs ruff, ruff-format, mypy, pyright, jscpd, gitleaks, markdownlint, and pytest on ubuntu/macos/windows.
+Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or the full `just check`, then `just test`) and get everything green before declaring a change complete. CI runs the Nix Flake Check gate (git-hooks + pytest + package build) on ubuntu via `nix flake check`, plus the artifact-build matrix on ubuntu/macos/windows.
 
 ## Code Style
 

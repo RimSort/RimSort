@@ -19,3 +19,7 @@ updates:
       interval: "daily"
     ignore:
      - dependency-name: "submodules/steamfiles"
+  - package-ecosystem: "nix" # Nix flake inputs (flake.nix / flake.lock)
+    directory: "/" # Location of flake.nix
+    schedule:
+      interval: "weekly"
