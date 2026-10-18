@@ -25,25 +25,37 @@ if "steamworks" not in sys.modules:
     sys.modules["steamworks"] = ModuleType("steamworks")
     sys.modules["steamworks"].STEAMWORKS = MagicMock()  # type: ignore[attr-defined]
 
+from app.views.main_window import MainWindow
+
 if TYPE_CHECKING:
     from app.views.main_content_panel import MainContent
-    from app.views.main_window import MainWindow
+
+
+class _StubMainWindow(QMainWindow):
+    """MainWindow stand-in borrowing only the methods under test.
+
+    PySide6 6.12 aborts when ``QMainWindow.__init__`` is called on an
+    instance created via ``MainWindow.__new__``, so borrow the methods
+    under test onto a properly constructed QMainWindow instead. The
+    borrowed methods touch only the attributes attached by
+    ``make_stub_main_window``.
+    """
+
+    main_content_panel: Any
+    watchdog_event_handler: Any
+    metadata_controller: Any
+
+    closeEvent = MainWindow.closeEvent
+    shutdown_watchdog = MainWindow.shutdown_watchdog
 
 
 def make_stub_main_window(metadata_controller: MagicMock | None = None) -> MainWindow:
-    """Create a MainWindow instance without running MainWindow.__init__.
-
-    Calls QMainWindow.__init__ to satisfy the C++ side (Shiboken),
-    then attaches the minimal attributes that downstream methods expect.
-    """
-    from app.views.main_window import MainWindow
-
-    instance = MainWindow.__new__(MainWindow)
-    QMainWindow.__init__(instance)
+    """Create a Qt-valid MainWindow stand-in with minimal test state."""
+    instance = _StubMainWindow()
     instance.main_content_panel = MagicMock()
     instance.watchdog_event_handler = None
     instance.metadata_controller = metadata_controller or MagicMock()
-    return instance
+    return instance  # type: ignore[return-value]
 
 
 @pytest.fixture
