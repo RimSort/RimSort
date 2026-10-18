@@ -86,6 +86,20 @@
         # Hygiene
         check-merge-conflicts.enable = true;
         detect-private-keys.enable = true;
+      }
+      # Copy/paste detection, mirroring `just jscpd`, but via the
+      # flake-provided binary so the version and thresholds match
+      # `nix flake check` and CI instead of an npx download that cannot exec
+      # on NixOS. Whole-repo by nature: duplication is a property of the tree,
+      # not of a single file, hence pass_filenames = false. Declared only
+      # where tools.nix provides a derivation for the system.
+      // lib.optionalAttrs config.rimsortTools.jscpdSupported {
+        jscpd = {
+          enable = true;
+          name = "jscpd";
+          entry = "${config.rimsortTools.jscpdDrv}/bin/jscpd . --config .jscpd.json";
+          pass_filenames = false;
+        };
       };
 
       formatter = pkgs.writeShellScriptBin "fmt" ''

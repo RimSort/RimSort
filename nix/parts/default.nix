@@ -8,6 +8,7 @@
     ./hooks.nix
     ./devshell.nix
     ./packages.nix
+    ./tools.nix
   ];
 
   # One nixpkgs instance for every part. The packaged app legitimately
