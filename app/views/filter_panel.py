@@ -619,7 +619,11 @@ class FilterButton(QToolButton):
         self._badge_label.hide()
 
         # Create the filter panel
-        self.filter_panel = FilterPanel()
+        # Parent the popup for ownership: the Qt.Popup window flag keeps it
+        # floating as a top-level window, while the parent makes its C++
+        # lifetime deterministic (destroyed with the button). PySide6 6.12
+        # aborts when garbage collection races parentless Qt-owned objects.
+        self.filter_panel = FilterPanel(self)
         self.filter_panel.filters_changed.connect(self._update_badge)
 
         self.clicked.connect(self._show_panel)
