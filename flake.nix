@@ -43,6 +43,15 @@
     };
   };
 
+  # Public binary cache for the flake packages and checks. Nix applies this
+  # config only after `--accept-flake-config` or an explicit approval prompt;
+  # CI accepts it in its nix setup. Without it everything still works, just
+  # from source.
+  nixConfig = {
+    extra-substituters = [ "https://rimsort.cachix.org" ];
+    extra-trusted-public-keys = [ "rimsort.cachix.org-1:1UpAcYYNqR5rKrCjjMQE7kVc+hZx5Vndw6ek2OvFppI=" ];
+  };
+
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
