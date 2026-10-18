@@ -287,6 +287,10 @@
         };
 
       checks.pytest = pytestDrv;
+      # Build the packaged app on every check run: a PR that breaks the
+      # wrapper, filesets, or desktop metadata must fail here rather than
+      # first surfacing in the post-merge cache publication.
+      checks.package = config.packages.rimsort;
     };
 
   # For NixOS / home-manager configurations:

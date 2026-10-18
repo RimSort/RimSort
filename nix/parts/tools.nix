@@ -5,8 +5,9 @@
 # platform-specific npm packages rather than a nixpkgs attribute, and the
 # `npx`-installed copy cannot exec on NixOS because it carries a
 # /lib64/ld-linux-x86-64.so.2 interpreter that does not exist there. Fetching
-# the same pinned tarball and pointing the loader at Nix's glibc makes the
-# identical version run under Nix, in the pre-commit hook and in CI.
+# the same pinned tarball and letting autoPatchelfHook point the loader at
+# Nix's glibc makes the identical version run under Nix, in the pre-commit
+# hook and in CI.
 { lib, ... }:
 {
   perSystem =
@@ -37,7 +38,7 @@
             inherit (arch) hash;
           in
           pkgs.stdenv.mkDerivation {
-            pname = arch.name;
+            pname = "jscpd";
             inherit version;
 
             src = pkgs.fetchurl {
@@ -45,7 +46,14 @@
               inherit hash;
             };
 
-            nativeBuildInputs = [ pkgs.patchelf ];
+            # autoPatchelfHook rewrites the foreign interpreter and builds the
+            # rpath from the actual NEEDED list; a missing library fails the
+            # build instead of surfacing at run time.
+            nativeBuildInputs = [ pkgs.autoPatchelfHook ];
+            buildInputs = [
+              pkgs.stdenv.cc.cc.lib # libgcc_s (unwinding), libstdc++
+              pkgs.zlib
+            ];
 
             dontConfigure = true;
             # No build step: the tarball ships a prebuilt executable.
@@ -59,13 +67,6 @@
               cp bin/jscpd "$out/bin/jscpd"
               cp LICENSE "$out/LICENSE"
               chmod +x "$out/bin/jscpd"
-
-              # Replace the foreign interpreter (and give it a glibc rpath) so
-              # the binary runs against Nix's glibc instead of /lib64.
-              patchelf \
-                --set-interpreter ${pkgs.stdenv.cc.bintools.dynamicLinker} \
-                --set-rpath ${lib.makeLibraryPath [ pkgs.glibc ]} \
-                "$out/bin/jscpd"
 
               runHook postInstall
             '';
