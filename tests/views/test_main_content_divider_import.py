@@ -37,8 +37,12 @@ def main_content(
         metadata_controller=mock_metadata_controller,
     )
     mc._test_save_mock = save_mock  # type: ignore[attr-defined]
-    monkeypatch.setattr(mc, "__duplicate_mods_prompt", Mock())
-    monkeypatch.setattr(mc, "__missing_mods_prompt", Mock())
+    # Patch the mangled names the class actually invokes; PySide6 6.12 no
+    # longer resolves the literal "__duplicate_mods_prompt" through
+    # QObject attribute lookup, and patching the mangled name is what
+    # actually intercepts the call.
+    monkeypatch.setattr(mc, "_MainContent__duplicate_mods_prompt", Mock())
+    monkeypatch.setattr(mc, "_MainContent__missing_mods_prompt", Mock())
     monkeypatch.setattr(mc, "_insert_data_into_lists", Mock())
     yield mc
     mc.deleteLater()
