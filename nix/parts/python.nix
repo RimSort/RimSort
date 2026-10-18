@@ -21,8 +21,8 @@
       };
 
       # System libraries the PySide6 wheel's Qt links or dlopens. Shared by
-      # the build-time patchelf inputs (below) and the runtime wrapper/shell
-      # environments (qtRuntimeDeps); listed once so the two cannot drift.
+      # the patchelf inputs and the RUNPATH entries for dlopen'd libraries
+      # (qtRuntimeDeps); listed once so the two cannot drift.
       commonQtSystemLibs = with pkgs; [
         alsa-lib
         libxkbcommon
@@ -39,16 +39,43 @@
       #    steamfiles, protobuf3-to-dict) are handled in pyproject.toml via
       #    [tool.uv.extra-build-dependencies], which uv2nix picks up here.
       #
-      #    The PySide6 wheels link libQt6* across wheel boundaries (essentials,
-      #    addons, webengine, pdf are separate store paths). nixpkgs Qt is NOT
-      #    handed to auto-patchelf: it would be baked into RUNPATH (and the
-      #    closure) and load instead of the wheel's Qt on any minor skew. Those
-      #    SONAMEs are ignored below and resolved at runtime via the wrapper's
-      #    LD_LIBRARY_PATH.
+      #    The PySide6 wheels link libQt6* and libpyside6/libshiboken6 across
+      #    wheel boundaries (shiboken6, essentials, addons, webengine and pdf
+      #    are separate store paths). Each wheel gets the wheels it depends on
+      #    as auto-patchelf search paths, so those links land in RUNPATH and no
+      #    LD_LIBRARY_PATH is needed. nixpkgs Qt is NOT handed to auto-patchelf:
+      #    it would be baked into RUNPATH (and the closure) and load instead of
+      #    the wheel's Qt on any minor skew.
       myOverrides =
-        _final: prev:
+        final: prev:
         let
           inherit (pkgs) lib;
+          # Package dirs holding a wheel's shared libraries: libshiboken6 sits
+          # in shiboken6/, libpyside6 in PySide6/, libQt6* in PySide6/Qt/lib.
+          wheelLibDirs = drv: [
+            "${drv}/${python.sitePackages}/shiboken6"
+            "${drv}/${python.sitePackages}/PySide6"
+            "${drv}/${python.sitePackages}/PySide6/Qt/lib"
+          ];
+          # Wheels each wheel links against; acyclic (essentials' QML plugins
+          # for addons/webengine modules stay unresolved, RimSort loads no QML).
+          wheelDeps = {
+            pyside6-essentials = [ final.shiboken6 ];
+            pyside6-addons = [
+              final.shiboken6
+              final.pyside6-essentials
+            ];
+            pyside6-webengine = [
+              final.shiboken6
+              final.pyside6-essentials
+              final.pyside6-addons
+            ];
+            pyside6-pdf = [
+              final.shiboken6
+              final.pyside6-essentials
+              final.pyside6-addons
+            ];
+          };
           # system libraries the wheels' Qt links (libxkbfile satisfies a
           # build-time link only); formerly propagated by nixpkgs Qt
           pysideSystemDeps =
@@ -87,14 +114,20 @@
               '';
             buildInputs =
               old.buildInputs or [ ] ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux pysideSystemDeps;
-            # The Essentials/Addons wheels split the Qt and binding libraries
-            # between them (addons wants libpyside6/libshiboken6, essentials
-            # wants libQt6WebEngineCore), so cross-wheel references cannot be
-            # build inputs without a cycle; runtime resolution happens via the
-            # merged venv's $ORIGIN RUNPATH + the wrapper's LD_LIBRARY_PATH
-            # (qtRoot below). The other entries belong to optional plugins
-            # RimSort never loads (GTK3 platform theme, SQL drivers, smart
-            # cards, speech). Anything else missing fails the build.
+            # Qt dlopens these (GL, dbus, X11/Wayland client libs); the
+            # dlopen'ing library's RUNPATH is searched, so add them to all.
+            runtimeDependencies = lib.optionals pkgs.stdenv.hostPlatform.isLinux qtRuntimeDeps;
+            preFixup =
+              old.preFixup or ""
+              + lib.concatMapStrings (dir: ''
+                addAutoPatchelfSearchPath ${dir}
+              '') (lib.concatMap wheelLibDirs (wheelDeps.${name} or [ ]));
+            # libQt6*/libpyside6/libshiboken6 still missing after the search
+            # paths belong to the essentials QML plugins for modules shipped in
+            # later wheels (see wheelDeps). The other entries belong to
+            # optional plugins RimSort never loads (GTK3 platform theme, SQL
+            # drivers, smart cards, speech). Anything else missing fails the
+            # build.
             autoPatchelfIgnoreMissingDeps = [
               "libQt6*.so.6"
               "libpyside6.abi3.so.*"
@@ -140,20 +173,11 @@
       #    ruff, ...). Doubles as the lint hook environment (git-hooks binPath).
       devEnv = pythonSet.mkVirtualEnv "rimsort-dev-env" workspace.deps.all;
 
-      # 7. Qt runtime plumbing shared by the app wrapper and the dev shell:
-      #    the wheel's own Qt (plugins + libs) plus the system libraries it
-      #    dlopens at runtime. Function-based so each env (appEnv, devEnv)
-      #    resolves against its own site-packages.
+      # 7. Qt platform plugin path shared by the app wrapper and the dev shell.
+      #    Function-based so each env (appEnv, devEnv) resolves against its
+      #    own site-packages.
       qtRootFor = env: "${env}/lib/${python.libPrefix}/site-packages/PySide6/Qt";
       qtPluginPathFor = env: "${qtRootFor env}/plugins/platforms";
-      # The wheel's Qt/lib first, then the PySide6 package dir (it holds
-      # libpyside6/libshiboken6, which the extension modules' RUNPATHs do not
-      # cover), then system libraries. Prepending the wheel dirs is what keeps
-      # the nixpkgs Qt baked into the patchelf RUNPATHs from loading when the
-      # wheel bundles a different Qt minor version (LD_LIBRARY_PATH wins over
-      # RUNPATH).
-      qtLdLibraryPathFor =
-        env: "${qtRootFor env}/lib:${qtRootFor env}:${pkgs.lib.makeLibraryPath qtRuntimeDeps}";
       qtRuntimeDeps =
         commonQtSystemLibs
         ++ (with pkgs; [
@@ -176,7 +200,7 @@
       options.rimsortPython = lib.mkOption {
         type = lib.types.raw;
         internal = true;
-        description = "uv2nix pipeline: python, workspace, pythonSet, appEnv, devEnv, qtRootFor, qtPluginPathFor, qtLdLibraryPathFor, qtRuntimeDeps";
+        description = "uv2nix pipeline: python, workspace, pythonSet, appEnv, devEnv, qtRootFor, qtPluginPathFor, qtRuntimeDeps";
       };
 
       config.rimsortPython = {
@@ -188,7 +212,6 @@
           devEnv
           qtRootFor
           qtPluginPathFor
-          qtLdLibraryPathFor
           qtRuntimeDeps
           ;
       };
