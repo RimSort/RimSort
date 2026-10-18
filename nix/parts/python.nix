@@ -173,11 +173,8 @@
       #    ruff, ...). Doubles as the lint hook environment (git-hooks binPath).
       devEnv = pythonSet.mkVirtualEnv "rimsort-dev-env" workspace.deps.all;
 
-      # 7. Qt platform plugin path shared by the app wrapper and the dev shell.
-      #    Function-based so each env (appEnv, devEnv) resolves against its
-      #    own site-packages.
-      qtRootFor = env: "${env}/lib/${python.libPrefix}/site-packages/PySide6/Qt";
-      qtPluginPathFor = env: "${qtRootFor env}/plugins/platforms";
+      # 7. Libraries Qt dlopens at runtime; baked into the wheels' RUNPATH via
+      #    runtimeDependencies (see myOverrides).
       qtRuntimeDeps =
         commonQtSystemLibs
         ++ (with pkgs; [
@@ -200,7 +197,7 @@
       options.rimsortPython = lib.mkOption {
         type = lib.types.raw;
         internal = true;
-        description = "uv2nix pipeline: python, workspace, pythonSet, appEnv, devEnv, qtRootFor, qtPluginPathFor, qtRuntimeDeps";
+        description = "uv2nix pipeline: python, workspace, pythonSet, appEnv, devEnv";
       };
 
       config.rimsortPython = {
@@ -210,9 +207,6 @@
           pythonSet
           appEnv
           devEnv
-          qtRootFor
-          qtPluginPathFor
-          qtRuntimeDeps
           ;
       };
     };

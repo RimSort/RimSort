@@ -5,7 +5,7 @@
   perSystem =
     { config, pkgs, ... }:
     let
-      inherit (config.rimsortPython) devEnv qtPluginPathFor;
+      inherit (config.rimsortPython) devEnv;
       hooks = config.pre-commit.settings;
     in
     {
@@ -37,7 +37,6 @@
           fi
           export PATH=${hooks.package}/bin:$PATH
           unset PYTHONPATH
-          export QT_QPA_PLATFORM_PLUGIN_PATH=${qtPluginPathFor devEnv}
           echo "RimSort dev shell (Nix). Python tools come from uv.lock via uv2nix." 1>&2
           echo "Run the app: python -m app --dev   (or: just run)" 1>&2
           echo "Tests:       just test" 1>&2
