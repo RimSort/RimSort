@@ -152,7 +152,7 @@ Edge-релизы перезаписываются: создаётся новы�
   - [Расширение VS Code](https://marketplace.visualstudio.com/items?itemName=mkhl.shfmt)
 - **[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2)** используется для линтинга Markdown (`just markdownlint`).
   - [Расширение VS Code](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
-  - Конфигурация находится в `.markdownlint.json` (правила, общие с CI super-linter) и `.markdownlint-cli2.jsonc` (опции CLI2).
+  - Конфигурация находится в `.markdownlint.json` (правила, общие с Nix pre-commit-хуком) и `.markdownlint-cli2.jsonc` (опции CLI2).
 
 ### Соглашения
 
