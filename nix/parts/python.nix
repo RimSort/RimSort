@@ -39,30 +39,39 @@
       #    steamfiles, protobuf3-to-dict) are handled in pyproject.toml via
       #    [tool.uv.extra-build-dependencies], which uv2nix picks up here.
       #
-      #    The PySide6 wheels bundle a Qt QML plugin tree whose .so files link
-      #    libQt6* by SONAME; auto-patchelf cannot resolve those inside the
-      #    wheel, so hand patchelf the Qt libs at BUILD time only. RimSort uses
-      #    no QML, so any minor-version skew against nixpkgs Qt is irrelevant:
-      #    at runtime the wheel's own Qt wins via $ORIGIN RUNPATH and the
-      #    wrapper's LD_LIBRARY_PATH.
+      #    The PySide6 wheels link libQt6* across wheel boundaries (essentials,
+      #    addons, webengine, pdf are separate store paths). nixpkgs Qt is NOT
+      #    handed to auto-patchelf: it would be baked into RUNPATH (and the
+      #    closure) and load instead of the wheel's Qt on any minor skew. Those
+      #    SONAMEs are ignored below and resolved at runtime via the wrapper's
+      #    LD_LIBRARY_PATH.
       myOverrides =
         _final: prev:
         let
           inherit (pkgs) lib;
-          # Qt libs so auto-patchelf can resolve libQt6* SONAMEs inside the
-          # bundled QML plugin tree (build-time only, like the nixpkgs package)
-          pysideQtDeps = with pkgs.qt6; [
-            qt5compat
-            qtbase
-            qtdeclarative
-            qtquick3d
-            qtquicktimeline
-            qtsvg
-            qtwayland
-          ];
-          # system libraries the QML/WebEngine plugins reference
-          # (libxkbfile satisfies a build-time link only)
-          pysideSystemDeps = commonQtSystemLibs ++ [ pkgs.libxkbfile ];
+          # system libraries the wheels' Qt links (libxkbfile satisfies a
+          # build-time link only); formerly propagated by nixpkgs Qt
+          pysideSystemDeps =
+            commonQtSystemLibs
+            ++ (with pkgs; [
+              cups
+              fontconfig
+              freetype
+              harfbuzz
+              krb5
+              libgbm
+              libxcb-cursor
+              libxcb-image
+              libxcb-keysyms
+              libxcb-render-util
+              libxcb-util
+              libxcb-wm
+              libxcomposite
+              libxkbfile
+              libxtst
+              wayland
+              zstd
+            ]);
         in
         lib.mapAttrs (
           name: drv:
@@ -77,10 +86,7 @@
                   --replace-fail "Path(ref_mod.__file__).resolve().parent" "Path(ref_mod.__file__).parent"
               '';
             buildInputs =
-              old.buildInputs or [ ]
-              ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux (pysideQtDeps ++ pysideSystemDeps);
-            # libraries, not Qt apps: build inputs trigger qtPreHook
-            dontWrapQtApps = true;
+              old.buildInputs or [ ] ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux pysideSystemDeps;
             # The Essentials/Addons wheels split the Qt and binding libraries
             # between them (addons wants libpyside6/libshiboken6, essentials
             # wants libQt6WebEngineCore), so cross-wheel references cannot be
@@ -102,11 +108,13 @@
               "libgtk-3.so.0"
               "libpango-1.0.so.0"
               "libpangocairo-1.0.so.0"
-              # Qt SQL drivers (Oracle, Firebird, Mimer, MySQL)
+              # Qt SQL drivers (Oracle, Firebird, Mimer, MySQL, ODBC, PostgreSQL)
               "libclntsh.so.*"
               "libfbclient.so.2"
               "libmimerapi.so"
               "libmysqlclient.so.*"
+              "libodbc.so.2"
+              "libpq.so.5"
               # QtNfc, QtTextToSpeech
               "libpcsclite.so.1"
               "libspeechd.so.2"
