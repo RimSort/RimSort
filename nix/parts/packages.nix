@@ -113,8 +113,8 @@
       steam-run = (pkgs.steam.override { privateTmp = false; }).run;
 
       # PySide6 wheels bundle their own Qt; it still dlopens system libs.
-      # LD_LIBRARY_PATH is required: the wheels' RUNPATH also points at the
-      # nixpkgs Qt used for patchelf, which would otherwise mix in.
+      # LD_LIBRARY_PATH is required: libQt6* links across the separate wheel
+      # store paths are left unresolved in RUNPATH (see python.nix).
       qtLdLibraryPath = qtLdLibraryPathFor appEnv;
       qtWrapperFlags = lib.optionals pkgs.stdenv.hostPlatform.isLinux [
         "--set"
@@ -160,9 +160,8 @@
         preCheck = ''
           export HOME=$(mktemp -d)
           export QT_QPA_PLATFORM=offscreen
-          # Same guarded library path the app wrapper and dev shell use: the
-          # wheels' bundled Qt and PySide6 libraries must win over the nixpkgs
-          # Qt paths baked into the build-time RUNPATHs.
+          # Same library path the app wrapper and dev shell use: cross-wheel
+          # libQt6* links are resolved only through it.
           export LD_LIBRARY_PATH=${qtLdLibraryPathFor devEnv}
         '';
 
