@@ -10,11 +10,21 @@ useDefault = true
 # both the pre-commit hook and `nix flake check`. That mode walks the
 # filesystem rather than git, so untracked build artifacts would otherwise be
 # scanned and produce false positives (compiled bytecode embeds string
-# constants that trip the generic-api-key rule). These are all gitignored and
-# never committed.
+# constants that trip the generic-api-key rule, and a Nuitka build/ tree is
+# hundreds of MB of the same). These are all gitignored and never committed.
+#
+# The binary-extension rules also cover the *tracked* vendored Steamworks
+# binaries under libs/ and packaging artifacts: gitleaks bytescans them and
+# reports high-entropy false positives, which is exactly what super-linter's
+# run used to skip. Deliberate trade-off: a real secret hidden inside a
+# tracked .so/.dll is out of scope for this hook.
 [allowlist]
-description = "Untracked build/runtime artifacts"
+description = "Build/runtime artifacts and vendored binaries"
 paths = [
+  '''(^|/)build/''',
+  '''(^|/)dist/''',
+  '''(^|/)dev/''',
+  '''(^|/)super-linter-output/''',
   '''__pycache__/''',
   '''\.py[co]$''',
   '''\.qm$''',

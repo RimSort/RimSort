@@ -47,7 +47,9 @@
         # `on:` key, missing `---`), so it was never the check CI applied.
         check-yaml.enable = true;
 
-        # Infrastructure-as-code checks for the workflows. TEMPORARY probe.
+        # IaC policy checks on the workflows (the framework this repo has).
+        # Needs the python3.14-ecdsa insecure-package permit in
+        # default.nix; keep that comment updated if this hook ever moves.
         checkov = {
           enable = true;
           name = "checkov";
