@@ -1,0 +1,69 @@
+name: Nix Cache
+on:
+  # Publish on merges to the default branches. Pull requests only read the
+  # cache (see nix.yml): they have no token, and unmerged artifacts should
+  # not end up in a public cache.
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: null
+
+permissions: {}
+
+concurrency:
+  group: nix-cache
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Forks never have the token and must not publish; a manual dispatch
+    # only publishes when it runs on the default branch.
+    if: >-
+      github.repository == 'RimSort/RimSort' &&
+      (github.event_name == 'push' || github.ref == 'refs/heads/main')
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Same reason as nix.yml: the flake's filesets include the
+          # vendored submodules and libs/.
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      # Fail loudly instead of "publishing" nothing when the secret is
+      # missing; cachix-action would fall back to a read-only pull.
+      - name: Check CACHIX_AUTH_TOKEN
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+        run: |
+          if [ -z "$CACHIX_AUTH_TOKEN" ]; then
+            echo "::error::repository secret CACHIX_AUTH_TOKEN is not set"
+            exit 1
+          fi
+
+      # The action installs a post-build hook, so every store path built
+      # below is pushed as it is produced.
+      - name: Publish to Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: rimsort
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Build and publish the package
+        run: nix build .#rimsort
+
+      # The check closures are the valuable half of the cache: they carry
+      # the uv2nix-built Python environment and the pinned tool set that
+      # every later `nix flake check` would otherwise rebuild.
+      - name: Build and publish the check environments
+        run: nix flake check

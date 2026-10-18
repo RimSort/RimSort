@@ -39,6 +39,14 @@ jobs:
             experimental-features = nix-command flakes
             accept-flake-config = true
 
+      # Read-only pull: no authToken, so this job can never publish. The
+      # cache is populated by nix-cache.yml on merges to main, which is
+      # what makes PR rebuilds fast.
+      - name: Pull from Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: rimsort
+
       # nix flake check builds and evaluates everything the flake exposes for
       # this system: checks.pytest (the full suite in a pure Nix environment)
       # and the pinned git-hooks.nix hooks (ruff, ruff-format, mypy, pyright,
