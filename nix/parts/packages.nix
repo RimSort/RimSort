@@ -160,6 +160,10 @@
         preCheck = ''
           export HOME=$(mktemp -d)
           export QT_QPA_PLATFORM=offscreen
+          # Same guarded library path the app wrapper and dev shell use: the
+          # wheels' bundled Qt and PySide6 libraries must win over the nixpkgs
+          # Qt paths baked into the build-time RUNPATHs.
+          export LD_LIBRARY_PATH=${qtLdLibraryPathFor devEnv}
         '';
 
         checkPhase = ''

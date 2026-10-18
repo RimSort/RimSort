@@ -138,7 +138,14 @@
       #    resolves against its own site-packages.
       qtRootFor = env: "${env}/lib/${python.libPrefix}/site-packages/PySide6/Qt";
       qtPluginPathFor = env: "${qtRootFor env}/plugins/platforms";
-      qtLdLibraryPathFor = env: "${qtRootFor env}/lib:${pkgs.lib.makeLibraryPath qtRuntimeDeps}";
+      # The wheel's Qt/lib first, then the PySide6 package dir (it holds
+      # libpyside6/libshiboken6, which the extension modules' RUNPATHs do not
+      # cover), then system libraries. Prepending the wheel dirs is what keeps
+      # the nixpkgs Qt baked into the patchelf RUNPATHs from loading when the
+      # wheel bundles a different Qt minor version (LD_LIBRARY_PATH wins over
+      # RUNPATH).
+      qtLdLibraryPathFor =
+        env: "${qtRootFor env}/lib:${qtRootFor env}:${pkgs.lib.makeLibraryPath qtRuntimeDeps}";
       qtRuntimeDeps =
         commonQtSystemLibs
         ++ (with pkgs; [
