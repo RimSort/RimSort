@@ -4,7 +4,6 @@ on:
   # self-triggering: a broken flake should fail the PR on its own rather than
   # depend on the artifact-build pipeline.
   pull_request: null
-  workflow_call: null
   workflow_dispatch: null
   merge_group:
   push:
@@ -20,21 +19,24 @@ concurrency:
 
 jobs:
   flake-check:
+    # The ruleset references required checks by name; keep this in sync with
+    # the branch protection settings when renaming.
+    name: Nix Flake Check
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
-          # The flake's filesets include the vendored submodules
-          # (steamworkspy, steamfiles) and libs/, so a shallow checkout
-          # without submodules cannot build.
-          submodules: recursive
-          fetch-depth: 0
+          # No submodules needed: Nix evaluates the flake from its own copy
+          # of the tree, which excludes submodule contents anyway; the
+          # package fetches SteamworksPy via fetchFromGitHub.
+          persist-credentials: false
 
       # Lockfile policy, not a build check: the nixpkgs input must be
       # NixOS-owned, on a supported ref, and less than 30 days old. The
-      # freshness half is kept by flake-update.yml's weekly bump PRs;
+      # freshness half is kept by dependabot's nix ecosystem bump PRs;
       # fail-mode turns the report into a gate.
       - name: Check Nix flake inputs
         uses: DeterminateSystems/flake-checker-action@v14
@@ -58,13 +60,14 @@ jobs:
           name: rimsort
 
       # nix flake check builds and evaluates everything the flake exposes for
-      # this system: checks.pytest (the full suite in a pure Nix environment)
-      # and the pinned git-hooks.nix hooks (ruff, ruff-format, mypy, pyright,
-      # shellcheck, shfmt, markdownlint, deferred-imports,
-      # eventbus-subscribers), plus the packaged app itself.
+      # this system: checks.pytest (the full suite in a pure Nix environment),
+      # checks.package (the packaged app), and the pinned git-hooks.nix hooks
+      # (nixfmt, deadnix, statix, gitleaks, actionlint, check-json,
+      # check-yaml, checkov, ruff, ruff-format, mypy, pyright, shellcheck,
+      # shfmt, markdownlint, jscpd, deferred-imports, eventbus-subscribers).
       #
-      # This is the same gate developers run locally through `just check`
-      # and the installed pre-commit hook, using tool versions pinned by
-      # uv.lock via uv2nix rather than whatever a CI action ships.
+      # This is the same gate developers run locally through `just check`,
+      # using tool versions pinned by uv.lock via uv2nix and by nixpkgs
+      # rather than whatever a CI container image ships.
       - name: Nix flake check
         run: nix flake check --show-trace

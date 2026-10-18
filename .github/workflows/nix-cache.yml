@@ -25,16 +25,16 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v7
+      # Actions in this job receive the CACHIX_AUTH_TOKEN write secret, so
+      # they are pinned by commit SHA, not by mutable tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          # Same reason as nix.yml: the flake's filesets include the
-          # vendored submodules and libs/.
-          submodules: recursive
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
@@ -54,7 +54,7 @@ jobs:
       # The action installs a post-build hook, so every store path built
       # below is pushed as it is produced.
       - name: Publish to Cachix
-        uses: cachix/cachix-action@v17
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: rimsort
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
