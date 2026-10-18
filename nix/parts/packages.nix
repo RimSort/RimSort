@@ -25,7 +25,6 @@
       inherit (config.rimsortPython)
         appEnv
         devEnv
-        qtLdLibraryPathFor
         qtPluginPathFor
         ;
 
@@ -112,31 +111,18 @@
       # SteamCMD run inside the Steam runtime FHS env)
       steam-run = (pkgs.steam.override { privateTmp = false; }).run;
 
-      # PySide6 wheels bundle their own Qt; it still dlopens system libs.
-      # LD_LIBRARY_PATH is required: libQt6* links across the separate wheel
-      # store paths are left unresolved in RUNPATH (see python.nix).
-      qtLdLibraryPath = qtLdLibraryPathFor appEnv;
+      # PySide6 wheels bundle their own Qt; their RUNPATHs resolve the other
+      # wheels and the system libraries it links or dlopens (see python.nix).
       qtWrapperFlags = lib.optionals pkgs.stdenv.hostPlatform.isLinux [
         "--set"
         "QT_QPA_PLATFORM_PLUGIN_PATH"
         (qtPluginPathFor appEnv)
-        "--prefix"
-        "LD_LIBRARY_PATH"
-        ":"
-        qtLdLibraryPath
       ];
 
-      # The game and SteamCMD must resolve libraries from the Steam runtime,
-      # not RimSort's Qt closure: strip exactly the entries the wrapper
-      # prepended and keep anything else (the user's own value, or one set
-      # through RimSort's game environment variables).
+      # The game and SteamCMD must not inherit RimSort's Qt plugin path.
       launchPrefix = pkgs.writeShellApplication {
         name = "rimsort-launch";
         text = ''
-          case "''${LD_LIBRARY_PATH-}" in
-          "${qtLdLibraryPath}") unset LD_LIBRARY_PATH ;;
-          "${qtLdLibraryPath}":*) export LD_LIBRARY_PATH="''${LD_LIBRARY_PATH#"${qtLdLibraryPath}":}" ;;
-          esac
           unset QT_QPA_PLATFORM_PLUGIN_PATH
           exec ${steam-run}/bin/steam-run "$@"
         '';
@@ -160,9 +146,6 @@
         preCheck = ''
           export HOME=$(mktemp -d)
           export QT_QPA_PLATFORM=offscreen
-          # Same library path the app wrapper and dev shell use: cross-wheel
-          # libQt6* links are resolved only through it.
-          export LD_LIBRARY_PATH=${qtLdLibraryPathFor devEnv}
         '';
 
         checkPhase = ''
