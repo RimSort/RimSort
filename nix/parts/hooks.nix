@@ -24,6 +24,37 @@
         deadnix.enable = true;
         statix.enable = true;
 
+        # Security + workflow/structured-data validation. These used to run
+        # in the super-linter GitHub workflow (lint.yml); they live here now so
+        # one command verifies them locally and in CI, with versions pinned by
+        # nixpkgs rather than whatever a container image ships.
+        gitleaks = {
+          enable = true;
+          # Default scans only the staged set, which makes `nix flake check`
+          # (pre-commit --all-files) a no-op. Scan the whole tree instead, as
+          # super-linter's VALIDATE_ALL_CODEBASE did.
+          args = [
+            "dir"
+            "."
+            "--redact"
+            "--no-banner"
+          ];
+        };
+        actionlint.enable = true;
+        check-json.enable = true;
+        # Structural YAML parsing. Deliberately not `yamllint`: its default
+        # ruleset rejects this repo's existing workflows (80-col lines, the
+        # `on:` key, missing `---`), so it was never the check CI applied.
+        check-yaml.enable = true;
+
+        # Infrastructure-as-code checks for the workflows. TEMPORARY probe.
+        checkov = {
+          enable = true;
+          name = "checkov";
+          entry = "${lib.getExe pkgs.checkov} -d . --quiet --compact --framework github_actions";
+          pass_filenames = false;
+        };
+
         # Python: pinned to the lock, not to whatever nixpkgs carries
         ruff = {
           enable = true;
