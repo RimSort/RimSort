@@ -299,12 +299,14 @@ def test_rows_inserted_converts_plain_dropped_item(qtbot: Any) -> None:
 
 @pytest.mark.parametrize("action", [Qt.DropAction.MoveAction, Qt.DropAction.CopyAction])
 def test_cross_list_drop_keeps_item_data(qtbot: Any, action: Qt.DropAction) -> None:
-    """A mod dropped onto the other list must keep its metadata and be
-    tracked there; a copy must not share metadata with the source item."""
-    source = _make_active_mod_list(qtbot, {}, ["/mods/moved"])
+    """Mods dropped onto the other list must keep their metadata and order
+    and be tracked there; a copy must not share metadata with the source."""
+    paths = ["/mods/a", "/mods/b"]
+    source = _make_active_mod_list(qtbot, {}, list(paths))
     source.list_type = "Inactive"
-    data = source.item(0).data(Qt.ItemDataRole.UserRole)
-    data.list_type = "Inactive"
+    source_data = [source.item(row).data(Qt.ItemDataRole.UserRole) for row in range(2)]
+    for data in source_data:
+        data.list_type = "Inactive"
     target = _make_active_mod_list(qtbot, {}, [])
     target.model().rowsInserted.connect(
         target.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
@@ -312,7 +314,7 @@ def test_cross_list_drop_keeps_item_data(qtbot: Any, action: Qt.DropAction) -> N
     target.resize(200, 200)
     target.show()
 
-    mime = source.model().mimeData([source.model().index(0, 0)])
+    mime = source.model().mimeData([source.model().index(row, 0) for row in range(2)])
     event = QDropEvent(
         QPointF(10, 10),
         action,
@@ -321,18 +323,19 @@ def test_cross_list_drop_keeps_item_data(qtbot: Any, action: Qt.DropAction) -> N
         Qt.KeyboardModifier.NoModifier,
     )
     target.dropEvent(event)
-    qtbot.waitUntil(lambda: target.paths == ["/mods/moved"])
+    qtbot.waitUntil(lambda: target.paths == paths)
 
-    item = target.item(0)
-    assert isinstance(item, CustomListWidgetItem)
-    dropped = item.data(Qt.ItemDataRole.UserRole)
-    assert dropped.path == "/mods/moved"
-    assert dropped.list_type == "Active"
-    if action == Qt.DropAction.MoveAction:
-        assert dropped is data
-    else:
-        assert dropped is not data
-        assert data.list_type == "Inactive"
+    for row, data in enumerate(source_data):
+        item = target.item(row)
+        assert isinstance(item, CustomListWidgetItem)
+        dropped = item.data(Qt.ItemDataRole.UserRole)
+        assert dropped.path == paths[row]
+        assert dropped.list_type == "Active"
+        if action == Qt.DropAction.MoveAction:
+            assert dropped is data
+        else:
+            assert dropped is not data
+            assert data.list_type == "Inactive"
 
 
 class TestStartupImpactLabel:
