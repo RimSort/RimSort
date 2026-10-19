@@ -3,7 +3,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QModelIndex, QPointF, Qt
+from PySide6.QtGui import QDropEvent
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
 from app.models.metadata.metadata_structure import (
@@ -270,6 +271,71 @@ def test_load_order_warning_header_matches_rule_direction(
     assert expected_header in warning
     assert "* Beta" in warning
     assert unexpected_header not in warning
+
+
+def test_rows_inserted_converts_plain_dropped_item(qtbot: Any) -> None:
+    """A plain QListWidgetItem inserted into the list must be replaced by a
+    CustomListWidgetItem carrying the same data and flags."""
+    widget = _make_active_mod_list(qtbot, {}, [])
+    data = object.__new__(CustomListWidgetItemMetadata)
+    data.path = "/mods/dropped"
+    data.list_type = "Inactive"
+    flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsDragEnabled
+    plain = QListWidgetItem("Dropped")
+    plain.setData(Qt.ItemDataRole.UserRole, data)
+    plain.setFlags(flags)
+    widget.addItem(plain)
+
+    widget.handle_rows_inserted(QModelIndex(), 0, 0)
+
+    item = widget.item(0)
+    assert isinstance(item, CustomListWidgetItem)
+    assert item.data(Qt.ItemDataRole.UserRole) is data
+    assert item.text() == "Dropped"
+    assert item.flags() == flags
+    assert data.list_type == "Active"
+    assert widget.paths == ["/mods/dropped"]
+
+
+@pytest.mark.parametrize("action", [Qt.DropAction.MoveAction, Qt.DropAction.CopyAction])
+def test_cross_list_drop_keeps_item_data(qtbot: Any, action: Qt.DropAction) -> None:
+    """Mods dropped onto the other list must keep their metadata and order
+    and be tracked there; a copy must not share metadata with the source."""
+    paths = ["/mods/a", "/mods/b"]
+    source = _make_active_mod_list(qtbot, {}, list(paths))
+    source.list_type = "Inactive"
+    source_data = [source.item(row).data(Qt.ItemDataRole.UserRole) for row in range(2)]
+    for data in source_data:
+        data.list_type = "Inactive"
+    target = _make_active_mod_list(qtbot, {}, [])
+    target.model().rowsInserted.connect(
+        target.handle_rows_inserted, Qt.ConnectionType.QueuedConnection
+    )
+    target.resize(200, 200)
+    target.show()
+
+    mime = source.model().mimeData([source.model().index(row, 0) for row in range(2)])
+    event = QDropEvent(
+        QPointF(10, 10),
+        action,
+        mime,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    target.dropEvent(event)
+    qtbot.waitUntil(lambda: target.paths == paths)
+
+    for row, data in enumerate(source_data):
+        item = target.item(row)
+        assert isinstance(item, CustomListWidgetItem)
+        dropped = item.data(Qt.ItemDataRole.UserRole)
+        assert dropped.path == paths[row]
+        assert dropped.list_type == "Active"
+        if action == Qt.DropAction.MoveAction:
+            assert dropped is data
+        else:
+            assert dropped is not data
+            assert data.list_type == "Inactive"
 
 
 class TestStartupImpactLabel:

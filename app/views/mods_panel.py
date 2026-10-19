@@ -1,4 +1,6 @@
 import os
+from collections.abc import Sequence
+from copy import deepcopy
 from datetime import datetime
 from difflib import SequenceMatcher
 from functools import partial
@@ -13,6 +15,7 @@ from PySide6.QtCore import (
     QEvent,
     QItemSelection,
     QKeyCombination,
+    QMimeData,
     QModelIndex,
     QObject,
     QRectF,
@@ -1143,6 +1146,18 @@ class ModListIcons:
         return cls._clear_icon
 
 
+class ModListMimeData(QMimeData):
+    """Drag payload holding the dragged items' UserRole data as Python objects.
+
+    PySide6 6.12 no longer serializes Python objects through Qt's QDataStream
+    item encoding, so a cross-list drop would otherwise arrive without data.
+    """
+
+    def __init__(self, item_data: list[Any]) -> None:
+        super().__init__()
+        self.item_data = item_data
+
+
 class ModListWidget(QListWidget):
     """
     Subclass for QListWidget. Used to store lists for
@@ -1370,6 +1385,26 @@ class ModListWidget(QListWidget):
         # from handle_rows_inserted once the queued insertion completes.
         if source_widget == self:
             self.list_update_signal.emit("drop")
+
+    def mimeData(self, items: Sequence[QListWidgetItem]) -> QMimeData:
+        base = super().mimeData(items)
+        mime = ModListMimeData([item.data(Qt.ItemDataRole.UserRole) for item in items])
+        # Keep Qt's encoded format so the model still accepts the drop.
+        for mime_format in base.formats():
+            mime.setData(mime_format, base.data(mime_format))
+        return mime
+
+    def dropMimeData(self, index: int, data: QMimeData, action: Qt.DropAction) -> bool:
+        if not isinstance(data, ModListMimeData):
+            return super().dropMimeData(index, data, action)
+        for offset, item_data in enumerate(data.item_data):
+            if action == Qt.DropAction.CopyAction:
+                # The source keeps its item; don't share mutable metadata.
+                item_data = deepcopy(item_data)
+            item = CustomListWidgetItem()
+            item.setData(Qt.ItemDataRole.UserRole, item_data, avoid_emit=True)
+            self.insertItem(index + offset, item)
+        return True
 
     def _get_selected_metadata(self) -> list[dict[str, Any]]:
         selected_items = self.selectedItems()
@@ -3066,8 +3101,14 @@ class ModListWidget(QListWidget):
         for idx in range(first, last + 1):
             item = self.item(idx)
             if not isinstance(item, CustomListWidgetItem):
-                # Convert to CustomListWidgetItem
-                item = CustomListWidgetItem(item)
+                # Convert to CustomListWidgetItem; PySide6 6.12 dropped the
+                # QListWidgetItem copy constructor, so copy roles and flags.
+                plain_item = item
+                item = CustomListWidgetItem()
+                role_data = self.model().itemData(self.model().index(idx, 0))
+                for role, value in role_data.items():
+                    item.setData(role, value, avoid_emit=True)
+                item.setFlags(plain_item.flags())
                 self.replaceItemAtIndex(idx, item)
             if item:
                 data = item.data(Qt.ItemDataRole.UserRole)
