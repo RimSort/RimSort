@@ -101,9 +101,10 @@ def test_mediator_use_this_instead_defaults_none(tmp_path: Path) -> None:
     assert mediator.use_this_instead is None
 
 
-def test_mediator_loads_no_version_warning(tmp_path: Path) -> None:
-    """Mediator loads No Version Warning from XML file."""
-    xml_content = '<?xml version="1.0" encoding="utf-8"?>\n<ModIdsToFix><li>mod.a</li><li>mod.b</li></ModIdsToFix>'
+def _load_no_version_warning_from_xml(
+    tmp_path: Path, xml_content: str
+) -> list[str] | None:
+    """Write a No Version Warning XML file and load it through a mediator."""
     nvw_path = tmp_path / "ModIdsToFix.xml"
     nvw_path.write_text(xml_content)
 
@@ -117,9 +118,38 @@ def test_mediator_loads_no_version_warning(tmp_path: Path) -> None:
         no_version_warning_path=nvw_path,
     )
     mediator._load_no_version_warning()
-    assert mediator.no_version_warning is not None
-    assert "mod.a" in mediator.no_version_warning
-    assert "mod.b" in mediator.no_version_warning
+    return mediator.no_version_warning
+
+
+def test_mediator_loads_no_version_warning(tmp_path: Path) -> None:
+    """Mediator loads No Version Warning from XML file."""
+    xml_content = '<?xml version="1.0" encoding="utf-8"?>\n<ModIdsToFix><li>mod.a</li><li>mod.b</li></ModIdsToFix>'
+
+    no_version_warning = _load_no_version_warning_from_xml(tmp_path, xml_content)
+
+    assert no_version_warning is not None
+    assert "mod.a" in no_version_warning
+    assert "mod.b" in no_version_warning
+
+
+@pytest.mark.parametrize(
+    ("xml_content", "expected"),
+    [
+        (
+            '<?xml version="1.0" encoding="utf-8"?>\n<ModIdsToFix>\n</ModIdsToFix>',
+            [],
+        ),
+        (
+            '<?xml version="1.0" encoding="utf-8"?>\n<ModIdsToFix>mod.a</ModIdsToFix>',
+            ["mod.a"],
+        ),
+    ],
+)
+def test_mediator_loads_no_version_warning_without_list_entries(
+    tmp_path: Path, xml_content: str, expected: list[str]
+) -> None:
+    """Mediator loads a No Version Warning XML root element without li entries."""
+    assert _load_no_version_warning_from_xml(tmp_path, xml_content) == expected
 
 
 def test_mediator_loads_use_this_instead(tmp_path: Path) -> None:

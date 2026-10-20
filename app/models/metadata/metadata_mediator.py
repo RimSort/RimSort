@@ -123,14 +123,18 @@ class MetadataMediator:
             return
         try:
             data = xml_path_to_json(str(self.no_version_warning_path))
-            mod_ids = data.get("ModIdsToFix", {}).get("li", [])
-            if isinstance(mod_ids, str):
-                mod_ids = [mod_ids]
+            container = data.get("ModIdsToFix", {})
+            raw_ids = (
+                container.get("li", []) if isinstance(container, dict) else container
+            )
+            if isinstance(raw_ids, str):
+                raw_ids = [raw_ids] if raw_ids.strip() else []
+            mod_ids = raw_ids if isinstance(raw_ids, list) else []
             self._no_version_warning = [str(mid).lower() for mid in mod_ids]
             logger.info(
                 f"Loaded {len(self._no_version_warning)} No Version Warning entries"
             )
-        except (OSError, ValueError, KeyError) as e:
+        except (OSError, ValueError, KeyError, AttributeError, TypeError) as e:
             logger.error(f"Failed to load No Version Warning DB: {e}")
             self._no_version_warning = None
 
