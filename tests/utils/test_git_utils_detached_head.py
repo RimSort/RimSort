@@ -62,8 +62,13 @@ def test_check_updates_with_detached_head(
 
 def test_pull_with_detached_head_reattaches_and_updates(
     detached_clone: tuple[Repository, Repository],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     upstream, clone = detached_clone
+    # The remote is a local path; skip the real network probe (sandboxed CI).
+    monkeypatch.setattr(
+        "app.utils.git_utils.check_internet_connection", lambda **_: True
+    )
 
     result = git_pull(clone, force=True)
 
