@@ -123,7 +123,8 @@ class MetadataMediator:
             return
         try:
             data = xml_path_to_json(str(self.no_version_warning_path))
-            mod_ids = data.get("ModIdsToFix", {}).get("li", [])
+            root = data.get("ModIdsToFix")
+            mod_ids = root.get("li", []) if isinstance(root, dict) else []
             if isinstance(mod_ids, str):
                 mod_ids = [mod_ids]
             self._no_version_warning = [str(mid).lower() for mid in mod_ids]

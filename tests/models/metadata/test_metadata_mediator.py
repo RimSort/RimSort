@@ -122,6 +122,34 @@ def test_mediator_loads_no_version_warning(tmp_path: Path) -> None:
     assert "mod.b" in mediator.no_version_warning
 
 
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        ("<ModIdsToFix>\n</ModIdsToFix>", []),
+        ("<ModIdsToFix />", []),
+        ("<ModIdsToFix><li>Mod.A</li></ModIdsToFix>", ["mod.a"]),
+    ],
+)
+def test_mediator_loads_no_version_warning_edge_shapes(
+    tmp_path: Path, body: str, expected: list[str]
+) -> None:
+    """Empty or single-entry ModIdsToFix.xml files load without raising."""
+    nvw_path = tmp_path / "ModIdsToFix.xml"
+    nvw_path.write_text(f'<?xml version="1.0" encoding="utf-8"?>\n{body}')
+
+    mediator = MetadataMediator(
+        user_rules_path=tmp_path / "rules.json",
+        community_rules_path=None,
+        steam_db_path=None,
+        workshop_mods_path=None,
+        local_mods_path=None,
+        game_path=None,
+        no_version_warning_path=nvw_path,
+    )
+    mediator._load_no_version_warning()
+    assert mediator.no_version_warning == expected
+
+
 def test_mediator_loads_use_this_instead(tmp_path: Path) -> None:
     """Mediator loads Use This Instead from JSON file, indexed by oldWorkshopId."""
     uti_data = {
