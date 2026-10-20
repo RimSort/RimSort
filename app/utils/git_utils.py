@@ -826,6 +826,74 @@ def git_clone(
         return None, GitCloneResult.GIT_ERROR
 
 
+def _resolve_branch_for_update(
+    repo: Repository, remote_name: str = "origin"
+) -> str | None:
+    """Return the branch name to compare/pull against.
+
+    When HEAD is attached this is simply the current branch. When HEAD is
+    detached (e.g. a mod repository left on a bare commit), ``repo.head.shorthand``
+    is the literal string ``"HEAD"``, and ``refs/remotes/<remote>/HEAD`` is a
+    *symbolic* reference whose ``target`` is a ref name rather than an Oid.
+    Passing that to ``walk``/``merge_analysis`` raises an error whose message is
+    only the ref name (e.g. ``refs/remotes/origin/master``). Instead, fall back
+    to the remote's default branch.
+    """
+    if not repo.head_is_detached:
+        return repo.head.shorthand
+
+    prefix = f"refs/remotes/{remote_name}/"
+    try:
+        target = repo.references[f"{prefix}HEAD"].target
+        if isinstance(target, str) and target.startswith(prefix):
+            return target[len(prefix) :]
+    except KeyError:
+        pass
+
+    for candidate in ("main", "master"):
+        if f"{prefix}{candidate}" in repo.references:
+            return candidate
+    return None
+
+
+def _remote_branch_oid(
+    repo: Repository, remote_name: str, branch: str
+) -> pygit2.Oid | None:
+    """Resolve ``refs/remotes/<remote>/<branch>`` to a commit Oid (following symrefs)."""
+    try:
+        target = (
+            repo.references[f"refs/remotes/{remote_name}/{branch}"].resolve().target
+        )
+    except KeyError:
+        return None
+    return target if isinstance(target, pygit2.Oid) else None
+
+
+def _attach_detached_head(repo: Repository, remote_name: str, branch: str) -> bool:
+    """Point a detached HEAD back at local ``branch`` so updates can move it.
+
+    The local branch is created at the current commit if it does not exist.
+    The working tree is left untouched; callers reset/checkout afterwards.
+    """
+    if not repo.head_is_detached:
+        return True
+    try:
+        if branch not in repo.branches.local:
+            commit = cast(pygit2.Commit, repo.get(repo.head.target))
+            local = repo.branches.local.create(branch, commit)
+        else:
+            local = repo.branches.local[branch]
+        remote_branch = repo.branches.remote.get(f"{remote_name}/{branch}")
+        if remote_branch is not None and local.upstream is None:
+            local.upstream = remote_branch
+        repo.set_head(local.name)
+        logger.info(f"Re-attached detached HEAD to branch '{branch}'")
+        return True
+    except (pygit2.GitError, KeyError, ValueError) as e:
+        logger.error(f"Failed to re-attach detached HEAD to '{branch}': {e}")
+        return False
+
+
 def git_check_updates(
     repo: Repository, config: GitOperationConfig | None = None
 ) -> pygit2.Walker | None:
@@ -864,14 +932,15 @@ def git_check_updates(
             logger.error(f"Fetch operation failed: {e!s}")
             return None
 
-        # Get current branch
-        current_branch = repo.head.shorthand
-        remote_ref = f"refs/remotes/origin/{current_branch}"
+        # Get current branch (falls back to origin's default branch if detached)
+        current_branch = _resolve_branch_for_update(repo, "origin")
+        if current_branch is None:
+            logger.info("HEAD is detached and no default remote branch was found")
+            return None
 
         # Check if remote branch exists
-        try:
-            remote_oid = repo.references[remote_ref].target
-        except KeyError:
+        remote_oid = _remote_branch_oid(repo, "origin", current_branch)
+        if remote_oid is None:
             logger.info(f"Remote branch 'origin/{current_branch}' not found")
             return None
 
@@ -936,10 +1005,14 @@ def git_pull(
 
     if branch is None:
         try:
-            branch = repo.head.shorthand
+            branch = _resolve_branch_for_update(repo, remote_name)
         except pygit2.GitError:
+            branch = None
+        if branch is None:
             logger.error("No active branch found or repository is empty")
-            return GitPullResult.GIT_ERROR  # Find the specified remote
+            return GitPullResult.GIT_ERROR
+    target_branch: str = branch
+    # Find the specified remote
     remote = None
     for r in repo.remotes:
         if r.name == remote_name:
@@ -997,11 +1070,15 @@ def git_pull(
                 logger.warning(f"Exception during stash before pull: {e}")
 
         # Get remote branch reference
-        remote_ref = f"refs/remotes/{remote.name}/{branch}"
-        try:
-            remote_master_id = repo.lookup_reference(remote_ref).target
-        except KeyError:
+        remote_master_id = _remote_branch_oid(repo, remote_name, target_branch)
+        if remote_master_id is None:
             logger.error(f"Remote branch '{remote.name}/{branch}' not found")
+            return GitPullResult.GIT_ERROR
+
+        # A detached HEAD cannot be fast-forwarded; re-attach it to the branch
+        if repo.head_is_detached and not _attach_detached_head(
+            repo, remote_name, target_branch
+        ):
             return GitPullResult.GIT_ERROR
 
         # Analyze merge situation
