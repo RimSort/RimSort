@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">名称</translation>
+        <translation>姓名</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">作者</translation>
+        <translation>作者</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>封装ID</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>已发布的文件 ID</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>支持的版本</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>模组已下载</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>研讨会更新</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>来源</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">路径</translation>
+        <translation>小路</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>研讨会页面</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2793,6 +2793,14 @@ Select which missing dependencies to add to your active mods list.</source>
 选择要添加到活动 mod 列表中的缺少的依赖项。</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>显示满意的依赖关系</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>除了缺少的依赖项之外，还显示已满足的依赖项</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>全选</translation>
     </message>
@@ -3068,7 +3076,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>未知错误</translation>
     </message>
 </context>
 <context>
@@ -4582,19 +4590,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>您的设置文件似乎已损坏且无法加载。</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort 在 {backup_path} 找到备份。您想尝试从此备份恢复您的设置吗？</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort 在 {backup_path} 找到旧备份。您想尝试从此备份恢复您的设置吗？</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>未找到备份文件，RimSort 会将您的设置重置为默认值。</translation>
     </message>
 </context>
 <context>
@@ -5590,6 +5598,22 @@ Please choose one of the following options to proceed.</source>
         <translation>仓库缓存已清除</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD 无法在此系统上运行</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD 已安装，但无法在此系统上执行。</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>SteamCMD 二进制文件需要未安装的 32 位系统库：&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;为您的发行版安装 32 位运行时，通常：&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>SteamCMD 二进制文件： {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>重新创建符号链接？</translation>
     </message>
@@ -6168,6 +6192,22 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>RimSort 的更新已发布： {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>请求将再次被接受{when}。</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>RimSort 更新错误</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>GitHub 的 API 速率已达到限制</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>从您的网络发送了太多请求，因此 GitHub 拒绝了此更新检查。您的安装没有任何问题。&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;在“设置 - 高级”下添加 GitHub 个人访问令牌会大幅提高限制，通常会删除此限制。 {reset}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

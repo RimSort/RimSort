@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">İsim</translation>
+        <translation>İsim</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">Yazar</translation>
+        <translation>Yazar</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>Paket Kimliği</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>Yayınlanan Dosya Kimliği</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>Desteklenen Sürümler</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>Mod İndirildi</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>Atölyede güncellendi</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Kaynak</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">Yol</translation>
+        <translation>Yol</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>Atölye Sayfası</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2795,6 +2795,14 @@ Select which missing dependencies to add to your active mods list.</source>
 Aktif modlar listenize hangi eksik bağımlılıkların ekleneceğini seçin.</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>Memnun bağımlılıkları göster</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>Eksik olanlara ek olarak halihazırda yerine getirilmiş bağımlılıkları göster</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>Tümünü Seç</translation>
     </message>
@@ -3069,7 +3077,7 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>Bilinmeyen hata</translation>
     </message>
 </context>
 <context>
@@ -4577,19 +4585,19 @@ An alternative updated mod is recommended:
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Ayarlar dosyanız bozuk görünüyor ve yüklenemiyor.</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort, {backup_path} konumunda bir yedek buldu. Bu yedeklemeden ayarlarınızı kurtarmayı denemek istiyor musunuz?</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort, {backup_path} konumunda eski bir yedek buldu. Bu yedeklemeden ayarlarınızı kurtarmayı denemek istiyor musunuz?</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>Yedekleme dosyası bulunamadı, RimSort ayarlarınızı varsayılanlara sıfırlayacak.</translation>
     </message>
 </context>
 <context>
@@ -5584,6 +5592,22 @@ Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translatio
         <translation>Steamcmd depo önbelleği temizlendi.</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD bu sistemde çalışamaz</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD yüklü ancak bu sistemde çalıştırılamıyor.</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>SteamCMD ikili dosyası, kurulmamış bir 32 bit sistem kitaplığına ihtiyaç duyar:&lt;br&gt;&lt;b&gt; {hint} {loader} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;b&gt; &lt;/b&gt; &lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>SteamCMD ikili dosyası:  {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>SymLink'i yeniden mi yaratıyorsunuz?</translation>
     </message>
@@ -6163,6 +6187,22 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>Rimsort için bir güncelleme yayınlandı:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>İstekler {when} tekrar kabul edilecektir.</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>RimSort Güncelleme Hatası</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>GitHub'ın API hız sınırına ulaşıldı</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>Ağınızdan çok fazla istek gönderildiğinden GitHub bu güncelleme kontrolünü reddetti. Kurulumunuzda yanlış bir şey yok.&lt;br&gt;&lt;br&gt; {reset} &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

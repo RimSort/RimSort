@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Name</translation>
+        <translation>Name</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">Autor</translation>
+        <translation>Autor</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>Paket-ID</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>ID der veröffentlichten Datei</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>Unterstützte Versionen</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>Mod heruntergeladen</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>Aktualisiert im Workshop</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Quelle</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">Weg</translation>
+        <translation>Weg</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>Workshop-Seite</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2793,6 +2793,14 @@ Select which missing dependencies to add to your active mods list.</source>
 Wählen Sie aus, welche fehlenden Abhängigkeiten Sie zu Ihrer aktiven Mods-Liste hinzufügen möchten.</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>Erfüllte Abhängigkeiten anzeigen</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>Zeigen Sie neben fehlenden auch bereits erfüllte Abhängigkeiten an</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>Wählen Sie alle aus</translation>
     </message>
@@ -3067,7 +3075,7 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>Unbekannter Fehler</translation>
     </message>
 </context>
 <context>
@@ -4575,19 +4583,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Ihre Einstellungsdatei scheint beschädigt zu sein und kann nicht geladen werden.</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort hat ein Backup unter {backup_path} gefunden. Möchten Sie versuchen, Ihre Einstellungen aus dieser Sicherung wiederherzustellen?</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort hat ein altes Backup unter {backup_path} gefunden. Möchten Sie versuchen, Ihre Einstellungen aus dieser Sicherung wiederherzustellen?</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>Es wurde keine Sicherungsdatei gefunden. RimSort setzt Ihre Einstellungen auf die Standardwerte zurück.</translation>
     </message>
 </context>
 <context>
@@ -5582,6 +5590,22 @@ Bitte wählen Sie eine der folgenden Optionen, um fortzufahren.</translation>
         <translation>SteamCMD Depot -Cache wurde gelöscht.</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD kann auf diesem System nicht ausgeführt werden</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD ist installiert, kann aber auf diesem System nicht ausgeführt werden.</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>Die SteamCMD-Binärdatei benötigt eine 32-Bit-Systembibliothek, die nicht installiert ist:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Installieren Sie die 32-Bit-Laufzeitumgebung für Ihre Distribution, normalerweise:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>SteamCMD-Binärdatei: {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>Symlink neu erstellen?</translation>
     </message>
@@ -6160,6 +6184,22 @@ Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_g
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>Ein Update auf RIMSORT wurde veröffentlicht:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>Anfragen werden wieder angenommen . {when}</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>RimSort-Aktualisierungsfehler</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>Das API-Ratenlimit von GitHub wurde erreicht</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>Von Ihrem Netzwerk wurden zu viele Anfragen gesendet, daher hat GitHub diese Update-Prüfung abgelehnt. An Ihrer Installation ist nichts falsch.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Das Hinzufügen eines persönlichen GitHub-Zugriffstokens unter „Einstellungen – Erweitert“ erhöht das Limit erheblich und entfernt es normalerweise.</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
