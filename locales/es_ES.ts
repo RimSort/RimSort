@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Nombre</translation>
+        <translation>Nombre</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">Autor</translation>
+        <translation>Autor</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>ID del paquete</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>ID de archivo publicado</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>Versiones compatibles</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>Mod descargado</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>Actualizado en el taller</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Fuente</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">Ruta</translation>
+        <translation>Camino</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>Página del taller</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -1256,7 +1256,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Configured game location: {path}</source>
-        <translation>Ubicación del juego configurada: {ruta}</translation>
+        <translation>Ubicación del juego configurada:  {path}</translation>
     </message>
     <message>
         <source>Checked content locations: {paths}</source>
@@ -1264,7 +1264,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Discovered Data location: {path}</source>
-        <translation>Ubicación de los datos descubiertos: {ruta}</translation>
+        <translation>Ubicación de los datos descubiertos:  {path}</translation>
     </message>
     <message>
         <source>Not found</source>
@@ -2794,6 +2794,14 @@ Select which missing dependencies to add to your active mods list.</source>
 Seleccione qué dependencias faltantes agregar a su lista de mods activos.</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>Mostrar dependencias satisfechas</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>Mostrar dependencias que ya están cumplidas, además de las que faltan</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>Seleccionar todo</translation>
     </message>
@@ -3068,7 +3076,7 @@ Seleccione su variante de mod de Mod en la tabla a continuación. También puede
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>Error desconocido</translation>
     </message>
 </context>
 <context>
@@ -4576,19 +4584,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Su archivo de configuración parece estar dañado y no se puede cargar.</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort encontró una copia de seguridad en {backup_path}. ¿Quieres intentar recuperar tu configuración de esta copia de seguridad?</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort encontró una copia de seguridad antigua en {backup_path}. ¿Quieres intentar recuperar tu configuración de esta copia de seguridad?</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>No se encontró ningún archivo de copia de seguridad, RimSort restablecerá su configuración a los valores predeterminados.</translation>
     </message>
 </context>
 <context>
@@ -5583,6 +5591,22 @@ Elija una de las siguientes opciones para continuar.</translation>
         <translation>El SteamCMD depot cache ha sido borrado.</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD no se puede ejecutar en este sistema</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD está instalado pero no se puede ejecutar en este sistema.</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>El binario SteamCMD necesita una biblioteca de sistema de 32 bits que no esté instalada:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Instale el tiempo de ejecución de 32 bits para su distribución, generalmente:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>Binario SteamCMD:  {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>Recrear el enlace simbólico?</translation>
     </message>
@@ -6161,6 +6185,22 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>Se ha lanzado una actualización de Rimsort:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>Las solicitudes se aceptarán nuevamente . {when}</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>Error de actualización de RimSort</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>Se alcanzó el límite de tasa de API de GitHub</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>Se enviaron demasiadas solicitudes desde su red, por lo que GitHub rechazó esta verificación de actualización. No hay ningún problema con tu instalación.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Agregar un token de acceso personal de GitHub en Configuración - Avanzado aumenta sustancialmente el límite y generalmente lo elimina.</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Название</translation>
+        <translation>Имя</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">Автор</translation>
+        <translation>Автор</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>Идентификатор пакета</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>Идентификатор опубликованного файла</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>Поддерживаемые версии</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>Мод загружен</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>Обновлено в Мастерской</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Источник</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">Путь</translation>
+        <translation>Путь</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>Страница мастерской</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2796,6 +2796,14 @@ Select which missing dependencies to add to your active mods list.</source>
 Выберите, какие отсутствующие зависимости добавить в список активных модов.</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>Показать удовлетворенные зависимости</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>Показать зависимости, которые уже выполнены, в дополнение к отсутствующим</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>Выбрать все</translation>
     </message>
@@ -3072,7 +3080,7 @@ Please select your preferred mod variant in the table below. You can also open e
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>Неизвестная ошибка</translation>
     </message>
 </context>
 <context>
@@ -4588,19 +4596,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Похоже, ваш файл настроек поврежден и не может быть загружен.</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort обнаружил резервную копию в {backup_path}. Хотите попытаться восстановить настройки из этой резервной копии?</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort обнаружил старую резервную копию в {backup_path}. Хотите попытаться восстановить настройки из этой резервной копии?</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>Файл резервной копии не найден, RimSort сбросит ваши настройки на значения по умолчанию.</translation>
     </message>
 </context>
 <context>
@@ -5596,6 +5604,22 @@ Please choose one of the following options to proceed.</source>
         <translation>Кэш депо SteamCMD очищен.</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD не может работать в этой системе.</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD установлен, но не может быть запущен в этой системе.</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>Бинарному файлу SteamCMD требуется 32-битная системная библиотека, которая не установлена:&lt;br&gt;&lt;b&gt; {hint} {loader} &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;b&gt; &lt;/b&gt; &lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>Бинарный файл SteamCMD:  {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>Создать символическую ссылку заново?</translation>
     </message>
@@ -6174,6 +6198,22 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>Вышло обновление RimSort: {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>Запросы будут приниматься снова . {when}</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>Ошибка обновления RimSort</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>Достигнут предел скорости API GitHub</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>Из вашей сети было отправлено слишком много запросов, поэтому GitHub отклонил проверку обновлений. С вашей установкой все в порядке.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Добавление токена личного доступа GitHub в разделе «Настройки» — «Дополнительно» существенно увеличивает ограничение и обычно устраняет его.</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

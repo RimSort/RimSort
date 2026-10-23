@@ -2796,6 +2796,14 @@ Select which missing dependencies to add to your active mods list.</source>
 Selecione quais dependências ausentes serão adicionadas à sua lista de mods ativos.</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>Mostrar dependências satisfeitas</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>Mostrar dependências que já foram preenchidas, além das que faltam</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>Selecionar Tudo</translation>
     </message>
@@ -5594,6 +5602,22 @@ Escolha uma das opções a seguir para continuar.</translation>
         <translation>O cache de depot do SteamCMD foi limpo.</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD não pode ser executado neste sistema</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD está instalado, mas não pode ser executado neste sistema.</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>O binário SteamCMD precisa de uma biblioteca de sistema de 32 bits que não esteja instalada:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Instale o tempo de execução de 32 bits para sua distribuição, normalmente:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>Binário SteamCMD:  {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>Recriar Link Simbólico?</translation>
     </message>
@@ -6172,6 +6196,22 @@ Para obter suporte, acesse: {support_url}</translation>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>Uma atualização para Rimsort foi lançada:  {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>As solicitações serão aceitas novamente . {when}</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>Erro de atualização do RimSort</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>O limite de taxa de API do GitHub foi atingido</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>Muitas solicitações foram enviadas da sua rede, então o GitHub recusou esta verificação de atualização. Não há nada de errado com sua instalação.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adicionar um token de acesso pessoal do GitHub em Configurações - Avançado aumenta substancialmente o limite e geralmente o remove.</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
