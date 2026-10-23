@@ -14,13 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15-intel
-            platform: "Darwin"
-            arch: "x86_64"
-            env:
-              ARTIFACT_KEY_GLOB: "*Darwin_x86_64*"
-              ARTIFACT_KEY: "Darwin_x86_64"
-              EXPECTED_NAME: "RimSort"
           - os: macos-latest
             arch: "arm64"
             platform: "Darwin"
