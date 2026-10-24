@@ -41,13 +41,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15-intel
-            platform: "Darwin"
-            arch: "x86_64"
-            env:
-              BUILD_OUTPUT: "app.app"
-              Executable: RimSort
-
           - os: macos-latest
             platform: "Darwin"
             arch: "arm64"
@@ -91,12 +84,6 @@ jobs:
             echo "PYTHONPATH=$PYTHONPATH:${{ github.workspace }}/submodules/SteamworksPy" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
-
-      - name: Remove problematic brew libs
-        run: |
-          brew remove --force --ignore-dependencies openssl@3
-          brew cleanup openssl@3
-        if: runner.os == 'macos' && matrix.arch == 'x86_64'
 
       - name: Get semantic version
         id: sem_version
