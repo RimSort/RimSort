@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QMenu, QMenuBar
 
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
+from app.controllers.metadata_controller import MetadataController
 from app.utils.system_info import SystemInfo
 
 
@@ -24,6 +25,7 @@ class MenuBar(QObject):
 
         self.menu_bar: QMenuBar = menu_bar
         self.settings: Settings = settings
+        self.metadata_controller = MetadataController.instance()
 
         # Declare actions and submenus as class variables
         # to be used by menu_bar_controller
@@ -237,7 +239,11 @@ class MenuBar(QObject):
                 self.settings.current_instance
             ].config_folder
             if config_str:
-                return Path(config_str).parent / suffix
+                player_log_dir = Path(config_str).parent
+                if self.metadata_controller.is_waylith:
+                    player_log_dir /= "Logs"
+
+                return player_log_dir / suffix
             return None
 
         logfile_submenu = QMenu(self.tr(menu_name))

@@ -44,6 +44,7 @@ from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
 from app.views.dialogue import show_information, show_warning
+from app.controllers.metadata_controller import MetadataController
 
 
 class LogPatternManager:
@@ -317,6 +318,7 @@ class PlayerLogTab(QWidget):
 
     def __init__(self, settings: Settings) -> None:
         super().__init__()
+        self.metadata_controller = MetadataController.instance()
         self.settings = settings
         self.player_log_path: Path | None = None
         self.log_storage = LogContentStorage()  # Use new memory-efficient storage
@@ -430,7 +432,11 @@ class PlayerLogTab(QWidget):
         try:
             current_instance: str = self.settings.current_instance
             config_folder: str = self.settings.instances[current_instance].config_folder
-            player_log_path: Path = Path(config_folder).parent / "Player.log"
+            player_log_dir = Path(config_folder).parent
+            if self.metadata_controller.is_waylith:
+                player_log_dir /= "Logs"
+
+            player_log_path = player_log_dir / "Player.log"
             if player_log_path.exists():
                 return player_log_path
         except Exception:  # noqa: S110
