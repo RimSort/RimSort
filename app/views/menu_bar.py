@@ -7,9 +7,9 @@ from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QMenuBar
 
+from app.controllers.metadata_controller import MetadataController
 from app.models.settings import Settings
 from app.utils.app_info import AppInfo
-from app.controllers.metadata_controller import MetadataController
 from app.utils.system_info import SystemInfo
 
 

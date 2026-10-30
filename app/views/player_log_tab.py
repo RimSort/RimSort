@@ -39,12 +39,12 @@ from PySide6.QtWidgets import (
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from app.controllers.metadata_controller import MetadataController
 from app.models.settings import Settings
 from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
 from app.views.dialogue import show_information, show_warning
-from app.controllers.metadata_controller import MetadataController
 
 
 class LogPatternManager:
