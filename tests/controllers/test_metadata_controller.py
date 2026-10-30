@@ -1064,3 +1064,13 @@ def test_reset_paths_leaves_local_mods_none_when_no_game(
     metadata_controller.reset_paths()
 
     assert metadata_controller.metadata_mediator.local_mods_path is None
+
+
+def test_is_waylith_delegates_to_mediator(
+    metadata_controller: MetadataController,
+) -> None:
+    metadata_controller.metadata_mediator._game_version = "1.7.4"
+    assert metadata_controller.is_waylith is True
+
+    metadata_controller.metadata_mediator._game_version = "1.6.4"
+    assert metadata_controller.is_waylith is False

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,6 +8,8 @@ from PySide6.QtWidgets import QApplication, QMenuBar
 
 from app.controllers.menu_bar_controller import MenuBarController
 from app.views.menu_bar import MenuBar
+
+pytestmark = pytest.mark.usefixtures("mock_metadata_controller")
 
 
 @pytest.fixture
@@ -266,3 +269,35 @@ class TestDisableUpdaterFlag:
                     del os.environ["RIMSORT_DISABLE_UPDATER"]
             else:
                 os.environ["RIMSORT_DISABLE_UPDATER"] = original_env
+
+
+class TestMenuBarRimWorldLogPath:
+    """Test that RimWorld log entries resolve under Logs/ for Waylith versions."""
+
+    @pytest.mark.parametrize(
+        ("is_waylith", "expected_subdir"),
+        [(False, ""), (True, "Logs")],
+        ids=["unity_pre_1_7", "waylith_1_7_plus"],
+    )
+    def test_player_log_path_respects_waylith(
+        self,
+        menu_bar_instance: MenuBar,
+        mock_settings_controller: MagicMock,
+        mock_metadata_controller: MagicMock,
+        tmp_path: Path,
+        is_waylith: bool,
+        expected_subdir: str,
+    ) -> None:
+        mock_metadata_controller.is_waylith = is_waylith
+        mock_settings_controller.settings.instances[
+            mock_settings_controller.settings.current_instance
+        ].config_folder = str(tmp_path / "config")
+
+        action = next(
+            a
+            for a in menu_bar_instance.upload_log_actions
+            if a.text() == "RimWorld Player.log"
+        )
+        path_accessor = action.data()
+
+        assert path_accessor() == tmp_path / expected_subdir / "Player.log"
