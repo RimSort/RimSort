@@ -95,6 +95,16 @@ class MetadataMediator:
         return self._game_version
 
     @property
+    def is_waylith(self) -> bool:
+        """Whether the game version's minor component is >= 7.
+
+        Computed on each access (not cached) since ``_game_version`` changes
+        on refresh. ``"Unknown"`` or malformed versions return False.
+        """
+        parts = self._game_version.split(".")
+        return len(parts) > 1 and parts[1].isdigit() and int(parts[1]) >= 7
+
+    @property
     def no_version_warning(self) -> list[str] | None:
         return self._no_version_warning
 

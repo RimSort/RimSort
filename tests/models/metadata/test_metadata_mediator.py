@@ -188,3 +188,22 @@ def test_mediator_loads_use_this_instead(tmp_path: Path) -> None:
     entry = mediator.use_this_instead["111111"]
     assert entry["newName"] == "New Mod"
     assert entry["newPackageId"] == "new.mod.b"
+
+
+@pytest.mark.parametrize(
+    ("game_version", "expected"),
+    [
+        ("1.6.4", False),
+        ("1.7.4", True),
+        ("1.10.0", True),
+        ("1.5", False),
+        ("Unknown", False),
+        ("1", False),
+        ("1.x", False),
+    ],
+)
+def test_is_waylith(
+    mediator: MetadataMediator, game_version: str, expected: bool
+) -> None:
+    mediator._game_version = game_version
+    assert mediator.is_waylith is expected
