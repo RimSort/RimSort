@@ -17,41 +17,54 @@ RimSort is a free and open-source multi-platform mod manager and sorter for RimW
 - Always use the local venv via `uv run ...` — never activate the venv manually or use a bare `pytest`/`ruff`.
 - Claude Code reads `CLAUDE.md`, not `AGENTS.md` — bridge it with `@AGENTS.md` at the top of `CLAUDE.md` or a symlink (Windows symlinks need Developer Mode).
 
-Never run `uv lock --upgrade` (== `just update`) as part of a task — dependency bumps are handled by dependabot.
+> **Never run `uv lock --upgrade` (== `just update`) as part of a task** — dependency bumps are handled by dependabot.
 
 ## Running the App
 
-- `just run` (== `uv run python -m app`)
-- Use dev mode so you don't touch real user data: `uv run python -m app --dev` — redirects settings/logs/databases/mod-lists to `dev/` (gitignored) and enables debug logging. Env overrides: `RIMSORT_DEV`, `RIMSORT_DEV_DIR`.
+| Command | Description |
+|---------|-------------|
+| `just run` | Run the app (`uv run python -m app`) |
+| `uv run python -m app --dev` | Dev mode: redirects settings/logs/databases/mod-lists to `dev/` (gitignored), enables debug logging. Env overrides: `RIMSORT_DEV`, `RIMSORT_DEV_DIR`. |
 
 ## Testing
 
-- Full suite: `just test` (== `uv run pytest --doctest-modules --no-qt-log -s`)
-- Verbose: `just test-verbose`; with coverage: `just test-coverage`
-- Single file: `uv run pytest --doctest-modules --no-qt-log tests/views/test_mods_panel_search.py -s`
-- Single test: append `-k "name_or_substring"` to the above.
+| Command | Description |
+|---------|-------------|
+| `just test` | Full suite (`uv run pytest --doctest-modules --no-qt-log -s`) |
+| `just test-verbose` | Verbose output with short tracebacks |
+| `just test-coverage` | Full coverage reports (XML, HTML, terminal) |
+| `uv run pytest --doctest-modules --no-qt-log tests/<path> -s` | Single file |
+| `... -k "name_or_substring"` | Single test |
+
 - Never run bare `pytest` — the project's `addopts` manage `--import-mode=importlib`, `pythonpath`, and `testpaths`.
 - Qt tests use the `qtbot` fixture (pytest-qt); `qapp`, `mock_app_info`, `fresh_event_bus`, `mock_metadata_controller`, `mock_steamcmd_interface` are defined in `tests/conftest.py`. Tests must never launch real Steam URLs or dialogs — `tests/conftest.py` autouse fixtures block both.
 - Add or update tests for any logic you change.
 
 ## Code Quality (MUST pass before finishing)
 
-`just check` runs the quality gate (Windows: `typecheck`, `pyright`, `ruff`, `ruff-format`, `jscpd`, `markdownlint`, `shfmt`, `deferred-imports`; Unix runs `nix flake check` — the pinned git-hooks (nixfmt, deadnix, statix, gitleaks, actionlint, check-json, check-yaml, checkov, ruff, ruff-format, mypy, pyright, shellcheck, shfmt, markdownlint, jscpd, repo guards) plus pytest and the packaged app build — then the native type/repo guards). `just fix` auto-fixes ruff check/format, shfmt, and markdownlint.
+`just check` runs the quality gate:
+
+- **Windows:** `typecheck`, `pyright`, `ruff`, `ruff-format`, `jscpd`, `markdownlint`, `shfmt`, `deferred-imports`, `eventbus-subscribers`
+- **Unix:** `nix flake check` (pinned git-hooks: nixfmt, deadnix, statix, gitleaks, actionlint, check-json, check-yaml, checkov, ruff, ruff-format, mypy, pyright, shellcheck, shfmt, markdownlint, jscpd, repo guards) plus pytest and the packaged app build — then the native type/repo guards
+
+`just fix` auto-fixes ruff check/format, shfmt, and markdownlint.
 
 | Command | Purpose |
-| --- | --- |
+|---------|---------|
 | `just ruff` | Ruff lint check (`ruff check`, config in `pyproject.toml`) |
 | `just ruff-format` | Ruff format check (`ruff format --check`) |
-| `just ruff-fix` / `just ruff-format-fix` | Ruff lint/format auto-fix (config in `pyproject.toml`) |
+| `just ruff-fix` / `just ruff-format-fix` | Ruff lint/format auto-fix |
 | `just typecheck` | mypy against `pyproject.toml` |
 | `just pyright` | pyright (standard mode) against `pyproject.toml` |
 | `just jscpd` | Copy-paste detection — CI enforces **0% duplication** (config in `.jscpd.json`). If code repeats, extract a shared helper. |
+| `just markdownlint` | Markdown lint for `docs/**` and root `*.md` (rules in `.markdownlint.json`; options in `.markdownlint-cli2.jsonc`) |
+| `just markdownlint-fix` | Auto-fix markdown issues |
+| `just shfmt` | Shell script formatting (fails when any script would be reformatted) |
+| `just shfmt-fix` | Auto-fix shell script formatting |
 | `just deferred-imports` | Guard against new function-local `from app…` imports (see Traps) |
 | `just eventbus-subscribers` | Guard against `EventBus` subscribers that aren't Qt objects or explicitly retained (see Traps) |
-| `just markdownlint` | Markdown lint for `docs/**` and root `*.md` (rules in `.markdownlint.json`; options in `.markdownlint-cli2.jsonc`) |
-| `just shfmt` | Shell script formatting (fails when any script would be reformatted) |
-
-Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or the full `just check`, then `just test`) and get everything green before declaring a change complete. CI runs the Nix Flake Check gate (git-hooks + pytest + package build) on ubuntu via `nix flake check`, plus the artifact-build matrix on ubuntu/macos/windows.
+| `just ci` | Full CI pipeline locally: all quality checks + tests with coverage |
+| `just clean` | Remove all build artifacts, caches, and generated files |
 
 ## Code Style
 
@@ -63,26 +76,33 @@ Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or 
 - All user-facing strings must go through Qt translations (see i18n below). Log and exception messages stay in English.
 - Prefer type-explicit, readable logic over clever one-liners.
 
-## i18n
+## Internationalization (i18n)
 
 - Every user-facing string must use `QCoreApplication.translate("ContextName", "English source string")` — the context is normally the class name (e.g. `"ModsPanel"`, `"InstanceService"`). Some modules alias `translate = QCoreApplication.translate`; follow the local convention.
-- After adding/changing translatable strings: run `just i18n-update` (runs `pyside6-lupdate` to merge into `locales/*.ts`, source language is `en_US`), then `just i18n-compile` (regenerates `.qm`). As a contributor, commit **both** the `.ts` and `.qm` changes.
+- After adding/changing translatable strings:
+  1. Run `just i18n-update` (runs `pyside6-lupdate` to merge into `locales/*.ts`, source language is `en_US`)
+  2. Run `just i18n-compile` (regenerates `.qm`)
+  3. As a contributor, commit **both** the `.ts` and `.qm` changes.
 - `translation_helper.py` is the CLI tool for translation workflows (check/completeness, validate, auto-translate). Only edit `.ts` files; `.qm` are generated artifacts.
 - Preserve `%s`, `{0}`, `\n`, and HTML placeholders exactly in any translated string you touch.
 - Do not change translation text of existing strings unless the English source changed.
 
 ## Project Layout
 
-- `app/` — application source (Python package).
-- `tests/` — pytest suite mirroring `app/`. Fixtures live in `tests/conftest.py`; test data in `tests/data/`.
-- `locales/` — Qt `.ts` (source) + `.qm` (compiled) translation files.
-- `themes/` — Qt stylesheet themes and default icons.
-- `docs/` — Jekyll documentation site source (`development-guide/`, `user-guide/`). Doc pages use Jekyll frontmatter (`title`, `layout: default`, `parent`, `permalink`).
-- `packaging/` — release packaging (AppImage, MSI, macOS bundle optimize).
-- `todds/` — texture-optimization binary location (runtime only).
-- `libs/`, `submodules/` — vendor/extras, see Boundaries.
-- `app/utils/github/` — GitHub provider, models, installer, updater; `app/utils/steam/` — Steam integration (`steam/workshop/`, `steam/steamcmd/`).
-- `distribute.py` — release build driver; `rimsort.nuitka-package.config.yml` and header comments in `app/__main__.py` hold Nuitka config.
+| Path | Purpose |
+|------|---------|
+| `app/` | Application source (Python package) |
+| `tests/` | pytest suite mirroring `app/`. Fixtures in `tests/conftest.py`; test data in `tests/data/` |
+| `locales/` | Qt `.ts` (source) + `.qm` (compiled) translation files |
+| `themes/` | Qt stylesheet themes and default icons |
+| `docs/` | Jekyll documentation site source (`development-guide/`, `user-guide/`). Doc pages use Jekyll frontmatter (`title`, `layout: default`, `parent`, `permalink`) |
+| `packaging/` | Release packaging (AppImage, MSI, macOS bundle optimize) |
+| `todds/` | Texture-optimization binary location (runtime only) |
+| `libs/`, `submodules/` | Vendor/extras (see Boundaries) |
+| `app/utils/github/` | GitHub provider, models, installer, updater |
+| `app/utils/steam/` | Steam integration (`steam/workshop/`, `steam/steamcmd/`) |
+| `distribute.py` | Release build driver |
+| `rimsort.nuitka-package.config.yml` / `app/__main__.py` | Nuitka config (header comments) |
 
 ## Git / PR Conventions
 
@@ -102,10 +122,10 @@ Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or 
 
 ## Definition of Done
 
-1. `just fix` + `just typecheck` + `just pyright` + `just deferred-imports` + `just eventbus-subscribers` all pass (or full `just check`).
-2. `just test` passes (full suite).
+1. `just fix`, `just check`, and `just test` all pass (full suite).
+2. All checks pass on **ubuntu, macOS, and Windows** (CI must be green on all platforms).
 3. The diff contains no unrelated reformatting, comments, or scope creep.
-4. New translatable strings have been run through `just i18n-update` and `just i18n-compile`. (Note: the i18n rule in the AGENTS.md spec — run these and commit both `.ts`/`.qm`.)
+4. New translatable strings have been run through `just i18n-update` and `just i18n-compile` (commit both `.ts` and `.qm`).
 
 ## Traps
 
@@ -114,3 +134,24 @@ Run at minimum `just fix` + `just test` + `just typecheck` + `just pyright` (or 
 - Never reformat code wholesale or add comments explaining what the code does — match surrounding style and only change what your feature touches.
 - Don't create new top-level data dirs/files under the repo root; app data goes through `AppInfo` (which tests redirect via `mock_app_info`).
 - Keep `docs/` edits lint-clean (markdownlint) and only touch `docs/index.md`/locale variants when truly needed.
+
+## Justfile Reference
+
+All project tasks are defined in `justfile` — run `just --list` to see all available recipes. Key commands:
+
+| Command | Purpose |
+|---------|---------|
+| `just run` | Run the app (via `dev-setup`) |
+| `just test` / `just test-verbose` / `just test-coverage` | Run tests |
+| `just fix` | Auto-fix lint/format (ruff, shfmt, markdownlint) |
+| `just check` | All quality gates (platform-specific) |
+| `just ci` | Full CI pipeline locally (check + test-coverage) |
+| `just dev-setup` | Create venv, sync deps, compile locales |
+| `just build [ARGS]` | Build executable (runs checks + i18n-compile first) |
+| `just i18n-update` / `just i18n-compile` | Translation workflow |
+| `just clean` | Remove all build artifacts, caches, generated files |
+| `just install-hooks` | Install pre-commit git hooks |
+| `just submodules-init` | Initialize git submodules |
+
+---
+*This document is the single source of truth for contributor workflows. Keep it in sync with `justfile` and `pyproject.toml`.*
