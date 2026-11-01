@@ -1,4 +1,7 @@
 import os
+from concurrent.futures import Future, ThreadPoolExecutor
+from pathlib import Path
+from time import monotonic
 from collections.abc import Mapping, Sequence
 from platform import system
 from re import compile, search
@@ -13,6 +16,7 @@ from PySide6.QtCore import QProcess, QProcessEnvironment, Qt, QTimer, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QIcon, QKeyEvent, QTextCursor
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QLabel,
     QMessageBox,
     QPlainTextEdit,
     QProgressBar,
@@ -86,6 +90,9 @@ class RunnerPanel(QWidget):
         self.installEventFilter(self)
         self.previous_line = ""
         self.steamcmd_download_tracking = steamcmd_download_tracking or []
+        # RIMSORT_STEAMCMD_BATCH_PROGRESS: freeze the requested IDs for the
+        # denominator; the mutable tracking list shrinks as downloads succeed.
+        self._steamcmd_batch_pfids = list(dict.fromkeys(self.steamcmd_download_tracking))
         self.steam_db = steam_db or {}
         self.todds_dry_run_support = todds_dry_run_support
         self.auto_close_on_complete = auto_close_on_complete
@@ -113,8 +120,38 @@ class RunnerPanel(QWidget):
         self._steamcmd_log_offset: int = 0
         self._steamcmd_log_partial: str = ""
         self._steamcmd_console_log_path: str = ""
+        # RIMSORT_LIVE_STEAMCMD_PROGRESS: live per-item SteamCMD byte tracking.
+        self._steamcmd_item_progress_timer = QTimer(self)
+        self._steamcmd_item_progress_timer.setInterval(1000)
+        self._steamcmd_item_progress_timer.timeout.connect(
+            self._poll_steamcmd_item_progress
+        )
+        self._steamcmd_item_size_executor = ThreadPoolExecutor(
+            max_workers=2, thread_name_prefix="rimsort-workshop-size"
+        )
+        self._steamcmd_batch_size_future: Future | None = None
+        self._steamcmd_item_size_future: Future | None = None
+        self._steamcmd_item_pfid: str | None = None
+        self._steamcmd_item_expected_bytes = 0
+        self._steamcmd_item_last_bytes = 0
+        self._steamcmd_item_last_sample = monotonic()
+        self._steamcmd_item_speed = 0.0
+        self._steamcmd_item_title = ""
 
-        # Progress carried across sequential phases so the bar only moves
+        # RIMSORT_STEAMCMD_BATCH_PROGRESS: batch-wide size and transfer accounting.
+        self._steamcmd_batch_expected_by_pfid: dict[str, int] = {}
+        self._steamcmd_batch_expected_bytes = 0
+        self._steamcmd_batch_completed_bytes: dict[str, int] = {}
+        self._steamcmd_batch_transferred_bytes = 0
+        self._steamcmd_batch_last_sampled_bytes = 0
+        self._steamcmd_batch_last_sample = monotonic()
+        self._steamcmd_batch_speed = 0.0
+        self._steamcmd_batch_size_lookup_done = not bool(self._steamcmd_batch_pfids)
+        if self._steamcmd_batch_pfids:
+            self._steamcmd_batch_size_future = self._steamcmd_item_size_executor.submit(
+                ISteamRemoteStorage_GetPublishedFileDetails,
+                list(self._steamcmd_batch_pfids),
+            )
         # forward instead of restarting at 0 for each one
         self._progress_offset: int = 0
 
@@ -204,6 +241,24 @@ class RunnerPanel(QWidget):
         self.progress_bar.setValue(0)
         self.progress_bar.hide()
         self.progress_bar.setObjectName("runner")
+        # RIMSORT_LIVE_STEAMCMD_PROGRESS: per-item bar under the batch bar.
+        self.steamcmd_item_progress_label = QLabel()
+        self.steamcmd_item_progress_label.setObjectName("SteamCMDItemProgressLabel")
+        self.steamcmd_item_progress_label.hide()
+        self.steamcmd_item_progress_bar = QProgressBar()
+        self.steamcmd_item_progress_bar.setObjectName("SteamCMDItemProgress")
+        self.steamcmd_item_progress_bar.setRange(0, 100)
+        self.steamcmd_item_progress_bar.setValue(0)
+        self.steamcmd_item_progress_bar.hide()
+        # RIMSORT_STEAMCMD_BATCH_PROGRESS: aggregate byte progress for the whole queue.
+        self.steamcmd_batch_progress_label = QLabel()
+        self.steamcmd_batch_progress_label.setObjectName("SteamCMDBatchProgressLabel")
+        self.steamcmd_batch_progress_label.hide()
+        self.steamcmd_batch_progress_bar = QProgressBar()
+        self.steamcmd_batch_progress_bar.setObjectName("SteamCMDBatchProgress")
+        self.steamcmd_batch_progress_bar.setRange(0, 100)
+        self.steamcmd_batch_progress_bar.setValue(0)
+        self.steamcmd_batch_progress_bar.hide()
 
     def _setup_layouts(self) -> None:
         """Set up the widget layouts."""
@@ -214,6 +269,10 @@ class RunnerPanel(QWidget):
 
         # Add widgets to layouts
         self.runner_layout.addWidget(self.progress_bar)
+        self.runner_layout.addWidget(self.steamcmd_batch_progress_label)
+        self.runner_layout.addWidget(self.steamcmd_batch_progress_bar)
+        self.runner_layout.addWidget(self.steamcmd_item_progress_label)
+        self.runner_layout.addWidget(self.steamcmd_item_progress_bar)
         self.runner_layout.addWidget(self.text)
 
         self.actions_bar_layout.addWidget(self.clear_runner_button)
@@ -231,6 +290,8 @@ class RunnerPanel(QWidget):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.closing_signal.emit()
         self._do_kill_process()
+        self._steamcmd_item_progress_timer.stop()
+        self._steamcmd_item_size_executor.shutdown(wait=False, cancel_futures=True)
         event.accept()
         self.destroy()
 
@@ -561,6 +622,309 @@ class RunnerPanel(QWidget):
             program_name, self.process.program(), self.process.arguments()
         )
 
+    # RIMSORT_LIVE_STEAMCMD_PROGRESS
+    @staticmethod
+    def _format_steamcmd_bytes(value: int) -> str:
+        amount = float(max(0, value))
+        for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+            if amount < 1024 or unit == "TiB":
+                return f"{amount:.1f} {unit}"
+            amount /= 1024
+        return f"{amount:.1f} TiB"
+
+    def _steamcmd_item_staging_dir(self) -> Path | None:
+        wrapper = self._steamcmd_wrapper
+        if wrapper is None or not wrapper.steamcmd_steam_path:
+            return None
+        return (
+            Path(wrapper.steamcmd_steam_path)
+            / "steamapps"
+            / "workshop"
+            / "downloads"
+            / "294100"
+            / str(self._steamcmd_item_pfid)
+        )
+
+    def _start_steamcmd_item_progress(self, pfid: str) -> None:
+        self._steamcmd_item_pfid = pfid
+        self._steamcmd_item_expected_bytes = 0
+        self._steamcmd_item_last_bytes = 0
+        self._steamcmd_item_last_sample = monotonic()
+        self._steamcmd_item_speed = 0.0
+        self._steamcmd_item_title = ""
+
+        # The Steam API lookup runs off the GUI thread so a slow API response
+        # cannot freeze the Runner window. file_size is the expected Workshop size.
+        self._steamcmd_item_size_future = self._steamcmd_item_size_executor.submit(
+            ISteamRemoteStorage_GetPublishedFileDetails, [pfid]
+        )
+
+        self.steamcmd_item_progress_bar.setRange(0, 0)
+        self.steamcmd_item_progress_bar.setFormat("Waiting for size information…")
+        self.steamcmd_item_progress_bar.setValue(0)
+        self.steamcmd_item_progress_label.setText(
+            f"Workshop item {pfid}  ·  preparing live progress…"
+        )
+        self.steamcmd_item_progress_label.show()
+        self.steamcmd_item_progress_bar.show()
+        if self._steamcmd_batch_pfids:
+            self.steamcmd_batch_progress_label.show()
+            self.steamcmd_batch_progress_bar.show()
+        self._steamcmd_item_progress_timer.start()
+        self._poll_steamcmd_item_progress()
+
+    def _scan_steamcmd_item_bytes(self, folder: Path) -> int:
+        """Sum regular files in the active staging folder without following symlinks."""
+        total = 0
+        if not folder.is_dir():
+            return total
+        for directory, dirs, files in os.walk(folder, followlinks=False):
+            dirs[:] = [
+                name for name in dirs
+                if not (Path(directory) / name).is_symlink()
+            ]
+            for name in files:
+                path = Path(directory) / name
+                try:
+                    if path.is_symlink():
+                        continue
+                    total += path.stat(follow_symlinks=False).st_size
+                except OSError:
+                    continue
+        return total
+
+    def _update_steamcmd_batch_progress(self, current_bytes: int = 0) -> None:
+        """Update aggregate byte progress, estimated size, speed, and ETA."""
+        pfids = self._steamcmd_batch_pfids
+        if not pfids:
+            return
+
+        total_items = len(pfids)
+        completed_items = len(self._steamcmd_batch_completed_bytes)
+        completed_bytes = sum(self._steamcmd_batch_completed_bytes.values())
+        downloaded_bytes = completed_bytes + max(0, int(current_bytes))
+        expected_bytes = self._steamcmd_batch_expected_bytes
+        sized_items = len(self._steamcmd_batch_expected_by_pfid)
+        sizes_complete = (
+            self._steamcmd_batch_size_lookup_done
+            and sized_items == total_items
+            and expected_bytes > 0
+        )
+        all_complete = completed_items >= total_items
+
+        downloaded_text = self._format_steamcmd_bytes(downloaded_bytes)
+
+        # A completed batch should report observed bytes, not compare them to
+        # Workshop file_size metadata: that value is an estimate and often
+        # differs from the bytes present in SteamCMD's staging directory.
+        if all_complete:
+            self.steamcmd_batch_progress_label.setText(
+                f"Batch {completed_items}/{total_items} items  ·  "
+                f"{downloaded_text} received  ·  Completed"
+            )
+            self.steamcmd_batch_progress_bar.setRange(0, 100)
+            self.steamcmd_batch_progress_bar.setValue(100)
+            self.steamcmd_batch_progress_bar.setFormat("100%")
+            return
+
+        speed = self._steamcmd_batch_speed
+        speed_text = (
+            f"{self._format_steamcmd_bytes(int(speed))}/s"
+            if speed > 0
+            else "measuring speed…"
+        )
+
+        if sizes_complete:
+            expected_text = self._format_steamcmd_bytes(expected_bytes)
+            remaining = max(0, expected_bytes - downloaded_bytes)
+            if speed > 0 and remaining > 0:
+                seconds = int(remaining / speed)
+                if seconds >= 3600:
+                    eta_text = f"{seconds // 3600}h {(seconds % 3600) // 60}m remaining"
+                elif seconds >= 60:
+                    eta_text = f"{seconds // 60}m {seconds % 60}s remaining"
+                else:
+                    eta_text = f"{seconds}s remaining"
+            elif remaining == 0:
+                eta_text = "finishing…"
+            else:
+                eta_text = "estimating…"
+
+            label = (
+                f"Batch {completed_items}/{total_items} items  ·  "
+                f"{downloaded_text} / {expected_text} (Workshop estimate)  ·  "
+                f"{speed_text}  ·  {eta_text}"
+            )
+            percent = min(99, int(downloaded_bytes * 100 / expected_bytes))
+            self.steamcmd_batch_progress_bar.setRange(0, 100)
+            self.steamcmd_batch_progress_bar.setValue(percent)
+            self.steamcmd_batch_progress_bar.setFormat(f"{percent}%")
+        else:
+            if self._steamcmd_batch_size_lookup_done:
+                size_status = f"sizes known for {sized_items}/{total_items} items"
+            else:
+                size_status = f"looking up sizes ({sized_items}/{total_items})"
+            label = (
+                f"Batch {completed_items}/{total_items} items  ·  "
+                f"{downloaded_text} observed  ·  {speed_text}  ·  "
+                f"{size_status}  ·  ETA unavailable"
+            )
+            self.steamcmd_batch_progress_bar.setRange(0, 0)
+            self.steamcmd_batch_progress_bar.setFormat("Calculating batch size…")
+
+        self.steamcmd_batch_progress_label.setText(label)
+
+    def _poll_steamcmd_item_progress(self) -> None:
+        batch_future = self._steamcmd_batch_size_future
+        if batch_future is not None and batch_future.done():
+            self._steamcmd_batch_size_future = None
+            try:
+                metadata, _failed, _errors = batch_future.result()
+                for item in metadata or []:
+                    pfid_key = str(item.get("publishedfileid", ""))
+                    if pfid_key not in self._steamcmd_batch_pfids:
+                        continue
+                    try:
+                        file_size = int(item.get("file_size", 0) or 0)
+                    except (TypeError, ValueError):
+                        file_size = 0
+                    if file_size > 0:
+                        self._steamcmd_batch_expected_by_pfid[pfid_key] = file_size
+                self._steamcmd_batch_expected_bytes = sum(
+                    self._steamcmd_batch_expected_by_pfid.values()
+                )
+            except Exception as exc:
+                logger.debug(f"Could not obtain Workshop batch sizes: {exc}")
+            finally:
+                self._steamcmd_batch_size_lookup_done = True
+                self._update_steamcmd_batch_progress(current_bytes=0)
+
+        pfid = self._steamcmd_item_pfid
+        if not pfid:
+            if self._steamcmd_batch_size_future is None:
+                self._steamcmd_item_progress_timer.stop()
+            return
+
+        future = self._steamcmd_item_size_future
+        if future is not None and future.done():
+            self._steamcmd_item_size_future = None
+            try:
+                metadata, _failed, _errors = future.result()
+                for item in metadata or []:
+                    if str(item.get("publishedfileid", "")) == pfid:
+                        try:
+                            self._steamcmd_item_expected_bytes = int(
+                                item.get("file_size", 0) or 0
+                            )
+                        except (TypeError, ValueError):
+                            self._steamcmd_item_expected_bytes = 0
+                        self._steamcmd_item_title = str(item.get("title") or "")
+                        break
+            except Exception as exc:
+                logger.debug(
+                    f"Could not obtain Workshop file size for {pfid}: {exc}"
+                )
+
+        folder = self._steamcmd_item_staging_dir()
+        current_bytes = self._scan_steamcmd_item_bytes(folder) if folder else 0
+        now = monotonic()
+        elapsed = max(now - self._steamcmd_item_last_sample, 0.001)
+        delta = current_bytes - self._steamcmd_item_last_bytes
+        instant_speed = max(0, delta) / elapsed
+        # Smooth one-second sampling noise while responding quickly to changes.
+        self._steamcmd_item_speed = (
+            instant_speed
+            if self._steamcmd_item_speed <= 0
+            else 0.65 * self._steamcmd_item_speed + 0.35 * instant_speed
+        )
+        self._steamcmd_item_last_bytes = current_bytes
+        self._steamcmd_item_last_sample = now
+
+        # Count positive staging-file growth across item boundaries for batch speed.
+        if delta > 0:
+            self._steamcmd_batch_transferred_bytes += delta
+        batch_elapsed = max(now - self._steamcmd_batch_last_sample, 0.001)
+        batch_delta = max(
+            0,
+            self._steamcmd_batch_transferred_bytes
+            - self._steamcmd_batch_last_sampled_bytes,
+        )
+        batch_instant_speed = batch_delta / batch_elapsed
+        self._steamcmd_batch_speed = (
+            batch_instant_speed
+            if self._steamcmd_batch_speed <= 0
+            else 0.65 * self._steamcmd_batch_speed + 0.35 * batch_instant_speed
+        )
+        self._steamcmd_batch_last_sampled_bytes = self._steamcmd_batch_transferred_bytes
+        self._steamcmd_batch_last_sample = now
+
+        expected = self._steamcmd_item_expected_bytes
+        if expected > 0:
+            percent = min(99, int(current_bytes * 100 / expected))
+            self.steamcmd_item_progress_bar.setRange(0, 100)
+            self.steamcmd_item_progress_bar.setValue(percent)
+            self.steamcmd_item_progress_bar.setFormat(f"{percent}%")
+            expected_text = self._format_steamcmd_bytes(expected)
+            remaining = max(0, expected - current_bytes)
+            eta = (
+                f"{int(remaining / self._steamcmd_item_speed)}s remaining"
+                if self._steamcmd_item_speed > 0 and remaining > 0
+                else ("finishing…" if remaining == 0 else "estimating…")
+            )
+        else:
+            self.steamcmd_item_progress_bar.setRange(0, 0)
+            self.steamcmd_item_progress_bar.setFormat("Downloading")
+            expected_text = "size unknown"
+            eta = "ETA unavailable"
+
+        title = f"{self._steamcmd_item_title}  ·  " if self._steamcmd_item_title else ""
+        speed_text = (
+            f"{self._format_steamcmd_bytes(int(self._steamcmd_item_speed))}/s"
+            if self._steamcmd_item_speed > 0
+            else "measuring speed…"
+        )
+        self.steamcmd_item_progress_label.setText(
+            f"{title}{pfid}  ·  "
+            f"{self._format_steamcmd_bytes(current_bytes)} / {expected_text}  ·  "
+            f"{speed_text}  ·  {eta}"
+        )
+        self._update_steamcmd_batch_progress(current_bytes=current_bytes)
+
+    def _finish_steamcmd_item_progress(self, success: bool) -> None:
+        pfid = self._steamcmd_item_pfid
+        if not pfid:
+            return
+        if self._steamcmd_batch_size_future is None:
+            self._steamcmd_item_progress_timer.stop()
+
+        # SteamCMD may move/remove its staging folder before emitting the
+        # success line. Preserve the last byte count observed while it existed.
+        folder = self._steamcmd_item_staging_dir()
+        final_scan = self._scan_steamcmd_item_bytes(folder) if folder else 0
+        final_bytes = max(final_scan, self._steamcmd_item_last_bytes)
+
+        title = self._steamcmd_item_title.strip()
+        item_name = f"{title}  ·  {pfid}" if title else pfid
+        expected = self._steamcmd_item_expected_bytes
+        size_text = self._format_steamcmd_bytes(final_bytes)
+        if expected > 0:
+            size_text += f" / {self._format_steamcmd_bytes(expected)}"
+
+        if success:
+            self._steamcmd_batch_completed_bytes[pfid] = final_bytes
+            self.steamcmd_item_progress_bar.setRange(0, 100)
+            self.steamcmd_item_progress_bar.setValue(100)
+            self.steamcmd_item_progress_bar.setFormat("100%")
+            self.steamcmd_item_progress_label.setText(
+                f"Completed {item_name}  ·  {size_text} downloaded"
+            )
+        else:
+            self.steamcmd_item_progress_label.setText(
+                f"Download failed: {item_name}  ·  {size_text} received"
+            )
+        self._update_steamcmd_batch_progress(current_bytes=0)
+        self._steamcmd_item_pfid = None
+
     def _handle_steamcmd_output(self, line: str) -> bool:
         """
         Process steamcmd-specific output.
@@ -575,6 +939,7 @@ class RunnerPanel(QWidget):
             match = search(r"Downloading item (\d+)...", line)
             if match:
                 self.steamcmd_current_pfid = match.group(1)
+                self._start_steamcmd_item_progress(match.group(1))
 
         # Determine if this line should overwrite the previous one
         if any(
@@ -602,7 +967,10 @@ class RunnerPanel(QWidget):
             self.steamcmd_download_tracking.remove(self.steamcmd_current_pfid)
             EventBus().steamcmd_mod_download_succeeded.emit(self.steamcmd_current_pfid)
             self.progress_bar.setValue(self.progress_bar.value() + 1)
+            self._finish_steamcmd_item_progress(success=True)
         elif "ERROR! Download item " in line:
+            if self._steamcmd_item_pfid:
+                self._finish_steamcmd_item_progress(success=False)
             # Track failed downloads
             match = search(r"ERROR! Download item (\d+)", line)
             if match:
@@ -736,6 +1104,7 @@ class RunnerPanel(QWidget):
         """Handle SteamCMD-specific completion tasks."""
         # Check if there are any failed downloads to report
         if len(self.steamcmd_download_tracking) == 0:
+            self._update_steamcmd_batch_progress(current_bytes=0)
             self.change_progress_bar_color("success")
             return
 
