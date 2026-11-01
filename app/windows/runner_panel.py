@@ -129,8 +129,8 @@ class RunnerPanel(QWidget):
         self._steamcmd_item_size_executor = ThreadPoolExecutor(
             max_workers=2, thread_name_prefix="rimsort-workshop-size"
         )
-        self._steamcmd_batch_size_future: Future | None = None
-        self._steamcmd_item_size_future: Future | None = None
+        self._steamcmd_batch_size_future: Future[tuple[list[Any], list[str], list[str]]] | None = None
+        self._steamcmd_item_size_future: Future[tuple[list[Any], list[str], list[str]]] | None = None
         self._steamcmd_item_pfid: str | None = None
         self._steamcmd_item_expected_bytes = 0
         self._steamcmd_item_last_bytes = 0
