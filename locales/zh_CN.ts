@@ -4355,7 +4355,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Force load at bottom of list</source>
-        <translation>在列表底部加载</translation>
+        <translation>强制在列表底部加载</translation>
     </message>
     <message>
         <source>User Rules (loadAfter)</source>
@@ -4425,7 +4425,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Rules from mods's About.xml cannot be modified. Only 'Community Rules' and 'User Rules' are allowed.</source>
-        <translation>从模组 About.xml 的规则不能被修改。只有 'Community Rules' 和 'User Rules' 是被允许的。</translation>
+        <translation>模组 About.xml 中的规则不能被修改，只允许修改“社区规则”和“用户规则”。</translation>
     </message>
     <message>
         <source>Rules can be Modified.</source>
@@ -4453,11 +4453,11 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Lock Community Rules</source>
-        <translation>隐藏社区规则</translation>
+        <translation>锁定社区规则</translation>
     </message>
     <message>
         <source>Lock User Rules</source>
-        <translation>隐藏用户规则</translation>
+        <translation>锁定用户规则</translation>
     </message>
     <message>
         <source>Enter a comment to annotate why this rule exists.This is useful for your own records, as well as others.</source>
@@ -4489,7 +4489,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Force load at top of list</source>
-        <translation>在列表顶部加载</translation>
+        <translation>强制在列表顶部加载</translation>
     </message>
 </context>
 <context>
@@ -5705,11 +5705,11 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>Select none</source>
-        <translation>不选择</translation>
+        <translation>全不选</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation>好的</translation>
+        <translation>确定</translation>
     </message>
     <message>
         <source>Cancel</source>
