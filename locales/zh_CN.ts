@@ -1180,7 +1180,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Truncate to the first {max_mods} mods</source>
-        <translation>截断到第一个 {max_mods} 个 mod</translation>
+        <translation>截断为前 {max_mods} 个模组</translation>
     </message>
     <message>
         <source>Uploaded active mod list</source>
@@ -1228,11 +1228,11 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Upload failed</source>
-        <translation>Upload failed</translation>
+        <translation>上传失败</translation>
     </message>
     <message>
         <source>Failed to upload log file to RimSort Logs.</source>
-        <translation>Failed to upload log file to RimSort Logs.</translation>
+        <translation>无法将日志文件上传到 RimSort Logs。</translation>
     </message>
     <message>
         <source>Uploaded file</source>
@@ -1332,7 +1332,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Import .acf</source>
-        <translation>导入.acf</translation>
+        <translation>导入 .acf</translation>
     </message>
     <message>
         <source>Export Error</source>
@@ -1364,7 +1364,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Failed to check for Workshop updates</source>
-        <translation>Failed to check for Workshop updates</translation>
+        <translation>检查创意工坊更新失败</translation>
     </message>
     <message>
         <source>No Workshop mods to check for updates</source>
@@ -1392,7 +1392,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>There is an active process already running!</source>
-        <translation>有一个活动进程正在运行！</translation>
+        <translation>已有进程正在运行！</translation>
     </message>
     <message>
         <source>Unable to initiate SteamCMD installation. Local mods path not set!</source>
@@ -1540,7 +1540,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Run anyway</source>
-        <translation>无论如何都要跑</translation>
+        <translation>仍然运行</translation>
     </message>
     <message>
         <source>todds Optimization Failed</source>
@@ -1684,7 +1684,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Enter your preferred expiry duration in seconds (default 1 week/604800 sec):</source>
-        <translation>输入你喜欢的有效期（默认 1 周/604800 秒）：</translation>
+        <translation>输入所需的有效期（以秒为单位，默认 1 周/604800 秒）：</translation>
     </message>
     <message>
         <source>Tried configuring Dynamic Query with a value that is not an integer.</source>
