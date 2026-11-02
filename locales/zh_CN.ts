@@ -349,7 +349,7 @@ The following table displays duplicate mods grouped by package ID. Select which 
     </message>
     <message>
         <source>Active Mods Error</source>
-        <translation>启用模组错误</translation>
+        <translation>已启用模组错误</translation>
     </message>
     <message>
         <source>No active mods found</source>
@@ -546,7 +546,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Search method is automatically selected based on options</source>
-        <translation>搜索方法将会根据选项自动处理</translation>
+        <translation>搜索方法将根据选项自动选择</translation>
     </message>
     <message>
         <source>Search</source>
@@ -610,7 +610,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Open With...</source>
-        <translation>用其他程序打开</translation>
+        <translation>用其他程序打开…</translation>
     </message>
     <message>
         <source>Notepad</source>
@@ -653,7 +653,7 @@ When unchecked, search all file types with standard search.</source>
     <name>FilterPanel</name>
     <message>
         <source>Mod Source</source>
-        <translation>模组源</translation>
+        <translation>模组来源</translation>
     </message>
     <message>
         <source>Mod Type</source>
@@ -669,7 +669,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>None</source>
-        <translation>没有任何</translation>
+        <translation>无</translation>
     </message>
     <message>
         <source>Clear All</source>
@@ -2578,7 +2578,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Append Mod List…</source>
-        <translation>Append Mod List…</translation>
+        <translation>追加模组列表…</translation>
     </message>
     <message>
         <source>From Workshop collection</source>
@@ -2594,7 +2594,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Mod List History…</source>
-        <translation>模组列表历史记录...</translation>
+        <translation>模组列表历史记录…</translation>
     </message>
     <message>
         <source>Open...</source>
@@ -2662,7 +2662,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Download RimWorld Version</source>
-        <translation>下载环世界版本</translation>
+        <translation>下载 RimWorld 版本</translation>
     </message>
     <message>
         <source>Add Git Mod</source>
@@ -2746,7 +2746,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Reset Warning Toggles</source>
-        <translation>重置警告状态</translation>
+        <translation>重置警告开关</translation>
     </message>
     <message>
         <source>Check for Updates on Startup</source>
