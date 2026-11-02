@@ -5793,7 +5793,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>This will delete the selected files. Make sure you have backups if needed.</source>
-        <translation>这将删除选定的文件。确保你有备份，如果需要的话。</translation>
+        <translation>这将删除选定的文件。如有需要，请确保已备份。</translation>
     </message>
     <message>
         <source>Game content not found</source>
@@ -5877,7 +5877,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Clean Orphaned Workshop Items</source>
-        <translation>清理孤儿工坊物品</translation>
+        <translation>清理孤立的创意工坊项目</translation>
     </message>
     <message>
         <source>Cleanup Complete</source>
@@ -5889,7 +5889,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>No Orphans Found</source>
-        <translation>未发现孤儿</translation>
+        <translation>未发现孤立条目</translation>
     </message>
     <message>
         <source>No orphaned workshop entries were found. The ACF file is clean.</source>
@@ -5901,7 +5901,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Failed to clean orphaned workshop items.</source>
-        <translation>无法清理废弃的工坊物品。</translation>
+        <translation>无法清理废弃的创意工坊项目。</translation>
     </message>
     <message>
         <source>Location Error</source>
@@ -5921,7 +5921,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Mods have been deleted. Please restart Steam to trigger automatic redownload of subscribed mods.&lt;br&gt;&lt;br&gt;If mods don't download automatically, try:&lt;br&gt;1. Restart Steam&lt;br&gt;2. Verify game files in Steam&lt;br&gt;3. Visit the Workshop page of each mod</source>
-        <translation>模组已被删除。请重新启动 Steam 以触发自动重新下载已订阅的模组。&lt;br&gt;&lt;br&gt;如果模组未自动下载，请尝试：&lt;br&gt;1.重新启动 Steam&lt;br&gt;2。验证 Steam 中的游戏文件&lt;br&gt;3。访问每个模组的创意工坊页面</translation>
+        <translation>模组已被删除。请重新启动 Steam 以触发自动重新下载已订阅的模组。&lt;br&gt;&lt;br&gt;如果模组未自动下载，请尝试：&lt;br&gt;1. 重新启动 Steam&lt;br&gt;2. 验证 Steam 中的游戏文件&lt;br&gt;3. 访问每个模组的创意工坊页面</translation>
     </message>
     <message>
         <source>Are you sure you want to delete all mods?&lt;br&gt;&lt;br&gt;WARNING: This will permanently delete all mods in your Mods folder and reset to vanilla state.</source>
@@ -5965,7 +5965,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Cache Cleared</source>
-        <translation>清除缓存</translation>
+        <translation>缓存已清除</translation>
     </message>
     <message>
         <source>Cache Clear</source>
@@ -6009,7 +6009,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Failed to process item: {item} due to the following error: {e}</source>
-        <translation>处理项目失败：{item} 由于以下错误：{e}</translation>
+        <translation>处理项目 {item} 失败，原因：{e}</translation>
     </message>
     <message>
         <source>Steam user Check failed</source>
@@ -6044,15 +6044,15 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Reset Steam Workshop mods (Deletes and redownloads all Steam mods)</source>
-        <translation>重置Steam创意工坊模组（删除并重新下载所有Steam模组）</translation>
+        <translation>重置 Steam 创意工坊模组（删除并重新下载所有 Steam 模组）</translation>
     </message>
     <message>
         <source>Deletes all Steam Workshop mods and triggers redownload.</source>
-        <translation>删除所有Steam创意工坊模组并重新下载。</translation>
+        <translation>删除所有 Steam 创意工坊模组并重新下载。</translation>
     </message>
     <message>
         <source>Reset mod configurations (Preserves ModsConfig.xml and Prefs.xml)</source>
-        <translation>重置模组配置（保留ModsConfig.xml和Prefs.xml）</translation>
+        <translation>重置模组配置（保留 ModsConfig.xml 和 Prefs.xml）</translation>
     </message>
     <message>
         <source>Deletes mod configuration files except ModsConfig.xml and Prefs.xml.</source>
@@ -6160,7 +6160,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>This will delete all mods in your Mods folder and reset to vanilla state</source>
-        <translation>这将删除你的模组文件夹中的所有模组并重置为原版状态</translation>
+        <translation>这将删除你的 Mods 文件夹中的所有模组并重置为原版状态</translation>
     </message>
     <message>
         <source>Clear All Mods</source>
