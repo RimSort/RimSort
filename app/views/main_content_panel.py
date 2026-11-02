@@ -334,8 +334,12 @@ class MainContent(QObject):
         self.mods_panel.inactive_mods_list.steamdb_blacklist_signal.connect(
             self._do_blacklist_action_steamdb
         )
-        self.mods_panel.active_mods_list.refresh_signal.connect(self._do_refresh)
-        self.mods_panel.inactive_mods_list.refresh_signal.connect(self._do_refresh)
+        self.mods_panel.active_mods_list.refresh_signal.connect(
+            lambda: self._do_refresh(apply_filter=True)
+        )
+        self.mods_panel.inactive_mods_list.refresh_signal.connect(
+            lambda: self._do_refresh(apply_filter=True)
+        )
 
         EventBus().use_this_instead_clicked.connect(self._use_this_instead_clicked)
         EventBus().do_threaded_loading_animation.connect(
@@ -927,16 +931,17 @@ class MainContent(QObject):
 
     # ACTIONS PANEL
 
-    def _do_refresh(self, is_initial: bool = False) -> None:
+    def _do_refresh(self, is_initial: bool = False, apply_filter: bool = False) -> None:
         """
-        Refresh expensive calculations & repopulate lists with that refreshed data
+        Refresh expensive calculations & repopulate lists with that refreshed data.
+        If filters are applied they will not clear and be reapplied.
         """
         EventBus().refresh_started.emit()
         EventBus().do_save_button_animation_stop.emit()
         # Force a re-read of the startup impact report on the next recalculation
         invalidate_startup_impact_cache()
         # If we are refreshing cache from user action
-        if not is_initial:
+        if not is_initial and not apply_filter:
             # Reset the data source filters to default and clear searches
             # Avoid recalculating warnings/errors when clearing search
             # Recalculation for each list will be triggered by mods being reinserted into inactive and active lists automatically

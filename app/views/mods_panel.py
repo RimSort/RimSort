@@ -2280,8 +2280,7 @@ class ModListWidget(QListWidget):
                                 logger.warning(
                                     f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
                                 )
-                    self.refresh_signal.emit()
-                    return True
+                    return self._schedule_deferred_refresh()
                 elif (  # ACTION: Convert SteamCMD mod(s) -> local
                     action == convert_steamcmd_local_action
                     and len(steamcmd_publishedfileid_to_name) > 0
@@ -2317,8 +2316,7 @@ class ModListWidget(QListWidget):
                                 logger.warning(
                                     f"Failed to convert mod! Destination already exists: {renamed_mod_path}"
                                 )
-                    self.refresh_signal.emit()
-                    return True
+                    return self._schedule_deferred_refresh()
                 elif (  # ACTION: Re-download SteamCMD mod(s)
                     action == re_steamcmd_action
                     and len(steamcmd_publishedfileid_to_name.keys()) > 0
@@ -2424,8 +2422,7 @@ class ModListWidget(QListWidget):
                                 stacktrace = format_exc()
                                 logger.error(f"Failed to convert mod: {path} - {e}")
                                 logger.error(stacktrace)
-                    self.refresh_signal.emit()
-                    return True
+                    return self._schedule_deferred_refresh()
                 elif (  # ACTION: Re-subscribe to mod(s) with Steam
                     action == re_steam_action and len(steam_publishedfileid_to_name) > 0
                 ):
@@ -4204,6 +4201,19 @@ class ModListWidget(QListWidget):
         self.model().rowsAboutToBeRemoved.connect(
             self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
         )
+
+    def _schedule_deferred_refresh(self) -> bool:
+        """Schedule a deferred refresh after the current event finishes.
+
+        Conversion actions rebuild the mod list, which clears and recreates
+        items. Doing that synchronously while the triggering event (e.g. a
+        context-menu action) is still being handled can crash. Deferring to
+        the next event-loop tick avoids that.
+
+        :return: True, indicating the action was handled.
+        """
+        QTimer.singleShot(0, self.refresh_signal.emit)
+        return True
 
 
 class ModsPanel(QWidget):
