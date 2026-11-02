@@ -48,7 +48,7 @@
     </message>
     <message>
         <source>Name</source>
-        <translation>姓名</translation>
+        <translation>名称</translation>
     </message>
     <message>
         <source>Author</source>
@@ -56,7 +56,7 @@
     </message>
     <message>
         <source>Package ID</source>
-        <translation>封装ID</translation>
+        <translation>包 ID</translation>
     </message>
     <message>
         <source>Published File Id</source>
@@ -72,7 +72,7 @@
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation>研讨会更新</translation>
+        <translation>创意工坊更新时间</translation>
     </message>
     <message>
         <source>Source</source>
@@ -80,11 +80,11 @@
     </message>
     <message>
         <source>Path</source>
-        <translation>小路</translation>
+        <translation>路径</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation>研讨会页面</translation>
+        <translation>创意工坊页面</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -108,7 +108,7 @@
     </message>
     <message>
         <source>Steam</source>
-        <translation>蒸汽</translation>
+        <translation>Steam</translation>
     </message>
     <message>
         <source>Subscribe selected</source>
@@ -554,7 +554,7 @@ When unchecked, search all file types with standard search.</source>
     </message>
     <message>
         <source>Stop</source>
-        <translation>暂停</translation>
+        <translation>停止</translation>
     </message>
     <message>
         <source>Ready to search</source>
@@ -2519,7 +2519,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>ACF Log Reader</source>
-        <translation>更新日志</translation>
+        <translation>ACF 日志查看器</translation>
     </message>
     <message>
         <source>This will allow you to use RimSort features that require the Steam Client. This includes, among other things, unsubscribing from workshop mods and opening workshop links via the Steam Client. 
@@ -2642,7 +2642,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Ignore JSON Editor…</source>
-        <translation>忽略编辑器</translation>
+        <translation>忽略 JSON 编辑器…</translation>
     </message>
     <message>
         <source>Auto-add Translations</source>
@@ -2650,7 +2650,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>View</source>
-        <translation>看法</translation>
+        <translation>视图</translation>
     </message>
     <message>
         <source>Show Translation Status</source>
@@ -2794,7 +2794,7 @@ Select which missing dependencies to add to your active mods list.</source>
     </message>
     <message>
         <source>Show satisfied dependencies</source>
-        <translation>显示满意的依赖关系</translation>
+        <translation>显示已满足的依赖关系</translation>
     </message>
     <message>
         <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
@@ -2826,7 +2826,7 @@ Select which missing dependencies to add to your active mods list.</source>
     </message>
     <message>
         <source>  ✅ Satisfied: </source>
-        <translation>✅ 满意：</translation>
+        <translation>✅ 已满足：</translation>
     </message>
     <message>
         <source>Available locally - add to active list</source>
@@ -2838,7 +2838,7 @@ Select which missing dependencies to add to your active mods list.</source>
     </message>
     <message>
         <source>Open Workshop</source>
-        <translation>开放工作坊</translation>
+        <translation>打开创意工坊</translation>
     </message>
     <message>
         <source>Download</source>
@@ -2903,7 +2903,7 @@ Please contact the mod authors to add these properties to their mods.</source>
     </message>
     <message>
         <source># Variants</source>
-        <translation># 版本</translation>
+        <translation># 变体</translation>
     </message>
     <message>
         <source>Download with SteamCMD</source>
@@ -2932,7 +2932,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     <name>ModDeletionMenu</name>
     <message>
         <source>Delete optimized textures (.dds files only)</source>
-        <translation>删除纹理（删除 .dds 纹理）</translation>
+        <translation>删除优化后的纹理（仅 .dds 文件）</translation>
     </message>
     <message>
         <source>RimSort</source>
@@ -3119,7 +3119,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Steam URL:</source>
-        <translation>蒸汽网址：</translation>
+        <translation>Steam 链接：</translation>
     </message>
     <message>
         <source>GitHub:</source>
@@ -3253,7 +3253,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Convert SteamCMD mod to local</source>
-        <translation>将 Steam 模组转换为本地模组</translation>
+        <translation>将 SteamCMD 模组转换为本地模组</translation>
     </message>
     <message>
         <source>Re-download mod with SteamCMD</source>
@@ -3365,7 +3365,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Divider name:</source>
-        <translation>分频器名称：</translation>
+        <translation>分隔线名称：</translation>
     </message>
     <message>
         <source>Are you sure?</source>
@@ -3477,11 +3477,11 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Expand</source>
-        <translation>扩张</translation>
+        <translation>展开</translation>
     </message>
     <message>
         <source>Collapse</source>
-        <translation>坍塌</translation>
+        <translation>折叠</translation>
     </message>
     <message>
         <source>Delete divider</source>
@@ -3739,7 +3739,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Workshop Updated</source>
-        <translation>研讨会已更新</translation>
+        <translation>创意工坊已更新</translation>
     </message>
     <message>
         <source>{padding}{count} updated</source>
@@ -4544,7 +4544,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>SteamCMD reported a login error. Please ensure you are connected to internet and steamcmd is not blocked by your firewall.</source>
-        <translation>SteamCMD 报告了登录误差。请确保你连接到网络，并且防火墙不会阻止 SteamCMD。</translation>
+        <translation>SteamCMD 报告了登录错误。请确保你连接到网络，并且防火墙不会阻止 SteamCMD。</translation>
     </message>
     <message>
         <source>SteamCMD failed to download mod(s)! Would you like to retry download of the mods that failed?&lt;br&gt;&lt;br&gt;Click 'Show Details' to see a list of mods that failed.</source>
@@ -4578,7 +4578,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Exit RimSort</source>
-        <translation>退出边缘排序</translation>
+        <translation>退出 RimSort</translation>
     </message>
     <message>
         <source>Settings Recovery Failed</source>
@@ -4609,7 +4609,7 @@ Alternative Dependencies:</source>
     <name>SettingsController</name>
     <message>
         <source>Steam Integration</source>
-        <translation>蒸汽集成</translation>
+        <translation>Steam 集成</translation>
     </message>
     <message>
         <source>Reset to defaults</source>
@@ -4804,7 +4804,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Game location</source>
-        <translation>比赛地点</translation>
+        <translation>游戏位置</translation>
     </message>
     <message>
         <source>Config location</source>
@@ -4913,8 +4913,8 @@ case-sensitive filesystems (Linux). Per the RimWorld modding spec, the
 correct path is About/About.xml.
 See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
         <translation>对 About/About.xml 启用不区分大小写的查找。
-某些 mod 使用不正确的大小写（例如 about/about.xml），这会导致
-区分大小写的文件系统 (Linux)。根据 RimWorld 改装规范，
+某些 mod 使用不正确的大小写（例如 about/about.xml），这在
+区分大小写的文件系统（Linux）上会导致问题。根据 RimWorld 模组制作规范，
 正确的路径是 About/About.xml。
 请参阅：https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</translation>
     </message>
@@ -5070,7 +5070,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>todds</source>
-        <translation>托兹</translation>
+        <translation>todds</translation>
     </message>
     <message>
         <source>Quality preset</source>
@@ -5154,7 +5154,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Constrain dialogues to main window monitor</source>
-        <translation>将对话限制到主窗口监视器</translation>
+        <translation>将对话框限制在主窗口所在的显示器内</translation>
     </message>
     <message>
         <source>Main Window Launch State</source>
@@ -5210,7 +5210,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Appearance</source>
-        <translation>外貌</translation>
+        <translation>外观</translation>
     </message>
     <message>
         <source>Render Unity Rich Text in mod descriptions</source>
@@ -5286,11 +5286,11 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>Launch game via Steam protocol (enables Steam overlay)</source>
-        <translation>通过 Steam 协议启动游戏（启用 Steam 覆盖）</translation>
+        <translation>通过 Steam 协议启动游戏（启用 Steam 覆盖层）</translation>
     </message>
     <message>
         <source>If enabled, RimSort will launch the game using the Steam protocol (steam://rungameid/294100) instead of directly running the executable. This enables the Steam overlay. Note: This requires Steam to be running and will ignore custom launch arguments.</source>
-        <translation>如果启用，RimSort 将使用 Steam 协议 (steam://rungameid/294100) 启动游戏，而不是直接运行可执行文件。这将启用 Steam 覆盖。注意：这需要 Steam 正在运行，并且将忽略自定义启动参数。</translation>
+        <translation>如果启用，RimSort 将使用 Steam 协议 (steam://rungameid/294100) 启动游戏，而不是直接运行可执行文件。这将启用 Steam 覆盖层。注意：这需要 Steam 正在运行，并且将忽略自定义启动参数。</translation>
     </message>
     <message>
         <source>Enter launch options using Steam-style syntax with optional %command% placeholder:
@@ -5444,7 +5444,7 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     </message>
     <message>
         <source>Create backup before RimSort update</source>
-        <translation>在 Rimsort 更新之前创建备份</translation>
+        <translation>在 RimSort 更新之前创建备份</translation>
     </message>
     <message>
         <source>Recommended to keep this enabled as it creates a backup before updating RimSort, This helps prevent any unwanted changes or data getting deleted.</source>
@@ -5556,7 +5556,7 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>Please reach out to us on Github Issues page or&lt;br&gt;#rimsort-testing on the Rocketman/CAI discord</source>
-        <translation>请通过 Github 问题页面或&lt;br&gt;关于 Rocketman/CAI 不和谐的#rimsort-testing 与我们联系</translation>
+        <translation>请通过 GitHub Issues 页面或&lt;br&gt;Rocketman/CAI Discord 的 #rimsort-testing 联系我们</translation>
     </message>
     <message>
         <source>You already have these mods in your download list!</source>
@@ -5662,7 +5662,7 @@ Please choose one of the following options to proceed.</source>
     <name>SteamworksInterface</name>
     <message>
         <source>Steam Not Detected</source>
-        <translation>未检测到蒸汽</translation>
+        <translation>未检测到 Steam</translation>
     </message>
     <message>
         <source>Steam Integration Unavailable</source>
@@ -5678,7 +5678,7 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>Snap Steam Detected</source>
-        <translation>检测到突然蒸汽</translation>
+        <translation>检测到 Snap 版 Steam</translation>
     </message>
     <message>
         <source>For full Steam support, please install native Steam from the official repository.</source>
@@ -5697,7 +5697,7 @@ Please choose one of the following options to proceed.</source>
     </message>
     <message>
         <source>new-tag, qol, framework</source>
-        <translation>新标签、质量、框架</translation>
+        <translation>new-tag, qol, framework</translation>
     </message>
     <message>
         <source>Select all</source>
@@ -5893,7 +5893,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>No orphaned workshop entries were found. The ACF file is clean.</source>
-        <translation>未找到孤立的研讨会条目。 ACF 文件是干净的。</translation>
+        <translation>未找到孤立的创意工坊条目。 ACF 文件是干净的。</translation>
     </message>
     <message>
         <source>Cleanup Failed</source>
