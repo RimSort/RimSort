@@ -4828,7 +4828,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Integration with recent save</source>
-        <translation>与最近保存的集成</translation>
+        <translation>与最近存档集成</translation>
     </message>
     <message>
         <source>Mod list history</source>
@@ -4996,7 +4996,7 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
     </message>
     <message>
         <source>Steam API key:</source>
-        <translation>Steam API key:</translation>
+        <translation>Steam API 密钥：</translation>
     </message>
     <message>
         <source>Download all published Workshop mods via:</source>
@@ -5082,7 +5082,7 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>If -p as in path is not specified, path from current active or all mods selection will be used.</source>
-        <translation>如果未指定路径中的 -p，则将使用当前活动路径或所有 mods 选择。</translation>
+        <translation>如果自定义命令里没有 -p 参数，RimSort 会根据“仅优化启用的模组/优化所有模组”自动补上对应路径。</translation>
     </message>
     <message>
         <source>When optimizing textures</source>
@@ -5238,11 +5238,11 @@ This may potentially prevent some issues with downloading mods such as download 
     </message>
     <message>
         <source>GitHub username:</source>
-        <translation>Github 用户名</translation>
+        <translation>GitHub 用户名：</translation>
     </message>
     <message>
         <source>GitHub personal access token:</source>
-        <translation>GitHub 个人访问令牌</translation>
+        <translation>GitHub 个人访问令牌：</translation>
     </message>
     <message>
         <source>Edit Game Run Arguments:</source>
@@ -5364,7 +5364,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
 
 1) 在你的'RimSort'配置文件夹中的'themes'文件夹内新建一个文件夹
 2) 将默认的'RimPy'主题复制到你创建的文件夹中
-3) 根据你的创意编辑复制的'style.qss'文件
+3) 按你的喜好编辑复制后的 'style.qss' 文件
 4) 启动'RimSort'并从下拉菜单中选择你的主题
 5) 点击'确定'保存设置并应用所选主题 
 
@@ -5386,7 +5386,7 @@ Name of folder will be used as name of the theme and any invalid theme will be i
     </message>
     <message>
         <source>Clear also moves DLC</source>
-        <translation>清除也会移动DLC</translation>
+        <translation>清除也会移动 DLC</translation>
     </message>
     <message>
         <source>Custom todds command</source>
@@ -5436,7 +5436,7 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
     </message>
     <message>
         <source>Include mod notes in mod name search filter</source>
-        <translation>在 Mod 名称搜索过滤器中包含 Mod 注释</translation>
+        <translation>在模组名称搜索过滤器中包含模组备注</translation>
     </message>
     <message>
         <source>This option will include searching mod notes when searching by mod name.</source>
