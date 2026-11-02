@@ -854,7 +854,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
-        <translation>RimSort 需要设置以下路径。&lt;br/&gt;&lt;br/&gt;1) 游戏文件夹（安装 RimWorld 的文件夹）。&lt;br/&gt;&lt;br/&gt;2) Config 文件夹（ModsConfig.xml 所在的文件夹）&lt;br/&gt;&lt;br/&gt;3) 本地 mods 文件夹（RimWorld 安装中的 Mods 文件夹）。&lt;br/&gt;&lt;br/&gt;4) Steam mods 文件夹（仅在使用 Steam 用户并启用 Steam 客户端时设置）集成）&lt;br/&gt;&lt;br/&gt;尝试使用自动检测功能自动设置所有路径。&lt;br/&gt;&lt;br/&gt;您想立即打开设置来配置它们吗？</translation>
+        <translation>RimSort 需要设置以下路径。&lt;br/&gt;&lt;br/&gt;1) 游戏文件夹（安装 RimWorld 的文件夹）。&lt;br/&gt;&lt;br/&gt;2) Config 文件夹（ModsConfig.xml 所在的文件夹）&lt;br/&gt;&lt;br/&gt;3) 本地 mods 文件夹（RimWorld 安装中的 Mods 文件夹）。&lt;br/&gt;&lt;br/&gt;4) Steam mods 文件夹（仅当使用 Steam 并启用 Steam 客户端集成时设置）&lt;br/&gt;&lt;br/&gt;尝试使用自动检测功能自动设置所有路径。&lt;br/&gt;&lt;br/&gt;您想立即打开设置来配置它们吗？</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -974,7 +974,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Workshop folder: {folder}&lt;br&gt;&lt;br&gt;Option 1: Convert to SteamCMD&lt;br&gt;RimSort will copy all Workshop mods to the new instance's local mods folder, converting them to SteamCMD mods that you can manage inside the new instance. The Workshop folder will be ignored for this instance to prevent duplicate mods.&lt;br&gt;&lt;br&gt;Option 2: Keep Workshop Folder&lt;br&gt;The new instance will use the same Workshop folder as the original instance. You can change this later in the settings if needed.&lt;br&gt;&lt;br&gt;How would you like to proceed?</source>
-        <translation>创意工坊文件夹：&lt;br&gt;&lt;br&gt;选项 1：转换为 SteamCMD&lt;br&gt;RimSort 会将所有创意工坊模组复制到新实例的本地模组文件夹，将它们转换为您可以在新实例中管理的 SteamCMD 模组。此实例的创意工坊文件夹将被忽略，以防止重复模组。&lt;br&gt;&lt;br&gt;选项 2：保留创意工坊文件夹&lt;br&gt;新实例将使用与原始实例相同的创意工坊文件夹。如果需要，您可以稍后在设置中更改此设置。&lt;br&gt;&lt;br&gt;您想如何继续？ {folder}</translation>
+        <translation>创意工坊文件夹：{folder}&lt;br&gt;&lt;br&gt;选项 1：转换为 SteamCMD&lt;br&gt;RimSort 会将所有创意工坊模组复制到新实例的本地模组文件夹，将它们转换为您可以在新实例中管理的 SteamCMD 模组。此实例的创意工坊文件夹将被忽略，以防止重复模组。&lt;br&gt;&lt;br&gt;选项 2：保留创意工坊文件夹&lt;br&gt;新实例将使用与原始实例相同的创意工坊文件夹。如果需要，您可以稍后在设置中更改此设置。&lt;br&gt;&lt;br&gt;您想如何继续？</translation>
     </message>
     <message>
         <source>Convert to SteamCMD</source>
@@ -1576,7 +1576,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>RimSort requires the below paths to be set.&lt;br/&gt;&lt;br/&gt;1) Game folder (Folder where RimWorld is installed).&lt;br/&gt;&lt;br/&gt;2) Config folder (Folder where ModsConfig.xml is located)&lt;br/&gt;&lt;br/&gt;3) Local mods folder (Mods folder inside the RimWorld installation).&lt;br/&gt;&lt;br/&gt;4) Steam mods folder (Only set if you use Steam user also enable Steam Client Integration)&lt;br/&gt;&lt;br/&gt;Try Using the autodetect functionality to set all paths automatically.&lt;br/&gt;&lt;br/&gt;Would you like to open the settings to configure them now?</source>
-        <translation>RimSort 需要设置以下路径。&lt;br/&gt;&lt;br/&gt;1) 游戏文件夹（安装 RimWorld 的文件夹）。&lt;br/&gt;&lt;br/&gt;2) Config 文件夹（ModsConfig.xml 所在的文件夹）&lt;br/&gt;&lt;br/&gt;3) 本地 mods 文件夹（RimWorld 安装中的 Mods 文件夹）。&lt;br/&gt;&lt;br/&gt;4) Steam mods 文件夹（仅在使用 Steam 用户并启用 Steam 客户端时设置）集成）&lt;br/&gt;&lt;br/&gt;尝试使用自动检测功能自动设置所有路径。&lt;br/&gt;&lt;br/&gt;您想立即打开设置来配置它们吗？</translation>
+        <translation>RimSort 需要设置以下路径。&lt;br/&gt;&lt;br/&gt;1) 游戏文件夹（安装 RimWorld 的文件夹）。&lt;br/&gt;&lt;br/&gt;2) Config 文件夹（ModsConfig.xml 所在的文件夹）&lt;br/&gt;&lt;br/&gt;3) 本地 mods 文件夹（RimWorld 安装中的 Mods 文件夹）。&lt;br/&gt;&lt;br/&gt;4) Steam mods 文件夹（仅当使用 Steam 并启用 Steam 客户端集成时设置）&lt;br/&gt;&lt;br/&gt;尝试使用自动检测功能自动设置所有路径。&lt;br/&gt;&lt;br/&gt;您想立即打开设置来配置它们吗？</translation>
     </message>
     <message>
         <source>This may be caused by malformed settings or improper migration between versions or different mod manager.&lt;br&gt;&lt;br&gt;Try resetting your settings, selecting a different sorting algorithm, or deleting your settings file.&lt;br&gt;&lt;br&gt;If the issue persists, please report it to the developers.</source>
@@ -1636,7 +1636,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>git executable was not found in $PATH!</source>
-        <translation>在$ PATH中找不到 GIT 可执行文件！</translation>
+        <translation>在 $PATH 中找不到 git 可执行文件！</translation>
     </message>
     <message>
         <source>Edit Steam DB repo</source>
@@ -1724,7 +1724,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>RimWorld save (*.rws);;All files (*.*)</source>
-        <translation>RimWorld 存档 (*.rws);所有文件 (*.*)</translation>
+        <translation>RimWorld 存档 (*.rws);;所有文件 (*.*)</translation>
     </message>
     <message>
         <source>Reset SteamCMD ACF data file</source>
@@ -2132,7 +2132,7 @@ Manage mods installed from GitHub releases.</source>
     </message>
     <message>
         <source>Successfully installed {owner_repo} ({version})</source>
-        <translation>已成功安装 {owner_repo}（） {version}</translation>
+        <translation>已成功安装 {owner_repo}（{version}）</translation>
     </message>
     <message>
         <source>Release {tag} has no ZIP assets. Switch to HEAD instead?</source>
@@ -2925,7 +2925,7 @@ Please select your preferred mod variant in the table below. You can also open e
 
 Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变体'。在下载之前，请注意这一点。
 
-请选择你在下表中偏好的 模组变体。你也可以在 Steam 或网页浏览器中打开每个变体进行验证。"</translation>
+请选择你在下表中偏好的 模组变体。你也可以在 Steam 或网页浏览器中打开每个变体进行验证。</translation>
     </message>
 </context>
 <context>
@@ -3628,7 +3628,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{old} → {new}</source>
-        <translation>→  {old} {new}</translation>
+        <translation>{old} → {new}</translation>
     </message>
     <message>
         <source>No differences</source>
@@ -5322,7 +5322,7 @@ This may potentially prevent some issues with downloading mods such as download 
 
  高级示例（使用 %command%、环境变量、包装器）：
 
-   PROTON_LOG=1%命令%
+   PROTON_LOG=1 %command%
 
    gamemoderun %command% -logfile /tmp/log
 
@@ -6060,7 +6060,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Reset game configurations (ModsConfig.xml, Prefs.xml, KeyPrefs.xml)*</source>
-        <translation>重置游戏配置（ModsConfig.xml, Prefs.xml, KeyPrefs.xml）</translation>
+        <translation>重置游戏配置（ModsConfig.xml, Prefs.xml, KeyPrefs.xml）*</translation>
     </message>
     <message>
         <source>Deletes game configuration files including ModsConfig.xml, Prefs.xml, and KeyPrefs.xml.</source>
@@ -6207,7 +6207,7 @@ Please reach out to us for support at: {support_url}</source>
     </message>
     <message>
         <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
-        <translation>从您的网络发送了太多请求，因此 GitHub 拒绝了此更新检查。您的安装没有任何问题。&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;在“设置 - 高级”下添加 GitHub 个人访问令牌会大幅提高限制，通常会删除此限制。 {reset}</translation>
+        <translation>从您的网络发送了太多请求，因此 GitHub 拒绝了此更新检查。您的安装没有任何问题。&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;在“设置 - 高级”下添加 GitHub 个人访问令牌会大幅提高限制，通常会解除此限制。</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>
