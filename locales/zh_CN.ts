@@ -2984,7 +2984,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Confirm Selective Deletion</source>
-        <translation>确认选择删除</translation>
+        <translation>确认删除（保留 .dds 纹理）</translation>
     </message>
     <message>
         <source>An error occurred while trying to {action} from Steam Workshop mods.</source>
@@ -3004,11 +3004,11 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>You have selected {selected_count} mod(s) for deletion.&lt;br&gt;{steam_count} of these are Steam Workshop mods that will also be {action_past}.</source>
-        <translation>您已选择删除 {selected_count} 个 mod。&lt;br&gt;其中 {steam_count} 个是 Steam 创意工坊 mod，也将是 {action_past}。</translation>
+        <translation>您已选择删除 {selected_count} 个 mod。&lt;br&gt;其中 {steam_count} 个是 Steam 创意工坊 mod，删除后也会变为“{action_past}”状态。</translation>
     </message>
     <message>
         <source>&lt;br&gt;This operation will:&lt;br&gt;• Delete the selected mod directories from your filesystem&lt;br&gt;• {action_capitalized} Steam Workshop mods from your Steam account&lt;br&gt;&lt;br&gt;Do you want to proceed?</source>
-        <translation>&lt;br&gt;此操作将：&lt;br&gt;• 从您的文件系统中删除选定的模组目录&lt;br&gt;• 从您的 Steam 帐户中删除 {action_capitalized} Steam 创意工坊模组&lt;br&gt;&lt;br&gt;您想继续吗？</translation>
+        <translation>&lt;br&gt;此操作将：&lt;br&gt;• 从您的文件系统中删除选定的模组目录&lt;br&gt;• 从您的 Steam 帐户中{action_capitalized} Steam 创意工坊模组&lt;br&gt;&lt;br&gt;您想继续吗？</translation>
     </message>
     <message>
         <source>unsubscribe</source>
@@ -3068,11 +3068,11 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Successfully initiated {action} from {len} Steam Workshop mod(s).&lt;br&gt;The process may take a few moments to complete.</source>
-        <translation>已从 {len} 个 Steam 创意工坊模组成功启动 {action}。&lt;br&gt;该过程可能需要一些时间才能完成。</translation>
+        <translation>已对 {len} 个 Steam 创意工坊模组启动 {action}。&lt;br&gt;该过程可能需要一些时间才能完成。</translation>
     </message>
     <message>
         <source>Confirm Deletion and {action_capitalized}</source>
-        <translation>确认删除和{action_capitalized}</translation>
+        <translation>确认删除并{action_capitalized}</translation>
     </message>
     <message>
         <source>Unknown error</source>
@@ -3237,11 +3237,11 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Open URL in browser</source>
-        <translation>在 浏览器 中打开模组页面</translation>
+        <translation>在浏览器中打开 URL</translation>
     </message>
     <message>
         <source>Copy URL to clipboard</source>
-        <translation>复制 模组链接 到剪切板</translation>
+        <translation>复制 URL 到剪贴板</translation>
     </message>
     <message>
         <source>Open mod in Steam</source>
@@ -3285,7 +3285,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Copy packageId to clipboard</source>
-        <translation>复制 包名 到剪切板</translation>
+        <translation>复制包 ID 到剪贴板</translation>
     </message>
     <message>
         <source>Edit mod with Rule Editor</source>
@@ -3305,7 +3305,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Open URL(s) in browser</source>
-        <translation>在 浏览器 中打开模组</translation>
+        <translation>在浏览器中打开 URL</translation>
     </message>
     <message>
         <source>Convert local mod(s) to SteamCMD</source>
@@ -3349,7 +3349,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Clipboard options</source>
-        <translation>剪切板选项</translation>
+        <translation>剪贴板选项</translation>
     </message>
     <message>
         <source>Workshop mods options</source>
@@ -3425,7 +3425,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>Found {count} translation(s). Select one to open:</source>
-        <translation>找到 {count} 翻译。选择一项打开：</translation>
+        <translation>找到 {count} 个翻译。选择一项打开：</translation>
     </message>
     <message>
         <source>Open</source>
@@ -3461,7 +3461,7 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
     </message>
     <message>
         <source>This will remove the selected mod, </source>
-        <translation>这将会移除所有选择的模组</translation>
+        <translation>这将移除所选模组</translation>
     </message>
     <message>
         <source>Replace tags</source>
@@ -3535,7 +3535,7 @@ Mod and Game Version Mismatch</source>
 An alternative updated mod is recommended:
 {alternative}</source>
         <translation>
-推荐一个替代的更新模组：
+推荐使用已更新的替代模组：
 {alternative}</translation>
     </message>
     <message>
@@ -3700,7 +3700,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Note for {ts}:</source>
-        <translation>{ts} 注意：</translation>
+        <translation>{ts} 的备注：</translation>
     </message>
     <message>
         <source>Could not save note</source>
@@ -3731,7 +3731,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>0 updated</source>
-        <translation>0 更新</translation>
+        <translation>0 个已更新</translation>
     </message>
     <message>
         <source>Click to only show recently updated mods</source>
@@ -3763,7 +3763,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Translations Added</source>
-        <translation>添加翻译</translation>
+        <translation>已添加翻译</translation>
     </message>
     <message>
         <source>Successfully added {count} translation mods to the active list.</source>
@@ -3879,7 +3879,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>0 new</source>
-        <translation>0 新</translation>
+        <translation>0 个新增</translation>
     </message>
     <message>
         <source>Click to only show active mods not in latest save</source>
@@ -3895,7 +3895,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>{padding}{count} new</source>
-        <translation>{padding}{count} 新</translation>
+        <translation>{padding}{count} 个新增</translation>
     </message>
 </context>
 <context>
@@ -3906,7 +3906,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Are you sure you want to reset all warning/error toggles?</source>
-        <translation>您确定要重置所有警告/错误切换吗？</translation>
+        <translation>您确定要重置所有警告/错误开关吗？</translation>
     </message>
     <message>
         <source>Reset All</source>
