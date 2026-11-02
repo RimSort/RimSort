@@ -87,30 +87,13 @@ markdownlint-fix:
     npx --yes markdownlint-cli2@0.23.2 --fix
 
 # Check shell script formatting (shfmt, fails on any differences)
-[unix]
+# shfmt discovers shell scripts recursively on its own (see `shfmt --help`)
 shfmt:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    mapfile -t sh_files < <(fd -e sh --exclude .venv --exclude submodules)
-    if [ ${#sh_files[@]} -eq 0 ]; then
-        echo "shfmt: no shell scripts found"
-        exit 0
-    fi
-    # shfmt -l prints files whose formatting differs and exits 1 if any exist
-    shfmt -l "${sh_files[@]}"
-
-[windows]
-shfmt:
-    $env:PATH = "$env:PATH;$env:LOCALAPPDATA\RimSortTools"; $files = @(fd -e sh --exclude .venv --exclude submodules); if ($files.Count -eq 0) { Write-Output "shfmt: no shell scripts found" } else { shfmt -l $files; if ($LASTEXITCODE -ne 0) { exit 1 } }
+    uv run shfmt --apply-ignore -l .
 
 # Automatically fix shell script formatting issues (shfmt)
-[unix]
 shfmt-fix:
-    fd -e sh --exclude .venv --exclude submodules -X shfmt -w
-
-[windows]
-shfmt-fix:
-    $env:PATH = "$env:PATH;$env:LOCALAPPDATA\RimSortTools"; fd -e sh --exclude .venv --exclude submodules -X shfmt -w
+    uv run shfmt --apply-ignore -w .
 
 # Run copy/paste detection (jscpd) using the project's .jscpd.json config
 jscpd:
