@@ -41,13 +41,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15-intel
-            platform: "Darwin"
-            arch: "x86_64"
-            env:
-              BUILD_OUTPUT: "app.app"
-              Executable: RimSort
-
           - os: macos-latest
             platform: "Darwin"
             arch: "arm64"
@@ -92,15 +85,9 @@ jobs:
           fi
         shell: bash
 
-      - name: Remove problematic brew libs
-        run: |
-          brew remove --force --ignore-dependencies openssl@3
-          brew cleanup openssl@3
-        if: runner.os == 'macos' && matrix.arch == 'x86_64'
-
       - name: Get semantic version
         id: sem_version
-        uses: PaulHatch/semantic-version@v6.0.4
+        uses: PaulHatch/semantic-version@v6.0.5
         with:
           version_format: "${{ inputs.version_format }}"
           change_path: "app libs submodules themes"

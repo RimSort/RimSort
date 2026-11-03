@@ -33,7 +33,6 @@ RimSort в настоящее время работает на Windows, MacOS и
   - `ubuntu-22.04`
   - `ubuntu-24.04`
 - Сборки macOS:
-  - `macos-15-intel` (x86_64)
   - `macos-latest` (arm)
 - Windows:
   - `windows-latest`

@@ -63,14 +63,20 @@ macOS
 > Замените `/path/to/` на реальный путь, где находится файл/папка, например:
 >
 >     xattr -d com.apple.quarantine /Users/John/Downloads/RimSort.app
->
-> Если вы по какой-то причине пытаетесь запустить сборку `x86_64` на Apple silicon, не включайте watchdog при запуске через Rosetta
+
+{: .warning }
+
+> RimSort больше не выпускает сборки macOS для `x86_64` (Intel). Начиная с версии 49.0.0 пакет
+> `cryptography` больше не публикует колёса x86_64 для macOS, а фиксировать критичный с точки
+> зрения безопасности пакет на неподдерживаемом выпуске мы не хотим. Единственная поддерживаемая
+> архитектура macOS — Apple silicon (`arm64`); последнюю сборку для Intel по-прежнему можно
+> скачать на [странице релизов][Releases].
 
 {: .note }
 
 > Инструмент текстур todds на текущий момент (по состоянию на май 2023) не поддерживает Apple silicon (Mac M1/M2 ARM64 CPU).
 
-- Скачайте и распакуйте релиз Darwin/macOS, соответствующий вашей архитектуре CPU (ARM64 для Apple Silicon, x86_64 для Intel)
+- Скачайте и распакуйте релиз Darwin/macOS `arm64` (Apple silicon)
 - С помощью `xattr` обойдите [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web) и добавьте `RimSort.app` и `libsteam_api.dylib` в белый список
 - Откройте бандл приложения: `RimSort.app`
 

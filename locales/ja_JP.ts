@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">名前</translation>
+        <translation>名前</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">作者</translation>
+        <translation>著者</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>パッケージID</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>公開されたファイルID</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>サポートされているバージョン</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>MODをダウンロードしました</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>ワークショップについて更新しました</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>ソース</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">パス</translation>
+        <translation>パス</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>ワークショップページ</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2792,6 +2792,14 @@ Select which missing dependencies to add to your active mods list.</source>
 アクティブな MOD リストに追加する不足している依存関係を選択します。</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>満たされた依存関係を表示する</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>不足している依存関係に加えて、すでに満たされている依存関係も表示します</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>すべて選択</translation>
     </message>
@@ -3067,7 +3075,7 @@ Please select your preferred mod variant in the table below. You can also open e
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>不明なエラー</translation>
     </message>
 </context>
 <context>
@@ -4578,19 +4586,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>設定ファイルが破損しているようで、ロードできません。</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>rimSort は {backup_path} でバックアップを見つけました。このバックアップから設定を復元しますか?</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>rimSort は {backup_path} で古いバックアップを見つけました。このバックアップから設定を復元しますか?</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>バックアップ ファイルが見つかりませんでした。RimSort は設定をデフォルトにリセットします。</translation>
     </message>
 </context>
 <context>
@@ -5584,6 +5592,22 @@ Please choose one of the following options to proceed.</source>
         <translation>SteamCMDのデポキャッシュがクリアされました。</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD はこのシステムでは実行できません</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD はインストールされていますが、このシステムでは実行できません。</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>SteamCMD バイナリには、インストールされていない 32 ビット システム ライブラリが必要です:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;ディストリビューションの 32 ビット ランタイムをインストールします。通常は:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>SteamCMD バイナリ: {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>シンボリックリンクを再作成しますか？</translation>
     </message>
@@ -6163,6 +6187,22 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>rimsortのアップデートがリリースされました： {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>リクエストは再度受け付けられます。 {when}</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>リムソート更新エラー</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>GitHub の API レート制限に達しました</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>ネットワークから送信されたリクエストが多すぎるため、GitHub はこの更新チェックを拒否しました。 Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

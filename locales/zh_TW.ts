@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">名稱</translation>
+        <translation>姓名</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">作者</translation>
+        <translation>作者</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>封裝ID</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>已發佈的文件 ID</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>支援的版本</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>模組已下載</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>研討會更新</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>來源</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">路徑</translation>
+        <translation>小路</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>研討會頁面</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2793,6 +2793,14 @@ Select which missing dependencies to add to your active mods list.</source>
 選擇要新增至活動 mod 清單中的缺少的依賴項。</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>顯示滿意的依賴關係</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>除了缺少的依賴項之外，還顯示已滿足的依賴項</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>全選</translation>
     </message>
@@ -3068,7 +3076,7 @@ Steam Workshop 上的 RimWorld 模組如果共享相同的 包名，則為 '變�
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>未知錯誤</translation>
     </message>
 </context>
 <context>
@@ -4582,19 +4590,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>您的設定檔似乎已損壞且無法載入。</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort 在 {backup_path} 找到備份。您想嘗試從此備份還原您的設定嗎？</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort 在 {backup_path} 找到舊備份。您想嘗試從此備份還原您的設定嗎？</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>未找到備份文件，RimSort 會將您的設定重設為預設值。</translation>
     </message>
 </context>
 <context>
@@ -4613,7 +4621,7 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>The selected game folder does not contain a valid RimWorld executable.&lt;br&gt;&lt;br&gt;Please select a valid game location.&lt;br&gt;&lt;br&gt;Windows: RimWorld.exe, RimWorldWin64.exe or RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac: RimWorld.app or RimWorldMac.app&lt;br&gt;&lt;br&gt;Linux: RimWorld, RimWorldLinux64 or RimWorldLinux&lt;br&gt;&lt;br&gt;RimWorld.exe, RimWorldWin64.exe or RimWorldWin.exe for Windows builds on Linux</source>
-        <translation>所選遊戲資料夾不包含有效的 RimWorld 可執行檔。 &lt;br&gt;&lt;br&gt;請選擇有效的遊戲位置。 &lt;br&gt;&lt;br&gt;Windows：RimWorld.exe、RimWorldWin64.exe 或 RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac：RimWorld.app 或 RimWorldMac.app&lt;br&gt;&lt;br&gt;Linux：RimWorld、RimWorldLinux？</translation>
+        <translation>所選遊戲資料夾不包含有效的 RimWorld 可執行檔。 &lt;br&gt;&lt;br&gt;請選擇有效的遊戲位置。 &lt;br&gt;&lt;br&gt;Windows：RimWorld.exe、RimWorldWin64.exe 或 RimWorldWin.exe&lt;br&gt;&lt;br&gt;Mac：RimWorld.app 或 RimWorldMac.app&lt;br&gt;&lt;br&gt;Linux：RimWorld、RimWorldLinux？ &lt;br&gt; &lt;br&gt;</translation>
     </message>
     <message>
         <source>The selected local mods folder location is not a valid directory.&lt;br&gt;&lt;br&gt;Please select a valid folder for local mods.&lt;br&gt;&lt;br&gt;The local mods folder should be the 'Mods' subfolder within the game content directory.</source>
@@ -5590,6 +5598,22 @@ Please choose one of the following options to proceed.</source>
         <translation>倉庫緩存已清除</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD 無法在此系統上運行</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD 已安裝，但無法在此系統上執行。</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>SteamCMD 二進位檔案需要未安裝的 32 位元系統函式庫：&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;為您的發行版安裝 32 位元執行時，通常：&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>SteamCMD 二進位檔案： {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>重新創建符號鏈接？</translation>
     </message>
@@ -6168,6 +6192,22 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>對Rimsort的更新已發佈： {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>請求將再次被接受{when}。</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>RimSort 更新錯誤</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>GitHub 的 API 速率已達到限制</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>從您的網路發送了太多請求，因此 GitHub 拒絕了此更新檢查。您的安裝沒有任何問題。 &lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;在「設定 - 進階」下新增 GitHub 個人存取權杖會大幅提高限制，通常會刪除此限制。 {reset}</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

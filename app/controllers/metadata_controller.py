@@ -220,6 +220,11 @@ class MetadataController(QObject):
         return self.metadata_mediator.game_version
 
     @property
+    def is_waylith(self) -> bool:
+        """Whether the game version is using the Waylith engine or Unity"""
+        return self.metadata_mediator.is_waylith
+
+    @property
     def steam_db(self) -> SteamDbSchema | None:
         """Get the loaded Steam database, if any."""
         return self.metadata_mediator.steam_db

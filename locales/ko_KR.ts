@@ -48,43 +48,43 @@
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">이름</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <source>Author</source>
-        <translation type="unfinished">제작자</translation>
+        <translation>작가</translation>
     </message>
     <message>
         <source>Package ID</source>
-        <translation type="unfinished"/>
+        <translation>패키지 ID</translation>
     </message>
     <message>
         <source>Published File Id</source>
-        <translation type="unfinished"/>
+        <translation>게시된 파일 ID</translation>
     </message>
     <message>
         <source>Supported Versions</source>
-        <translation type="unfinished"/>
+        <translation>지원되는 버전</translation>
     </message>
     <message>
         <source>Mod Downloaded</source>
-        <translation type="unfinished"/>
+        <translation>모드가 다운로드됨</translation>
     </message>
     <message>
         <source>Updated on Workshop</source>
-        <translation type="unfinished"/>
+        <translation>워크샵에 업데이트됨</translation>
     </message>
     <message>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>원천</translation>
     </message>
     <message>
         <source>Path</source>
-        <translation type="unfinished">경로</translation>
+        <translation>길</translation>
     </message>
     <message>
         <source>Workshop Page</source>
-        <translation type="unfinished"/>
+        <translation>워크샵 페이지</translation>
     </message>
     <message>
         <source>Open Page</source>
@@ -2792,6 +2792,14 @@ Select which missing dependencies to add to your active mods list.</source>
 활성 모드 목록에 추가할 누락된 종속성을 선택하세요.</translation>
     </message>
     <message>
+        <source>Show satisfied dependencies</source>
+        <translation>만족된 종속성 표시</translation>
+    </message>
+    <message>
+        <source>Show dependencies that are already fulfilled, in addition to missing ones</source>
+        <translation>누락된 종속성 외에 이미 충족된 종속성을 표시합니다.</translation>
+    </message>
+    <message>
         <source>Select All</source>
         <translation>모두 선택</translation>
     </message>
@@ -3067,7 +3075,7 @@ Please select your preferred mod variant in the table below. You can also open e
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"/>
+        <translation>알 수 없는 오류</translation>
     </message>
 </context>
 <context>
@@ -4578,19 +4586,19 @@ Alternative Dependencies:</source>
     </message>
     <message>
         <source>Your settings file seems to be corrupted and cannot be loaded.</source>
-        <translation type="unfinished"/>
+        <translation>설정 파일이 손상된 것 같으며 로드할 수 없습니다.</translation>
     </message>
     <message>
         <source>RimSort found a backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort가 {backup_path}에서 백업을 찾았습니다. 이 백업에서 설정을 복구하시겠습니까?</translation>
     </message>
     <message>
         <source>RimSort found an old backup at {backup_path}. Do you want to attempt to recover your settings from this backup?</source>
-        <translation type="unfinished"/>
+        <translation>RimSort가 {backup_path}에서 오래된 백업을 찾았습니다. 이 백업에서 설정을 복구하시겠습니까?</translation>
     </message>
     <message>
         <source>No backup file was found, RimSort will reset your settings to defaults.</source>
-        <translation type="unfinished"/>
+        <translation>백업 파일을 찾을 수 없습니다. RimSort가 설정을 기본값으로 재설정합니다.</translation>
     </message>
 </context>
 <context>
@@ -5584,6 +5592,22 @@ Please choose one of the following options to proceed.</source>
         <translation>SteamCMD의 데포 캐시가 삭제되었습니다.</translation>
     </message>
     <message>
+        <source>SteamCMD cannot run on this system</source>
+        <translation>SteamCMD는 이 시스템에서 실행할 수 없습니다</translation>
+    </message>
+    <message>
+        <source>SteamCMD is installed but cannot be executed on this system.</source>
+        <translation>SteamCMD가 설치되어 있지만 이 시스템에서 실행할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The SteamCMD binary needs a 32-bit system library that is not installed:&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;Install the 32-bit runtime for your distribution, usually:&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</source>
+        <translation>SteamCMD 바이너리에는 설치되지 않은 32비트 시스템 라이브러리가 필요합니다.&lt;br&gt;&lt;b&gt;{loader}&lt;/b&gt;&lt;br&gt;&lt;br&gt;배포판에 32비트 런타임을 설치합니다. 일반적으로 다음과 같습니다.&lt;br&gt;&lt;b&gt;{hint}&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>SteamCMD binary: {binary}</source>
+        <translation>SteamCMD 바이너리:  {binary}</translation>
+    </message>
+    <message>
         <source>Re-create Symlink?</source>
         <translation>심볼릭 링크를 다시 생성하시겠습니까?</translation>
     </message>
@@ -6163,6 +6187,22 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>An update to RimSort has been released: {latest_tag_name}</source>
         <translation>rimsort 업데이트가 출시되었습니다: {latest_tag_name}</translation>
+    </message>
+    <message>
+        <source>Requests will be accepted again {when}.</source>
+        <translation>요청이 다시 수락됩니다. {when}</translation>
+    </message>
+    <message>
+        <source>RimSort Update Error</source>
+        <translation>RimSort 업데이트 오류</translation>
+    </message>
+    <message>
+        <source>GitHub's API rate limit has been reached</source>
+        <translation>GitHub의 API 속도 제한에 도달했습니다.</translation>
+    </message>
+    <message>
+        <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
+        <translation>네트워크에서 너무 많은 요청이 전송되어 GitHub가 이 업데이트 확인을 거부했습니다. 설치에는 아무런 문제가 없습니다.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;설정 - 고급에서 GitHub 개인 액세스 토큰을 추가하면 한도가 크게 늘어나고 일반적으로 이 토큰이 제거됩니다.</translation>
     </message>
     <message>
         <source>Downloading RimSort {tag_name} release...</source>

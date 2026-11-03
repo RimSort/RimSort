@@ -870,7 +870,7 @@ def git_check_updates(
 
         # Check if remote branch exists
         try:
-            remote_oid = repo.references[remote_ref].target
+            remote_oid = repo.references[remote_ref].resolve().target
         except KeyError:
             logger.info(f"Remote branch 'origin/{current_branch}' not found")
             return None
@@ -999,7 +999,7 @@ def git_pull(
         # Get remote branch reference
         remote_ref = f"refs/remotes/{remote.name}/{branch}"
         try:
-            remote_master_id = repo.lookup_reference(remote_ref).target
+            remote_master_id = repo.lookup_reference(remote_ref).resolve().target
         except KeyError:
             logger.error(f"Remote branch '{remote.name}/{branch}' not found")
             return GitPullResult.GIT_ERROR

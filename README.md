@@ -18,7 +18,7 @@ To install RimSort, visit the [Releases][Releases] page and download the latest 
 
 For Windows and Linux, unzip the download and run the `RimSort` executable inside the unzipped folder.
 
-For macOS, make sure you grab the appropriate release per your CPU (x86_64 is for an Intel CPU Mac, ARM64 is for an Apple M1/M2 CPU Mac). You may need to follow [special instructions](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing#macos) to get around Gatekeeper errors.
+For macOS, grab the `arm64` release (Apple silicon). Intel (`x86_64`) Macs are no longer supported: `cryptography` stopped publishing x86_64 macOS wheels in 49.0.0, and pinning a security-critical dependency to an unsupported release isn't a trade we want to make. The last Intel build is still downloadable from the [Releases][Releases] page. You may need to follow [special instructions](https://rimsort.github.io/RimSort/user-guide/downloading-and-installing#macos) to get around Gatekeeper errors.
 
 Check the [wiki][Wiki] for more detailed instructions.
 
