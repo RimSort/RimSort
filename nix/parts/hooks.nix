@@ -48,10 +48,14 @@
         check-yaml.enable = true;
 
         # IaC policy checks on the workflows (the framework this repo has).
-        # Needs the python3.14-ecdsa insecure-package permit in
-        # default.nix; keep that comment updated if this hook ever moves.
+        # Temporarily off: pkgs.checkov cannot build on any pin carrying
+        # python3Packages.unidiff 1.0.1, because its dependency
+        # bc-detect-secrets fails two diff-scanning tests in its own build
+        # (RimSort#2609). Re-enable once NixOS/nixpkgs#582549 lands on
+        # nixos-unstable, and restore the python3.14-ecdsa permit in
+        # default.nix that was dropped alongside this.
         checkov = {
-          enable = true;
+          enable = false;
           name = "checkov";
           entry = "${lib.getExe pkgs.checkov} -d . --quiet --compact --framework github_actions";
           pass_filenames = false;
