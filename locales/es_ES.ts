@@ -3465,6 +3465,12 @@ Should be Loaded Before:</source>
         <translation>Debe cargarse antes:</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith proporciona códigos auxiliares de compatibilidad para 1.6</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>Impacto de inicio:  {time}</translation>
     </message>

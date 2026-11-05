@@ -20,6 +20,7 @@ from app.models.metadata.metadata_structure import (
     SteamDbSchema,
 )
 from app.services.game_layout_service import resolve_game_layout
+from app.utils.mod_info import parse_major_minor
 from app.utils.xml import xml_path_to_json
 
 
@@ -96,13 +97,13 @@ class MetadataMediator:
 
     @property
     def is_waylith(self) -> bool:
-        """Whether the game version's minor component is >= 7.
+        """Whether the game version is 1.7 or later.
 
         Computed on each access (not cached) since ``_game_version`` changes
         on refresh. ``"Unknown"`` or malformed versions return False.
         """
-        parts = self._game_version.split(".")
-        return len(parts) > 1 and parts[1].isdigit() and int(parts[1]) >= 7
+        parsed = parse_major_minor(self._game_version)
+        return parsed is not None and parsed >= (1, 7)
 
     @property
     def no_version_warning(self) -> list[str] | None:

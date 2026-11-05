@@ -3392,6 +3392,12 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>Вы выбрали {len} мод(ов) для отписки.</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith предоставляет заглушки совместимости для версии 1.6.</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>Влияние на запуск: {time}</translation>
     </message>

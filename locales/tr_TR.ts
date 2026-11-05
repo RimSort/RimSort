@@ -3413,6 +3413,12 @@ Lütfen aşağıdaki tabloda tercih ettiğiniz Mod varyantı seçin. Doğrulamak
         <translation>Yorum yapılmadı veya giriş iptal edildi. Bu eylem için yorumlar gereklidir!</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith 1.6 için uyumluluk taslakları sağlar</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>Başlangıç ​​etkisi: {time}</translation>
     </message>

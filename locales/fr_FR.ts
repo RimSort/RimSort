@@ -3437,6 +3437,12 @@ Incompatibilities:</source>
         <translation>Incompatibilités:</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith fournit des talons de compatibilité pour 1.6</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>Impact sur le démarrage : {time}</translation>
     </message>

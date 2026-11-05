@@ -3387,6 +3387,12 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>{len}개의 구독 해제할 모드를 선택했습니다.</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith는 1.6에 대한 호환성 스텁을 제공합니다.</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>시작 영향: {time}</translation>
     </message>

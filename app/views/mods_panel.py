@@ -35,8 +35,10 @@ from PySide6.QtGui import (
     QFocusEvent,
     QFontMetrics,
     QIcon,
+    QImage,
     QKeyEvent,
     QKeySequence,
+    QPixmap,
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
@@ -146,6 +148,7 @@ class ModListItemInner(QWidget):
         mod_color: QColor,
         show_tags: bool = False,
         metadata_controller: MetadataController | None = None,
+        soft_warning: bool = False,
     ) -> None:
         """
         Initialize the QWidget with mod path. Metadata can be accessed via MetadataController.
@@ -254,7 +257,7 @@ class ModListItemInner(QWidget):
         self.warning_icon_label = ClickableQLabel()
         self.warning_icon_label.clicked.connect(self.__on_warning_icon_clicked)
         self.warning_icon_label.setPixmap(
-            ModListIcons.warning_icon().pixmap(QSize(20, 20))
+            self._warning_icon_for(soft_warning).pixmap(QSize(20, 20))
         )
         # Default to hidden to avoid showing early
         self.warning_icon_label.setHidden(True)
@@ -320,6 +323,8 @@ class ModListItemInner(QWidget):
             self.handle_mod_color_change(init=True)
         elif self.filtered:
             self.main_label.setObjectName("ListItemLabelFiltered")
+        elif soft_warning and not errors:
+            self.main_label.setObjectName("ListItemLabelSoftWarning")
         elif errors_warnings:
             self.main_label.setObjectName("ListItemLabelInvalid")
         else:
@@ -391,6 +396,13 @@ class ModListItemInner(QWidget):
             package_id,
             self.path,
         )
+
+    @staticmethod
+    def _warning_icon_for(soft_warning: bool) -> QIcon:
+        """Return the grayscale icon for soft warnings, otherwise the normal one."""
+        if soft_warning:
+            return ModListIcons.soft_warning_icon()
+        return ModListIcons.warning_icon()
 
     def __on_warning_icon_clicked(self) -> None:
         mod = self.metadata_controller.get_mod(self.path)
@@ -663,6 +675,10 @@ class ModListItemInner(QWidget):
             self.error_icon_label.setHidden(True)
             self.error_icon_label.setToolTip("")
         if warning_tooltip:
+            soft_warning = bool(item_data.__dict__.get("soft_warning", False))
+            self.warning_icon_label.setPixmap(
+                self._warning_icon_for(soft_warning).pixmap(QSize(20, 20))
+            )
             self.warning_icon_label.setHidden(False)
             self.warning_icon_label.setToolTip(warning_tooltip)
         else:  # Hide the warning icon if no warning tool tip text
@@ -739,7 +755,11 @@ class ModListItemInner(QWidget):
             new_widget_object_name = "ListItemLabelFiltered"
             self.handle_mod_color_reset()
         elif error_tooltip or warning_tooltip:
-            new_widget_object_name = "ListItemLabelInvalid"
+            soft_warning = bool(item_data.__dict__.get("soft_warning", False))
+            if soft_warning and not error_tooltip:
+                new_widget_object_name = "ListItemLabelSoftWarning"
+            else:
+                new_widget_object_name = "ListItemLabelInvalid"
             self.handle_mod_color_reset()
         else:
             new_widget_object_name = "ListItemLabel"
@@ -1054,6 +1074,9 @@ class ModListIcons:
     _git_icon: QIcon | None = None
     _steamcmd_icon: QIcon | None = None
     _warning_icon: QIcon | None = None
+    _soft_warning_icon: QIcon | None = None
+    # Scales the warning icon's luminance so soft warnings read as muted
+    _soft_warning_brightness: float = 0.6
     _error_icon: QIcon | None = None
     _new_icon: QIcon | None = None
     _updated_icon: QIcon | None = None
@@ -1106,6 +1129,33 @@ class ModListIcons:
         if cls._warning_icon is None:
             cls._warning_icon = QIcon(cls._warning_icon_path)
         return cls._warning_icon
+
+    @classmethod
+    def soft_warning_icon(cls) -> QIcon:
+        """Muted grayscale variant of the warning icon, keeping its transparency."""
+        if cls._soft_warning_icon is None:
+            image = (
+                cls.warning_icon()
+                .pixmap(QSize(20, 20))
+                .toImage()
+                .convertToFormat(QImage.Format.Format_ARGB32)
+            )
+            for y in range(image.height()):
+                for x in range(image.width()):
+                    color = image.pixelColor(x, y)
+                    if color.alpha() == 0:
+                        continue
+                    luma = (
+                        0.299 * color.red()
+                        + 0.587 * color.green()
+                        + 0.114 * color.blue()
+                    )
+                    shade = int(luma * cls._soft_warning_brightness)
+                    image.setPixelColor(
+                        x, y, QColor(shade, shade, shade, color.alpha())
+                    )
+            cls._soft_warning_icon = QIcon(QPixmap.fromImage(image))
+        return cls._soft_warning_icon
 
     @classmethod
     def error_icon(cls) -> QIcon:
@@ -2982,6 +3032,7 @@ class ModListWidget(QListWidget):
                 mod_color=mod_color,
                 show_tags=show_tags,
                 metadata_controller=self.metadata_controller,
+                soft_warning=bool(data.__dict__.get("soft_warning", False)),
             )
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
@@ -3579,6 +3630,7 @@ class ModListWidget(QListWidget):
             if getattr(current_item_data, "is_divider", False):
                 continue
             current_item_data["mismatch"] = False
+            current_item_data.__dict__["soft_warning"] = False
             current_item_data["errors"] = ""
             current_item_data["warnings"] = ""
             # Mark active as new if not present in latest save; mark inactive as in_save if present in save
@@ -3756,6 +3808,19 @@ class ModListWidget(QListWidget):
             ):
                 # Add tool tip to indicate mod and game version mismatch
                 tool_tip_text += self.tr("\nMod and Game Version Mismatch")
+                # Only soften when the mismatch is the sole warning on this mod
+                has_other_warnings = (
+                    bool(mod_errors["load_before_violations"])
+                    or bool(mod_errors["load_after_violations"])
+                    or self._check_use_this_instead(current_item_data)
+                )
+                if not has_other_warnings and (
+                    self.metadata_controller.is_soft_version_mismatch(uuid)
+                ):
+                    current_item_data.__dict__["soft_warning"] = True
+                    tool_tip_text += self.tr(
+                        "\nWaylith provides compatibility stubs for 1.6"
+                    )
             # Handle "use this instead" behavior
             if (
                 self._check_use_this_instead(current_item_data)

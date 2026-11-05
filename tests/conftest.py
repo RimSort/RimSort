@@ -153,6 +153,7 @@ def mock_metadata_controller(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     controller.mods_metadata = {}
     controller.game_version = "1.5"
     controller.is_waylith = False
+    controller.is_soft_version_mismatch = MagicMock(return_value=False)
     controller.steam_db = None
     controller.community_rules = None
     controller.user_rules = None

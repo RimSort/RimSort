@@ -3391,6 +3391,12 @@ Selecione na tabela a variante de sua preferência. Você também pode abrir cad
         <translation>Você selecionou {len} mod(s) para cancelar inscrição.</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith fornece stubs de compatibilidade para 1.6</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>Impacto na inicialização: {time}</translation>
     </message>

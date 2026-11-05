@@ -483,6 +483,9 @@ QLabel#ListItemLabelFiltered {
 QLabel#ListItemLabelInvalid {
     color: #ff4500;
 }
+QLabel#ListItemLabelSoftWarning {
+    color: #f0d874;
+}
 /* Styling for the errors summary frame */
 QWidget#errorFrame { /* Outer-most encapsulator */
     background-color: #2e1a1a;

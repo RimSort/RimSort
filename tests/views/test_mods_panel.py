@@ -3,8 +3,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QModelIndex, QPointF, Qt
-from PySide6.QtGui import QDropEvent
+from PySide6.QtCore import QModelIndex, QPointF, QSize, Qt
+from PySide6.QtGui import QColor, QDropEvent
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
 from app.models.metadata.metadata_structure import (
@@ -15,7 +15,12 @@ from app.models.metadata.metadata_structure import (
 from app.models.settings import Settings
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
-from app.views.mods_panel import ModListItemInner, ModListWidget, TagEditDialog
+from app.views.mods_panel import (
+    ModListIcons,
+    ModListItemInner,
+    ModListWidget,
+    TagEditDialog,
+)
 
 
 def _make_active_mod_list(
@@ -34,6 +39,7 @@ def _make_active_mod_list(
     metadata_controller.mods_metadata = mods
     metadata_controller.settings = settings
     metadata_controller.is_version_mismatch.return_value = False
+    metadata_controller.is_soft_version_mismatch.return_value = False
     metadata_controller.steamdb_packageid_to_name = {}
 
     widget = ModListWidget.__new__(ModListWidget)
@@ -428,3 +434,133 @@ class TestStartupImpactLabel:
         widget.repolish(self._item(2.34))
 
         assert widget.startup_impact_label.isHidden()
+
+
+def test_soft_version_mismatch_flags_item_and_adds_stub_line(qtbot: Any) -> None:
+    mod_a = AboutXmlMod(
+        name="Alpha",
+        _mod_path=Path("/mods/a"),
+        package_id=CaseInsensitiveStr("mod.a"),
+    )
+    widget = _make_active_mod_list(qtbot, {"/mods/a": mod_a}, ["/mods/a"])
+    controller: Any = widget.metadata_controller
+    controller.is_version_mismatch.return_value = True
+    controller.is_soft_version_mismatch.return_value = True
+
+    widget.recalculate_internal_errors_warnings()
+
+    item = widget.item(0)
+    assert item is not None
+    data = item.data(Qt.ItemDataRole.UserRole)
+    assert data.__dict__["soft_warning"] is True
+    assert "Mod and Game Version Mismatch" in data.warnings
+    assert "Waylith provides compatibility stubs for 1.6" in data.warnings
+
+
+def test_plain_version_mismatch_is_not_soft(qtbot: Any) -> None:
+    mod_a = AboutXmlMod(
+        name="Alpha",
+        _mod_path=Path("/mods/a"),
+        package_id=CaseInsensitiveStr("mod.a"),
+    )
+    widget = _make_active_mod_list(qtbot, {"/mods/a": mod_a}, ["/mods/a"])
+    controller: Any = widget.metadata_controller
+    controller.is_version_mismatch.return_value = True
+    controller.is_soft_version_mismatch.return_value = False
+
+    widget.recalculate_internal_errors_warnings()
+
+    item = widget.item(0)
+    assert item is not None
+    data = item.data(Qt.ItemDataRole.UserRole)
+    assert data.__dict__["soft_warning"] is False
+    assert "Mod and Game Version Mismatch" in data.warnings
+    assert "Waylith provides compatibility stubs for 1.6" not in data.warnings
+
+
+def test_warning_icon_selects_grayscale_variant_for_soft_warning(qtbot: Any) -> None:
+    assert ModListItemInner._warning_icon_for(True) is ModListIcons.soft_warning_icon()
+    assert ModListItemInner._warning_icon_for(False) is ModListIcons.warning_icon()
+
+
+def test_soft_warning_icon_is_grayscale_and_keeps_transparency(qtbot: Any) -> None:
+    source = ModListIcons.warning_icon().pixmap(QSize(20, 20)).toImage()
+    soft = ModListIcons.soft_warning_icon().pixmap(QSize(20, 20)).toImage()
+    assert soft.size() == source.size()
+    brightest = 0
+    for y in range(soft.height()):
+        for x in range(soft.width()):
+            soft_color = QColor.fromRgba(soft.pixel(x, y))
+            source_color = QColor.fromRgba(source.pixel(x, y))
+            assert soft_color.red() == soft_color.green() == soft_color.blue()
+            assert soft_color.alpha() == source_color.alpha()
+            brightest = max(brightest, soft_color.red())
+    # The yellow fill (luma ~227) must be dimmed, not left at full brightness
+    assert brightest <= 140
+
+
+def test_soft_warning_not_applied_when_load_order_warning_present(qtbot: Any) -> None:
+    mod_a = AboutXmlMod(
+        name="Alpha",
+        _mod_path=Path("/mods/a"),
+        package_id=CaseInsensitiveStr("mod.a"),
+    )
+    mod_b = AboutXmlMod(
+        name="Beta",
+        _mod_path=Path("/mods/b"),
+        package_id=CaseInsensitiveStr("mod.b"),
+    )
+    mod_a.about_rules.load_before = CaseInsensitiveSet(["mod.b"])
+    widget = _make_active_mod_list(
+        qtbot, {"/mods/a": mod_a, "/mods/b": mod_b}, ["/mods/b", "/mods/a"]
+    )
+    controller: Any = widget.metadata_controller
+    controller.is_version_mismatch.return_value = True
+    controller.is_soft_version_mismatch.return_value = True
+
+    widget.recalculate_internal_errors_warnings()
+
+    item = widget.item(1)
+    assert item is not None
+    data = item.data(Qt.ItemDataRole.UserRole)
+    assert "Should be Loaded Before:" in data.warnings
+    assert data.__dict__["soft_warning"] is False
+
+
+def test_soft_warning_label_uses_soft_object_name(qtbot: Any) -> None:
+    controller: Any = MagicMock()
+    controller.get_mod.return_value = None
+    controller.steamdb_packageid_to_name = {}
+    settings = MagicMock(spec=Settings)
+    settings.mod_type_filter = False
+    settings.mod_list_startup_impact = False
+    settings.show_save_comparison_indicators = False
+    settings.mod_list_updated_indicator = False
+    settings.mod_list_updated_threshold_days = 0
+    settings.external_use_this_instead_metadata_source = "None"
+    kwargs: dict[str, Any] = {
+        "errors_warnings": "x",
+        "errors": "",
+        "warnings": "x",
+        "filtered": False,
+        "invalid": False,
+        "mismatch": True,
+        "alternative": False,
+        "settings": settings,
+        "path": "/mods/a",
+        "mod_color": None,
+        "metadata_controller": controller,
+    }
+    soft = ModListItemInner(soft_warning=True, **kwargs)
+    qtbot.addWidget(soft)
+    assert soft.main_label.objectName() == "ListItemLabelSoftWarning"
+
+    hard = ModListItemInner(soft_warning=False, **kwargs)
+    qtbot.addWidget(hard)
+    assert hard.main_label.objectName() == "ListItemLabelInvalid"
+
+    with_errors = ModListItemInner(
+        soft_warning=True, **{**kwargs, "errors": "missing dep"}
+    )
+    qtbot.addWidget(with_errors)
+    assert with_errors.main_label.objectName() == "ListItemLabelInvalid"
