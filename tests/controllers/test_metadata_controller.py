@@ -1100,3 +1100,12 @@ def test_is_soft_version_mismatch(
     metadata_controller.metadata_mediator._game_version = game_version
 
     assert metadata_controller.is_soft_version_mismatch("/mods/mod") is expected
+
+
+def test_is_soft_version_mismatch_false_for_non_about_xml_mod(
+    metadata_controller: MetadataController,
+) -> None:
+    metadata_controller.metadata_mediator._game_version = "1.7.4"
+    metadata_controller.is_version_mismatch = lambda path: True  # type: ignore[method-assign]
+
+    assert metadata_controller.is_soft_version_mismatch("/mods/unknown") is False
