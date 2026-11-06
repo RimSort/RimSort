@@ -813,8 +813,8 @@ wheels = [
 
 [[package]]
 name = "nuitka"
-version = "4.3.1"
-source = { git = "https://github.com/Nuitka/Nuitka?tag=4.3.1#8ba9ccdf78268aba8bb21b79ed72fc9a4d44887d" }
+version = "4.3.4"
+source = { git = "https://github.com/Nuitka/Nuitka?tag=4.3.4#d87cf657b56e3b0e86ea0978b80687cb6ca4788d" }
 
 [[package]]
 name = "packaging"
@@ -1403,7 +1403,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-build = [{ name = "nuitka", git = "https://github.com/Nuitka/Nuitka?tag=4.3.1" }]
+build = [{ name = "nuitka", git = "https://github.com/Nuitka/Nuitka?tag=4.3.4" }]
 dev = [
     { name = "googletrans", specifier = ">=4.0.0rc1" },
     { name = "mypy", specifier = ">=1.20.2" },
