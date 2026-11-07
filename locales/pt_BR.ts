@@ -6491,4 +6491,17 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>O RimSort não conseguiu ler a lista de mods fornecida, pois ela pode estar inválida ou ausente.</translation>
     </message>
 </context>
+<context>
+    <name>platform_specific_open</name>
+    <message>
+        <location filename="../app/utils/generic.py" line="484"/>
+        <source>Path not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/utils/generic.py" line="485"/>
+        <source>The selected path does not exist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
 </TS>

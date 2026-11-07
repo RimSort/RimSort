@@ -6482,4 +6482,17 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>RimSort가 제공된 모드 리스트를 읽을 수 없습니다. 유효하지 않거나 찾을 수 없을 가능성이 있습니다.</translation>
     </message>
 </context>
+<context>
+    <name>platform_specific_open</name>
+    <message>
+        <location filename="../app/utils/generic.py" line="484"/>
+        <source>Path not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/utils/generic.py" line="485"/>
+        <source>The selected path does not exist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
 </TS>

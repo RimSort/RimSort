@@ -478,12 +478,22 @@ def open_url_browser(url: str) -> None:
     webbrowser.open(url)
 
 
+def _show_missing_path_warning(path: str) -> None:
+    logger.warning(f"Cannot open missing path: {path}")
+    dialogue.show_warning(
+        title=translate("platform_specific_open", "Path not found"),
+        text=translate("platform_specific_open", "The selected path does not exist."),
+        details=path,
+    )
+
+
 def platform_specific_open(path: str | Path) -> None:
     """
     Function to open a folder in the platform-specific file-explorer app
     or a file in the relevant system default application. On mac, if the path
     is a directory or an .app file, open the path in Finder using -R
-    (i.e. treat .app as directory).
+    (i.e. treat .app as directory). Protocol URIs bypass filesystem validation.
+    Missing filesystem paths show a warning without opening an application.
 
     :param path: path to open
     :type path: str | Path
@@ -493,6 +503,9 @@ def platform_specific_open(path: str | Path) -> None:
     logger.info(f"USER ACTION: opening {path}")
     p = Path(path)
     path = str(path)
+    if "://" not in path and not p.exists():
+        _show_missing_path_warning(path)
+        return
     if sys.platform == "darwin":
         logger.info(f"Opening {path} with subprocess open on MacOS")
         if p.is_dir() and p.suffix == ".app":
@@ -504,6 +517,9 @@ def platform_specific_open(path: str | Path) -> None:
         try:
             os.startfile(path)
         except OSError as e:
+            if e.winerror in (2, 3):
+                _show_missing_path_warning(path)
+                return
             # Handle cases where no default application is associated
             if e.winerror == -2147221003:  # Application not found
                 logger.warning(
