@@ -1074,3 +1074,38 @@ def test_is_waylith_delegates_to_mediator(
 
     metadata_controller.metadata_mediator._game_version = "1.6.4"
     assert metadata_controller.is_waylith is False
+
+
+@pytest.mark.parametrize(
+    ("game_version", "supported_versions", "expected"),
+    [
+        ("1.7.4", {"1.6"}, True),
+        ("1.7.4", {"1.5", "1.6"}, True),
+        ("1.7.4", {"1.10"}, True),
+        ("1.7.4", {"1.5"}, False),
+        ("1.7.4", {"1.7"}, False),
+        ("1.7.4", {"bogus"}, False),
+        ("1.6.4", {"1.5"}, False),
+    ],
+)
+def test_is_soft_version_mismatch(
+    metadata_controller: MetadataController,
+    game_version: str,
+    supported_versions: set[str],
+    expected: bool,
+) -> None:
+    mod = _make_about_xml_mod("Mod", "author.mod", ModType.LOCAL, "/mods/mod")
+    mod.supported_versions = supported_versions
+    metadata_controller.metadata_mediator._mods_metadata = {"/mods/mod": mod}
+    metadata_controller.metadata_mediator._game_version = game_version
+
+    assert metadata_controller.is_soft_version_mismatch("/mods/mod") is expected
+
+
+def test_is_soft_version_mismatch_false_for_non_about_xml_mod(
+    metadata_controller: MetadataController,
+) -> None:
+    metadata_controller.metadata_mediator._game_version = "1.7.4"
+    metadata_controller.is_version_mismatch = lambda path: True  # type: ignore[method-assign]
+
+    assert metadata_controller.is_soft_version_mismatch("/mods/unknown") is False

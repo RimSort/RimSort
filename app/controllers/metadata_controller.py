@@ -28,6 +28,7 @@ from app.models.settings import Instance, Settings
 from app.services.game_layout_service import resolve_game_layout
 from app.utils.acf_utils import load_acf_from_path
 from app.utils.app_info import AppInfo
+from app.utils.mod_info import parse_major_minor
 from app.utils.schema import generate_rimworld_mods_list, validate_rimworld_mods_list
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from app.utils.xml import json_to_xml_write, xml_path_to_json
@@ -470,6 +471,26 @@ class MetadataController(QObject):
             return False
         game_major_minor = ".".join(self.game_version.split(".")[:2])
         return game_major_minor not in mod.supported_versions
+
+    def is_soft_version_mismatch(self, path: str) -> bool:
+        """Check if a version mismatch should be shown as a soft warning.
+
+        A mismatch is soft when the game is Waylith (1.7+) and the mod lists
+        at least one supported version of 1.6 or later.
+
+        :param path: Mod path
+        :return: True if the mismatch is a soft warning, False otherwise
+        """
+        if not self.is_waylith or not self.is_version_mismatch(path):
+            return False
+        mod = self.mods_metadata.get(path)
+        if not isinstance(mod, AboutXmlMod):
+            return False
+        for version in mod.supported_versions:
+            parsed = parse_major_minor(version)
+            if parsed is not None and parsed >= (1, 6):
+                return True
+        return False
 
     def has_alternative_mod(self, path: str) -> ReplacementInfo | None:
         """Check if a mod has a recommended replacement from Use This Instead DB.

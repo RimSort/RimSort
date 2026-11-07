@@ -3387,6 +3387,12 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
         <translation>Sie haben {len} Mods für Abmeldung ausgewählt.</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith stellt Kompatibilitäts-Stubs für 1.6 bereit</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>Auswirkungen auf das Startup: {time}</translation>
     </message>

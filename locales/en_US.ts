@@ -3365,6 +3365,11 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation type="unfinished"></translation>
     </message>

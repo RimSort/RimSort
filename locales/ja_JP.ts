@@ -3387,6 +3387,12 @@ Please select your preferred mod variant in the table below. You can also open e
         <translation>購読解除するモッドを{len}個選択しました。</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith は 1.6 の互換性スタブを提供します</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>起動時の影響: {time}</translation>
     </message>

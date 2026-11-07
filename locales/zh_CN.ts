@@ -3388,6 +3388,12 @@ Steam Workshop 上的 RimWorld 模组如果共享相同的 包名，则为 '变�
         <translation>你选择了 {len} 个模组进行取消订阅。</translation>
     </message>
     <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith 提供 1.6 的兼容性存根</translation>
+    </message>
+    <message>
         <source>Startup impact: {time}</source>
         <translation>启动影响：{time}</translation>
     </message>

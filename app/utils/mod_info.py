@@ -7,6 +7,19 @@ from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod, ModTy
 from app.utils.constants import DEFAULT_MISSING_PACKAGEID
 from app.utils.generic import format_time_display
 
+
+def parse_major_minor(version: str) -> tuple[int, int] | None:
+    """Parse a RimWorld version string such as "1.6" into (major, minor).
+
+    :param version: The version string to parse
+    :return: The (major, minor) tuple, or None if the string is malformed
+    """
+    parts = version.strip().split(".")
+    if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
+        return None
+    return int(parts[0]), int(parts[1])
+
+
 # Module-level constants for better access
 UNKNOWN = "Unknown"
 STEAM_CMD = "SteamCMD"

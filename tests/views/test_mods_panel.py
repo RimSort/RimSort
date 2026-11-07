@@ -3,8 +3,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PySide6.QtCore import QModelIndex, QPointF, Qt
-from PySide6.QtGui import QDropEvent
+from PySide6.QtCore import QModelIndex, QPointF, QSize, Qt
+from PySide6.QtGui import QColor, QDropEvent
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
 from app.models.metadata.metadata_structure import (
@@ -13,9 +13,23 @@ from app.models.metadata.metadata_structure import (
     CaseInsensitiveStr,
 )
 from app.models.settings import Settings
+from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
-from app.views.mods_panel import ModListItemInner, ModListWidget, TagEditDialog
+from app.views.mods_panel import (
+    ModListIcons,
+    ModListItemInner,
+    ModListWidget,
+    TagEditDialog,
+)
+
+
+def _make_mod(name: str, path: str, package_id: str) -> AboutXmlMod:
+    return AboutXmlMod(
+        name=name,
+        _mod_path=Path(path),
+        package_id=CaseInsensitiveStr(package_id),
+    )
 
 
 def _make_active_mod_list(
@@ -34,6 +48,7 @@ def _make_active_mod_list(
     metadata_controller.mods_metadata = mods
     metadata_controller.settings = settings
     metadata_controller.is_version_mismatch.return_value = False
+    metadata_controller.is_soft_version_mismatch.return_value = False
     metadata_controller.steamdb_packageid_to_name = {}
 
     widget = ModListWidget.__new__(ModListWidget)
@@ -246,16 +261,8 @@ def test_load_order_warning_header_matches_rule_direction(
     expected_header: str,
     unexpected_header: str,
 ) -> None:
-    mod_a = AboutXmlMod(
-        name="Alpha",
-        _mod_path=Path("/mods/a"),
-        package_id=CaseInsensitiveStr("mod.a"),
-    )
-    mod_b = AboutXmlMod(
-        name="Beta",
-        _mod_path=Path("/mods/b"),
-        package_id=CaseInsensitiveStr("mod.b"),
-    )
+    mod_a = _make_mod("Alpha", "/mods/a", "mod.a")
+    mod_b = _make_mod("Beta", "/mods/b", "mod.b")
     setattr(mod_a.about_rules, rule_name, CaseInsensitiveSet(["mod.b"]))
     widget = _make_active_mod_list(
         qtbot,
@@ -428,3 +435,179 @@ class TestStartupImpactLabel:
         widget.repolish(self._item(2.34))
 
         assert widget.startup_impact_label.isHidden()
+
+
+@pytest.mark.parametrize("soft", [True, False])
+def test_version_mismatch_soft_flag_and_stub_line(qtbot: Any, soft: bool) -> None:
+    mod_a = _make_mod("Alpha", "/mods/a", "mod.a")
+    widget = _make_active_mod_list(qtbot, {"/mods/a": mod_a}, ["/mods/a"])
+    controller: Any = widget.metadata_controller
+    controller.is_version_mismatch.return_value = True
+    controller.is_soft_version_mismatch.return_value = soft
+
+    widget.recalculate_internal_errors_warnings()
+
+    item = widget.item(0)
+    assert item is not None
+    data = item.data(Qt.ItemDataRole.UserRole)
+    assert data.__dict__["soft_warning"] is soft
+    assert "Mod and Game Version Mismatch" in data.warnings
+    stub_line = "Waylith provides compatibility stubs for 1.6"
+    assert (stub_line in data.warnings) is soft
+
+
+def test_warning_icon_selects_grayscale_variant_for_soft_warning(qtbot: Any) -> None:
+    assert ModListItemInner._warning_icon_for(True) is ModListIcons.soft_warning_icon()
+    assert ModListItemInner._warning_icon_for(False) is ModListIcons.warning_icon()
+
+
+@pytest.fixture
+def real_warning_icons(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point ModListIcons at the real warning.png and reset its cache.
+
+    The icon path is computed from AppInfo at import time, which the test
+    fixtures redirect elsewhere, so pixmaps would otherwise load as null.
+    """
+    theme_icon = Path(__file__).resolve().parents[2] / "themes" / "default-icons"
+    monkeypatch.setattr(
+        ModListIcons, "_warning_icon_path", str(theme_icon / "warning.png")
+    )
+    monkeypatch.setattr(ModListIcons, "_warning_icon", None)
+    monkeypatch.setattr(ModListIcons, "_soft_warning_icon", None)
+
+
+@pytest.mark.usefixtures("real_warning_icons")
+def test_soft_warning_icon_is_grayscale_and_keeps_transparency(qtbot: Any) -> None:
+    source = ModListIcons.warning_icon().pixmap(QSize(20, 20)).toImage()
+    soft = ModListIcons.soft_warning_icon().pixmap(QSize(20, 20)).toImage()
+    assert not source.isNull()
+    assert soft.size() == source.size()
+    brightest = 0
+    for y in range(soft.height()):
+        for x in range(soft.width()):
+            soft_color = QColor.fromRgba(soft.pixel(x, y))
+            source_color = QColor.fromRgba(source.pixel(x, y))
+            assert soft_color.red() == soft_color.green() == soft_color.blue()
+            assert soft_color.alpha() == source_color.alpha()
+            brightest = max(brightest, soft_color.red())
+    # The yellow fill (luma ~227) must be dimmed, not left at full brightness
+    assert brightest > 0
+    assert brightest <= 140
+
+
+@pytest.mark.usefixtures("real_warning_icons")
+def test_repolish_soft_warning_uses_dimmed_icon_and_soft_label(qtbot: Any) -> None:
+    widget = _make_item_inner(qtbot, soft_warning=False)
+    item = _make_item_for_repolish(
+        {"errors": "", "warnings": "Mod and Game Version Mismatch", "soft": True}
+    )
+
+    widget.repolish(item)
+
+    assert widget.main_label.objectName() == "ListItemLabelSoftWarning"
+    assert (
+        widget.warning_icon_label.pixmap().toImage()
+        == ModListIcons.soft_warning_icon().pixmap(QSize(20, 20)).toImage()
+    )
+    assert (
+        widget.warning_icon_label.pixmap().toImage()
+        != ModListIcons.warning_icon().pixmap(QSize(20, 20)).toImage()
+    )
+
+
+@pytest.mark.usefixtures("real_warning_icons")
+def test_repolish_soft_warning_with_errors_stays_invalid(qtbot: Any) -> None:
+    widget = _make_item_inner(qtbot, soft_warning=False)
+    item = _make_item_for_repolish(
+        {"errors": "Missing Dependencies", "warnings": "x", "soft": True}
+    )
+
+    widget.repolish(item)
+
+    # The name stays red because of the hard error; the warning icon is still
+    # the soft one since the mismatch is the only warning on this mod.
+    assert widget.main_label.objectName() == "ListItemLabelInvalid"
+    assert (
+        widget.warning_icon_label.pixmap().toImage()
+        == ModListIcons.soft_warning_icon().pixmap(QSize(20, 20)).toImage()
+    )
+
+
+def _make_item_for_repolish(spec: dict[str, Any]) -> CustomListWidgetItem:
+    data = object.__new__(CustomListWidgetItemMetadata)
+    data.errors = spec["errors"]
+    data.warnings = spec["warnings"]
+    data.errors_warnings = spec["errors"] or spec["warnings"]
+    data.mod_tags = []
+    data.mod_color = None
+    data.filtered = False
+    data.path = "/mods/a"
+    data.__dict__["soft_warning"] = spec["soft"]
+    item = CustomListWidgetItem()
+    item.setData(Qt.ItemDataRole.UserRole, data, avoid_emit=True)
+    return item
+
+
+def _make_item_inner(
+    qtbot: Any, soft_warning: bool, errors: str = ""
+) -> ModListItemInner:
+    controller: Any = MagicMock()
+    controller.get_mod.return_value = None
+    controller.steamdb_packageid_to_name = {}
+    settings = MagicMock(spec=Settings)
+    settings.mod_type_filter = False
+    settings.mod_list_startup_impact = False
+    settings.show_save_comparison_indicators = False
+    settings.mod_list_updated_indicator = False
+    settings.mod_list_updated_threshold_days = 0
+    settings.external_use_this_instead_metadata_source = "None"
+    settings.aux_db_path = str(AppInfo().databases_folder / "aux_metadata.db")
+    # Item data carries mod_color=None when no custom color is set
+    kwargs: dict[str, Any] = {
+        "errors_warnings": "x",
+        "errors": errors,
+        "warnings": "x",
+        "filtered": False,
+        "invalid": False,
+        "mismatch": True,
+        "alternative": False,
+        "settings": settings,
+        "path": "/mods/a",
+        "mod_color": None,
+        "metadata_controller": controller,
+        "soft_warning": soft_warning,
+    }
+    widget = ModListItemInner(**kwargs)
+    qtbot.addWidget(widget)
+    return widget
+
+
+def test_soft_warning_not_applied_when_load_order_warning_present(qtbot: Any) -> None:
+    mod_a = _make_mod("Alpha", "/mods/a", "mod.a")
+    mod_b = _make_mod("Beta", "/mods/b", "mod.b")
+    mod_a.about_rules.load_before = CaseInsensitiveSet(["mod.b"])
+    widget = _make_active_mod_list(
+        qtbot, {"/mods/a": mod_a, "/mods/b": mod_b}, ["/mods/b", "/mods/a"]
+    )
+    controller: Any = widget.metadata_controller
+    controller.is_version_mismatch.return_value = True
+    controller.is_soft_version_mismatch.return_value = True
+
+    widget.recalculate_internal_errors_warnings()
+
+    item = widget.item(1)
+    assert item is not None
+    data = item.data(Qt.ItemDataRole.UserRole)
+    assert "Should be Loaded Before:" in data.warnings
+    assert data.__dict__["soft_warning"] is False
+
+
+def test_soft_warning_label_uses_soft_object_name(qtbot: Any) -> None:
+    soft = _make_item_inner(qtbot, soft_warning=True)
+    assert soft.main_label.objectName() == "ListItemLabelSoftWarning"
+
+    hard = _make_item_inner(qtbot, soft_warning=False)
+    assert hard.main_label.objectName() == "ListItemLabelInvalid"
+
+    with_errors = _make_item_inner(qtbot, soft_warning=True, errors="missing dep")
+    assert with_errors.main_label.objectName() == "ListItemLabelInvalid"
