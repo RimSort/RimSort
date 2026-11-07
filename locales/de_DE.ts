@@ -6485,4 +6485,17 @@ The following table displays Workshop mods available for update from Steam.</sou
         <translation>RIMSORT konnte die gelieferte Mods -Liste nicht lesen, da sie möglicherweise ungültig oder fehlt.</translation>
     </message>
 </context>
+<context>
+    <name>platform_specific_open</name>
+    <message>
+        <location filename="../app/utils/generic.py" line="484"/>
+        <source>Path not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/utils/generic.py" line="485"/>
+        <source>The selected path does not exist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
 </TS>
