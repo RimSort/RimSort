@@ -198,6 +198,27 @@ if __name__ == "__main__":
             sys.exit(1)
         sys.exit(0)
 
+    # MCP mode - headless JSON-RPC server on stdio. Must run before any GUI
+    # setup, and before logging is configured: the MCP transport owns stdout,
+    # so app.mcp.entrypoint re-points every log sink at stderr itself.
+    if "--mcp" in sys.argv:
+        # GUI-less Qt: QCoreApplication is enough for QObject signals, settings
+        # storage and QThreadPool. Must be set before PySide6 is imported.
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        from app.mcp.entrypoint import run_mcp_server
+
+        sys.argv.remove("--mcp")
+        mcp_instance: str | None = None
+        if "--instance" in sys.argv:
+            index = sys.argv.index("--instance")
+            if index + 1 < len(sys.argv):
+                mcp_instance = sys.argv[index + 1]
+                del sys.argv[index : index + 2]
+            else:
+                print("Error: --instance requires a name", file=sys.stderr)
+                sys.exit(2)
+        sys.exit(run_mcp_server(mcp_instance))
+
     # GUI mode continues below with normal initialization
     # Dev mode always enables debug logging; production checks for a DEBUG file
     if AppInfo().is_dev_mode:
