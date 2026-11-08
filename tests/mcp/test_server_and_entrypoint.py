@@ -8,15 +8,21 @@ import queue
 import subprocess
 import sys
 import threading
+from collections.abc import Generator
 from pathlib import Path
+from types import ModuleType
+from unittest.mock import MagicMock
 
 import anyio
 import pytest
+from loguru import logger
 from mcp_types import CallToolResult, Tool
 
 from app.mcp.core import RimSortMcpCore
 from app.mcp.server import SERVER_NAME, build_server
+from app.models.instance import Instance
 from app.models.settings import Settings
+from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
 from tests.game_layout_fixtures import GameInstall
 from tests.mcp.conftest import build_core, write_mod, write_mods_config
 
@@ -370,3 +376,201 @@ def test_settings_model_used_by_server_is_plain_settings() -> None:
 
     assert isinstance(settings.current_instance, str)
     assert settings.current_instance in settings.instances
+
+
+# ---- in-process entrypoint units ----
+#
+# The stdio tests above drive ``python -m app --mcp`` as a subprocess, which
+# coverage.py cannot observe. These call the same functions in-process so line
+# coverage reflects what the entrypoint really executes.
+
+
+@pytest.fixture
+def entrypoint() -> Generator[ModuleType]:
+    """Import the entrypoint with the singleton metadata controller reset."""
+    from app.controllers.metadata_controller import MetadataController
+    from app.mcp import entrypoint as module
+
+    MetadataController._instance = None
+    yield module
+    MetadataController._instance = None
+    # ``_configure_stdio_logging`` replaces every sink; restore a live one so
+    # later tests never write to the stream pytest has already closed.
+    logger.remove()
+    logger.add(sys.stderr)
+
+
+@pytest.fixture
+def configured_settings(game_install: GameInstall, config_folder: Path) -> Settings:
+    """Persist a Default instance pointing at the synthetic install.
+
+    ``_bootstrap_core`` constructs its own :class:`Settings`, so the only way to
+    make it see a usable instance is to write the file it will load.
+    """
+    write_mod(game_install.mods_path, "Harmony", "brrainz.harmony")
+    write_mods_config(config_folder, ["ludeon.rimworld"])
+
+    settings = Settings()
+    settings.instances[settings.current_instance] = Instance(
+        name=settings.current_instance,
+        game_folder=str(game_install.launch_location),
+        config_folder=str(config_folder),
+        local_folder=str(game_install.mods_path),
+    )
+    settings.save()
+    return settings
+
+
+def test_configure_stdio_logging_writes_only_to_stderr_and_file(
+    entrypoint: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    log_file = entrypoint._configure_stdio_logging()
+
+    try:
+        logger.info("frame-safe diagnostic")
+        captured = capsys.readouterr()
+
+        assert log_file.name == "RimSortMCPServer.log"
+        assert log_file.is_file()
+        assert captured.out == ""
+        assert "frame-safe diagnostic" in captured.err
+    finally:
+        logger.remove()
+        logger.add(sys.stderr)
+
+
+def test_select_instance_keeps_the_active_one_when_unspecified(
+    entrypoint: ModuleType, configured_settings: Settings
+) -> None:
+    entrypoint._select_instance(configured_settings, None)
+
+    assert configured_settings.current_instance == "Default"
+
+
+def test_select_instance_switches_to_a_configured_instance(
+    entrypoint: ModuleType, configured_settings: Settings
+) -> None:
+    configured_settings.instances["Second"] = Instance(name="Second")
+
+    entrypoint._select_instance(configured_settings, "Second")
+
+    assert configured_settings.current_instance == "Second"
+
+
+def test_select_instance_rejects_an_unknown_name(
+    entrypoint: ModuleType,
+    configured_settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    error = MagicMock()
+    monkeypatch.setattr(entrypoint.logger, "error", error)
+
+    with pytest.raises(SystemExit) as raised:
+        entrypoint._select_instance(configured_settings, "Missing")
+
+    assert raised.value.code == 2
+    error.assert_called_once()
+    assert "Missing" in error.call_args.args[0]
+    # The bound instance is left untouched by a rejected name.
+    assert configured_settings.current_instance == "Default"
+
+
+def test_bootstrap_core_loads_metadata_for_the_bound_instance(
+    entrypoint: ModuleType,
+    configured_settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_steamcmd = MagicMock()
+    fake_steamcmd.steamcmd_appworkshop_acf_path = ""
+    monkeypatch.setattr(
+        SteamcmdInterface, "instance", MagicMock(return_value=fake_steamcmd)
+    )
+
+    core = entrypoint._bootstrap_core(None)
+
+    assert core.settings.current_instance == "Default"
+    assert "brrainz.harmony" in core.metadata_controller.packageid_to_paths
+    assert core.get_instance_status()["active_mods_count"] == 1
+
+
+def test_bootstrap_core_warns_when_paths_are_unconfigured(
+    entrypoint: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A fresh install has no paths; the server must still come up."""
+    Settings().save()  # writes an instance with empty folders
+    fake_steamcmd = MagicMock()
+    fake_steamcmd.steamcmd_appworkshop_acf_path = ""
+    monkeypatch.setattr(
+        SteamcmdInterface, "instance", MagicMock(return_value=fake_steamcmd)
+    )
+    warning = MagicMock()
+    monkeypatch.setattr(entrypoint.logger, "warning", warning)
+
+    core = entrypoint._bootstrap_core(None)
+
+    assert core.get_instance_status()["paths"]["local_folder"] == ""
+    assert core.get_instance_status()["active_mods_count"] == 0
+    assert any(
+        "missing a game folder" in str(call.args[0]) for call in warning.call_args_list
+    )
+
+
+def test_run_mcp_server_serves_and_quits_the_core_app(
+    entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    core = MagicMock(spec=RimSortMcpCore)
+    server = MagicMock()
+    server.run.return_value = None
+    qt_app = MagicMock()
+
+    monkeypatch.setattr(entrypoint, "_configure_stdio_logging", MagicMock())
+    monkeypatch.setattr(entrypoint, "_bootstrap_core", MagicMock(return_value=core))
+    monkeypatch.setattr(entrypoint, "build_server", MagicMock(return_value=server))
+    monkeypatch.setattr(
+        entrypoint.QCoreApplication, "instance", MagicMock(return_value=qt_app)
+    )
+
+    assert entrypoint.run_mcp_server() == 0
+    server.run.assert_called_once_with(transport="stdio")
+    qt_app.quit.assert_called_once()
+
+
+def test_run_mcp_server_creates_a_core_application_when_absent(
+    entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    core = MagicMock(spec=RimSortMcpCore)
+    server = MagicMock()
+    created = MagicMock()
+    app_class = MagicMock()
+    app_class.instance.return_value = None
+    app_class.return_value = created
+
+    monkeypatch.setattr(entrypoint, "_configure_stdio_logging", MagicMock())
+    monkeypatch.setattr(entrypoint, "_bootstrap_core", MagicMock(return_value=core))
+    monkeypatch.setattr(entrypoint, "build_server", MagicMock(return_value=server))
+    monkeypatch.setattr(entrypoint, "QCoreApplication", app_class)
+
+    assert entrypoint.run_mcp_server("Second") == 0
+    app_class.assert_called_once()
+    created.quit.assert_called_once()
+    entrypoint._bootstrap_core.assert_called_once_with("Second")
+
+
+def test_run_mcp_server_handles_keyboard_interrupt(
+    entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    core = MagicMock(spec=RimSortMcpCore)
+    server = MagicMock()
+    server.run.side_effect = KeyboardInterrupt
+    qt_app = MagicMock()
+
+    monkeypatch.setattr(entrypoint, "_configure_stdio_logging", MagicMock())
+    monkeypatch.setattr(entrypoint, "_bootstrap_core", MagicMock(return_value=core))
+    monkeypatch.setattr(entrypoint, "build_server", MagicMock(return_value=server))
+    monkeypatch.setattr(
+        entrypoint.QCoreApplication, "instance", MagicMock(return_value=qt_app)
+    )
+
+    assert entrypoint.run_mcp_server() == 0
+    qt_app.quit.assert_called_once()

@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
+from unittest.mock import MagicMock
 from xml.etree import ElementTree
 
 import pytest
 
+from app.controllers.sort_controller import Sorter
 from app.mcp.core import RimSortMcpCore
+from app.models.metadata.metadata_structure import ModType
+from app.services.import_export_service import ImportExportService
 from app.services.mod_list_parser import parse_mod_list_file
 from tests.game_layout_fixtures import GameInstall
 from tests.mcp.conftest import build_core, write_mod, write_mods_config
@@ -425,4 +430,251 @@ def test_refresh_metadata_cache_keeps_clearing_invalid_workshop_folder(
     assert (
         mcp_core.settings.instances[mcp_core.settings.current_instance].workshop_folder
         == ""
+    )
+
+
+# ---- defensive branches ----
+
+
+def test_mods_config_without_root_is_treated_as_absent(
+    mcp_core: RimSortMcpCore, config_folder: Path
+) -> None:
+    """A file without ``ModsConfigData`` yields no active list, not a crash."""
+    (config_folder / "ModsConfig.xml").write_text(
+        "<NotModsConfig><activeMods><li>brrainz.harmony</li></activeMods>"
+        "</NotModsConfig>",
+        encoding="utf-8",
+    )
+
+    result = mcp_core.get_active_modlist()
+
+    assert result["found"] is False
+    assert result["active_mods"] == []
+
+
+def test_empty_package_id_list_resolves_to_nothing(mcp_core: RimSortMcpCore) -> None:
+    assert mcp_core.get_mod_details([])["requested"] == []
+    assert mcp_core.get_mod_details(["   "])["not_found"] == []
+
+
+def test_dedupe_drops_blanks_and_case_insensitive_duplicates() -> None:
+    assert RimSortMcpCore._dedupe(
+        ["test.core", "  ", "TEST.CORE", "", "test.other"]
+    ) == ["test.core", "test.other"]
+    # Non-string entries (possible through a JSON caller) are skipped, not kept.
+    assert RimSortMcpCore._dedupe(cast("list[str]", ["test.core", 42, None])) == [
+        "test.core"
+    ]
+
+
+def test_steam_lookup_prefers_first_entry_and_ignores_blanks(
+    mcp_core: RimSortMcpCore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Blank package IDs are skipped; the first entry wins on a collision."""
+
+    def entry(package_id: str | None) -> MagicMock:
+        built = MagicMock()
+        built.packageId = package_id
+        built.name = package_id
+        return built
+
+    db = MagicMock()
+    db.database = {
+        "111": entry(None),
+        "222": entry("Test.Core"),
+        "333": entry("test.core"),
+        "444": entry("other.mod"),
+    }
+    monkeypatch.setattr(type(mcp_core.metadata_controller), "steam_db", db, False)
+    mcp_core._packageid_to_steam_entry = None
+
+    assert mcp_core._steam_entry_for("TEST.CORE") is db.database["222"]
+    assert mcp_core._steam_entry_for("other.mod") is db.database["444"]
+    assert mcp_core._steam_entry_for("absent.mod") is None
+
+
+def test_incompatibility_ignores_self_declaration(
+    mcp_core: RimSortMcpCore, game_install: GameInstall
+) -> None:
+    write_mod(
+        game_install.mods_path,
+        "Selfish",
+        "test.selfish",
+        rules="<incompatibleWith><li>test.selfish</li></incompatibleWith>",
+    )
+    core = build_core(mcp_core.settings)
+
+    result = core.analyze_and_sort_modlist(["test.selfish"])
+
+    assert result["incompatibilities"] == []
+
+
+def test_unsortable_algorithm_unwinds_the_list(
+    ordered: RimSortMcpCore, config_folder: Path
+) -> None:
+    """An unknown sorting algorithm is reported instead of raising."""
+    ordered.settings.sorting_algorithm = "NotARealAlgorithm"  # type: ignore[assignment]
+
+    result = ordered.apply_active_modlist(["test.core"])
+
+    assert result["saved"] is False
+    assert "sorting_algorithm_unimplemented" in [
+        error["type"] for error in result["errors"]
+    ]
+    assert result["sorted_package_ids"] == []
+
+
+def test_dropped_mods_are_reported(
+    ordered: RimSortMcpCore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A sorter that silently loses a mod must surface as a warning."""
+
+    def drop_everything(
+        self: object,
+        sort_method: object = None,
+    ) -> tuple[bool, list[str]]:
+        return True, []
+
+    monkeypatch.setattr(Sorter, "sort", drop_everything, raising=True)
+
+    result = ordered.analyze_and_sort_modlist(["test.core", "brrainz.harmony"])
+
+    assert result["sorted_package_ids"] == []
+    dropped = [w for w in result["warnings"] if w["type"] == "mods_dropped_from_sort"]
+    assert dropped and dropped[0]["packageids"]
+
+
+def test_load_order_violations_are_reported(
+    ordered: RimSortMcpCore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Wrong output order is caught by the post-sort verification pass."""
+    paths = ordered.metadata_controller.packageid_to_paths
+    dependent_path = next(iter(paths["test.dependent"]))
+    core_path = next(iter(paths["test.core"]))
+    wrong_order = [dependent_path, core_path]
+
+    def reverse_sort(
+        self: object, sort_method: object = None
+    ) -> tuple[bool, list[str]]:
+        return True, list(wrong_order)
+
+    monkeypatch.setattr(Sorter, "sort", reverse_sort, raising=True)
+
+    result = ordered.analyze_and_sort_modlist(
+        ["test.core", "test.dependent", "brrainz.harmony"]
+    )
+
+    violations = [w for w in result["warnings"] if w["type"] == "load_order_violation"]
+    assert violations
+    assert violations[0]["packageid"] == "test.dependent"
+    assert violations[0]["target"] == "test.core"
+    assert violations[0]["relation"] == "loadAfter"
+
+
+def test_load_before_violation_is_reported(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The ``loadBefore`` half of the verification pass is reported too."""
+    mods = game_install.mods_path
+    write_mod(mods, "Core_Lib", "test.core")
+    write_mod(
+        mods,
+        "Early",
+        "test.early",
+        rules="<loadBefore><li>test.core</li></loadBefore>",
+    )
+    core = build_core(mcp_core.settings)
+
+    paths = core.metadata_controller.packageid_to_paths
+    core_path = next(iter(paths["test.core"]))
+    early_path = next(iter(paths["test.early"]))
+    # core before early violates "early must load before core".
+    wrong_order = [core_path, early_path]
+
+    def reverse_sort(
+        self: object, sort_method: object = None
+    ) -> tuple[bool, list[str]]:
+        return True, list(wrong_order)
+
+    monkeypatch.setattr(Sorter, "sort", reverse_sort, raising=True)
+
+    result = core.analyze_and_sort_modlist(["test.core", "test.early"])
+
+    violations = [w for w in result["warnings"] if w["type"] == "load_order_violation"]
+    assert violations
+    assert violations[0]["packageid"] == "test.early"
+    assert violations[0]["target"] == "test.core"
+    assert violations[0]["relation"] == "loadBefore"
+
+
+def test_apply_refuses_ids_resolved_after_analysis(
+    ordered: RimSortMcpCore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The write path re-resolves its own output and refuses anything unknown."""
+    original = type(ordered).analyze_and_sort_modlist
+
+    def analysis_with_ghost(
+        self: RimSortMcpCore, package_ids: list[str]
+    ) -> dict[str, object]:
+        result = original(self, package_ids)
+        result["sorted_package_ids"] = ["test.ghost"]
+        return result
+
+    monkeypatch.setattr(
+        type(ordered), "analyze_and_sort_modlist", analysis_with_ghost, raising=True
+    )
+
+    result = ordered.apply_active_modlist(["test.core"])
+
+    assert result["saved"] is False
+    assert [error["type"] for error in result["errors"]] == ["unresolved_package_id"]
+    assert result["sorted_package_ids"] == ["test.ghost"]
+
+
+def test_apply_reports_write_failure(
+    ordered: RimSortMcpCore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An unwritable target is reported, not raised, so the session survives."""
+
+    def boom(self: object, active_mods: list[str]) -> str:
+        raise OSError("disk is full")
+
+    monkeypatch.setattr(ImportExportService, "save_to_mods_config", boom, raising=True)
+
+    result = ordered.apply_active_modlist(["test.core"])
+
+    assert result["saved"] is False
+    assert [error["type"] for error in result["errors"]] == ["write_failed"]
+    assert "disk is full" in result["errors"][0]["message"]
+
+
+def test_duplicate_workshop_ids_get_the_steam_suffix() -> None:
+    """Both copies of a duplicate stay in the file, the Workshop one suffixed."""
+
+    def mod(package_id: str, mod_type: ModType) -> MagicMock:
+        built = MagicMock()
+        built.package_id = package_id
+        built.mod_type = mod_type
+        return built
+
+    duplicate = {"test.core": ["/workshop/test.core", "/local/test.core"]}
+
+    assert (
+        RimSortMcpCore._config_package_id(
+            mod("test.core", ModType.STEAM_WORKSHOP), duplicate
+        )
+        == "test.core_steam"
+    )
+    assert (
+        RimSortMcpCore._config_package_id(mod("test.core", ModType.LOCAL), duplicate)
+        == "test.core"
+    )
+    # A package ID that is not duplicated is written verbatim.
+    assert (
+        RimSortMcpCore._config_package_id(
+            mod("other.mod", ModType.STEAM_WORKSHOP), duplicate
+        )
+        == "other.mod"
     )
