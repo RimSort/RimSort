@@ -9,7 +9,7 @@ permalink: user-guide/mcp-server
 
 {: .no_toc}
 
-RimSort ships a [Model Context Protocol](https://modelcontextprotocol.io/) server so AI agents (Cursor, Claude Desktop, and other MCP clients) can inspect your installed RimWorld mods, validate a load order, and read or write `ModsConfig.xml` through structured tool calls.
+RimSort ships a [Model Context Protocol](https://modelcontextprotocol.io/) server so any MCP client can inspect your installed RimWorld mods, validate a load order, and read or write `ModsConfig.xml` through structured tool calls.
 
 ## Table of Contents
 
@@ -66,7 +66,29 @@ That separation is what allows the server to be launched from an MCP client, whi
 
 ## Client configuration
 
-Add the server to your MCP client's configuration. For Cursor, `.cursor/mcp.json` in this repository already contains:
+The server is a normal MCP stdio process. Any client that can launch a local command and speak JSON-RPC on that process's stdin and stdout can use it. The snippets below differ only in where each client stores the config and which key wraps the server entry.
+
+From a source checkout the launch command is always `uv`, with these arguments:
+
+```json
+["run", "python", "-m", "app", "--mcp"]
+```
+
+`uv` must be on the `PATH` the client uses. The process working directory must be the repository root, because `python -m app` is imported from that checkout. Clients that document a working-directory field (`cwd` below) should set it to that directory. `QT_QPA_PLATFORM=offscreen` stops Qt from opening a window.
+
+A release build uses the packaged executable instead of `uv`, with the same `--mcp` and `--instance` arguments shown under Starting the server (`./RimSort` or `RimSort.exe`).
+
+To serve an instance other than the one selected in the GUI, append the instance name to `args`:
+
+```json
+["run", "python", "-m", "app", "--mcp", "--instance", "My Second Instance"]
+```
+
+The configs below omit `--instance`, so they bind the active instance. An unknown name still exits with code `2`.
+
+### Cursor
+
+Cursor reads a top-level `mcpServers` object from `.cursor/mcp.json` in a project, or from `~/.cursor/mcp.json` for every project. See [MCP in Cursor](https://cursor.com/docs/mcp).
 
 ```json
 {
@@ -80,7 +102,101 @@ Add the server to your MCP client's configuration. For Cursor, `.cursor/mcp.json
 }
 ```
 
-For Claude Desktop, the same block belongs under `mcpServers` in `claude_desktop_config.json`.
+### Claude Desktop
+
+The same `mcpServers` block belongs in `claude_desktop_config.json`. [Claude Desktop's local-server guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers) places that file at:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+
+Settings → Developer → Edit Config opens the file.
+
+### Gemini CLI
+
+Gemini CLI reads a top-level `mcpServers` object from `~/.gemini/settings.json` for every session, or from `.gemini/settings.json` in a project (the project file overrides the user file). A stdio server sets `command`. `args`, `env`, and `cwd` are optional. See [MCP servers with Gemini CLI](https://geminicli.com/docs/tools/mcp-server/).
+
+```json
+{
+  "mcpServers": {
+    "rimsort": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "app", "--mcp"],
+      "env": { "QT_QPA_PLATFORM": "offscreen" },
+      "cwd": "/path/to/RimSort"
+    }
+  }
+}
+```
+
+### Codex CLI
+
+OpenAI Codex reads `~/.codex/config.toml`. A trusted project can override it with `.codex/config.toml`; Codex skips project layers until the project is trusted. A stdio server is a table named `[mcp_servers.<name>]` with `command` and optional `args`, `env`, and `cwd`. See [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic) and the [`mcp_servers` reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+```toml
+[mcp_servers.rimsort]
+command = "uv"
+args = ["run", "python", "-m", "app", "--mcp"]
+env = { "QT_QPA_PLATFORM" = "offscreen" }
+cwd = "/path/to/RimSort"
+```
+
+### VS Code
+
+GitHub Copilot in VS Code uses the VS Code MCP format. Workspace config is `.vscode/mcp.json`. The user-profile file is opened with the command **MCP: Open User Configuration**; its path is not a fixed location in the docs. Both files use a top-level `servers` object, and a local server sets `"type": "stdio"`. In a workspace, `cwd` defaults to the workspace folder. A user-profile entry is not tied to one folder, so set `cwd` there to the checkout. See the [MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
+
+```json
+{
+  "servers": {
+    "rimsort": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "python", "-m", "app", "--mcp"],
+      "env": { "QT_QPA_PLATFORM": "offscreen" }
+    }
+  }
+}
+```
+
+VS Code forwards that entry to the Copilot agent session. In Copilot Chat, switch the mode to Agent and enable the RimSort tools. Copilot's separate portable files (workspace `.mcp.json`, or `~/.copilot/mcp-config.json`) use `mcpServers` instead of `servers` and take `command` plus `args` without `type`.
+
+### Windsurf
+
+Cascade reads `mcpServers` from `mcp_config.json`. The [Windsurf Cascade MCP guide](https://docs.devin.ai/windsurf/plugins/cascade/mcp) puts that file at `~/.config/devin/mcp_config.json` on macOS and Linux (`$XDG_CONFIG_HOME/devin/mcp_config.json` when `XDG_CONFIG_HOME` is set) and at `%AppData%/devin/mcp_config.json` on Windows. Open MCP config file in Cascade's MCP menu opens the file for your install. A stdio entry is `command`, `args`, and `env`. The guide does not document a working-directory field, so start the client from the RimSort checkout (or point `command` at a release binary and pass `--mcp`).
+
+```json
+{
+  "mcpServers": {
+    "rimsort": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "app", "--mcp"],
+      "env": { "QT_QPA_PLATFORM": "offscreen" }
+    }
+  }
+}
+```
+
+The editor's own discovery file is separate: `~/.codeium/windsurf/mcp_config.json` (Next builds use `~/.codeium/windsurf-next/mcp_config.json`). It uses the same `mcpServers` shape.
+
+### Zed
+
+Zed stores local servers under `context_servers` in the settings file opened by `zed: open settings file`. Each entry has `command`, `args`, and `env`. See [Model Context Protocol in Zed](https://zed.dev/docs/ai/mcp). The settings page does not document a working-directory key. If `uv run python -m app` cannot see this checkout, point `command` at a release binary and pass `--mcp`.
+
+```json
+{
+  "context_servers": {
+    "rimsort": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "app", "--mcp"],
+      "env": { "QT_QPA_PLATFORM": "offscreen" }
+    }
+  }
+}
+```
+
+### Other stdio clients
+
+A client that is not listed above still works when it can start a process and use stdio rather than HTTP or SSE. Give it the same `command`, `args`, and `env` as the Cursor block, and set its working directory to the repository root when the client has a place to put that path.
 
 ## Tools
 
