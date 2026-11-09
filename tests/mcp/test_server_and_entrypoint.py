@@ -516,20 +516,44 @@ def test_bootstrap_core_warns_when_paths_are_unconfigured(
     )
 
 
-def test_run_mcp_server_serves_and_quits_the_core_app(
-    entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def _stub_run_mcp_server(
+    entrypoint: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    run_side_effect: type[BaseException] | None = None,
+    qt_app: MagicMock | None = None,
+) -> MagicMock:
+    """Stub the collaborators ``run_mcp_server`` calls before it serves.
+
+    :param entrypoint: Imported ``app.mcp.entrypoint`` module.
+    :param monkeypatch: Fixture patching that module.
+    :param run_side_effect: Exception class ``server.run`` raises, if any.
+    :param qt_app: Application returned by ``QCoreApplication.instance``.
+        Omit it when the test replaces ``QCoreApplication`` itself.
+    :return: The mock ``build_server`` returns.
+    """
     core = MagicMock(spec=RimSortMcpCore)
     server = MagicMock()
-    server.run.return_value = None
-    qt_app = MagicMock()
+    if run_side_effect is None:
+        server.run.return_value = None
+    else:
+        server.run.side_effect = run_side_effect
 
     monkeypatch.setattr(entrypoint, "_configure_stdio_logging", MagicMock())
     monkeypatch.setattr(entrypoint, "_bootstrap_core", MagicMock(return_value=core))
     monkeypatch.setattr(entrypoint, "build_server", MagicMock(return_value=server))
-    monkeypatch.setattr(
-        entrypoint.QCoreApplication, "instance", MagicMock(return_value=qt_app)
-    )
+    if qt_app is not None:
+        monkeypatch.setattr(
+            entrypoint.QCoreApplication, "instance", MagicMock(return_value=qt_app)
+        )
+    return server
+
+
+def test_run_mcp_server_serves_and_quits_the_core_app(
+    entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    qt_app = MagicMock()
+    server = _stub_run_mcp_server(entrypoint, monkeypatch, qt_app=qt_app)
 
     assert entrypoint.run_mcp_server() == 0
     server.run.assert_called_once_with(transport="stdio")
@@ -539,16 +563,11 @@ def test_run_mcp_server_serves_and_quits_the_core_app(
 def test_run_mcp_server_creates_a_core_application_when_absent(
     entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    core = MagicMock(spec=RimSortMcpCore)
-    server = MagicMock()
+    _stub_run_mcp_server(entrypoint, monkeypatch)
     created = MagicMock()
     app_class = MagicMock()
     app_class.instance.return_value = None
     app_class.return_value = created
-
-    monkeypatch.setattr(entrypoint, "_configure_stdio_logging", MagicMock())
-    monkeypatch.setattr(entrypoint, "_bootstrap_core", MagicMock(return_value=core))
-    monkeypatch.setattr(entrypoint, "build_server", MagicMock(return_value=server))
     monkeypatch.setattr(entrypoint, "QCoreApplication", app_class)
 
     assert entrypoint.run_mcp_server("Second") == 0
@@ -560,16 +579,12 @@ def test_run_mcp_server_creates_a_core_application_when_absent(
 def test_run_mcp_server_handles_keyboard_interrupt(
     entrypoint: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    core = MagicMock(spec=RimSortMcpCore)
-    server = MagicMock()
-    server.run.side_effect = KeyboardInterrupt
     qt_app = MagicMock()
-
-    monkeypatch.setattr(entrypoint, "_configure_stdio_logging", MagicMock())
-    monkeypatch.setattr(entrypoint, "_bootstrap_core", MagicMock(return_value=core))
-    monkeypatch.setattr(entrypoint, "build_server", MagicMock(return_value=server))
-    monkeypatch.setattr(
-        entrypoint.QCoreApplication, "instance", MagicMock(return_value=qt_app)
+    _stub_run_mcp_server(
+        entrypoint,
+        monkeypatch,
+        run_side_effect=KeyboardInterrupt,
+        qt_app=qt_app,
     )
 
     assert entrypoint.run_mcp_server() == 0
