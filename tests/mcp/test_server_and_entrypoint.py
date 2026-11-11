@@ -19,7 +19,7 @@ from loguru import logger
 from mcp_types import CallToolResult, Tool
 
 from app.mcp.core import RimSortMcpCore
-from app.mcp.server import SERVER_NAME, build_server
+from app.mcp.server import SERVER_NAME, TOOL_DESCRIPTIONS, build_server
 from app.models.instance import Instance
 from app.models.settings import Settings
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
@@ -79,6 +79,26 @@ def test_every_tool_documents_itself_and_types_its_arguments(
         assert schema["type"] == "object"
         for prop in schema.get("properties", {}).values():
             assert prop.get("type") or prop.get("anyOf"), prop
+
+
+def test_tool_descriptions_do_not_depend_on_docstrings(
+    mcp_core: RimSortMcpCore,
+) -> None:
+    """Packaged builds strip ``__doc__``; registration must pass text explicitly."""
+    assert set(TOOL_DESCRIPTIONS) == EXPECTED_TOOLS
+
+    saved_docs: dict[str, str | None] = {}
+    for name in EXPECTED_TOOLS:
+        method = getattr(RimSortMcpCore, name)
+        saved_docs[name] = method.__doc__
+        method.__doc__ = None
+    try:
+        tools = {tool.name: tool for tool in _list_tools(mcp_core)}
+        for name, description in TOOL_DESCRIPTIONS.items():
+            assert tools[name].description == description
+    finally:
+        for name, doc in saved_docs.items():
+            getattr(RimSortMcpCore, name).__doc__ = doc
 
 
 def test_search_tool_schema_exposes_documented_parameters(

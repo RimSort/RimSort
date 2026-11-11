@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 from unittest.mock import MagicMock
@@ -10,10 +12,13 @@ from xml.etree import ElementTree
 import pytest
 
 from app.controllers.sort_controller import Sorter
+from app.mcp import core as mcp_core_module
 from app.mcp.core import RimSortMcpCore
+from app.models.instance import Instance
 from app.models.metadata.metadata_structure import ModType
 from app.services.import_export_service import ImportExportService
 from app.services.mod_list_parser import parse_mod_list_file
+from app.sort import topo_sort as topo_sort_module
 from tests.game_layout_fixtures import GameInstall
 from tests.mcp.conftest import build_core, write_mod, write_mods_config
 
@@ -678,3 +683,152 @@ def test_duplicate_workshop_ids_get_the_steam_suffix() -> None:
         )
         == "other.mod"
     )
+
+
+def _core_with_local_and_workshop_copy(
+    mcp_core: RimSortMcpCore, game_install: GameInstall, tmp_path: Path
+) -> RimSortMcpCore:
+    """Build a core that has the same package ID as both local and Workshop."""
+    write_mod(game_install.mods_path, "CopyLocal", "test.copy")
+
+    steamapps = tmp_path / "steamapps"
+    workshop = steamapps / "workshop" / "content" / "294100"
+    write_mod(workshop, "1234567890", "test.copy")
+    (steamapps / "workshop" / "appworkshop_294100.acf").write_text(
+        '"AppWorkshop"{}', encoding="utf-8"
+    )
+
+    instance = mcp_core.settings.instances[mcp_core.settings.current_instance]
+    instance.workshop_folder = str(workshop)
+    instance.steam_client_integration = True
+    return build_core(mcp_core.settings)
+
+
+@pytest.mark.parametrize("auto_sort", [True, False])
+def test_apply_keeps_workshop_copy_when_local_duplicate_exists(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    config_folder: Path,
+    tmp_path: Path,
+    auto_sort: bool,
+) -> None:
+    """Saving ``test.copy_steam`` must not fall back to the local copy."""
+    core = _core_with_local_and_workshop_copy(mcp_core, game_install, tmp_path)
+    write_mods_config(config_folder, ["ludeon.rimworld"])
+
+    result = core.apply_active_modlist(["test.copy_steam"], auto_sort=auto_sort)
+
+    assert result["saved"] is True
+    written = result["written_package_ids"]
+    assert "test.copy_steam" in written
+    assert "test.copy" not in written
+    parsed = parse_mod_list_file(str(config_folder / "ModsConfig.xml"))
+    assert "test.copy_steam" in parsed.package_ids
+    assert "test.copy" not in parsed.package_ids
+
+
+def test_refresh_keeps_bound_instance_across_settings_reload(
+    mcp_core: RimSortMcpCore, game_install: GameInstall, config_folder: Path
+) -> None:
+    """``--instance`` must survive ``Settings.load()`` during a refresh."""
+    settings = mcp_core.settings
+    settings.instances["Other"] = Instance(
+        name="Other",
+        game_folder=str(game_install.launch_location),
+        config_folder=str(config_folder),
+        local_folder=str(game_install.mods_path),
+    )
+    settings.current_instance = "Other"
+    core = build_core(settings)
+
+    settings.current_instance = "Default"
+    settings.save()
+    settings.current_instance = "Other"
+
+    core.refresh_metadata_cache()
+
+    assert core.settings.current_instance == "Other"
+    assert core.get_instance_status()["instance_name"] == "Other"
+
+
+def test_overlapping_sort_dialog_capture_does_not_restore_early() -> None:
+    """A nested/overlapping capture must not reinstate the real dialog callback."""
+    original = topo_sort_module.show_warning
+    second_entered = threading.Event()
+    first_may_exit = threading.Event()
+    failures: list[str] = []
+
+    def first() -> None:
+        with mcp_core_module._capture_sort_dialogs() as captured:
+            if not second_entered.wait(timeout=2):
+                failures.append("second capture never entered")
+                return
+            if topo_sort_module.show_warning is original:
+                failures.append("show_warning restored while first capture active")
+            topo_sort_module.show_warning("one", "cycle-a", details="A -> B -> A")
+            first_may_exit.set()
+            assert captured
+
+    def second() -> None:
+        with mcp_core_module._capture_sort_dialogs() as captured:
+            second_entered.set()
+            if not first_may_exit.wait(timeout=2):
+                failures.append("first capture never reached midpoint")
+                return
+            if topo_sort_module.show_warning is original:
+                failures.append("show_warning restored while second capture active")
+            topo_sort_module.show_warning("two", "cycle-b", details="B -> A -> B")
+            assert captured
+
+    threads = [threading.Thread(target=first), threading.Thread(target=second)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=5)
+
+    assert failures == []
+    assert topo_sort_module.show_warning is original
+
+
+def test_backup_names_are_unique_within_the_same_second(
+    ordered: RimSortMcpCore,
+    config_folder: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two backups in the same second must not overwrite each other."""
+    write_mods_config(config_folder, ["ludeon.rimworld"])
+    fixed = datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)
+
+    class _FixedDateTime:
+        @staticmethod
+        def now(tz: object | None = None) -> datetime:
+            return fixed
+
+    monkeypatch.setattr(mcp_core_module, "datetime", _FixedDateTime)
+
+    first = ordered._backup_mods_config()
+    write_mods_config(config_folder, ["ludeon.rimworld", "brrainz.harmony"])
+    second = ordered._backup_mods_config()
+
+    assert first is not None and second is not None
+    assert first != second
+    assert first.is_file() and second.is_file()
+    assert first.read_text(encoding="utf-8") != second.read_text(encoding="utf-8")
+
+
+def test_apply_refuses_write_when_core_cannot_be_resolved(
+    ordered: RimSortMcpCore, config_folder: Path
+) -> None:
+    """Metadata failure must not replace ModsConfig with an empty Unknown list."""
+    existing = write_mods_config(config_folder, ["ludeon.rimworld", "brrainz.harmony"])
+    before = existing.read_text(encoding="utf-8")
+
+    ordered.metadata_controller.mods_metadata.clear()
+    ordered.metadata_controller._packageid_to_paths_cache = None
+    ordered.metadata_controller.metadata_mediator._game_version = "Unknown"
+
+    result = ordered.apply_active_modlist([])
+
+    assert result["saved"] is False
+    assert result["errors"][0]["type"] == "core_unresolved"
+    assert existing.read_text(encoding="utf-8") == before

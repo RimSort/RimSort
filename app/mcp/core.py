@@ -12,6 +12,7 @@ rather than Qt translations (they never reach a QWidget).
 from __future__ import annotations
 
 import shutil
+import threading
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -43,8 +44,15 @@ from app.utils.xml import xml_path_to_json
 MODS_CONFIG_FILENAME = "ModsConfig.xml"
 MAX_SEARCH_RESULTS = 200
 DESCRIPTION_LIMIT = 500
+CORE_PACKAGE_ID = "ludeon.rimworld"
+_STEAM_SUFFIX = "_steam"
 
 Diagnostic = dict[str, Any]
+
+_sort_dialog_lock = threading.Lock()
+_sort_dialog_depth = 0
+_sort_dialog_original: Callable[..., None] | None = None
+_sort_dialog_tls = threading.local()
 
 
 def _diagnostic(kind: str, message: str, **extra: Any) -> Diagnostic:
@@ -62,24 +70,23 @@ def _supporting_major_minor(supported_versions: set[str]) -> list[str]:
     return sorted(normalized)
 
 
-@contextmanager
-def _capture_sort_dialogs() -> Iterator[list[dict[str, Any]]]:
-    """Capture the modal warnings the sort pipeline would otherwise block on.
+def _strip_steam_suffix(package_id: str) -> str:
+    """Return the bare package ID, dropping a trailing ``_steam`` suffix."""
+    if package_id.lower().endswith(_STEAM_SUFFIX):
+        return package_id[: -len(_STEAM_SUFFIX)]
+    return package_id
 
-    ``do_topo_sort`` reports circular dependencies through
-    ``app.sort.topo_sort.show_warning``, which spins a ``QMessageBox`` and would
-    hang a headless server. The dialog payloads are collected instead so the
-    caller can turn them into structured diagnostics.
-    """
-    captured: list[dict[str, Any]] = []
 
-    def _capture(
-        title: str | None = None,
-        text: str | None = None,
-        information: str | None = None,
-        details: str | None = None,
-        parent: Any = None,
-    ) -> None:
+def _intercepted_show_warning(
+    title: str | None = None,
+    text: str | None = None,
+    information: str | None = None,
+    details: str | None = None,
+    parent: Any = None,
+) -> None:
+    """Headless stand-in for ``topo_sort.show_warning`` while sorts are active."""
+    captured = getattr(_sort_dialog_tls, "captured", None)
+    if captured is not None:
         captured.append(
             {
                 "title": title,
@@ -88,13 +95,44 @@ def _capture_sort_dialogs() -> Iterator[list[dict[str, Any]]]:
                 "details": details,
             }
         )
+        return
+    logger.warning(
+        "topo_sort.show_warning fired without an MCP capture sink "
+        f"(title={title!r}, text={text!r})"
+    )
 
-    original: Callable[..., None] = topo_sort_module.show_warning
-    topo_sort_module.show_warning = _capture
+
+@contextmanager
+def _capture_sort_dialogs() -> Iterator[list[dict[str, Any]]]:
+    """Capture the modal warnings the sort pipeline would otherwise block on.
+
+    ``do_topo_sort`` reports circular dependencies through
+    ``app.sort.topo_sort.show_warning``, which spins a ``QMessageBox`` and would
+    hang a headless server. The dialog payloads are collected instead so the
+    caller can turn them into structured diagnostics.
+
+    Overlapping sorts share one interceptor under a refcount: the real dialog
+    callback is restored only when the outermost capture exits.
+    """
+    global _sort_dialog_depth, _sort_dialog_original
+
+    captured: list[dict[str, Any]] = []
+    with _sort_dialog_lock:
+        if _sort_dialog_depth == 0:
+            _sort_dialog_original = topo_sort_module.show_warning
+            topo_sort_module.show_warning = _intercepted_show_warning
+        _sort_dialog_depth += 1
+    _sort_dialog_tls.captured = captured
     try:
         yield captured
     finally:
-        topo_sort_module.show_warning = original
+        _sort_dialog_tls.captured = None
+        with _sort_dialog_lock:
+            _sort_dialog_depth -= 1
+            if _sort_dialog_depth == 0:
+                if _sort_dialog_original is not None:
+                    topo_sort_module.show_warning = _sort_dialog_original
+                _sort_dialog_original = None
 
 
 class RimSortMcpCore:
@@ -108,6 +146,9 @@ class RimSortMcpCore:
         self.settings = settings
         self.metadata_controller = metadata_controller
         self._packageid_to_steam_entry: dict[str, SteamDbEntry] | None = None
+        # ``--instance`` (or the active instance at bootstrap) must survive
+        # ``Settings.load()`` during metadata refresh.
+        self._bound_instance_name = settings.current_instance
 
     # ---- shared helpers ----
 
@@ -528,8 +569,9 @@ class RimSortMcpCore:
     def analyze_and_sort_modlist(self, package_ids: list[str]) -> dict[str, Any]:
         """Validate a candidate list and run RimSort's native sort on it."""
         candidate_ids = self._ensure_core_content(package_ids)
-        mods, unresolved, _duplicates = self._resolve_package_ids(candidate_ids)
+        mods, unresolved, duplicates = self._resolve_package_ids(candidate_ids)
         mods_by_pid = {str(mod.package_id): mod for mod in mods}
+        mods_by_uuid = {mod.uuid: mod for mod in mods}
         active_paths = {mod.uuid for mod in mods if mod.mod_path is not None}
 
         warnings: list[Diagnostic] = []
@@ -574,9 +616,12 @@ class RimSortMcpCore:
             sorted_paths = []
         else:
             if sort_success:
-                path_to_pid = {mod.uuid: pid for pid, mod in mods_by_pid.items()}
+                # Emit ModsConfig identities (including ``_steam``) so callers that
+                # write the sorted list keep the Workshop copy analysis chose.
                 sorted_package_ids = [
-                    path_to_pid[path] for path in sorted_paths if path in path_to_pid
+                    self._config_package_id(mods_by_uuid[path], duplicates)
+                    for path in sorted_paths
+                    if path in mods_by_uuid
                 ]
                 warnings.extend(
                     self._load_order_violations(sorted_package_ids, mods_by_pid)
@@ -598,7 +643,8 @@ class RimSortMcpCore:
                     )
                 )
 
-        dropped = sorted(set(mods_by_pid) - set(sorted_package_ids))
+        sorted_bare = {_strip_steam_suffix(pid) for pid in sorted_package_ids}
+        dropped = sorted(set(mods_by_pid) - sorted_bare)
         if sort_success and dropped:
             warnings.append(
                 _diagnostic(
@@ -760,7 +806,8 @@ class RimSortMcpCore:
     ) -> list[Diagnostic]:
         """Verify the produced order honours explicit load-order rules."""
         position = {
-            package_id: index for index, package_id in enumerate(sorted_package_ids)
+            _strip_steam_suffix(package_id): index
+            for index, package_id in enumerate(sorted_package_ids)
         }
         violations: list[Diagnostic] = []
         for package_id, mod in mods_by_pid.items():
@@ -819,6 +866,25 @@ class RimSortMcpCore:
                 "sorted_package_ids": [],
             }
 
+        # An empty/Unknown write is worse than refusing: if Core never made it
+        # into metadata (bad game folder, failed scan), do not clobber the file.
+        if not self._core_is_resolvable():
+            return {
+                "saved": False,
+                "errors": [
+                    _diagnostic(
+                        "core_unresolved",
+                        "RimWorld Core is not available in metadata; refusing "
+                        "to write ModsConfig.xml. Fix the game folder path and "
+                        "refresh metadata.",
+                    )
+                ],
+                "warnings": [],
+                "mods_config_path": str(mods_config_path),
+                "backup_path": None,
+                "sorted_package_ids": [],
+            }
+
         analysis = self.analyze_and_sort_modlist(package_ids)
         warnings = list(analysis["warnings"])
         errors = list(analysis["errors"])
@@ -854,10 +920,10 @@ class RimSortMcpCore:
                 }
             final_ids = list(analysis["sorted_package_ids"])
         else:
-            mods, _unresolved, _duplicates = self._resolve_package_ids(
+            mods, _unresolved, duplicates = self._resolve_package_ids(
                 self._ensure_core_content(package_ids)
             )
-            final_ids = [str(mod.package_id) for mod in mods]
+            final_ids = [self._config_package_id(mod, duplicates) for mod in mods]
 
         mods, unresolved, duplicates = self._resolve_package_ids(final_ids)
         if unresolved:
@@ -923,11 +989,19 @@ class RimSortMcpCore:
         """
         package_id = str(mod.package_id)
         if package_id in duplicates and mod.mod_type == ModType.STEAM_WORKSHOP:
-            return f"{package_id}_steam"
+            return f"{package_id}{_STEAM_SUFFIX}"
         return package_id
 
+    def _core_is_resolvable(self) -> bool:
+        """Return whether the base game package is present in metadata."""
+        installed = {
+            package_id.lower()
+            for package_id in self.metadata_controller.packageid_to_paths
+        }
+        return CORE_PACKAGE_ID in installed
+
     def _backup_mods_config(self) -> Path | None:
-        """Copy the existing ``ModsConfig.xml`` to a timestamped backup."""
+        """Copy the existing ``ModsConfig.xml`` to a unique timestamped backup."""
         source = self.mods_config_path
         if source is None or not source.is_file():
             return None
@@ -935,6 +1009,10 @@ class RimSortMcpCore:
         backup_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         target = backup_dir / f"ModsConfig_{stamp}.xml"
+        suffix = 1
+        while target.exists():
+            target = backup_dir / f"ModsConfig_{stamp}_{suffix}.xml"
+            suffix += 1
         shutil.copy2(source, target)
         logger.info(f"Backed up ModsConfig.xml to {target}")
         return target
@@ -948,11 +1026,20 @@ class RimSortMcpCore:
         (a user editing ``settings.json``, or an agent fixing
         ``workshop_folder``) take effect without restarting the server. Saves
         that :meth:`Settings.load` performs during mitigation stay on disk; the
-        in-memory object is authoritative afterwards.
+        in-memory object is authoritative afterwards. The instance selected at
+        bootstrap (``--instance`` or the then-active instance) stays bound even
+        when the reloaded file names a different ``current_instance``.
 
         :return: Summary counts for the refreshed metadata
         """
         self.settings.load()
+        if self._bound_instance_name in self.settings.instances:
+            self.settings.current_instance = self._bound_instance_name
+        else:
+            logger.warning(
+                f"Bound MCP instance {self._bound_instance_name!r} is no longer "
+                f"configured; staying on {self.settings.current_instance!r}"
+            )
         self.metadata_controller.reset_paths()
         self.metadata_controller.metadata_mediator.refresh_metadata(
             prefer_versioned=self.settings.prefer_versioned_about_tags,

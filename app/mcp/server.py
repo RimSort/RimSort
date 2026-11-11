@@ -18,6 +18,30 @@ from app.utils.app_info import AppInfo
 
 SERVER_NAME = "RimSort"
 
+# Nuitka release builds strip docstrings, so tool descriptions must be passed
+# explicitly at registration rather than inferred from ``fn.__doc__``.
+TOOL_DESCRIPTIONS: dict[str, str] = {
+    "get_instance_status": (
+        "Report the bound instance, game version, paths and mod counts."
+    ),
+    "search_installed_mods": (
+        "Search installed mods by keyword, version and active state."
+    ),
+    "get_mod_details": (
+        "Return full metadata and rule sets for the given package IDs."
+    ),
+    "get_active_modlist": (
+        "Return the ordered ModsConfig.xml list and any missing entries."
+    ),
+    "analyze_and_sort_modlist": (
+        "Validate a candidate list and run RimSort's native sort on it."
+    ),
+    "apply_active_modlist": (
+        "Write a validated load order to the instance's ModsConfig.xml."
+    ),
+    "refresh_metadata_cache": ("Re-scan the filesystem and ModsConfig.xml."),
+}
+
 
 def _guarded(name: str, fn: Callable[..., Any]) -> Callable[..., Any]:
     """Wrap a tool so unexpected failures surface as structured errors.
@@ -63,7 +87,11 @@ def build_server(core: RimSortMcpCore) -> MCPServer[Any]:
     )
 
     def register(name: str, fn: Callable[..., Any]) -> None:
-        server.add_tool(_guarded(name, fn), name=name)
+        server.add_tool(
+            _guarded(name, fn),
+            name=name,
+            description=TOOL_DESCRIPTIONS[name],
+        )
 
     register("get_instance_status", core.get_instance_status)
     register("search_installed_mods", core.search_installed_mods)
