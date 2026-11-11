@@ -18,9 +18,9 @@ dependencies = [
     "natsort==8.4.0",
     "networkx==3.7",
     "packaging==26.3",
-    "platformdirs==4.14.3",
+    "platformdirs==4.14.5",
     "psutil==7.2.2",
-    "pygit2==1.20.1",
+    "pygit2==1.21.0",
     "pygithub==2.10.0",
     "pyside6==6.12.0",
     "rapidfuzz>=3.14.3",
@@ -29,7 +29,7 @@ dependencies = [
     "steam==1.4.4",
     "steamfiles",
     "toposort==1.10",
-    "watchdog==7.0.0",
+    "watchdog==7.1.0",
     "zstandard==0.25.0",
 ]
 
