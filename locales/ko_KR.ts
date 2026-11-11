@@ -306,6 +306,10 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>다음 표는 중복된 모드를 패키지 ID별로 그룹화하여 표시합니다. 유지할 버전을 선택하고 작업을 선택하세요.</translation>
     </message>
     <message>
+        <source>Ignore Selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Delete Selected Mods</source>
         <translation>선택한 모드 삭제</translation>
     </message>
@@ -4931,6 +4935,14 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>동일한 패키지 ID를 가진 모드를 알리고 표시합니다.</translation>
+    </message>
+    <message>
+        <source>Clear ignored duplicate mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the duplicate mods warning again for package IDs you ignored</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Show recently updated mods indicator</source>

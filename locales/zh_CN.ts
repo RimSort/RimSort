@@ -306,6 +306,10 @@ The following table displays duplicate mods grouped by package ID. Select which 
         <translation>下表显示了按包名分组的重复模组。选择要保留的版本并选择操作。</translation>
     </message>
     <message>
+        <source>Ignore Selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Delete Selected Mods</source>
         <translation>删除选定的模组</translation>
     </message>
@@ -4935,6 +4939,14 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>通知并显示具有相同包名的模组</translation>
+    </message>
+    <message>
+        <source>Clear ignored duplicate mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the duplicate mods warning again for package IDs you ignored</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Show recently updated mods indicator</source>
