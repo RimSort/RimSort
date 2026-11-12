@@ -10,6 +10,7 @@
 # nuitka-project: --include-package=steamworks
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/../rimsort.nuitka-package.config.yml
 # nuitka-project: --include-data-file={MAIN_DIRECTORY}/../steam_appid.txt=steam_appid.txt
+# nuitka-project: --include-data-file={MAIN_DIRECTORY}/views/modern/modern.qss=app/views/modern/modern.qss
 # nuitka-project: --windows-icon-from-ico={MAIN_DIRECTORY}/../themes/default-icons/AppIcon_alt.ico
 # nuitka-project: --python-flag=no_asserts,no_docstrings
 
@@ -33,6 +34,35 @@ import traceback
 from logging import WARNING, getLogger
 from multiprocessing import freeze_support, set_start_method
 from types import TracebackType
+
+# Process --dev BEFORE any app.* imports: any module-level AppInfo()
+# construction in the import chain freezes the singleton with dev mode off
+# and silently redirects a --dev run to production storage. (Paired fix:
+# Instance's lazy steamcmd_install_path default.)
+if "--dev" in sys.argv:
+    os.environ["RIMSORT_DEV"] = "1"
+
+# Restart helper mode: the old process spawns THIS executable with
+# --restart-helper and then quits; we wait for its single-instance lock
+# to clear and launch the replacement. A frozen build cannot run a
+# `python -c` helper (sys.executable is RimSort itself), so the helper
+# dispatches through the packaged executable's own entry point. Stdlib
+# only: it must not pay the application's import cost.
+if "--restart-helper" in sys.argv:
+    import subprocess
+    import time
+    from pathlib import Path
+
+    helper_index = sys.argv.index("--restart-helper")
+    lock_path = sys.argv[helper_index + 1]
+    command = sys.argv[helper_index + 2 :]
+    for _ in range(50):
+        if not Path(lock_path).exists():
+            break
+        time.sleep(0.2)
+    # If the old process still hangs, launch anyway: the new instance's
+    # own lock acquisition recovers an outdated lock
+    sys.exit(subprocess.call(command))
 
 from loguru import logger
 
@@ -93,10 +123,7 @@ def handle_exception(
 sys.excepthook = handle_exception
 
 
-# Process --dev flag if present (before any other initialization)
-if "--dev" in sys.argv:
-    os.environ["RIMSORT_DEV"] = "1"
-
+# --dev is processed above the app imports - see the top of this file.
 # Process --disable-updater flag if present (before any other initialization)
 if "--disable-updater" in sys.argv:
     os.environ["RIMSORT_DISABLE_UPDATER"] = "1"

@@ -165,12 +165,28 @@ class TestPlatformSpecificOpen:
 
 
 class TestRestartApplication:
+    def _assert_helper_invocation(
+        self, mock_popen: MagicMock, executable: str, cmd: list[str]
+    ) -> None:
+        """Restarting spawns a detached helper through this
+        executable's own entry point that waits for the single-instance
+        lock to clear before relaunching, so the Popen call wraps the
+        real command instead of being it."""
+        mock_popen.assert_called_once()
+        args, kwargs = mock_popen.call_args
+        delayed = args[0]
+        assert kwargs["creationflags"] == 0
+        assert delayed[0] == executable
+        flag_index = delayed.index("--restart-helper")
+        assert "rimsort.lock" in delayed[flag_index + 1]
+        assert delayed[flag_index + 2 :] == cmd
+
     def test_non_frozen_reconstructs_module_invocation(self) -> None:
         """Regression test: `python -m app` sets sys.argv[0] to the resolved
-        path of app/__main__.py, not "-m app". Re-launching with
-        [sys.executable] + sys.argv (the old behavior) ran that path as a
-        plain script, which put app/ instead of the project root on
-        sys.path and broke `from app...` imports on restart."""
+        path of app/__main__.py, not "-m app". Re-launching with that path
+        directly runs it as a plain script, which puts app/ instead of the
+        project root on sys.path and breaks `from app...` imports on
+        restart, so the -m invocation is reconstructed."""
         with (
             patch("app.utils.generic.sys") as mock_sys,
             patch("app.utils.generic.subprocess.Popen") as mock_popen,
@@ -183,8 +199,10 @@ class TestRestartApplication:
 
             restart_application()
 
-            mock_popen.assert_called_once_with(
-                ["C:\\Python\\python.exe", "-m", "app", "--extra"]
+            self._assert_helper_invocation(
+                mock_popen,
+                "C:\\Python\\python.exe",
+                ["C:\\Python\\python.exe", "-m", "app", "--extra"],
             )
 
     def test_frozen_reuses_executable_directly(self) -> None:
@@ -200,7 +218,11 @@ class TestRestartApplication:
 
             restart_application()
 
-            mock_popen.assert_called_once_with(["C:\\RimSort\\RimSort.exe", "--extra"])
+            self._assert_helper_invocation(
+                mock_popen,
+                "C:\\RimSort\\RimSort.exe",
+                ["C:\\RimSort\\RimSort.exe", "--extra"],
+            )
 
 
 class TestApplyLaunchPrefix:

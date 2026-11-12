@@ -3037,6 +3037,9 @@ class ModListWidget(QListWidget):
             widget.toggle_warning_signal.connect(self.toggle_warning)
             widget.toggle_error_signal.connect(self.toggle_warning)
             item.setSizeHint(widget.sizeHint())
+            # Column 1: the widget's minimum size overflows its cell, and
+            # on column 0 that overflow covered the row checkbox. Placing
+            # it on the Name column keeps the checkbox fully visible.
             self.setItemWidget(item, widget)
 
             # Apply translation status if enabled

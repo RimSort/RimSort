@@ -50,7 +50,7 @@ class AuxMetadataEntry(Base):
     )
 
     user_notes: Mapped[str] = mapped_column(String, default="", server_default="")
-    color_hex: Mapped[str] = mapped_column(
+    color_hex: Mapped[str | None] = mapped_column(
         String, default=None, nullable=True
     )  # None/NULL means use theme default
     ignore_warnings: Mapped[bool] = mapped_column(

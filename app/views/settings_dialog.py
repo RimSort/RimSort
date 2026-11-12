@@ -1344,15 +1344,46 @@ This basically preserves your mod coloring, user notes etc. for this many second
 
         tab_layout = QVBoxLayout(tab)
 
-        # === Theme settings group ===
-        theme_group_label = self._make_section_label(self.tr("Theme Settings"))
-        tab_layout.addWidget(theme_group_label)
+        # === Profile settings group ===
+        profile_group_label = self._make_section_label(self.tr("Profile Settings"))
+        tab_layout.addWidget(profile_group_label)
 
-        theme_group_box = QGroupBox()
-        tab_layout.addWidget(theme_group_box)
+        _, profile_group_layout = self._add_group_box(tab_layout)
+
+        profile_format_layout = QHBoxLayout()
+        profile_group_layout.addLayout(profile_format_layout)
+
+        profile_format_label = QLabel(self.tr("Profile Format"))
+        profile_format_layout.addWidget(profile_format_label)
+        profile_format_layout.addStretch()
+
+        self.profile_format_combobox = QComboBox()
+        self.profile_format_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        self.profile_format_combobox.addItems(
+            [self.tr("RimSort"), self.tr("RimSort - Modern UI")]
+        )
+        profile_format_layout.addWidget(self.profile_format_combobox)
+
+        # Per-profile options (unique to the selected profile format). No
+        # inner scroll: the Appearance tab's own scroll owns overflow, and
+        # the comboboxes' popup lists scroll natively when they grow.
+        profile_options_layout = QVBoxLayout()
+        profile_options_layout.setContentsMargins(4, 4, 4, 4)
+        profile_group_layout.addLayout(profile_options_layout)
+
+        # -- RimSort (classic) profile options --
+        classic_profile_label = QLabel(self.tr("RimSort (classic) profile"))
+        classic_profile_label.setStyleSheet("font-weight: bold;")
+        profile_options_layout.addWidget(classic_profile_label)
+
+        theme_settings_label = QLabel(self.tr("Theme Settings"))
+        theme_settings_label.setStyleSheet("font-style: italic;")
+        profile_options_layout.addWidget(theme_settings_label)
 
         theme_layout = QHBoxLayout()
-        theme_group_box.setLayout(theme_layout)
+        profile_options_layout.addLayout(theme_layout)
 
         self.enable_themes_checkbox = QCheckBox(
             self.tr("Enable to use theme / stylesheet instead of system Theme")
@@ -1380,6 +1411,148 @@ This basically preserves your mod coloring, user notes etc. for this many second
         self.theme_location_open_button = QToolButton()
         self.theme_location_open_button.setText(self.tr("Open Theme Location"))
         theme_layout.addWidget(self.theme_location_open_button)
+
+        # The exception note lives under the CLASSIC theme settings: the
+        # Modern UI borrows this setting for its border
+        row_style_note = QLabel(
+            self.tr("RimSort - Modern UI uses this setting for its border.")
+        )
+        row_style_note.setStyleSheet("font-style: italic;")
+        row_style_note.setWordWrap(True)
+        profile_options_layout.addWidget(row_style_note)
+
+        # -- RimSort - Modern UI profile options --
+        modern_profile_label = QLabel(self.tr("RimSort - Modern UI profile"))
+        modern_profile_label.setStyleSheet("font-weight: bold;")
+        profile_options_layout.addWidget(modern_profile_label)
+
+        active_columns_label = QLabel(self.tr("Active Columns (6 slots)"))
+        active_columns_label.setStyleSheet("font-style: italic;")
+        profile_options_layout.addWidget(active_columns_label)
+
+        # Active Columns: exactly 6 slots, each fillable from the available
+        # column list. Slot 1 defaults to RimSort's bundled "Default"
+        # column; the remaining slots default to "None".
+        available_columns = [
+            "Default",
+            "Category",
+            "Mod/Game Version",
+            "Author",
+            "Modified Time/Workshop Updated",
+            "Folder Size",
+            "Version",
+            "PackageId",
+            "None",
+        ]
+        self.active_columns_comboboxes: list[QComboBox] = []
+        for slot in range(6):
+            slot_layout = QHBoxLayout()
+            profile_options_layout.addLayout(slot_layout)
+            slot_label = QLabel(self.tr(f"Slot {slot + 1}"))
+            slot_layout.addWidget(slot_label)
+            slot_layout.addStretch()
+            slot_combobox = QComboBox()
+            slot_combobox.setSizePolicy(
+                QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+            )
+            slot_combobox.addItems([self.tr(c) for c in available_columns])
+            slot_layout.addWidget(slot_combobox)
+            self.active_columns_comboboxes.append(slot_combobox)
+
+        categories_label = QLabel(self.tr("Categories (collapsible mod groups)"))
+        categories_label.setStyleSheet("font-style: italic;")
+        profile_options_layout.addWidget(categories_label)
+
+        categories_file_layout = QHBoxLayout()
+        profile_options_layout.addLayout(categories_file_layout)
+
+        categories_file_path_label = QLabel(self.tr("Categories file"))
+        categories_file_layout.addWidget(categories_file_path_label)
+
+        self.categories_file_input = QLineEdit()
+        self._style_line_edit(self.categories_file_input)
+        self.categories_file_input.setPlaceholderText(
+            self.tr("Leave empty for the default location (shareable JSON)")
+        )
+        categories_file_layout.addWidget(self.categories_file_input, 1)
+
+        self.categories_file_browse_button = QToolButton()
+        self.categories_file_browse_button.setText(self.tr("Browse"))
+        categories_file_layout.addWidget(self.categories_file_browse_button)
+
+        # Modern UI theme settings: row background style
+        theme_label = QLabel(self.tr("Theme Settings (Modern UI)"))
+        theme_label.setStyleSheet("font-style: italic;")
+        profile_options_layout.addWidget(theme_label)
+
+        row_style_layout = QHBoxLayout()
+        profile_options_layout.addLayout(row_style_layout)
+        row_style_text_label = QLabel(self.tr("Mod list row background"))
+        row_style_layout.addWidget(row_style_text_label)
+        row_style_layout.addStretch()
+        self.modern_row_style_combobox = QComboBox()
+        self.modern_row_style_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        self.modern_row_style_combobox.addItems([self.tr("Plain"), self.tr("Striped")])
+        row_style_layout.addWidget(self.modern_row_style_combobox)
+
+        # Category divider style: Neon (gradient + slash chips) or Solid
+        # (flat MO2-style blocks, no gradients)
+        category_style_layout = QHBoxLayout()
+        profile_options_layout.addLayout(category_style_layout)
+        category_style_label = QLabel(self.tr("Category divider style"))
+        category_style_layout.addWidget(category_style_label)
+        category_style_layout.addStretch()
+        self.modern_category_style_combobox = QComboBox()
+        self.modern_category_style_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        self.modern_category_style_combobox.addItems(
+            [self.tr("Solid"), self.tr("Neon")]
+        )
+        category_style_layout.addWidget(self.modern_category_style_combobox)
+
+        # Category text alignment inside the divider
+        category_align_layout = QHBoxLayout()
+        profile_options_layout.addLayout(category_align_layout)
+        category_align_label = QLabel(self.tr("Category text format"))
+        category_align_layout.addWidget(category_align_label)
+        category_align_layout.addStretch()
+        self.modern_category_align_combobox = QComboBox()
+        self.modern_category_align_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        self.modern_category_align_combobox.addItems(
+            [self.tr("Left"), self.tr("Center"), self.tr("Right")]
+        )
+        category_align_layout.addWidget(self.modern_category_align_combobox)
+
+        # Active mod coloring style on the right panel
+        active_style_layout = QHBoxLayout()
+        profile_options_layout.addLayout(active_style_layout)
+        active_style_label = QLabel(self.tr("Active mod style"))
+        active_style_layout.addWidget(active_style_label)
+        active_style_layout.addStretch()
+        self.modern_active_style_combobox = QComboBox()
+        self.modern_active_style_combobox.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        self.modern_active_style_combobox.addItems(
+            [self.tr("Default"), self.tr("Double Gradient")]
+        )
+        active_style_layout.addWidget(self.modern_active_style_combobox)
+
+        # One Confirm for the whole theme settings block (a
+        # restart question per selection isn't practical) - bottom left
+        modern_theme_confirm_layout = QHBoxLayout()
+        profile_options_layout.addLayout(modern_theme_confirm_layout)
+        self.modern_theme_confirm_button = QPushButton(self.tr("Confirm"))
+        self.modern_theme_confirm_button.setToolTip(
+            self.tr("Apply the Modern UI theme settings above")
+        )
+        modern_theme_confirm_layout.addWidget(self.modern_theme_confirm_button)
+        modern_theme_confirm_layout.addStretch()
 
         # === Font settings group ===
         font_group_label = self._make_section_label(self.tr("Font Settings"))

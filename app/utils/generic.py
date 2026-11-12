@@ -782,14 +782,31 @@ def restart_application() -> None:
         # Reconstruct the original `-m app` invocation instead.
         cmd = [sys.executable, "-m", "app"] + sys.argv[1:]
 
-    subprocess.Popen(cmd)
-
     instance = QApplication.instance()
     if instance:
         logger.info("Restarting the application")
         instance.quit()
-    else:
-        logger.warning("No QApplication instance found, cannot restart the application")
+
+    # Spawn a detached helper that WAITS for this process's
+    # single-instance lock to clear and only then launches the new
+    # instance. A fixed sleep raced the lock: the new instance could
+    # still hit "Already Running", or fail to spawn at all. The helper
+    # runs through this executable's own entry point (frozen builds
+    # cannot execute a `python -c` script) and WAITS for the lock file
+    # to disappear rather than removing it - on macOS and Linux an
+    # unlink succeeds while the owner still runs, and both processes
+    # would then share settings and databases.
+    from app.utils.app_info import AppInfo
+
+    lock_path = str(AppInfo().app_storage_folder / "rimsort.lock")
+    helper = [sys.executable]
+    if not getattr(sys, "frozen", False):
+        helper += ["-m", "app"]
+    delayed = helper + ["--restart-helper", lock_path] + cmd
+    creationflags = (
+        getattr(subprocess, "DETACHED_PROCESS", 0) if sys.platform == "win32" else 0
+    )
+    subprocess.Popen(delayed, creationflags=creationflags)
 
 
 def get_relative_time(timestamp: int) -> str:
