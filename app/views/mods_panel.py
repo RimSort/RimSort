@@ -4520,6 +4520,9 @@ class ModsPanel(QWidget):
                 self.tr("Version"),
             ]
         )
+        self.active_mods_search_filter.currentTextChanged.connect(
+            lambda: self.on_active_mods_search(self.active_mods_search.text())
+        )
 
         # FilterButton replaces old source/type/tag filter widgets
         self.active_filter_button = FilterButton(self)
@@ -4661,6 +4664,9 @@ class ModsPanel(QWidget):
                 self.tr("PublishedFileId"),
                 self.tr("Version"),
             ]
+        )
+        self.inactive_mods_search_filter.currentTextChanged.connect(
+            lambda: self.on_inactive_mods_search(self.inactive_mods_search.text())
         )
 
         # FilterButton replaces old source/type/tag filter widgets
@@ -4896,6 +4902,7 @@ class ModsPanel(QWidget):
             lw.check_widgets_visible()
             # Emit signal to update counts and errors/warnings
             lw.list_update_signal.emit(str(lw.count()))
+            self._apply_search_and_filters("Inactive", self.inactive_mods_search.text())
         finally:
             if hasattr(self, "_size_progress_dialog") and self._size_progress_dialog:
                 self._size_progress_dialog.close()
@@ -4932,6 +4939,12 @@ class ModsPanel(QWidget):
                 else self.inactive_mods_list
             )
             mod_list.recreate_mod_list_and_sort(list_type, uuids, key, descending)
+            search = (
+                self.active_mods_search
+                if list_type == "Active"
+                else self.inactive_mods_search
+            )
+            self._apply_search_and_filters(list_type, search.text())
 
     @staticmethod
     def _text_to_sort_key(text: str) -> ModsPanelSortKey:
@@ -5288,15 +5301,19 @@ class ModsPanel(QWidget):
         :param list_type: The type of list to search within (Active or Inactive).
         :param pattern: The pattern to search for.
         """
-        _filter: QComboBox
-        filter_state: bool  # The 'Hide Filter' state
-        uuids: list[str]
-        fs: FilterState
         # Notify controller when search bar text or any filters change
         if list_type == "Active":
             EventBus().filters_changed_in_active_modlist.emit()
         elif list_type == "Inactive":
             EventBus().filters_changed_in_inactive_modlist.emit()
+        self._apply_search_and_filters(list_type, pattern)
+
+    def _apply_search_and_filters(self, list_type: str, pattern: str) -> None:
+        """Evaluate current filters without notifying the controller of a change."""
+        _filter: QComboBox
+        filter_state: bool  # The 'Hide Filter' state
+        uuids: list[str]
+        fs: FilterState
         # Determine which list to filter
         if list_type == "Active":
             _filter = self.active_mods_search_filter
@@ -5372,8 +5389,7 @@ class ModsPanel(QWidget):
                 elif invalid and not filters_active:
                     item_data["filtered"] = False
                     item.setHidden(False)
-            # Check if the item is filtered
-            item_filtered = item_data["filtered"]
+            item_filtered = False
 
             # Search pattern filtering
             if search_filter == "version" and pattern:
@@ -5486,9 +5502,11 @@ class ModsPanel(QWidget):
                     item_data["hidden_by_filter"] = False
                     num_unfiltered += 1
             else:
-                if item_filtered and item.isHidden():
-                    item.setHidden(False)
-                    item_data["hidden_by_filter"] = False
+                item.setHidden(False)
+                item_data["hidden_by_filter"] = False
+                if item_filtered:
+                    num_filtered += 1
+                else:
                     num_unfiltered += 1
 
             # Update item data
