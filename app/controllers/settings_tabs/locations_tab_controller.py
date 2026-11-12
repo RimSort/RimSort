@@ -166,7 +166,7 @@ class LocationsTabController(BaseTabController):
     def _on_game_choose(self, dialog: SettingsDialog) -> str | None:
         if SystemInfo().operating_system == SystemInfo.OperatingSystem.MACOS:
             game_location = show_dialogue_file(
-                mode="open_dir",
+                mode="open",
                 caption="Select Game Location",
             )
             if not game_location:

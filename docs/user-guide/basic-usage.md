@@ -46,6 +46,8 @@ On Windows and Linux, select the installation directory. On macOS, select the ga
 
 Keep the selected bundle as **Game Location** and use the detected content directory’s `Mods` folder as **Local Mods**. There is no need to create a `Mods` symlink inside the bundle. If an existing workaround symlink points to the correct `Mods` directory, RimSort accepts it without changing the link. Cloning a split-layout installation copies the resolved game content directory, including the selected bundle, rather than copying only the bundle.
 
+On macOS, **Game location → Choose…** selects the `.app` bundle itself, including games installed on an external drive. You can also enter the full bundle path directly in the **Game location** field.
+
 If the executable is valid but the content directory cannot be identified, Settings accepts the game location with a diagnostic. An explicitly selected, existing local-mods directory is retained. Check the locations listed in the diagnostic: missing content prevents reliable version and official-module discovery. These discovery rules cover both macOS layouts; a different installation layout should be inspected rather than worked around by moving files.
 
 ## Mod info panel
