@@ -903,6 +903,7 @@ class MainContent(QObject):
         loading_animation_text_label = None
         if text:
             loading_animation_text_label = QLabel(text)
+            loading_animation_text_label.setWordWrap(True)
             loading_animation_text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             loading_animation_text_label.setObjectName("loadingAnimationString")
             self.mod_info_panel.panel.addWidget(loading_animation_text_label)
