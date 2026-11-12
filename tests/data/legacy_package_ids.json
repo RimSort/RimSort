@@ -1,0 +1,165 @@
+{
+  "game_version": "1.7.5005 rev1082",
+  "method": "Verse.ModMetaData.ModMetaDataInternal.TryParsePackageId(false, false)",
+  "cases": [
+    {
+      "author": "LegacyAuthor",
+      "name": "LegacyMod",
+      "description": "D",
+      "expected": "legacyauthor781.legacymod"
+    },
+    {
+      "author": "LegacyAuthor",
+      "name": "LegacyMod",
+      "description": "",
+      "expected": "legacyauthornone.legacymod"
+    },
+    {
+      "author": "LegacyAuthor",
+      "name": "LegacyMod",
+      "expected": "legacyauthor189.legacymod"
+    },
+    {
+      "author": " A ",
+      "name": " Mod ",
+      "description": "\nD\n",
+      "expected": "hah696.hmodh"
+    },
+    {
+      "author": "André 🐨",
+      "name": "LBE's Australian Wildlife",
+      "description": "D",
+      "expected": "andrihhk781.lbeoshaustralianhwildlife"
+    },
+    {
+      "author": "A",
+      "name": "B",
+      "description": "A longer description",
+      "expected": "a207.b"
+    },
+    {
+      "author": "A",
+      "name": "B",
+      "description": "🐨",
+      "expected": "a179.b"
+    }
+  ],
+  "xml_cases": [
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>   </description></ModMetaData>",
+      "expected": "anone.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>D</description><packageId>   </packageId></ModMetaData>",
+      "expected": "a781.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description><![CDATA[   ]]></description></ModMetaData>",
+      "expected": "a716.b"
+    },
+    {
+      "xml": "<ModMetaData xml:space=\"preserve\"><author>A</author><name>B</name><description>   </description></ModMetaData>",
+      "expected": "a189.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description> </description></ModMetaData>",
+      "expected": "a873.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>D\r\ntext</description></ModMetaData>",
+      "expected": "a203.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#xD;</description></ModMetaData>",
+      "expected": "anone.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#x9;</description></ModMetaData>",
+      "expected": "anone.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>D&amp;E</description></ModMetaData>",
+      "expected": "a751.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>&#xA0;B</name><description>D</description></ModMetaData>",
+      "expected": "a781.kb"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B\r\nC</name><description>D</description></ModMetaData>",
+      "expected": "a781.bnkc"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description><![CDATA[D]]></description></ModMetaData>",
+      "expected": "a781.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>\n<![CDATA[D]]>\n</description></ModMetaData>",
+      "expected": "a781.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>  <![CDATA[D]]>  </description></ModMetaData>",
+      "expected": "a781.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>\r\n<![CDATA[D\r\nE]]>\r\n</description></ModMetaData>",
+      "expected": "a232.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description><![CDATA[D&amp;E]]></description></ModMetaData>",
+      "expected": "a146.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>\n<![CDATA[D&amp;E]]>\n</description></ModMetaData>",
+      "expected": "a146.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>\n<![CDATA[B]]>\n</name><description>D</description></ModMetaData>",
+      "expected": "a781.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>  <![CDATA[B]]>  </name><description>D</description></ModMetaData>",
+      "expected": "a781.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>\r\n<![CDATA[B\r\nC]]>\r\n</name><description>D</description></ModMetaData>",
+      "expected": "a781.bnkc"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#9;</description></ModMetaData>",
+      "expected": "a722.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#10;</description></ModMetaData>",
+      "expected": "a723.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#13;</description></ModMetaData>",
+      "expected": "a726.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#32;</description></ModMetaData>",
+      "expected": "a745.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#xA;</description></ModMetaData>",
+      "expected": "anone.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#x20;</description></ModMetaData>",
+      "expected": "anone.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#0013;</description></ModMetaData>",
+      "expected": "a726.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>\n&#13;\n</description></ModMetaData>",
+      "expected": "a695.b"
+    },
+    {
+      "xml": "<ModMetaData><author>A</author><name>B</name><description>&#13;<![CDATA[D]]></description></ModMetaData>",
+      "expected": "a189.b"
+    }
+  ]
+}

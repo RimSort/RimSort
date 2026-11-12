@@ -84,6 +84,7 @@ Steam Workshop Metadata
   - Dependency metadata that is available on Steam - mod developers list DLC dependencies as well as additional mod dependencies on Steam.
     - In an ideal world, this can be taken care of completely by proper About.xml creation. However, SteamDB can supplement the available data if this is not done.
   - Some local metadata is included from mods' About.xml. This includes PackageId and gameVersions.
+    - For legacy mods with an author and name but no PackageId, RimSort generates the same ID as RimWorld, using the author, name, and description. Successfully generated IDs are excluded from the missing PackageId warning. This does not edit the mod's About.xml or make an outdated mod compatible with newer game versions.
     - Providing a complete database, this allows the user to be able to sometimes find mod dependencies even without having the mods already downloaded.
       - When trying to import a mod list that contains mods that are not already available locally, in order to try to lookup PackageId -> PublishedFileId, SteamDB is necessary.
 
