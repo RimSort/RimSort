@@ -52,6 +52,8 @@ If the executable is valid but the content directory cannot be identified, Setti
 
 The left side of the main window. Displays general information from a selected mod, with its preview image if found.
 
+While refreshing, the loading animation fits the available panel space and its progress text wraps to keep the window at its current size.
+
 ## Mod lists
 
 Certain errors/warnings are produced based on dependency presence, incompatibilities, load rules, and any potential updates found.
