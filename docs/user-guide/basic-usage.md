@@ -26,6 +26,10 @@ The main menu bar is, depending on your operating system and desktop environment
 
 To merge a mod list with your current active list, use `File > Append Mod List...`. The mods from the selected file that are not already in your active list will be appended to it.
 
+## Player Log
+
+In the **Player Log** tab, scroll the left panel to reach the file controls, filters, and quick navigation when the window is short. The log view scrolls independently.
+
 ## Settings panel
 
 You can enter the settings panel from the main menu bar using `File > Settings... ` In this window, you'll find multiple tabs, each labeled.
