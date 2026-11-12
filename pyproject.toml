@@ -35,7 +35,7 @@ dependencies = [
 
 [tool.uv.sources]
 steamfiles = { git = "https://github.com/RimSort/steamfiles" }
-nuitka = { git = "https://github.com/Nuitka/Nuitka", tag = "4.3.4" }
+nuitka = { git = "https://github.com/Nuitka/Nuitka", tag = "4.3.5" }
 
 [dependency-groups]
 dev = [
