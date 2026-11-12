@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 from datetime import UTC, datetime
+from io import BufferedWriter
 from pathlib import Path
 from typing import cast
 from unittest.mock import MagicMock
@@ -16,10 +17,11 @@ from app.mcp import core as mcp_core_module
 from app.mcp.core import RimSortMcpCore
 from app.models.instance import Instance
 from app.models.metadata.metadata_structure import ModType
+from app.models.settings import Settings
 from app.services.import_export_service import ImportExportService
 from app.services.mod_list_parser import parse_mod_list_file
 from app.sort import topo_sort as topo_sort_module
-from tests.game_layout_fixtures import GameInstall
+from tests.game_layout_fixtures import GameInstall, make_game_install
 from tests.mcp.conftest import build_core, write_mod, write_mods_config
 
 
@@ -727,28 +729,203 @@ def test_apply_keeps_workshop_copy_when_local_duplicate_exists(
     assert "test.copy" not in parsed.package_ids
 
 
-def test_refresh_keeps_bound_instance_across_settings_reload(
-    mcp_core: RimSortMcpCore, game_install: GameInstall, config_folder: Path
+def test_get_active_modlist_round_trip_keeps_workshop_copy(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    config_folder: Path,
+    tmp_path: Path,
 ) -> None:
-    """``--instance`` must survive ``Settings.load()`` during a refresh."""
+    """IDs returned by get must save the same Workshop copy they were read from."""
+    core = _core_with_local_and_workshop_copy(mcp_core, game_install, tmp_path)
+    write_mods_config(config_folder, ["ludeon.rimworld", "test.copy_steam"])
+
+    active = core.get_active_modlist()
+    package_ids = [str(entry["packageid"]) for entry in active["active_mods"]]
+
+    assert "test.copy_steam" in package_ids
+    assert "test.copy" not in package_ids
+
+    result = core.apply_active_modlist(package_ids)
+    parsed = parse_mod_list_file(str(config_folder / "ModsConfig.xml"))
+
+    assert result["saved"] is True
+    assert "test.copy_steam" in result["written_package_ids"]
+    assert "test.copy" not in result["written_package_ids"]
+    assert "test.copy_steam" in parsed.package_ids
+    assert "test.copy" not in parsed.package_ids
+
+
+def _bind_other_instance(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    other_config: Path,
+) -> RimSortMcpCore:
+    """Bind a core to ``Other`` with its own config folder and the same game."""
     settings = mcp_core.settings
     settings.instances["Other"] = Instance(
         name="Other",
         game_folder=str(game_install.launch_location),
-        config_folder=str(config_folder),
+        config_folder=str(other_config),
         local_folder=str(game_install.mods_path),
     )
     settings.current_instance = "Other"
-    core = build_core(settings)
+    return build_core(settings)
 
-    settings.current_instance = "Default"
-    settings.save()
-    settings.current_instance = "Other"
+
+def _prepare_other_instance(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    config_folder: Path,
+    tmp_path: Path,
+) -> tuple[RimSortMcpCore, Path, bytes]:
+    """Bind ``Other`` and snapshot Default's ``ModsConfig.xml``."""
+    other_config = tmp_path / "OtherConfig"
+    write_mods_config(config_folder, ["ludeon.rimworld", "only.default"])
+    write_mods_config(other_config, ["ludeon.rimworld", "only.other"])
+    default_before = (config_folder / "ModsConfig.xml").read_bytes()
+    return (
+        _bind_other_instance(mcp_core, game_install, other_config),
+        other_config,
+        default_before,
+    )
+
+
+def test_refresh_keeps_bound_instance_across_settings_reload(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    config_folder: Path,
+    tmp_path: Path,
+) -> None:
+    """A refresh must keep later writes on the instance given at startup."""
+    core, other_config, default_before = _prepare_other_instance(
+        mcp_core, game_install, config_folder, tmp_path
+    )
+
+    core.settings.current_instance = "Default"
+    core.settings.save()
+    core.settings.current_instance = "Other"
 
     core.refresh_metadata_cache()
 
+    status = core.get_instance_status()
     assert core.settings.current_instance == "Other"
-    assert core.get_instance_status()["instance_name"] == "Other"
+    assert status["instance_name"] == "Other"
+    assert status["paths"]["config_folder"] == str(other_config)
+
+    result = core.apply_active_modlist(["ludeon.rimworld"])
+
+    assert result["saved"] is True
+    assert (config_folder / "ModsConfig.xml").read_bytes() == default_before
+    other_text = (other_config / "ModsConfig.xml").read_text(encoding="utf-8")
+    assert "only.other" not in other_text
+    assert "ludeon.rimworld" in other_text
+
+
+def test_refresh_refuses_write_when_bound_instance_was_removed(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    config_folder: Path,
+    tmp_path: Path,
+) -> None:
+    """A deleted instance must not send the next write at the saved one."""
+    core, other_config, default_before = _prepare_other_instance(
+        mcp_core, game_install, config_folder, tmp_path
+    )
+    other_before = (other_config / "ModsConfig.xml").read_bytes()
+
+    core.settings.current_instance = "Default"
+    del core.settings.instances["Other"]
+    core.settings.save()
+
+    refreshed = core.refresh_metadata_cache()
+    applied = core.apply_active_modlist(["ludeon.rimworld"])
+
+    assert refreshed["refreshed"] is False
+    assert applied["saved"] is False
+    assert applied["errors"][0]["type"] == "instance_unbound"
+    assert applied["backup_path"] is None
+    assert (config_folder / "ModsConfig.xml").read_bytes() == default_before
+    assert (other_config / "ModsConfig.xml").read_bytes() == other_before
+
+
+def test_overlapping_refresh_cannot_redirect_apply_to_saved_instance(
+    mcp_core: RimSortMcpCore,
+    game_install: GameInstall,
+    config_folder: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A save that overlaps ``Settings.load`` still writes the startup instance."""
+    core, other_config, default_before = _prepare_other_instance(
+        mcp_core, game_install, config_folder, tmp_path
+    )
+    core.settings.current_instance = "Default"
+    core.settings.save()
+    core.settings.current_instance = "Other"
+
+    apply_paused = threading.Event()
+    release_apply = threading.Event()
+    load_paused = threading.Event()
+    release_load = threading.Event()
+    errors: list[BaseException] = []
+    real_rebind = RimSortMcpCore._rebind_instance
+    real_load = Settings.load
+
+    def rebind_and_pause(self: RimSortMcpCore) -> bool:
+        bound = real_rebind(self)
+        if not apply_paused.is_set():
+            apply_paused.set()
+            if not release_apply.wait(timeout=5):
+                raise TimeoutError("apply was not released")
+        return bound
+
+    def load_and_pause(self: Settings) -> None:
+        real_load(self)
+        load_paused.set()
+        if not release_load.wait(timeout=5):
+            raise TimeoutError("refresh was not released")
+
+    monkeypatch.setattr(RimSortMcpCore, "_rebind_instance", rebind_and_pause)
+    monkeypatch.setattr(Settings, "load", load_and_pause)
+
+    def refresh() -> None:
+        try:
+            core.refresh_metadata_cache()
+        except BaseException as exc:
+            errors.append(exc)
+
+    def apply() -> None:
+        try:
+            core.apply_active_modlist(["ludeon.rimworld"])
+        except BaseException as exc:
+            errors.append(exc)
+
+    writer = threading.Thread(target=apply)
+    refresher = threading.Thread(target=refresh)
+    writer.start()
+    assert apply_paused.wait(timeout=5)
+    refresher.start()
+    refresh_entered_load = load_paused.wait(timeout=0.5)
+    if refresh_entered_load:
+        release_apply.set()
+        writer.join(timeout=5)
+        release_load.set()
+    else:
+        release_apply.set()
+        writer.join(timeout=5)
+        assert load_paused.wait(timeout=5)
+        release_load.set()
+    refresher.join(timeout=5)
+
+    assert errors == []
+    assert not writer.is_alive()
+    assert not refresher.is_alive()
+    assert not refresh_entered_load
+    assert core.settings.current_instance == "Other"
+    assert (config_folder / "ModsConfig.xml").read_bytes() == default_before
+    other_text = (other_config / "ModsConfig.xml").read_text(encoding="utf-8")
+    assert "only.other" not in other_text
+    assert "ludeon.rimworld" in other_text
 
 
 def test_overlapping_sort_dialog_capture_does_not_restore_early() -> None:
@@ -816,6 +993,147 @@ def test_backup_names_are_unique_within_the_same_second(
     assert first.read_text(encoding="utf-8") != second.read_text(encoding="utf-8")
 
 
+def test_overlapping_saves_keep_the_pre_save_backup(
+    ordered: RimSortMcpCore,
+    config_folder: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A save paused in the backup copy must not record the other save's config."""
+    original = write_mods_config(
+        config_folder, ["ludeon.rimworld", "brrainz.harmony"]
+    ).read_bytes()
+    copy_started = threading.Event()
+    release_copy = threading.Event()
+    errors: list[BaseException] = []
+    found: dict[str, dict[str, object]] = {}
+    real_copy = RimSortMcpCore._copy_into_reserved_backup
+
+    def pausing_copy(
+        self: RimSortMcpCore, source: Path, handle: BufferedWriter
+    ) -> None:
+        if not copy_started.is_set():
+            copy_started.set()
+            if not release_copy.wait(timeout=5):
+                raise TimeoutError("backup copy was not released")
+        real_copy(self, source, handle)
+
+    def fast_analysis(
+        self: RimSortMcpCore, package_ids: list[str]
+    ) -> dict[str, object]:
+        return {
+            "warnings": [],
+            "errors": [],
+            "unresolved_package_ids": [],
+            "sort_success": True,
+            "sorted_package_ids": list(package_ids),
+        }
+
+    monkeypatch.setattr(RimSortMcpCore, "_copy_into_reserved_backup", pausing_copy)
+    monkeypatch.setattr(RimSortMcpCore, "analyze_and_sort_modlist", fast_analysis)
+
+    def run(label: str, package_ids: list[str]) -> None:
+        try:
+            found[label] = cast(
+                dict[str, object],
+                ordered.apply_active_modlist(package_ids, auto_sort=False),
+            )
+        except BaseException as exc:
+            errors.append(exc)
+
+    first = threading.Thread(target=run, args=("first", ["ludeon.rimworld"]))
+    second = threading.Thread(
+        target=run, args=("second", ["ludeon.rimworld", "brrainz.harmony"])
+    )
+    first.start()
+    assert copy_started.wait(timeout=5)
+    second.start()
+    second.join(timeout=1)
+    assert second.is_alive()
+    release_copy.set()
+    first.join(timeout=5)
+    second.join(timeout=5)
+
+    assert errors == []
+    assert not first.is_alive()
+    assert not second.is_alive()
+    assert found["first"]["saved"] is True
+    assert found["second"]["saved"] is True
+    first_backup = Path(str(found["first"]["backup_path"]))
+    second_backup = Path(str(found["second"]["backup_path"]))
+    final = (config_folder / "ModsConfig.xml").read_bytes()
+    assert first_backup != second_backup
+    assert first_backup.read_bytes() == original
+    assert b"brrainz.harmony" not in second_backup.read_bytes()
+    assert b"brrainz.harmony" in final
+    assert second_backup.read_bytes() != final
+
+
+def test_overlapping_cycle_sorts_do_not_open_a_dialog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two real cycle sorts must both stay on the interceptor."""
+    dialog_calls: list[str] = []
+
+    def spy(*_args: object, **_kwargs: object) -> None:
+        dialog_calls.append("dialog")
+
+    monkeypatch.setattr(topo_sort_module, "show_warning", spy)
+    cores: list[tuple[RimSortMcpCore, str]] = []
+    for name in ("alpha", "beta"):
+        install = make_game_install(tmp_path / name, "linux")
+        config = tmp_path / f"{name}-config"
+        config.mkdir()
+        write_mod(
+            install.mods_path,
+            "LoopA",
+            f"{name}.loopa",
+            rules=f"<loadAfter><li>{name}.loopb</li></loadAfter>",
+        )
+        write_mod(
+            install.mods_path,
+            "LoopB",
+            f"{name}.loopb",
+            rules=f"<loadAfter><li>{name}.loopa</li></loadAfter>",
+        )
+        settings = Settings()
+        settings.instances[settings.current_instance] = Instance(
+            name=settings.current_instance,
+            game_folder=str(install.launch_location),
+            config_folder=str(config),
+            local_folder=str(install.mods_path),
+        )
+        cores.append((build_core(settings), name))
+
+    results: list[dict[str, object]] = []
+    errors: list[BaseException] = []
+    barrier = threading.Barrier(2)
+
+    def run(core: RimSortMcpCore, name: str) -> None:
+        try:
+            barrier.wait(timeout=5)
+            results.append(
+                core.analyze_and_sort_modlist([f"{name}.loopa", f"{name}.loopb"])
+            )
+        except BaseException as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=run, args=(core, name)) for core, name in cores]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+
+    assert errors == []
+    assert not any(thread.is_alive() for thread in threads)
+    assert dialog_calls == []
+    assert topo_sort_module.show_warning is spy
+    assert len(results) == 2
+    for result in results:
+        assert result["sort_success"] is False
+        errors_payload = cast(list[dict[str, object]], result["errors"])
+        assert errors_payload[0]["type"] == "circular_dependency"
+
+
 def test_apply_refuses_write_when_core_cannot_be_resolved(
     ordered: RimSortMcpCore, config_folder: Path
 ) -> None:
@@ -831,4 +1149,28 @@ def test_apply_refuses_write_when_core_cannot_be_resolved(
 
     assert result["saved"] is False
     assert result["errors"][0]["type"] == "core_unresolved"
+    assert result["backup_path"] is None
     assert existing.read_text(encoding="utf-8") == before
+
+
+def test_apply_refuses_write_when_game_version_cannot_be_resolved(
+    ordered: RimSortMcpCore, config_folder: Path, game_install: GameInstall
+) -> None:
+    """Core without a readable Version.txt must not save ``<version>Unknown</version>``."""
+    existing = write_mods_config(config_folder, ["ludeon.rimworld", "brrainz.harmony"])
+    before = existing.read_bytes()
+    (game_install.content_root / "Version.txt").unlink()
+
+    refreshed = ordered.refresh_metadata_cache()
+    result = ordered.apply_active_modlist(["ludeon.rimworld"])
+
+    indexed = {
+        package_id.lower()
+        for package_id in ordered.metadata_controller.packageid_to_paths
+    }
+    assert "ludeon.rimworld" in indexed
+    assert refreshed["game_version"] == "Unknown"
+    assert result["saved"] is False
+    assert result["errors"][0]["type"] == "version_unresolved"
+    assert result["backup_path"] is None
+    assert existing.read_bytes() == before

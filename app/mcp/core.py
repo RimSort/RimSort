@@ -11,13 +11,15 @@ rather than Qt translations (they never reach a QWidget).
 
 from __future__ import annotations
 
+import functools
 import shutil
 import threading
 from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import UTC, datetime
+from io import BufferedWriter
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, cast
 
 from loguru import logger
 
@@ -135,6 +137,29 @@ def _capture_sort_dialogs() -> Iterator[list[dict[str, Any]]]:
                 _sort_dialog_original = None
 
 
+class _HasOperationLock(Protocol):
+    """Structural type for the per-core tool lock."""
+
+    _operation_lock: AbstractContextManager[bool]
+
+
+def _locked_tool[**P, R](method: Callable[P, R]) -> Callable[P, R]:
+    """Run one tool while that core's instance lock is held.
+
+    :meth:`Settings.load` writes the on-disk ``current_instance`` onto the
+    shared object before the startup instance can be put back. The lock keeps
+    that window, and the backup-then-write that follows a save, invisible to
+    every other tool on the same core.
+    """
+
+    @functools.wraps(method)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        with cast(_HasOperationLock, args[0])._operation_lock:
+            return method(*args, **kwargs)
+
+    return wrapper
+
+
 class RimSortMcpCore:
     """Tool implementations backed by RimSort's live metadata state."""
 
@@ -149,13 +174,14 @@ class RimSortMcpCore:
         # ``--instance`` (or the active instance at bootstrap) must survive
         # ``Settings.load()`` during metadata refresh.
         self._bound_instance_name = settings.current_instance
+        self._operation_lock = threading.RLock()
 
     # ---- shared helpers ----
 
     @property
     def instance(self) -> Instance:
-        """The RimWorld instance the server is bound to."""
-        return self.settings.instances[self.settings.current_instance]
+        """The RimWorld instance the server was started against."""
+        return self.settings.instances[self._bound_instance_name]
 
     @property
     def mods_config_path(self) -> Path | None:
@@ -312,6 +338,7 @@ class RimSortMcpCore:
 
     # ---- tool 1 ----
 
+    @_locked_tool
     def get_instance_status(self) -> dict[str, Any]:
         """Report the bound instance, game version, paths and mod counts."""
         about_mods = self._about_mods()
@@ -324,7 +351,7 @@ class RimSortMcpCore:
         )
         instance = self.instance
         return {
-            "instance_name": self.settings.current_instance,
+            "instance_name": self._bound_instance_name,
             "game_version": self.metadata_controller.game_version,
             "is_waylith": self.metadata_controller.is_waylith,
             "paths": {
@@ -366,6 +393,7 @@ class RimSortMcpCore:
 
     # ---- tool 2 ----
 
+    @_locked_tool
     def search_installed_mods(
         self,
         query: str = "",
@@ -444,6 +472,7 @@ class RimSortMcpCore:
 
     # ---- tool 3 ----
 
+    @_locked_tool
     def get_mod_details(self, package_ids: list[str]) -> dict[str, Any]:
         """Return full metadata and rule sets for the given package IDs."""
         requested = self._dedupe(package_ids)
@@ -527,6 +556,7 @@ class RimSortMcpCore:
 
     # ---- tool 4 ----
 
+    @_locked_tool
     def get_active_modlist(self) -> dict[str, Any]:
         """Return the ordered ``ModsConfig.xml`` list and any missing entries."""
         path = self.mods_config_path
@@ -542,15 +572,20 @@ class RimSortMcpCore:
             }
 
         declared = [str(package_id) for package_id in mods_config.activeMods]
-        mods, missing, _duplicates = self._resolve_package_ids(declared)
+        mods, missing, duplicates = self._resolve_package_ids(declared)
+        # The mod object only carries the bare package id. Emit the ModsConfig
+        # token, including ``_steam``, so a get → apply round trip keeps the copy.
+        identities = self._stored_active_ids(declared, missing)
+        if len(identities) != len(mods):
+            identities = [self._config_package_id(mod, duplicates) for mod in mods]
         ordered = [
             {
-                "packageid": str(mod.package_id),
+                "packageid": package_id,
                 "name": mod.name,
                 "supportedversions": sorted(mod.supported_versions),
                 "workshop_id": mod.published_file_id,
             }
-            for mod in mods
+            for package_id, mod in zip(identities, mods, strict=True)
         ]
         return {
             "mods_config_path": str(path) if path else None,
@@ -566,6 +601,7 @@ class RimSortMcpCore:
 
     # ---- tool 5 ----
 
+    @_locked_tool
     def analyze_and_sort_modlist(self, package_ids: list[str]) -> dict[str, Any]:
         """Validate a candidate list and run RimSort's native sort on it."""
         candidate_ids = self._ensure_core_content(package_ids)
@@ -842,6 +878,7 @@ class RimSortMcpCore:
 
     # ---- tool 6 ----
 
+    @_locked_tool
     def apply_active_modlist(
         self,
         package_ids: list[str],
@@ -849,6 +886,14 @@ class RimSortMcpCore:
         create_backup: bool = True,
     ) -> dict[str, Any]:
         """Write a validated load order to the instance's ``ModsConfig.xml``."""
+        if not self._rebind_instance():
+            return self._reject_write(
+                None,
+                "instance_unbound",
+                f"Bound instance {self._bound_instance_name!r} is not in "
+                "settings; refusing to write ModsConfig.xml.",
+            )
+
         mods_config_path = self.mods_config_path
         if mods_config_path is None:
             return {
@@ -866,24 +911,24 @@ class RimSortMcpCore:
                 "sorted_package_ids": [],
             }
 
-        # An empty/Unknown write is worse than refusing: if Core never made it
-        # into metadata (bad game folder, failed scan), do not clobber the file.
+        # An empty/Unknown write is worse than refusing: do not clobber the file
+        # when Core never made it into metadata, or Version.txt could not be read.
         if not self._core_is_resolvable():
-            return {
-                "saved": False,
-                "errors": [
-                    _diagnostic(
-                        "core_unresolved",
-                        "RimWorld Core is not available in metadata; refusing "
-                        "to write ModsConfig.xml. Fix the game folder path and "
-                        "refresh metadata.",
-                    )
-                ],
-                "warnings": [],
-                "mods_config_path": str(mods_config_path),
-                "backup_path": None,
-                "sorted_package_ids": [],
-            }
+            return self._reject_write(
+                mods_config_path,
+                "core_unresolved",
+                "RimWorld Core is not available in metadata; refusing "
+                "to write ModsConfig.xml. Fix the game folder path and "
+                "refresh metadata.",
+            )
+        if not self._version_is_resolved():
+            return self._reject_write(
+                mods_config_path,
+                "version_unresolved",
+                "The game version could not be resolved; refusing to "
+                "write ModsConfig.xml. Refresh metadata after Version.txt "
+                "is readable so the saved list keeps version-specific rules.",
+            )
 
         analysis = self.analyze_and_sort_modlist(package_ids)
         warnings = list(analysis["warnings"])
@@ -978,6 +1023,36 @@ class RimSortMcpCore:
             "active_mods_count": len(written_ids),
         }
 
+    def _reject_write(
+        self, mods_config_path: Path | None, kind: str, message: str
+    ) -> dict[str, Any]:
+        """Return a refusal that leaves ``ModsConfig.xml`` untouched."""
+        return {
+            "saved": False,
+            "errors": [_diagnostic(kind, message)],
+            "warnings": [],
+            "mods_config_path": (
+                str(mods_config_path) if mods_config_path is not None else None
+            ),
+            "backup_path": None,
+            "sorted_package_ids": [],
+        }
+
+    @staticmethod
+    def _stored_active_ids(declared: list[str], missing: list[str]) -> list[str]:
+        """Return ModsConfig package IDs that resolved, suffix included.
+
+        Resolution strips ``_steam``, so the mod object only has the bare id.
+        The token stored in the file is what a later save must write back.
+        """
+        missing_keys = {package_id.lower() for package_id in missing}
+        return [
+            package_id
+            for package_id in declared
+            if package_id.lower() not in missing_keys
+            and _strip_steam_suffix(package_id).lower() not in missing_keys
+        ]
+
     @staticmethod
     def _config_package_id(
         mod: AboutXmlMod, duplicates: Mapping[str, list[str]]
@@ -1000,25 +1075,59 @@ class RimSortMcpCore:
         }
         return CORE_PACKAGE_ID in installed
 
+    def _version_is_resolved(self) -> bool:
+        """Return whether metadata has a real game version.
+
+        A missing ``Version.txt`` leaves ``game_version`` as ``Unknown``.
+        Saving that sentinel drops version-specific rules such as
+        ``loadAfterByVersion``.
+        """
+        version = self.metadata_controller.game_version.strip()
+        return bool(version) and version.casefold() != "unknown"
+
     def _backup_mods_config(self) -> Path | None:
-        """Copy the existing ``ModsConfig.xml`` to a unique timestamped backup."""
+        """Copy ``ModsConfig.xml`` into an exclusively created backup file.
+
+        The name is reserved with ``xb`` before the source is read, so two
+        savers cannot share a path. Callers hold :attr:`_operation_lock`
+        across this method and the following write; otherwise a saver paused
+        inside the copy can persist the other saver's config.
+        """
         source = self.mods_config_path
         if source is None or not source.is_file():
             return None
         backup_dir = AppInfo().backups_folder / "mods_config"
         backup_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
-        target = backup_dir / f"ModsConfig_{stamp}.xml"
-        suffix = 1
-        while target.exists():
-            target = backup_dir / f"ModsConfig_{stamp}_{suffix}.xml"
-            suffix += 1
-        shutil.copy2(source, target)
+        suffix = 0
+        while True:
+            name = (
+                f"ModsConfig_{stamp}.xml"
+                if suffix == 0
+                else f"ModsConfig_{stamp}_{suffix}.xml"
+            )
+            target = backup_dir / name
+            try:
+                with target.open("xb") as handle:
+                    self._copy_into_reserved_backup(source, handle)
+            except FileExistsError:
+                suffix += 1
+                continue
+            except Exception:
+                target.unlink(missing_ok=True)
+                raise
+            break
+        shutil.copystat(source, target)
         logger.info(f"Backed up ModsConfig.xml to {target}")
         return target
 
+    def _copy_into_reserved_backup(self, source: Path, handle: BufferedWriter) -> None:
+        """Write the live config into a file opened with exclusive create."""
+        handle.write(source.read_bytes())
+
     # ---- tool 7 ----
 
+    @_locked_tool
     def refresh_metadata_cache(self) -> dict[str, Any]:
         """Re-scan the filesystem and ``ModsConfig.xml``.
 
@@ -1028,36 +1137,54 @@ class RimSortMcpCore:
         that :meth:`Settings.load` performs during mitigation stay on disk; the
         in-memory object is authoritative afterwards. The instance selected at
         bootstrap (``--instance`` or the then-active instance) stays bound even
-        when the reloaded file names a different ``current_instance``.
+        when the reloaded file names a different ``current_instance``. If that
+        instance was removed, metadata is left untouched so a later write cannot
+        land on the saved instance.
 
-        :return: Summary counts for the refreshed metadata
+        :return: Summary counts for the refreshed metadata. ``refreshed`` is
+            false when the bound instance is no longer configured.
         """
         self.settings.load()
-        if self._bound_instance_name in self.settings.instances:
-            self.settings.current_instance = self._bound_instance_name
+        bound = self._rebind_instance()
+        if bound:
+            self.metadata_controller.reset_paths()
+            self.metadata_controller.metadata_mediator.refresh_metadata(
+                prefer_versioned=self.settings.prefer_versioned_about_tags,
+                case_insensitive_about_xml=(
+                    self.settings.case_insensitive_about_xml_lookup
+                ),
+            )
+            self._packageid_to_steam_entry = None
         else:
             logger.warning(
                 f"Bound MCP instance {self._bound_instance_name!r} is no longer "
-                f"configured; staying on {self.settings.current_instance!r}"
+                "configured; not adopting "
+                f"{self.settings.current_instance!r}"
             )
-        self.metadata_controller.reset_paths()
-        self.metadata_controller.metadata_mediator.refresh_metadata(
-            prefer_versioned=self.settings.prefer_versioned_about_tags,
-            case_insensitive_about_xml=(
-                self.settings.case_insensitive_about_xml_lookup
-            ),
-        )
-        self._packageid_to_steam_entry = None
         about_mods = self._about_mods()
-        active_paths = self._active_mod_paths()
+        active_count = len(self._active_mod_paths()) if bound else 0
         return {
-            "refreshed": True,
+            "refreshed": bound,
             "game_version": self.metadata_controller.game_version,
             "total_installed_mods": len({str(mod.package_id) for mod in about_mods}),
             "total_mod_entries": len(about_mods),
-            "active_mods_count": len(active_paths),
+            "active_mods_count": active_count,
             "steam_db_loaded": self.metadata_controller.steam_db is not None,
             "community_rules_loaded": (
                 self.metadata_controller.community_rules is not None
             ),
         }
+
+    def _rebind_instance(self) -> bool:
+        """Point settings back at the instance this server was started with.
+
+        :meth:`Settings.load` replaces ``current_instance`` with the name saved
+        in the file. Writes and metadata scans must keep using the startup
+        instance.
+
+        :return: False when that instance is no longer configured
+        """
+        if self._bound_instance_name not in self.settings.instances:
+            return False
+        self.settings.current_instance = self._bound_instance_name
+        return True
