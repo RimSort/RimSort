@@ -103,7 +103,10 @@ from app.views.mods_panel import (
 )
 from app.views.settings_dialog import SettingsDialog
 from app.views.task_progress_window import TaskProgressWindow
-from app.windows.duplicate_mods_panel import DuplicateModsPanel
+from app.windows.duplicate_mods_panel import (
+    DuplicateModsPanel,
+    filter_ignored_duplicates,
+)
 from app.windows.ignore_json_editor import IgnoreJsonEditor
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
 from app.windows.missing_mod_properties_panel import MissingModPropertiesPanel
@@ -700,17 +703,16 @@ class MainContent(QObject):
                 "User preference is not configured to display duplicate mods. Skipping..."
             )
             return
-        elif (
-            self.settings.duplicate_mods_warning
-            and self.duplicate_mods
-            and len(self.duplicate_mods) > 0
-        ):
-            duplicate_mods_count = len(self.duplicate_mods)
+        visible_duplicate_mods = filter_ignored_duplicates(
+            self.duplicate_mods or {}, self.settings.ignored_duplicate_mods
+        )
+        if visible_duplicate_mods:
+            duplicate_mods_count = len(visible_duplicate_mods)
             logger.info(
                 f"Found {duplicate_mods_count} duplicate mods. Opening DuplicateModsPanel..."
             )
             duplicate_mods_panel = DuplicateModsPanel(
-                self.duplicate_mods, metadata_controller=self.metadata_controller
+                visible_duplicate_mods, metadata_controller=self.metadata_controller
             )
             self.window_manager.register(duplicate_mods_panel)
             duplicate_mods_panel.setWindowModality(Qt.WindowModality.ApplicationModal)

@@ -92,6 +92,14 @@ class TestRecentlyUpdatedIndicatorDefaults:
         assert settings.mod_list_updated_threshold_days == 3
 
 
+class TestIgnoredDuplicateModsDefaults:
+    """Test defaults for ignoring duplicate mods."""
+
+    def test_ignored_duplicate_mods_defaults_to_empty(self, settings: Settings) -> None:
+        """No package IDs are ignored on a new install."""
+        assert settings.ignored_duplicate_mods == {}
+
+
 class TestModlistHistoryDefaults:
     """Test defaults for the mod list history feature."""
 

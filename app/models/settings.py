@@ -132,6 +132,10 @@ class Settings(QObject):
         self.try_download_missing_mods: bool = True
         # Whether to notify user about duplicate mods
         self.duplicate_mods_warning: bool = True
+        # Lowercased package IDs the user chose to ignore in the duplicate mods
+        # warning, mapped to the sorted paths seen at the time. The warning
+        # returns when the set of paths for a package ID changes.
+        self.ignored_duplicate_mods: dict[str, list[str]] = {}
         # Whether to show the "recently updated" indicator on Steam Workshop mods
         self.mod_list_updated_indicator: bool = False
         # Number of days within which a workshop mod counts as "recently updated"

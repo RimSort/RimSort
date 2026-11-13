@@ -307,6 +307,10 @@ The following table displays duplicate mods grouped by package ID. Select which 
 В таблице ниже показаны повторяющиеся моды, сгруппированные по идентификатору пакета. Выберите, какие версии оставить, и укажите действие.</translation>
     </message>
     <message>
+        <source>Ignore Selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Delete Selected Mods</source>
         <translation>Удалить выбранные моды</translation>
     </message>
@@ -4941,6 +4945,14 @@ See: https://www.rimworldwiki.com/wiki/Modding_Tutorials/About.xml</source>
     <message>
         <source>Notifies and displays the mods that have the same packageid</source>
         <translation>Уведомляет и показывает моды с одинаковым packageId</translation>
+    </message>
+    <message>
+        <source>Clear ignored duplicate mods</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show the duplicate mods warning again for package IDs you ignored</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Show startup load time per mod</source>

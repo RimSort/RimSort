@@ -21,6 +21,7 @@ class SortingTabController(BaseTabController):
     ) -> None:
         super().__init__(settings, dialog)
         self._change_mod_coloring_mode = False
+        self._clear_ignored_duplicate_mods = False
 
     def connect_signals(self) -> None:
         self.dialog.color_background_instead_of_text_checkbox.stateChanged.connect(
@@ -29,6 +30,9 @@ class SortingTabController(BaseTabController):
         EventBus().settings_have_changed.connect(self._handle_mod_coloring_mode_changed)
         self.dialog.mod_list_updated_indicator_checkbox.toggled.connect(
             self.dialog.mod_list_updated_threshold_spinbox.setEnabled
+        )
+        self.dialog.clear_ignored_duplicate_mods_button.clicked.connect(
+            self._on_clear_ignored_duplicate_mods_clicked
         )
 
     def update_view_from_model(self) -> None:
@@ -66,6 +70,10 @@ class SortingTabController(BaseTabController):
         )
         self.dialog.show_duplicate_mods_warning_checkbox.setChecked(
             self.settings.duplicate_mods_warning
+        )
+        self._clear_ignored_duplicate_mods = False
+        self.dialog.clear_ignored_duplicate_mods_button.setEnabled(
+            bool(self.settings.ignored_duplicate_mods)
         )
         self.dialog.mod_list_updated_indicator_checkbox.setChecked(
             self.settings.mod_list_updated_indicator
@@ -117,6 +125,9 @@ class SortingTabController(BaseTabController):
         self.settings.duplicate_mods_warning = (
             self.dialog.show_duplicate_mods_warning_checkbox.isChecked()
         )
+        if self._clear_ignored_duplicate_mods:
+            self.settings.ignored_duplicate_mods = {}
+            self._clear_ignored_duplicate_mods = False
         self.settings.mod_list_updated_indicator = (
             self.dialog.mod_list_updated_indicator_checkbox.isChecked()
         )
@@ -132,6 +143,11 @@ class SortingTabController(BaseTabController):
         self.settings.save_inactive_mods_sort_state = (
             self.dialog.save_inactive_mods_sort_state_checkbox.isChecked()
         )
+
+    @Slot()
+    def _on_clear_ignored_duplicate_mods_clicked(self) -> None:
+        self._clear_ignored_duplicate_mods = True
+        self.dialog.clear_ignored_duplicate_mods_button.setEnabled(False)
 
     @Slot()
     def _on_use_background_coloring_checkbox_changed(self) -> None:
