@@ -2536,6 +2536,10 @@ Manage mods installed from GitHub releases.</source>
         <source>Player Log</source>
         <translation>Журнал игрока</translation>
     </message>
+    <message>
+        <source>RimSort {version} is available. Click to update.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -5494,6 +5498,13 @@ Please choose one of the following options to proceed.</source>
     <message>
         <source>Exit RimSort</source>
         <translation>Выйти из RimSort</translation>
+    </message>
+</context>
+<context>
+    <name>Status</name>
+    <message>
+        <source>Update available</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
