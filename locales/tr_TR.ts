@@ -2472,6 +2472,18 @@ Manage mods installed from GitHub releases.</source>
         <source>Your local changes conflicted with remote changes. The repository has been reset to a clean state with the latest remote changes. Your original changes are preserved in the database file and will be committed.</source>
         <translation>Yerel değişiklikleriniz uzaktan değişikliklerle çelişti. Depo, en son uzaktan değişikliklerle temiz bir duruma sıfırlandı. Orijinal değişiklikleriniz veritabanı dosyasında korunur ve işlenir.</translation>
     </message>
+    <message>
+        <source>Updating databases...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update databases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database updates finished</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -6233,6 +6245,10 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
     <message>
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;En son sürüm başarıyla alındı.&lt;br&gt;Güncelleme şuradan yüklenecek: {update_source_path}</translation>
+    </message>
+    <message>
+        <source>Checking for RimSort updates...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

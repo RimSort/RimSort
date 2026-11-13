@@ -2460,6 +2460,18 @@ Manage mods installed from GitHub releases.</source>
         <source>{count} repositories were updated with their latest commits:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Updating databases...</source>
+        <translation>Updating databases...</translation>
+    </message>
+    <message>
+        <source>Failed to update databases</source>
+        <translation>Failed to update databases</translation>
+    </message>
+    <message>
+        <source>Database updates finished</source>
+        <translation>Database updates finished</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -6161,6 +6173,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking for RimSort updates...</source>
+        <translation>Checking for RimSort updates...</translation>
     </message>
 </context>
 <context>
