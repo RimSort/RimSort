@@ -27,6 +27,10 @@ When downloading a release, make sure to select the file more appropriate for yo
 1. TOC
 {:toc}
 
+## Updating RimSort
+
+With **Create backup before RimSort update** enabled, RimSort creates a backup before installing an application update. If backup creation fails, choose **No** to stop the update or **Yes** to continue without a new backup. Existing backups are retained when creating a new backup fails. A timed-out backup stops the update.
+
 ## Windows
 
 {: .d-inline-block}

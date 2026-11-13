@@ -6234,6 +6234,26 @@ Destek için lütfen bize ulaşın: {support_url} {development_guide_url}</trans
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;En son sürüm başarıyla alındı.&lt;br&gt;Güncelleme şuradan yüklenecek: {update_source_path}</translation>
     </message>
+    <message>
+        <source>Creating Backup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. Waiting for the backup to stop...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. The update was stopped.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create a backup before updating. Do you want to continue without a backup?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backing up files: {current} / {total}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>

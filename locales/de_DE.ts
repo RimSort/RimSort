@@ -6231,6 +6231,26 @@ Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_g
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;Neueste Version erfolgreich abgerufen.&lt;br&gt;Das Update wird installiert von: {update_source_path}</translation>
     </message>
+    <message>
+        <source>Creating Backup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. Waiting for the backup to stop...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. The update was stopped.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create a backup before updating. Do you want to continue without a backup?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backing up files: {current} / {total}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>

@@ -6162,6 +6162,26 @@ Please reach out to us for support at: {support_url}</source>
         <source>Too many requests were sent from your network, so GitHub declined this update check. Nothing is wrong with your installation.&lt;br&gt;&lt;br&gt;{reset}&lt;br&gt;&lt;br&gt;Adding a GitHub personal access token under Settings - Advanced raises the limit substantially and usually removes this.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Creating Backup</source>
+        <translation>Creating Backup</translation>
+    </message>
+    <message>
+        <source>Backup timed out. Waiting for the backup to stop...</source>
+        <translation>Backup timed out. Waiting for the backup to stop...</translation>
+    </message>
+    <message>
+        <source>Backup timed out. The update was stopped.</source>
+        <translation>Backup timed out. The update was stopped.</translation>
+    </message>
+    <message>
+        <source>Failed to create a backup before updating. Do you want to continue without a backup?</source>
+        <translation>Failed to create a backup before updating. Do you want to continue without a backup?</translation>
+    </message>
+    <message>
+        <source>Backing up files: {current} / {total}</source>
+        <translation>Backing up files: {current} / {total}</translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>

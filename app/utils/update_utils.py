@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QEventLoop, QObject, QThread, Signal
+from PySide6.QtCore import QEventLoop, QObject, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.utils import http
@@ -72,7 +72,6 @@ WINDOWS_PROTECTED_TOKENS = [
 # Thread timeouts and waits
 BACKUP_TIMEOUT_SECONDS = 600  # 10 minutes for backup
 EXTRACTION_THREAD_TIMEOUT_MS = 5000  # 5 seconds for thread cleanup
-THREAD_JOIN_TIMEOUT = 5  # 5 seconds for thread join
 
 # Platform-specific constants
 # Note: TEMP_DIR_DARWIN and TEMP_DIR_DEFAULT are unused and can be removed
@@ -126,6 +125,30 @@ class UpdateExtractionError(UpdateError):
 
 class UpdateScriptLaunchError(UpdateError):
     """Raised when launching update script fails."""
+
+
+class _BackupWorker(QThread):
+    progress = Signal(int, int)
+
+    def __init__(self, source: Path, destination: Path) -> None:
+        super().__init__()
+        self.source = source
+        self.destination = destination
+        self.error: str | None = None
+
+    def run(self) -> None:
+        def report_progress(current: int, total: int) -> None:
+            if self.isInterruptionRequested():
+                raise InterruptedError("Backup cancelled")
+            self.progress.emit(current, total)
+
+        try:
+            if self.isInterruptionRequested():
+                raise InterruptedError("Backup cancelled")
+            create_zip_backup(self.source, self.destination, report_progress)
+        except Exception as error:
+            self.error = str(error)
+            logger.exception("Application backup failed")
 
 
 class ReleaseInfo(TypedDict):
@@ -1310,11 +1333,12 @@ class UpdateManager(QObject):
                 return
 
             # AppImage updates use .bak rename as the backup — skip ZIP backup
-            if not is_appimage and self.settings.enable_backup_before_update:
-                # Create backup of current installation with progress window
-                self._create_backup_with_progress()
-                # Clean up old backups after successful backup creation
-                self._cleanup_old_backups()
+            if (
+                not is_appimage
+                and self.settings.enable_backup_before_update
+                and not self._create_backup_with_progress()
+            ):
+                return
 
             # Prepare for update script execution
             logger.info("Preparing to launch update...")
@@ -2602,96 +2626,97 @@ class UpdateManager(QObject):
         except Exception:
             logger.exception("Error cleaning up progress widget")
 
-    def _create_backup_with_progress(self) -> None:
-        """Create a backup with a progress widget."""
+    def _create_backup_with_progress(self) -> bool:
+        """Create a backup and return whether the update may proceed."""
         self._progress_widget = TaskProgressWindow(
-            title="Creating Backup",
+            title=self.tr("Creating Backup"),
             show_message=True,
             show_percent=True,
         )
         self._progress_widget.set_message(
             self.tr("Creating backup... (this may take several minutes)")
         )
+        progress_widget = self._progress_widget
 
         # Show progress widget (backup cannot be cancelled)
         self._show_progress_widget(self._progress_widget, cancellable=False)
 
-        # Run backup in a thread (not daemon - ensure proper cleanup)
-        backup_thread = threading.Thread(target=self._create_backup)
-        backup_thread.daemon = False
-        backup_thread.start()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")  # noqa: DTZ005
+        backup_path = (
+            AppInfo().application_backups_folder / f"RimSort_Backup_{timestamp}.zip"
+        )
+        worker = _BackupWorker(AppInfo().application_folder, backup_path)
+        loop = QEventLoop()
+        timer = QTimer()
+        timer.setSingleShot(True)
+        timed_out = False
+        quitting = False
 
-        # Wait for thread to complete with timeout
-        start_time = time.time()
-        while backup_thread.is_alive():
-            QApplication.processEvents()
-            time.sleep(1)
-            elapsed = time.time() - start_time
-            if elapsed > BACKUP_TIMEOUT_SECONDS:
-                logger.warning(f"Backup thread timeout after {elapsed:.0f} seconds")
-                break
-
-        # Ensure thread is joined before cleanup
-        backup_thread.join(timeout=THREAD_JOIN_TIMEOUT)
-        if backup_thread.is_alive():
-            logger.warning("Backup thread still alive after join timeout")
-
-        self._hide_progress_widget(self._progress_widget)
-
-    def _create_backup(self) -> None:
-        """
-        Create a compressed backup of the current RimSort installation as a ZIP file.
-        Updates progress widget during backup.
-        """
-        app_folder = AppInfo().application_folder
-        app_backup_folder = AppInfo().application_backups_folder
-
-        # Generate backup ZIP filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # noqa: DTZ005
-        backup_filename = f"RimSort_Backup_{timestamp}.zip"
-        backup_path = app_backup_folder / backup_filename
-
-        logger.info("Creating backup of RimSort installation")
-
-        def update_backup_progress(current: int, total: int) -> None:
-            """Update progress widget during backup (thread-safe)."""
-            if self._progress_widget and total > 0:
-                percent = int((current / total) * 100)
-                message = f"Backing up files: {current} / {total}"
-                # Use emit for thread safety, or call directly if on main thread
-                try:
-                    self._progress_widget.update_progress(percent, message)
-                except Exception as e:
-                    logger.debug(f"Error updating backup progress: {e}")
-
-        try:
-            # Create ZIP backup of the application folder with progress updates
-            create_zip_backup(
-                app_folder, backup_path, progress_callback=update_backup_progress
+        def timeout() -> None:
+            nonlocal timed_out
+            timed_out = True
+            worker.requestInterruption()
+            progress_widget.set_message(
+                self.tr("Backup timed out. Waiting for the backup to stop...")
             )
 
-            # Verify backup was created
-            if backup_path.exists():
-                backup_size = backup_path.stat().st_size
-                logger.info(
-                    f"Backup created successfully ({backup_size / (1024 * 1024):.2f} MB)"
-                )
-            else:
-                logger.warning("Backup file not created")
+        def shutdown() -> None:
+            nonlocal quitting
+            quitting = True
+            worker.requestInterruption()
 
-        except Exception as e:
-            logger.warning(f"Failed to create backup: {e}")
-            logger.error(f"Backup creation error traceback: {traceback.format_exc()}")
-            # show dialog and ask user to if they want to proceed with update anyway
+        worker.progress.connect(
+            self._on_backup_progress, Qt.ConnectionType.QueuedConnection
+        )
+        worker.finished.connect(loop.quit, Qt.ConnectionType.QueuedConnection)
+        timer.timeout.connect(timeout)
+        app = QApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(shutdown)
+        try:
+            timer.start(int(BACKUP_TIMEOUT_SECONDS * 1000))
+            worker.start()
+            loop.exec()
+        finally:
+            timer.stop()
+            worker.requestInterruption()
+            worker.wait()
+            worker.progress.disconnect(self._on_backup_progress)
+            if app is not None:
+                app.aboutToQuit.disconnect(shutdown)
+            self._hide_progress_widget(self._progress_widget)
+            self._progress_widget = None
+
+        if quitting:
+            return False
+        if timed_out:
+            dialogue.show_warning(
+                title=self.tr(ERR_BACKUP_FAILED_TITLE),
+                text=self.tr("Backup timed out. The update was stopped."),
+            )
+            return False
+        if worker.error is not None:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr(ERR_BACKUP_FAILED_TITLE),
-                text=self.tr(ERR_BACKUP_FAILED_TEXT),
-                information=f"{e}",
-                details=f"{traceback.format_exc()}",
+                text=self.tr(
+                    "Failed to create a backup before updating. Do you want to continue without a backup?"
+                ),
+                information=worker.error,
             )
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-            # Continue with update even if backup fails
+            return answer == QMessageBox.StandardButton.Yes
+
+        self._cleanup_old_backups()
+        return True
+
+    @Slot(int, int)
+    def _on_backup_progress(self, current: int, total: int) -> None:
+        if self._progress_widget is not None and total > 0:
+            self._progress_widget.update_progress(
+                int(current / total * 100),
+                self.tr("Backing up files: {current} / {total}").format(
+                    current=current, total=total
+                ),
+            )
 
     def _cleanup_old_backups(self) -> None:
         """
