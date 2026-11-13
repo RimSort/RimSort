@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import app.utils.generic
 from app.utils.generic import (
     apply_launch_prefix,
     check_valid_http_git_url,
@@ -223,6 +224,26 @@ class TestRestartApplication:
                 "C:\\RimSort\\RimSort.exe",
                 ["C:\\RimSort\\RimSort.exe", "--extra"],
             )
+
+    def test_nuitka_build_without_sys_frozen_reuses_executable(self) -> None:
+        """macOS Nuitka bundles leave sys.frozen unset. Adding -m app
+        there makes the bundle reject its own invocation with exit
+        code 2, so the helper must detect __compiled__ instead."""
+        executable = "/Applications/RimSort.app/Contents/MacOS/RimSort"
+        with (
+            patch("app.utils.generic.sys") as mock_sys,
+            patch("app.utils.generic.subprocess.Popen") as mock_popen,
+            patch("app.utils.generic.QApplication") as mock_qapp,
+            patch.dict(app.utils.generic.__dict__, {"__compiled__": object()}),
+        ):
+            mock_sys.frozen = False
+            mock_sys.executable = executable
+            mock_sys.argv = [executable]
+            mock_qapp.instance.return_value = MagicMock()
+
+            restart_application()
+
+            self._assert_helper_invocation(mock_popen, executable, [executable])
 
 
 class TestApplyLaunchPrefix:

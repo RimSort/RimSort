@@ -771,8 +771,17 @@ def check_internet_connection(timeout: float = 10) -> bool:
     return False
 
 
+def _nuitka_compiled() -> bool:
+    """Nuitka leaves sys.frozen unset in macOS bundles and instead
+    injects __compiled__ into every compiled module."""
+    return "__compiled__" in globals()
+
+
 def restart_application() -> None:
-    if getattr(sys, "frozen", False):
+    # Nuitka bundles can leave sys.frozen unset, so both the
+    # replacement command and the helper detect the compiler marker
+    packaged = getattr(sys, "frozen", False) or _nuitka_compiled()
+    if packaged:
         cmd = [sys.executable] + sys.argv[1:]
     else:
         # `python -m app` sets sys.argv[0] to the resolved path of
@@ -781,11 +790,6 @@ def restart_application() -> None:
         # project root) on sys.path and breaks `from app...` imports.
         # Reconstruct the original `-m app` invocation instead.
         cmd = [sys.executable, "-m", "app"] + sys.argv[1:]
-
-    instance = QApplication.instance()
-    if instance:
-        logger.info("Restarting the application")
-        instance.quit()
 
     # Spawn a detached helper that WAITS for this process's
     # single-instance lock to clear and only then launches the new
@@ -800,13 +804,21 @@ def restart_application() -> None:
 
     lock_path = str(AppInfo().app_storage_folder / "rimsort.lock")
     helper = [sys.executable]
-    if not getattr(sys, "frozen", False):
+    if not packaged:
         helper += ["-m", "app"]
     delayed = helper + ["--restart-helper", lock_path] + cmd
     creationflags = (
         getattr(subprocess, "DETACHED_PROCESS", 0) if sys.platform == "win32" else 0
     )
+    # The helper must exist BEFORE quitting: teardown can end the
+    # process early (the folder-size walk's bounded exit), and a helper
+    # spawned after that moment never runs
     subprocess.Popen(delayed, creationflags=creationflags)
+
+    instance = QApplication.instance()
+    if instance:
+        logger.info("Restarting the application")
+        instance.quit()
 
 
 def get_relative_time(timestamp: int) -> str:

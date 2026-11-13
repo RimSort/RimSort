@@ -4144,6 +4144,9 @@ class ModListWidget(QListWidget):
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = new_color
+        # Manual picks outrank category colors; the flag keeps styling
+        # passes from overwriting the choice on the next refresh
+        item_data["mod_color_hand_picked"] = True
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         auxdb_update_mod_color(self.settings, uuid, new_color)
 
@@ -4154,6 +4157,7 @@ class ModListWidget(QListWidget):
             item = self.item(current_mod_index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
             item_data["mod_color"] = new_color
+            item_data["mod_color_hand_picked"] = True
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = new_color
         auxdb_update_all_mod_colors(self.settings, uuid_to_color)
@@ -4163,6 +4167,8 @@ class ModListWidget(QListWidget):
         item = self.item(current_mod_index)
         item_data = item.data(Qt.ItemDataRole.UserRole)
         item_data["mod_color"] = None
+        # A reset gives the category color back its rank
+        item_data["mod_color_hand_picked"] = False
         # jscpd:ignore-start
         item.setData(Qt.ItemDataRole.UserRole, item_data)
         auxdb_update_mod_color(self.settings, uuid, None)
@@ -4175,6 +4181,7 @@ class ModListWidget(QListWidget):
             item = self.item(current_mod_index)
             item_data = item.data(Qt.ItemDataRole.UserRole)
             item_data["mod_color"] = None
+            item_data["mod_color_hand_picked"] = False
             item.setData(Qt.ItemDataRole.UserRole, item_data)
             uuid_to_color[uuid] = None
         auxdb_update_all_mod_colors(self.settings, uuid_to_color)

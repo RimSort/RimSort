@@ -62,14 +62,14 @@ from app.sort.mod_sorting import FolderSizeRequestWorker
 from app.utils.aux_db_utils import auxdb_update_all_mod_colors
 from app.utils.categories_utils import save_categories
 from app.views.filter_panel import FilterButton
-from app.views.mods_panel import ModListIcons
+from app.views.mods_panel import ModListIcons, TagEditDialog
 
 if TYPE_CHECKING:
     from app.models.settings import Settings
     from app.utils.custom_list_widget_item_metadata import (
         CustomListWidgetItemMetadata,
     )
-    from app.views.mods_panel import CustomListWidgetItem, ModsPanel
+    from app.views.mods_panel import CustomListWidgetItem, ModListWidget, ModsPanel
 
 UNCATEGORIZED = "Uncategorized"
 
@@ -92,9 +92,18 @@ _DATA_COLUMNS: dict[str, str] = {
     "PackageId": "packageid",
 }
 
+_BLOCKED_MENU_ACTIONS = frozenset({"Add divider here"})
+
+
+def _action_stem(text: str) -> str:
+    """Single and multi selections spell some classic labels differently
+    ("Change mod color" / "Change mod colors"); this reduces both to
+    their common stem for matching."""
+    return text.casefold().replace("(s)", "s").removesuffix("s")
+
+
 # List-level classic menu options that belong to the RIGHT panel only;
 # filtered out when the center delegates the classic menu
-_BLOCKED_MENU_ACTIONS = frozenset({"Add divider here"})
 
 
 class GradientColor(QColor):
@@ -1213,14 +1222,8 @@ class ModernModsTable(QWidget):
         # every ctrl/shift-selected mod moves in the same direction
         # (multi-select must stay functional)
         self._move_mod(uuid, source_item, to_active=want_active)
-        for selected_row in self.tree.selectedItems():
+        for selected_row, row_uuid, row_source in self._selected_center_rows():
             if selected_row is item:
-                continue
-            row_uuid = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole)
-            if not row_uuid or row_uuid == "group":
-                continue
-            row_source = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-            if row_source is None or isinstance(row_source, str):
                 continue
             row_data = row_source.data(Qt.ItemDataRole.UserRole)
             if row_data is None:
@@ -1342,6 +1345,20 @@ class ModernModsTable(QWidget):
         source = _type_to_source.get(cast("ModType", mod_type), "local")
         return source not in filter_state.sources
 
+    def _selected_center_rows(
+        self,
+    ) -> Iterator[tuple[QTreeWidgetItem, str, Any]]:
+        """(tree row, uuid, source list item) for every selected mod
+        row; group rows and rows without a backing item are skipped."""
+        for selected_row in self.tree.selectedItems():
+            row_uuid = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole)
+            if not row_uuid or row_uuid == "group":
+                continue
+            row_source = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+            if row_source is None or isinstance(row_source, str):
+                continue
+            yield selected_row, str(row_uuid), row_source
+
     def _on_context_menu(self, pos: QPoint) -> None:
         """The center's menu = the source list's FULL classic menu (tags,
         open URL, Steam actions, translations, deletion, miscellaneous,
@@ -1391,26 +1408,32 @@ class ModernModsTable(QWidget):
         )
         mod = self.mods_panel.metadata_controller.get_mod(uuid)
         package_id = str(getattr(mod, "package_id", "") or "")
+        display_name = str(getattr(mod, "name", "") or "")
 
-        # Mirror the FULL center selection into the source list: the
+        # Mirror the center selection into the clicked row's list: the
         # classic menu handler reads the list's selectedItems(), so
-        # every ctrl/shift-selected mod gets the action, not just the
-        # clicked one. setCurrentItem FIRST (it resets the selection in
-        # ExtendedSelection mode), then add the rest with setSelected.
+        # every selected mod from THIS list gets the action, not just
+        # the clicked one. setCurrentItem FIRST (it resets the selection
+        # in ExtendedSelection mode), then add the rest with setSelected.
+        # Rows backed by the other list are collected here and receive
+        # the chosen action afterwards, through their own list.
         source_list.clearSelection()
         source_list.setCurrentItem(source_item)
-        for selected_row in self.tree.selectedItems():
-            row_uuid = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole)
-            if not row_uuid or row_uuid == "group":
-                continue
-            row_source = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-            if row_source is not None and not isinstance(row_source, str):
+        other_items: list[CustomListWidgetItem] = []
+        for _selected_row, _row_uuid, row_source in self._selected_center_rows():
+            if row_source.listWidget() is source_list:
                 row_source.setSelected(True)
+            else:
+                other_items.append(row_source)
 
         captured: dict[str, Any] = {"result": None}
+        dialog_state: dict[str, Any] = {"color": None, "tag_code": None, "tags": None}
         center_actions: dict[object, tuple[str, str | None]] = {}
         original_exec_ = QMenu.exec_
         original_exec = QMenu.exec
+        original_get_color = QColorDialog.getColor
+        original_tag_exec = TagEditDialog.exec
+        original_tag_tags = TagEditDialog.selected_tags
 
         def patched_exec(menu_self: QMenu, *args: object, **kwargs: object) -> object:
             for act in list(menu_self.actions()):
@@ -1440,22 +1463,73 @@ class ModernModsTable(QWidget):
             captured["result"] = result
             return result
 
+        def recording_get_color(*args: object, **kwargs: object) -> QColor:
+            if dialog_state["color"] is None:
+                dialog_state["color"] = original_get_color(
+                    *cast(Any, args), **cast(Any, kwargs)
+                )
+            return cast(QColor, dialog_state["color"])
+
+        def recording_tag_exec(
+            tag_dialog: TagEditDialog, *args: object, **kwargs: object
+        ) -> int:
+            if dialog_state["tag_code"] is None:
+                code = original_tag_exec(
+                    tag_dialog, *cast(Any, args), **cast(Any, kwargs)
+                )
+                dialog_state["tag_code"] = int(code)
+                if code:
+                    dialog_state["tags"] = original_tag_tags(tag_dialog)
+            return int(dialog_state["tag_code"])
+
+        def recording_tag_tags(tag_dialog: TagEditDialog) -> list[str]:
+            recorded = dialog_state["tags"]
+            if recorded is not None:
+                return cast("list[str]", recorded)
+            return original_tag_tags(tag_dialog)
+
+        # The color picker and the tag dialog answer once and replay on
+        # a re-dispatch, so a cross-list selection is never asked twice
+        QColorDialog.getColor = staticmethod(  # type: ignore[method-assign]
+            recording_get_color
+        )
+        TagEditDialog.exec = recording_tag_exec  # type: ignore[assignment]
+        TagEditDialog.selected_tags = recording_tag_tags  # type: ignore[assignment]
         # itemAt is pointed at the source item for the classic handler,
         # which reads the list's selection plus the item under the cursor
         source_list.itemAt = lambda _pos: source_item  # type: ignore[assignment,method-assign]
         QMenu.exec_ = patched_exec  # type: ignore[assignment]
         QMenu.exec = patched_exec  # type: ignore[assignment]
         try:
-            event = QContextMenuEvent(
-                QContextMenuEvent.Reason.Mouse,
-                QPoint(0, 0),
-                QCursor.pos(),
-            )
-            source_list.eventFilter(source_list, event)
+            try:
+                event = QContextMenuEvent(
+                    QContextMenuEvent.Reason.Mouse,
+                    QPoint(0, 0),
+                    QCursor.pos(),
+                )
+                source_list.eventFilter(source_list, event)
+            finally:
+                del source_list.itemAt
+                QMenu.exec_ = original_exec_  # type: ignore[method-assign]
+                QMenu.exec = original_exec  # type: ignore[method-assign]
+
+            result = captured.get("result")
+            if result is not None and result not in center_actions and other_items:
+                # A classic action only ran on the clicked row's list;
+                # the rest of the center selection lives in the other
+                # backing list and receives the same action now
+                other_list = (
+                    self.mods_panel.inactive_mods_list
+                    if source_list is self.mods_panel.active_mods_list
+                    else self.mods_panel.active_mods_list
+                )
+                self._redispatch_classic_action(other_list, other_items, result.text())
         finally:
-            del source_list.itemAt
-            QMenu.exec_ = original_exec_  # type: ignore[method-assign]
-            QMenu.exec = original_exec  # type: ignore[method-assign]
+            QColorDialog.getColor = staticmethod(  # type: ignore[method-assign]
+                original_get_color
+            )
+            TagEditDialog.exec = original_tag_exec  # type: ignore[method-assign]
+            TagEditDialog.selected_tags = original_tag_tags  # type: ignore[method-assign]
 
         result = captured.get("result")
         if result is None or result not in center_actions:
@@ -1464,19 +1538,16 @@ class ModernModsTable(QWidget):
         if kind == "assign":
             # Assign EVERY selected mod, not just the clicked one:
             # menu actions work on the selected group
-            selected_ids: list[str] = []
-            for selected_row in self.tree.selectedItems():
-                row_uuid = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole)
-                if not row_uuid or row_uuid == "group":
-                    continue
+            selected: list[tuple[str, str]] = []
+            for _selected_row, row_uuid, _row_source in self._selected_center_rows():
                 row_mod = self.mods_panel.metadata_controller.get_mod(row_uuid)
                 row_pid = str(getattr(row_mod, "package_id", "") or "")
                 if row_pid:
-                    selected_ids.append(row_pid)
-            if not selected_ids:
-                selected_ids = [package_id] if package_id else []
-            for pid in selected_ids:
-                self._assign_mod_to_category(payload, pid)
+                    selected.append((row_pid, str(getattr(row_mod, "name", "") or "")))
+            if not selected and package_id:
+                selected = [(package_id, display_name)]
+            for pid, name in selected:
+                self._assign_mod_to_category(payload, pid, name)
         elif kind == "divider":
             self._add_category_divider()
         elif kind == "color":
@@ -1484,22 +1555,74 @@ class ModernModsTable(QWidget):
         elif kind == "match":
             self._match_colors_to_categories()
 
+    def _redispatch_classic_action(
+        self,
+        other_list: ModListWidget,
+        other_items: list[CustomListWidgetItem],
+        action_text: str,
+    ) -> None:
+        """Run a classic menu action chosen in the center menu on the
+        rows backed by the other list, without a second menu."""
+        first_source = other_items[0]
+        other_list.clearSelection()
+        other_list.setCurrentItem(first_source)
+        for row_source in other_items[1:]:
+            row_source.setSelected(True)
+
+        def auto_exec(menu_self: QMenu, *args: object, **kwargs: object) -> object:
+            # Pick the same action by label; single and multi
+            # selections spell some labels differently, so match on the
+            # stem both spellings reduce to
+            target = _action_stem(action_text)
+            for act in list(menu_self.actions()):
+                if _action_stem(act.text()) == target:
+                    return act
+            return None
+
+        original_exec_ = QMenu.exec_
+        original_exec = QMenu.exec
+        # itemAt is pointed at a real row of this list for the classic
+        # handler, which reads the selection plus the item under the
+        # cursor; the palette save is skipped because the replayed
+        # picker never opened and has no palette worth saving
+        other_list.itemAt = lambda _pos: first_source  # type: ignore[assignment,method-assign]
+        other_list.SaveUserCustomColors = (  # type: ignore[method-assign]
+            lambda color_dlg: None
+        )
+        QMenu.exec_ = auto_exec  # type: ignore[assignment]
+        QMenu.exec = auto_exec  # type: ignore[assignment]
+        try:
+            event = QContextMenuEvent(
+                QContextMenuEvent.Reason.Mouse,
+                QPoint(0, 0),
+                QCursor.pos(),
+            )
+            other_list.eventFilter(other_list, event)
+        finally:
+            del other_list.itemAt
+            del other_list.SaveUserCustomColors
+            QMenu.exec_ = original_exec_  # type: ignore[method-assign]
+            QMenu.exec = original_exec  # type: ignore[method-assign]
+
     def _assign_mod_to_category(
-        self, category_name: str | None, package_id: str
+        self, category_name: str | None, package_id: str, display_name: str = ""
     ) -> None:
         if not category_name or not package_id:
             return
-        folded = package_id.casefold()
+        # Membership is recorded by package id or by display name, so a
+        # reassign must clear both spellings; otherwise an old name
+        # match (Core holds "RimWorld") keeps the mod in its old group
+        stale = {package_id.casefold(), display_name.casefold()} - {""}
         for category in self.categories.get("categories", []):
             mods = category.setdefault("mods", [])
             if str(category.get("name", "")) == category_name:
                 # A mod belongs to one category: the destination gains it
-                if folded not in [str(m).casefold() for m in mods]:
+                if not any(str(m).casefold() in stale for m in mods):
                     mods.append(package_id)
             else:
                 # Every other category loses it, or _category_for keeps
                 # returning the older first match
-                category["mods"] = [m for m in mods if str(m).casefold() != folded]
+                category["mods"] = [m for m in mods if str(m).casefold() not in stale]
         if save_categories(self.settings.categories_file, self.categories):
             self.refresh()
 
