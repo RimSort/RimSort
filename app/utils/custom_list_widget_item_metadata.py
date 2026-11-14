@@ -1,3 +1,4 @@
+import os
 from typing import Any
 
 from loguru import logger
@@ -15,7 +16,71 @@ from app.utils.aux_db_utils import (
     auxdb_get_mod_user_notes,
     auxdb_get_mod_warning_toggled,
 )
+from app.utils.categories_utils import get_categories_path, load_categories
 from app.utils.mod_utils import resolve_workshop_updated_timestamp
+
+# Category-membership colors, keyed by categories file path with the
+# file's mtime for invalidation - populate builds thousands of metadata
+# objects, so the file is read once per change
+_CATEGORY_COLOR_CACHE: dict[str, tuple[float, dict[str, QColor]]] = {}
+
+
+def _category_color_for(settings: Settings, path: str) -> QColor | None:
+    """Category membership colors the mod everywhere: when
+    a mod carries no hand-picked color, the color of the category it
+    belongs to follows it into both profiles. Matches by package id and
+    name, the same pair the Modern table matches on."""
+    # The empty setting means the default location in app storage -
+    # resolve it the same way every other categories reader does
+    categories_path = get_categories_path(
+        getattr(settings, "categories_file", "") or ""
+    )
+    if not categories_path.exists():
+        return None
+    cache_key = str(categories_path)
+    try:
+        mtime = os.path.getmtime(categories_path)
+    except OSError:
+        return None
+    cached = _CATEGORY_COLOR_CACHE.get(cache_key)
+    if cached is None or cached[0] != mtime:
+        mapping: dict[str, QColor] = {}
+        try:
+            categories = load_categories(getattr(settings, "categories_file", "") or "")
+        except Exception as e:
+            logger.warning(f"Could not load categories for coloring: {e}")
+            categories = {"categories": []}
+        for category in categories.get("categories", []):
+            color_text = str(category.get("color", "") or "")
+            if not color_text:
+                continue
+            color = QColor(color_text)
+            if not color.isValid():
+                continue
+            for key in category.get("mods", []) or []:
+                mapping.setdefault(str(key).casefold(), color)
+        _CATEGORY_COLOR_CACHE[cache_key] = (mtime, mapping)
+    else:
+        mapping = cached[1]
+
+    try:
+        metadata_controller = MetadataController.instance()
+        mod = metadata_controller.get_mod(path)
+    except Exception:
+        return None
+    if mod is None:
+        return None
+    keys = [
+        str(getattr(mod, "package_id", "") or "").casefold(),
+        str(getattr(mod, "name", "") or "").casefold(),
+    ]
+    for key in keys:
+        if not key:
+            continue
+        found = mapping.get(key)
+        if found is not None:
+            return found
+    return None
 
 
 class CustomListWidgetItemMetadata:
@@ -92,6 +157,13 @@ class CustomListWidgetItemMetadata:
             )
         else:
             self.mod_color = mod_color
+        # A hand-picked color wins; otherwise the category the mod
+        # belongs to colors it in both profiles. The flag lets styling
+        # passes (the Modern tint) keep their hands off hand-picked
+        # colors instead of overwriting them with the category color
+        self.mod_color_hand_picked = self.mod_color is not None
+        if self.mod_color is None:
+            self.mod_color = _category_color_for(settings, path)
         self.alternative = (
             alternative
             if alternative is not None

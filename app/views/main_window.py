@@ -102,12 +102,22 @@ class MainWindow(QMainWindow):
         app_layout.addWidget(self.tab_widget)
 
         # Create various panels on the application GUI
-        self.main_content_panel: MainContent = MainContent(
-            settings=self.settings,
-            show_settings_dialog=self._show_settings_dialog,
-            settings_dialog=settings_dialog,
-            metadata_controller=self.metadata_controller,
-        )
+        if self.settings.profile_format == "RimSort - Modern UI":
+            from app.views.modern.modern_main_content import ModernMainContent
+
+            self.main_content_panel: MainContent = ModernMainContent(
+                settings=self.settings,
+                show_settings_dialog=self._show_settings_dialog,
+                settings_dialog=settings_dialog,
+                metadata_controller=self.metadata_controller,
+            )
+        else:
+            self.main_content_panel = MainContent(
+                settings=self.settings,
+                show_settings_dialog=self._show_settings_dialog,
+                settings_dialog=settings_dialog,
+                metadata_controller=self.metadata_controller,
+            )
         self.main_content_panel.disable_enable_widgets_signal.connect(
             self.__disable_enable_widgets
         )

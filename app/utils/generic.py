@@ -771,8 +771,17 @@ def check_internet_connection(timeout: float = 10) -> bool:
     return False
 
 
+def _nuitka_compiled() -> bool:
+    """Nuitka leaves sys.frozen unset in macOS bundles and instead
+    injects __compiled__ into every compiled module."""
+    return "__compiled__" in globals()
+
+
 def restart_application() -> None:
-    if getattr(sys, "frozen", False):
+    # Nuitka bundles can leave sys.frozen unset, so both the
+    # replacement command and the helper detect the compiler marker
+    packaged = getattr(sys, "frozen", False) or _nuitka_compiled()
+    if packaged:
         cmd = [sys.executable] + sys.argv[1:]
     else:
         # `python -m app` sets sys.argv[0] to the resolved path of
@@ -782,14 +791,34 @@ def restart_application() -> None:
         # Reconstruct the original `-m app` invocation instead.
         cmd = [sys.executable, "-m", "app"] + sys.argv[1:]
 
-    subprocess.Popen(cmd)
+    # Spawn a detached helper that WAITS for this process's
+    # single-instance lock to clear and only then launches the new
+    # instance. A fixed sleep raced the lock: the new instance could
+    # still hit "Already Running", or fail to spawn at all. The helper
+    # runs through this executable's own entry point (frozen builds
+    # cannot execute a `python -c` script) and WAITS for the lock file
+    # to disappear rather than removing it - on macOS and Linux an
+    # unlink succeeds while the owner still runs, and both processes
+    # would then share settings and databases.
+    from app.utils.app_info import AppInfo
+
+    lock_path = str(AppInfo().app_storage_folder / "rimsort.lock")
+    helper = [sys.executable]
+    if not packaged:
+        helper += ["-m", "app"]
+    delayed = helper + ["--restart-helper", lock_path] + cmd
+    creationflags = (
+        getattr(subprocess, "DETACHED_PROCESS", 0) if sys.platform == "win32" else 0
+    )
+    # The helper must exist BEFORE quitting: teardown can end the
+    # process early (the folder-size walk's bounded exit), and a helper
+    # spawned after that moment never runs
+    subprocess.Popen(delayed, creationflags=creationflags)
 
     instance = QApplication.instance()
     if instance:
         logger.info("Restarting the application")
         instance.quit()
-    else:
-        logger.warning("No QApplication instance found, cannot restart the application")
 
 
 def get_relative_time(timestamp: int) -> str:

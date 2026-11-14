@@ -63,7 +63,11 @@ def auxdb_get_mod_color(
     if entry:
         color_text = entry.color_hex
         if color_text is not None:
-            mod_color = QColor(color_text)
+            # Only solid colors load: a value QColor cannot parse painted
+            # black bars on every affected row at startup.
+            parsed = QColor(color_text)
+            if parsed.isValid() and color_text.startswith("#"):
+                mod_color = parsed
 
     return mod_color
 
@@ -141,11 +145,14 @@ def auxdb_update_mod_color(
     local_session = session or local_controller.Session()
     try:
         # jscpd:ignore-end
-        local_controller.update(
-            local_session,
-            path,
-            color_hex=color.name() if color else None,
-        )
+        # Only solid colors persist: a GradientColor's name() is full
+        # gradient CSS, which rendered as black bars on repolish
+        color_hex = color.name() if color and color.name().startswith("#") else None
+        # UPSERT: an update on a missing row is a silent no-op, so
+        # create the entry when needed
+        entry = local_controller.get_or_create(local_session, path)
+        entry.color_hex = color_hex
+        local_session.commit()
     finally:
         if not session:
             local_session.close()
@@ -172,10 +179,28 @@ def auxdb_update_all_mod_colors(
 
     local_session = session or local_controller.Session()
     try:
+        # UPSERT: bulk_update_mappings only touches existing rows, and
+        # mods without entries silently lost their colors. Insert the
+        # missing rows first, then update everything.
+        paths = list(path_color_mapping.keys())
+        existing = {
+            p
+            for (p,) in local_session.query(AuxMetadataEntry.path)
+            .filter(AuxMetadataEntry.path.in_(paths))
+            .all()
+        }
+        for path in paths:
+            if path not in existing:
+                local_session.add(AuxMetadataEntry(path=path))
+        local_session.flush()
         updates = [
             {
                 "path": path,
-                "color_hex": color.name() if color else None,
+                # Only solid colors persist - gradient CSS rendered as
+                # black bars on repolish
+                "color_hex": (
+                    color.name() if color and color.name().startswith("#") else None
+                ),
             }
             for path, color in path_color_mapping.items()
         ]
