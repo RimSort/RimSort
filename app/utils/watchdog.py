@@ -6,7 +6,13 @@ from typing import Any
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
-from watchdog.events import FileSystemEvent, FileSystemEventHandler
+from watchdog.events import (
+    DirCreatedEvent,
+    DirDeletedEvent,
+    FileModifiedEvent,
+    FileSystemEvent,
+    FileSystemEventHandler,
+)
 from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
 from watchdog.observers.polling import PollingObserver
@@ -127,10 +133,16 @@ class WatchdogHandler(FileSystemEventHandler, QObject):
             if path and os.path.exists(path) and os.path.isdir(path):  # noqa: SIM102
                 if self.watchdog_mods_observer is not None:
                     logger.debug(f"Scheduling observer for mod source: {path}")
+                    # Avoid queuing file-open/close events from mod scans.
                     self.watchdog_mods_observer.schedule(
                         self,
                         path,
                         recursive=True,
+                        event_filter=[
+                            DirCreatedEvent,
+                            DirDeletedEvent,
+                            FileModifiedEvent,
+                        ],
                     )
 
     def __check_acf_file(self, event: FileSystemEvent, event_scr_path: Path) -> bool:
