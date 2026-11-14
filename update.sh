@@ -5,6 +5,7 @@
 # This script safely updates RimSort by replacing the current installation
 # with files from a temporary directory.
 # Usage: update.sh <temp_update_path> [log_path] [install_dir]
+# On macOS, install_dir must be the original application bundle.
 # ========================================================================
 
 set -euo pipefail # Exit on error, undefined variables, and pipe failures
@@ -194,10 +195,18 @@ log_info "TMPDIR: ${TMPDIR:-not set}"
 if [ "$OS" = "Darwin" ]; then
 	# macOS detected
 	EXECUTABLE_NAME="RimSort.app"
-	SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"            # .../RimSort.app/Contents/MacOS
-	APP_BUNDLE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")" # .../RimSort.app
-	INSTALL_PARENT_DIR="$(dirname "$APP_BUNDLE_DIR")"      # Parent of .app (e.g. /Applications)
-	INSTALL_DIR="$APP_BUNDLE_DIR"                          # For common messaging
+	APP_BUNDLE_DIR="${3:-}"
+	if [[ "$APP_BUNDLE_DIR" != /* ]] || [ ! -d "$APP_BUNDLE_DIR" ]; then
+		log_error "An existing absolute application bundle path is required as the third argument."
+		exit 1
+	fi
+	APP_BUNDLE_DIR="$(cd "$APP_BUNDLE_DIR" && pwd -P)"
+	if [[ "$APP_BUNDLE_DIR" != *.app ]] || [ ! -f "$APP_BUNDLE_DIR/Contents/MacOS/RimSort" ]; then
+		log_error "Invalid RimSort application bundle: $APP_BUNDLE_DIR"
+		exit 1
+	fi
+	INSTALL_PARENT_DIR="$(dirname "$APP_BUNDLE_DIR")"
+	INSTALL_DIR="$APP_BUNDLE_DIR"
 	UPDATE_SOURCE_FOLDER="$TEMP_UPDATE_PATH"
 
 	log_info "macOS detected"
@@ -361,7 +370,7 @@ if [ "$OS" = "Darwin" ]; then
 		exit 1
 	fi
 
-	TARGET_BUNDLE="$INSTALL_PARENT_DIR/$EXECUTABLE_NAME"
+	TARGET_BUNDLE="$APP_BUNDLE_DIR"
 	if [ -d "$TARGET_BUNDLE" ]; then
 		log_info "Removing old app bundle: $TARGET_BUNDLE"
 		if ! $DRY_RUN && ! rm -rf "$TARGET_BUNDLE"; then
