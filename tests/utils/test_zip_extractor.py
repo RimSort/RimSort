@@ -2,6 +2,10 @@ import os
 import zipfile
 from pathlib import Path
 
+import pytest
+
+from app.utils.zip_extractor import create_zip_backup
+
 
 def _create_zip_with_entries(zip_path: str, entries: dict[str, str]) -> None:
     """Create a ZIP file with the given filename->content entries."""
@@ -84,3 +88,41 @@ class TestZipSlipProtection:
         # The /tmp/evil.txt should not be created at the absolute path
         # (os.path.join with absolute second arg returns the absolute path,
         # but realpath check should catch it)
+
+
+def test_failed_backup_preserves_existing_destination(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "RimSort").write_text("new application")
+    destination = tmp_path / "backup.zip"
+    with zipfile.ZipFile(destination, "w") as archive:
+        archive.writestr("RimSort", "last complete backup")
+
+    def fail_progress(_current: int, _total: int) -> None:
+        raise OSError("Backup interrupted")
+
+    with pytest.raises(OSError, match="Backup interrupted"):
+        create_zip_backup(source, destination, fail_progress)
+
+    with zipfile.ZipFile(destination) as archive:
+        assert archive.read("RimSort") == b"last complete backup"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["backup.zip", "source"]
+
+
+def test_unreadable_subdirectory_fails_backup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    destination = tmp_path / "backup.zip"
+
+    def fail_walk(*_args: object, **kwargs: object) -> list[object]:
+        onerror = kwargs.get("onerror")
+        if callable(onerror):
+            onerror(PermissionError("Unreadable subdirectory"))
+        return []
+
+    monkeypatch.setattr(os, "walk", fail_walk)
+    with pytest.raises(PermissionError, match="Unreadable subdirectory"):
+        create_zip_backup(source, destination)
+    assert not destination.exists()
