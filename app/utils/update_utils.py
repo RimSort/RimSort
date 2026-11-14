@@ -198,7 +198,7 @@ class ScriptConfig:
             temp_path: Path to the temporary extraction directory
             log_path: Path to the update log file
             needs_elevation: Whether elevated privileges are required
-            install_dir: Installation directory (required for Linux)
+            install_dir: Installation directory (required for Linux and macOS)
             update_manager: UpdateManager instance (for backwards compatibility, not used)
 
         Returns:
@@ -207,7 +207,7 @@ class ScriptConfig:
         base_args = [str(script_path), str(temp_path), str(log_path)]
         if self.platform == "Windows":
             base_args.append(str(AppInfo().application_folder))
-        elif install_dir and self.platform == "Linux":
+        elif install_dir and self.platform in {"Linux", "Darwin"}:
             base_args.append(str(install_dir))
 
         return self._build_platform_args(
@@ -307,11 +307,11 @@ class ScriptConfig:
         """
         if self.platform == "Darwin":
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
-            terminal_cmd = (
-                f'/bin/bash {quoted_args}; read -p \\"Press enter to close\\"'
-            )
+            terminal_cmd = f'/bin/bash {quoted_args}; read -p "Press enter to close"'
             script_cmd = f"sudo {terminal_cmd}" if needs_elevation else terminal_cmd
-            return f'osascript -e \'tell app "Terminal" to do script "{script_cmd}"\''
+            script_cmd = script_cmd.replace("\\", "\\\\").replace('"', '\\"')
+            applescript = f'tell app "Terminal" to do script "{script_cmd}"'
+            return f"osascript -e {shlex.quote(applescript)}"
         elif self.platform == "Windows":
             if needs_elevation:
                 # Properly escape paths for PowerShell with special characters and spaces
@@ -2577,6 +2577,8 @@ class UpdateManager(QObject):
         appimage_path = AppInfo().appimage_path
         if appimage_path is not None:
             install_dir = appimage_path.parent
+        elif self._system == "Darwin":
+            install_dir = script_path.parents[2]
         else:
             install_dir = script_path.parent
         args_repr = config.get_args(
