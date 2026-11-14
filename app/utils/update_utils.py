@@ -479,6 +479,7 @@ def rate_limit_reset_clock(response: Any) -> str:
 class UpdateManager(QObject):
     update_progress = Signal(int, str)  # percent, message
     download_complete = Signal(bool, str)  # success, error_message
+    update_available = Signal(str)
 
     # Class-level cached platform patterns for performance
     _platform_patterns = {  # noqa: RUF012
@@ -553,6 +554,7 @@ class UpdateManager(QObject):
         )
         # Progress window for update operations
         self._progress_widget: TaskProgressWindow | None = None
+        self._quiet_check_thread: threading.Thread | None = None
 
     def _check_needs_elevation(self) -> bool:
         """
@@ -669,6 +671,33 @@ class UpdateManager(QObject):
             "kitty, gnome-terminal, konsole, xfce4-terminal, mate-terminal, xterm, x-terminal-emulator. "
             "Please install one of these or ensure the update script is executable."
         )
+
+    def _check_for_update_silently(self) -> None:
+        """Look for a release in the background without interrupting the user."""
+        if os.getenv("RIMSORT_DISABLE_UPDATER") or "__compiled__" not in globals():
+            return
+        if self._quiet_check_thread is not None and self._quiet_check_thread.is_alive():
+            return
+        self._quiet_check_thread = threading.Thread(
+            target=self._quiet_check_worker, daemon=True
+        )
+        try:
+            self._quiet_check_thread.start()
+        except Exception as e:
+            self._quiet_check_thread = None
+            logger.warning(f"Unable to start background update check: {e}")
+
+    def _quiet_check_worker(self) -> None:
+        try:
+            current_version = version.parse(AppInfo().app_version)
+            release = self._get_latest_release_info(quiet=True)
+            if release is not None:
+                tag = (
+                    release["tag_name"] if release["version"] > current_version else ""
+                )
+                self.update_available.emit(tag)
+        except Exception as e:
+            logger.warning(f"Background update check failed: {e}")
 
     def do_check_for_update(self) -> None:
         """
@@ -868,7 +897,7 @@ class UpdateManager(QObject):
             raise UpdateError(f"Update failed: {e}") from e
 
     def _get_latest_release_info(
-        self, needs_elevation: bool = False
+        self, needs_elevation: bool = False, *, quiet: bool = False
     ) -> ReleaseInfo | None:
         """
         Get the latest release information from GitHub API.
@@ -879,6 +908,7 @@ class UpdateManager(QObject):
 
         Args:
             needs_elevation: Whether elevation is needed (affects Windows asset selection)
+            quiet: Log failures without showing dialogs, including from worker threads
 
         Returns:
             Dictionary containing version, tag_name, download_url, and is_msi flag, or None if failed
@@ -900,7 +930,8 @@ class UpdateManager(QObject):
                 latest_version = version.parse(normalized_tag)
             except Exception as e:
                 logger.warning(f"Failed to parse version from tag {tag_name}: {e}")
-                self.show_update_error()
+                if not quiet:
+                    self.show_update_error()
                 return None
 
             # Get platform-specific download URL
@@ -908,13 +939,15 @@ class UpdateManager(QObject):
                 release_data.get("assets", []), needs_elevation
             )
             if not download_info:
-                system_info = f"{platform.system()} {platform.architecture()[0]} {platform.machine()}"
-                dialogue.show_warning(
-                    title=self.tr(ERR_NO_VALID_RELEASE_TITLE),
-                    text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(
-                        system_info=system_info
-                    ),
-                )
+                logger.warning("No compatible application release asset found")
+                if not quiet:
+                    system_info = f"{platform.system()} {platform.architecture()[0]} {platform.machine()}"
+                    dialogue.show_warning(
+                        title=self.tr(ERR_NO_VALID_RELEASE_TITLE),
+                        text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(
+                            system_info=system_info
+                        ),
+                    )
                 return None
 
             return {
@@ -927,6 +960,9 @@ class UpdateManager(QObject):
             }
 
         except requests.HTTPError as e:
+            if quiet:
+                logger.warning(f"Failed to fetch release information: {e}")
+                return None
             if is_github_rate_limit_error(e):
                 logger.warning(f"GitHub API rate limit reached: {e}")
                 clock = rate_limit_reset_clock(getattr(e, "response", None))
@@ -957,14 +993,16 @@ class UpdateManager(QObject):
             return None
         except requests.RequestException as e:
             logger.warning(f"Failed to fetch release information: {e}")
-            dialogue.show_warning(
-                title=self.tr(ERR_API_CONNECTION_TITLE),
-                text=self.tr(ERR_API_CONNECTION_TEXT).format(error=str(e)),
-            )
+            if not quiet:
+                dialogue.show_warning(
+                    title=self.tr(ERR_API_CONNECTION_TITLE),
+                    text=self.tr(ERR_API_CONNECTION_TEXT).format(error=str(e)),
+                )
             return None
         except Exception as e:
             logger.warning(f"Unexpected error fetching release info: {e}")
-            self.show_update_error()
+            if not quiet:
+                self.show_update_error()
             return None
 
     def _asset_matches(

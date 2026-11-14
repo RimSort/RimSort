@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from app.views.settings_dialog import SettingsDialog
 
 from loguru import logger
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QCoreApplication, QTimer, Slot
 from PySide6.QtGui import QCloseEvent, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -36,6 +36,7 @@ from app.utils.app_info import AppInfo
 from app.utils.event_bus import EventBus
 from app.utils.gui_info import GUIInfo
 from app.utils.steam.steamcmd.wrapper import SteamcmdInterface
+from app.utils.update_utils import UpdateManager
 from app.utils.watchdog import WatchdogHandler
 from app.utils.window_launch_state import apply_window_launch_state
 from app.views.acf_log_reader import AcfLogReader
@@ -113,6 +114,7 @@ class MainWindow(QMainWindow):
         self.main_content_panel.stop_watchdog_signal.connect(self.shutdown_watchdog)
 
         self.bottom_panel = Status()
+        self._initialize_application_update_notification()
 
         # Create and add the Main Content panel tab
         self.main_content_tab = QWidget()
@@ -249,6 +251,28 @@ class MainWindow(QMainWindow):
         self._launch_main_window()
         logger.debug("Finished MainWindow initialization")
 
+    def _initialize_application_update_notification(self) -> None:
+        self._startup_update_manager = UpdateManager(
+            self.settings,
+            self.main_content_panel,
+            self.main_content_panel.mod_info_panel,
+        )
+        self._startup_update_manager.update_available.connect(
+            self._on_application_update_available
+        )
+        self.bottom_panel.update_available_button.clicked.connect(
+            EventBus().do_check_for_application_update.emit
+        )
+
+    @Slot(str)
+    def _on_application_update_available(self, tag: str) -> None:
+        self.bottom_panel.update_available_button.setToolTip(
+            QCoreApplication.translate(
+                "MainWindow", "RimSort {version} is available. Click to update."
+            ).format(version=tag)
+        )
+        self.bottom_panel.update_available_button.setVisible(bool(tag))
+
     def _launch_main_window(self) -> None:
         """Apply main window launch state from settings"""
         main_window_launch_state = self.settings.main_window_launch_state
@@ -341,8 +365,8 @@ class MainWindow(QMainWindow):
             self._get_active_instance().initial_setup = False
             self.settings.save()
         # IF CHECK FOR UPDATE ON STARTUP...
-        if self.settings.check_for_update_startup:
-            EventBus().do_check_for_application_update.emit()
+        if is_initial and self.settings.check_for_update_startup:
+            self._startup_update_manager._check_for_update_silently()
         # Delete outdated entries in aux DB
         EventBus().do_delete_outdated_entries_in_aux_db.emit()
 

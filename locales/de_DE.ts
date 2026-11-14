@@ -2533,6 +2533,10 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
         <source>Player Log</source>
         <translation>Spielerprotokoll</translation>
     </message>
+    <message>
+        <source>RimSort {version} is available. Click to update.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -5480,6 +5484,13 @@ Bitte wählen Sie eine der folgenden Optionen, um fortzufahren.</translation>
     <message>
         <source>Exit RimSort</source>
         <translation>Rimsort beenden</translation>
+    </message>
+</context>
+<context>
+    <name>Status</name>
+    <message>
+        <source>Update available</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

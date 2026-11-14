@@ -20,6 +20,12 @@ When downloading a release, make sure to select the file more appropriate for yo
 [Stable Release][Stable Release]{: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Edge Release][Edge Release]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
+RimSort checks for updates quietly on startup. When a newer release is available,
+an **Update available** button appears in the bottom status area. Click it to open
+the update dialog, or choose **Update → Check for Updates…** to check manually.
+Automatic checks do not open update or connection-error dialogs. You can disable
+startup checks under **Update → Check for Updates on Startup**.
+
 ## Table of Contents
 
 {: .no_toc .text-delta }
