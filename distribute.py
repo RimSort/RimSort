@@ -47,6 +47,8 @@ _NUITKA_CMD = [
     f"--include-data-dir={glob.glob('.venv/**/qtwebengine_locales', recursive=True)[0]}=qtwebengine_locales",
 ]
 
+_NUITKA_CMD.append("--show-scons")
+
 if (
     _SYSTEM == "Darwin"
     and _PROCESSOR in ["x86_64", "arm64"]
