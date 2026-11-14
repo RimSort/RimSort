@@ -351,7 +351,6 @@ class ModListItemInner(QWidget):
         self.main_item_layout.addWidget(
             self.mod_tags_label, Qt.AlignmentFlag.AlignCenter
         )
-        self.update_tags_label()
         if self.settings.show_save_comparison_indicators:
             self.main_item_layout.addWidget(
                 self.in_save_icon_label, Qt.AlignmentFlag.AlignRight
@@ -378,6 +377,7 @@ class ModListItemInner(QWidget):
             )
         self.main_item_layout.addStretch()
         self.setLayout(self.main_item_layout)
+        self.update_tags_label()
 
         # Reveal if errors or warnings exist
         if self.warnings:
