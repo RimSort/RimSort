@@ -84,6 +84,10 @@ macOS
 - Use the `xattr` command to circumvent [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web) and whitelist `RimSort.app` and `libsteam_api.dylib`
 - Open the app bundle: `RimSort.app`
 
+In-app updates preserve the current application bundle's location and name.
+If that location requires administrator access, the updater requests permission
+in Terminal before replacing the bundle.
+
 <img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/28567881/7731911b-cc7c-47c8-9c34-6f925fc5b188">
 
 ## Linux
