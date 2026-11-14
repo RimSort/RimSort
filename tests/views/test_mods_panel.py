@@ -549,7 +549,7 @@ def _make_item_for_repolish(spec: dict[str, Any]) -> CustomListWidgetItem:
 
 
 def _make_item_inner(
-    qtbot: Any, soft_warning: bool, errors: str = ""
+    qtbot: Any, soft_warning: bool, errors: str = "", show_tags: bool = False
 ) -> ModListItemInner:
     controller: Any = MagicMock()
     controller.get_mod.return_value = None
@@ -576,6 +576,7 @@ def _make_item_inner(
         "mod_color": None,
         "metadata_controller": controller,
         "soft_warning": soft_warning,
+        "show_tags": show_tags,
     }
     widget = ModListItemInner(**kwargs)
     qtbot.addWidget(widget)
@@ -611,3 +612,29 @@ def test_soft_warning_label_uses_soft_object_name(qtbot: Any) -> None:
 
     with_errors = _make_item_inner(qtbot, soft_warning=True, errors="missing dep")
     assert with_errors.main_label.objectName() == "ListItemLabelInvalid"
+
+
+def test_tags_label_not_separate_window(
+    qtbot: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression test for #2651: the tags label should not be visible as its own window."""
+    monkeypatch.setattr(
+        "app.views.mods_panel.auxdb_get_mod_tags", lambda *_args, **_kwargs: ["qol"]
+    )
+    floated_after_update: list[bool] = []
+    real_update_tags_label = ModListItemInner.update_tags_label
+
+    def update_then_check_label(
+        self: ModListItemInner, tags: list[str] | None = None
+    ) -> None:
+        real_update_tags_label(self, tags)
+        label = self.mod_tags_label
+        floated_after_update.append(label.isWindow() and not label.isHidden())
+
+    monkeypatch.setattr(ModListItemInner, "update_tags_label", update_then_check_label)
+
+    widget = _make_item_inner(qtbot, soft_warning=False, show_tags=True)
+
+    assert floated_after_update, "update_tags_label() never ran during construction"
+    assert not any(floated_after_update)
+    assert not widget.mod_tags_label.isHidden()
