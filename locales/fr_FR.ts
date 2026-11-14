@@ -6242,6 +6242,14 @@ Veuillez nous contacter pour l'assistance à: {support_url} {development_guide_u
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;Dernière version récupérée avec succès.&lt;br&gt;La mise à jour sera installée à partir de : {update_source_path}</translation>
     </message>
+    <message>
+        <source>No compatible update download was found. Your installation has not been changed.&lt;br&gt;&lt;br&gt;Check &lt;a href="https://github.com/RimSort/RimSort/releases"&gt;RimSort releases&lt;/a&gt; for a download matching your operating system and CPU architecture.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;&lt;br&gt;AppImage installations require a compatible AppImage download.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>
