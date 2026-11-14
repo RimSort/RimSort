@@ -143,6 +143,38 @@ def test_unlabelled_architecture_is_rejected(
     assert manager._get_platform_download_url(_assets(names)) is None
 
 
+@pytest.mark.parametrize("quiet", [False, True])
+@pytest.mark.parametrize("appimage", [False, True])
+def test_incompatible_download_warning_respects_quiet_mode(
+    manager_factory: Callable[[str, str], UpdateManager],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    quiet: bool,
+    appimage: bool,
+) -> None:
+    manager = manager_factory("Linux", "aarch64")
+    if appimage:
+        monkeypatch.setenv("APPIMAGE", str(tmp_path / "RimSort.AppImage"))
+    response = MagicMock()
+    response.json.return_value = {
+        "tag_name": "v1.17.4",
+        "assets": _assets(RELEASE_NAMES),
+    }
+    monkeypatch.setattr(update_utils.http, "get", MagicMock(return_value=response))
+    warning = MagicMock()
+    monkeypatch.setattr(update_utils.dialogue, "show_warning", warning)
+
+    assert manager._get_latest_release_info(quiet=quiet) is None
+
+    if quiet:
+        warning.assert_not_called()
+    else:
+        warning.assert_called_once()
+        information = warning.call_args.kwargs["information"]
+        assert "https://github.com/RimSort/RimSort/releases" in information
+        assert ("AppImage" in information) is appimage
+
+
 @pytest.mark.parametrize("condition", ["missing", "wrong_architecture", "compatible"])
 def test_appimage_update_check_never_downloads_archive_fallback(
     manager_factory: Callable[[str, str], UpdateManager],
