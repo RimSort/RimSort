@@ -96,10 +96,10 @@ class AppInfo:
                 self._app_version = ver.text
 
             # If edge in version_string, append short sha
-            if "edge" in self._app_version.lower():
+            if "edge" in self._app_version.lower() and "+" not in self._app_version:
                 commit = root.find("commit")
                 if commit is not None and commit.text is not None:
-                    self._app_version += f"+{commit[:7]}"
+                    self._app_version += f"+{commit.text[:7]}"
 
         # Define important directories — dev mode redirects to a local folder
         # so that running from source never touches production data.

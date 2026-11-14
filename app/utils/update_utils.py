@@ -39,6 +39,9 @@ from packaging import version
 # Pre-compiled regex patterns for performance
 VERSION_PATTERN = re.compile(r"v?\d+[\.\-_]\d+")
 TAG_PREFIX_PATTERN = re.compile(r"^v", re.IGNORECASE)
+EDGE_VERSION_PATTERN = re.compile(
+    r"^(v?\d+\.\d+\.\d+)-edge(\d+)(?=\+|$)", re.IGNORECASE
+)
 
 # API and network constants
 GITHUB_API_URL = "https://api.github.com/repos/RimSort/RimSort/releases/latest"
@@ -79,8 +82,6 @@ THREAD_JOIN_TIMEOUT = 5  # 5 seconds for thread join
 
 # No Version Dialog Constants
 UNKNOWN_VERSION_TITLE = "Unknown Version Detected"
-UNKNOWN_VERSION_TEXT = "Could not find version Information of RimSort, This may indicate that the application is not an offical release and may be a custom build."
-UNKNOWN_VERSION_INFO = "Are you sure you want to still update anyway?"
 
 # Standardized error messages
 ERR_UPDATE_SKIPPED_TITLE = "Update skipped"
@@ -666,7 +667,9 @@ class UpdateManager(QObject):
 
     def _quiet_check_worker(self) -> None:
         try:
-            current_version = version.parse(AppInfo().app_version)
+            current_version = self._parse_current_version(AppInfo().app_version)
+            if current_version is None:
+                return
             release = self._get_latest_release_info(quiet=True)
             if release is not None:
                 tag = (
@@ -756,6 +759,21 @@ class UpdateManager(QObject):
 
         current_version = AppInfo().app_version
         logger.info(f"Current RimSort version: {current_version}")
+        current_version_parsed = self._parse_current_version(current_version)
+        if current_version_parsed is None:
+            dialogue.show_warning(
+                title=self.tr(UNKNOWN_VERSION_TITLE),
+                text=self.tr(
+                    "RimSort could not read its current version, so it cannot "
+                    "safely check for updates."
+                ),
+                information=self.tr(
+                    "Download a stable release manually from "
+                    '<a href="https://github.com/RimSort/RimSort/releases/latest">'
+                    "the RimSort releases page</a>."
+                ),
+            )
+            return None
 
         # Get the latest release info
         logger.info("Fetching latest release information from GitHub API...")
@@ -772,7 +790,6 @@ class UpdateManager(QObject):
         logger.info(f"Update available: {latest_tag_name} ({latest_version})")
 
         # Compare versions
-        current_version_parsed = self._parse_current_version(current_version)
         if current_version_parsed >= latest_version:
             logger.info("Already running the latest version")
             return None
@@ -791,39 +808,22 @@ class UpdateManager(QObject):
             "is_tar_gz": latest_release_info.get("is_tar_gz", False),
         }
 
-    def _parse_current_version(self, current_version: str) -> version.Version:
+    def _parse_current_version(self, current_version: str) -> version.Version | None:
         """
-        Parse the current version string, handling special cases.
+        Parse the installed version, including RimSort's Edge prerelease format.
 
         Args:
             current_version: The current version string
 
         Returns:
-            Parsed version object
+            Parsed version object, or None when the version cannot be compared
         """
         try:
-            if current_version == "Unknown version":
-                logger.warning(
-                    f"Current version is: {current_version}, assuming custom build"
-                )
-                answer = dialogue.show_dialogue_conditional(
-                    title=self.tr(UNKNOWN_VERSION_TITLE),
-                    text=self.tr(UNKNOWN_VERSION_TEXT),
-                    information=self.tr(UNKNOWN_VERSION_INFO),
-                )
-                if answer == QMessageBox.StandardButton.Yes:
-                    logger.info(f"User chose to update version: {current_version}")
-                    # If user confirms, continue with update by returning a dummy version
-                    return version.parse("0.0.0")
-                else:
-                    logger.info(f"User chose not to update version: {current_version}")
-                    # If user declines, return a dummy version that's higher than any valid version
-                    return version.parse("999.999.999")
-
-            return version.parse(current_version)
-        except Exception as e:
+            normalized = EDGE_VERSION_PATTERN.sub(r"\1.dev\2", current_version.strip())
+            return version.parse(normalized)
+        except version.InvalidVersion as e:
             logger.warning(f"Failed to parse version '{current_version}': {e}")
-            return version.parse("0.0.0")
+            return None
 
     def _prompt_user_for_update(
         self, latest_tag_name: str, current_version: str
@@ -911,6 +911,14 @@ class UpdateManager(QObject):
             response.raise_for_status()
             release_data = response.json()
 
+            if release_data.get("draft", False) or release_data.get(
+                "prerelease", False
+            ):
+                logger.warning("Ignoring a draft or prerelease update candidate")
+                if not quiet:
+                    self.show_update_error()
+                return None
+
             tag_name = release_data.get("tag_name", "")
             # Normalize tag name by removing prefix 'v' if present
             normalized_tag = TAG_PREFIX_PATTERN.sub("", str(tag_name))
@@ -918,6 +926,8 @@ class UpdateManager(QObject):
             # Parse version
             try:
                 latest_version = version.parse(normalized_tag)
+                if latest_version.is_prerelease:
+                    raise version.InvalidVersion("Update candidate is not stable")
             except Exception as e:
                 logger.warning(f"Failed to parse version from tag {tag_name}: {e}")
                 if not quiet:

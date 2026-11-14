@@ -26,6 +26,12 @@ the update dialog, or choose **Update → Check for Updates…** to check manual
 Automatic checks do not open update or connection-error dialogs. You can disable
 startup checks under **Update → Check for Updates on Startup**.
 
+The built-in updater offers stable releases only. Edge builds remain manual
+downloads. An installed Edge build can update to its corresponding stable
+release or a newer one, but an older stable release is not offered. If RimSort
+cannot read the installed version, use the stable download link above to update
+manually.
+
 ## Table of Contents
 
 {: .no_toc .text-delta }
