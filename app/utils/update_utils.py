@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any, TypedDict, cast
@@ -24,7 +25,6 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.utils import http
 from app.utils.app_info import AppInfo
-from app.utils.generic import check_internet_connection
 from app.utils.zip_extractor import (
     BadZipFile,
     ZipExtractThread,
@@ -739,8 +739,7 @@ class UpdateManager(QObject):
             )
             return False
 
-        # Check internet connection
-        return check_internet_connection()
+        return True
 
     def _fetch_and_compare_versions(self) -> dict[str, Any] | None:
         """
@@ -894,7 +893,21 @@ class UpdateManager(QObject):
         headers = {"Authorization": f"Bearer {token}"} if token else {}
         try:
             # Use releases API for better asset information
-            response = http.get(GITHUB_API_URL, timeout=API_TIMEOUT, headers=headers)
+            fetch_release = partial(
+                http.get, GITHUB_API_URL, timeout=API_TIMEOUT, headers=headers
+            )
+            if quiet:
+                response = fetch_release()
+            else:
+                response = self.main_content.do_threaded_loading_animation(
+                    gif_path=str(
+                        AppInfo().theme_data_folder / "default-icons" / "rimsort.gif"
+                    ),
+                    target=fetch_release,
+                    text=self.tr("Checking for RimSort updates..."),
+                )
+            if response is None:
+                return None
             response.raise_for_status()
             release_data = response.json()
 

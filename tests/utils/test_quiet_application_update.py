@@ -25,7 +25,11 @@ def updater(monkeypatch: pytest.MonkeyPatch) -> Generator[UpdateManager]:
     monkeypatch.delenv("RIMSORT_DISABLE_UPDATER", raising=False)
     monkeypatch.setattr(update_utils, "__compiled__", object(), raising=False)
     AppInfo()._app_version = "1.0.0"
-    manager = UpdateManager(Settings(), None)
+    content = MagicMock()
+    content.do_threaded_loading_animation.side_effect = lambda **kwargs: kwargs[
+        "target"
+    ]()
+    manager = UpdateManager(Settings(), content)
     yield manager
     thread = getattr(manager, "_quiet_check_thread", None)
     if thread is not None:
@@ -137,7 +141,11 @@ def test_background_results_never_open_dialogs(
     monkeypatch.setattr(update_utils.dialogue, "show_warning", dialogs)
     monkeypatch.setattr(update_utils.dialogue, "show_dialogue_conditional", dialogs)
     internet = MagicMock()
-    monkeypatch.setattr(update_utils, "check_internet_connection", internet)
+    monkeypatch.setattr(update_utils.http, "head", internet)
+    loading = MagicMock()
+    monkeypatch.setattr(
+        updater, "main_content", MagicMock(do_threaded_loading_animation=loading)
+    )
     install = MagicMock()
     monkeypatch.setattr(updater, "_handle_update_process", install)
     tags: list[str] = []
@@ -150,6 +158,7 @@ def test_background_results_never_open_dialogs(
     )
     dialogs.assert_not_called()
     internet.assert_not_called()
+    loading.assert_not_called()
     install.assert_not_called()
 
 

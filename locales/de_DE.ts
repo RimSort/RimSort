@@ -2470,6 +2470,18 @@ Manage mods installed from GitHub releases.</source>
         <source>{count} repositories were updated with their latest commits:</source>
         <translation>{count} Repositories wurden mit ihren neuesten Commits aktualisiert:</translation>
     </message>
+    <message>
+        <source>Updating databases...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update databases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database updates finished</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -6241,6 +6253,10 @@ Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_g
     <message>
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;Neueste Version erfolgreich abgerufen.&lt;br&gt;Das Update wird installiert von: {update_source_path}</translation>
+    </message>
+    <message>
+        <source>Checking for RimSort updates...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

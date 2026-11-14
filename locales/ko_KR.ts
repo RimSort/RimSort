@@ -2469,6 +2469,18 @@ Manage mods installed from GitHub releases.</source>
         <source>{count} repositories were updated with their latest commits:</source>
         <translation>{count}개의 저장소가 최신 커밋으로 업데이트되었습니다.</translation>
     </message>
+    <message>
+        <source>Updating databases...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update databases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database updates finished</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -6244,6 +6256,10 @@ Please reach out to us for support at: {support_url}</source>
     <message>
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;최신 릴리스를 성공적으로 검색했습니다.&lt;br&gt;업데이트는 다음 위치에서 설치됩니다: {update_source_path}</translation>
+    </message>
+    <message>
+        <source>Checking for RimSort updates...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

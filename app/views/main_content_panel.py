@@ -356,6 +356,7 @@ class MainContent(QObject):
         self._extract_progress_widget: TaskProgressWindow | None = None
         self.window_manager = WindowManager(self.metadata_controller)
         self._active_loading_loop: QEventLoop | None = None
+        self._loading_aborted: bool = False
         self._refresh_in_progress: bool = False
 
     @classmethod
@@ -387,6 +388,7 @@ class MainContent(QObject):
         the process can exit cleanly.
         """
         if self._active_loading_loop is not None:
+            self._loading_aborted = True
             self._active_loading_loop.quit()
 
     def close_child_windows(self) -> None:
@@ -911,22 +913,27 @@ class MainContent(QObject):
         loading_animation.finished.connect(loop.quit)
         # Store ref so closeEvent can break out of this loop
         self._active_loading_loop = loop
+        self._loading_aborted = False
         loop.exec_()
         self._active_loading_loop = None
         # If the loop was quit externally (e.g. window close), skip UI cleanup
-        if not loading_animation.animation_finished:
+        if self._loading_aborted or not loading_animation.animation_finished:
+            loading_animation._thread.wait()
             return None
-        if loading_animation.exception:
-            raise loading_animation.exception
         data = loading_animation.data
+        exception = loading_animation.exception
         # Remove text label if it was passed
         if text and loading_animation_text_label is not None:
             self.mod_info_panel.panel.removeWidget(loading_animation_text_label)
             loading_animation_text_label.close()
+        self.mod_info_panel.panel.removeWidget(loading_animation)
+        loading_animation.deleteLater()
         # Enable widgets again after loading
         self.disable_enable_widgets_signal.emit(True)
         # Show the info panel widgets
         self.mod_info_panel.info_panel_frame.show()
+        if exception:
+            raise exception
         logger.debug(f"Returning {type(data)}")
         return data
 
@@ -2250,8 +2257,6 @@ class MainContent(QObject):
         self._open_steam_browser(url)
 
     def _do_check_for_workshop_updates(self) -> None:
-        if not check_internet_connection():
-            return
         try:
             result: WorkshopUpdateResult = self.do_threaded_loading_animation(
                 gif_path=str(
@@ -2269,7 +2274,9 @@ class MainContent(QObject):
             self.status_signal.emit(self.tr("Failed to check for Workshop updates"))
             return
 
-        if not result or result.status == "no_workshop_mods":
+        if result is None:
+            return
+        if result.status == "no_workshop_mods":
             self.status_signal.emit(self.tr("No Workshop mods to check for updates"))
             return
 
