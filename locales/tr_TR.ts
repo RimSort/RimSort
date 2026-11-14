@@ -2547,6 +2547,10 @@ Manage mods installed from GitHub releases.</source>
         <source>Player Log</source>
         <translation>Oyuncu günlüğü</translation>
     </message>
+    <message>
+        <source>RimSort {version} is available. Click to update.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MenuBar</name>
@@ -5494,6 +5498,13 @@ E.g., 'oels.vehiclemapframework', alternatives: 'oels.vehiclemapframework.dev'</
 Please choose one of the following options to proceed.</source>
         <translation>Rimsort ayarları dosyanız bozuk.
 Lütfen devam etmek için aşağıdaki seçeneklerden birini seçin.</translation>
+    </message>
+</context>
+<context>
+    <name>Status</name>
+    <message>
+        <source>Update available</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
