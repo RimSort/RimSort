@@ -14,6 +14,7 @@ dependencies = [
     "click==8.5.1",
     "loguru==0.7.3",
     "lxml==6.1.3",
+    "mcp>=2.3.0,<3",
     "msgspec==0.22.0",
     "natsort==8.4.0",
     "networkx==3.7",
