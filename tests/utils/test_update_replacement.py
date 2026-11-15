@@ -167,7 +167,7 @@ def installer(tmp_path: Path) -> Callable[[str], Installer]:
             / (
                 "RimSort.AppImage"
                 if appimage
-                else "RimSort.app"
+                else "Custom RimSort.app"
                 if mode == "macos"
                 else "RimSort"
             )
