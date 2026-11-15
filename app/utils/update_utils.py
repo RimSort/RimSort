@@ -12,6 +12,7 @@ import tempfile
 import threading
 import time
 import traceback
+from collections.abc import Callable
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -127,6 +128,90 @@ class UpdateScriptLaunchError(UpdateError):
     """Raised when launching update script fails."""
 
 
+def _create_macos_bundle_backup(
+    source: Path,
+    destination: Path,
+    progress_callback: Callable[[int, int], None] | None,
+) -> None:
+    if not source.is_dir():
+        raise OSError(f"Source directory does not exist: {source}")
+    if destination.resolve().is_relative_to(source.resolve()):
+        raise OSError("Application backup must be outside the application bundle")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(
+        prefix=f".{destination.name}.", suffix=".partial.tar.gz", dir=destination.parent
+    )
+    os.close(fd)
+    temporary_path = Path(name)
+    command = [
+        "/usr/bin/tar",
+        "--mac-metadata",
+        "--acls",
+        "--xattrs",
+        "-czf",
+        str(temporary_path),
+        "-C",
+        str(source.parent),
+        "--",
+        f"./{source.name}",
+    ]
+    archive_env = dict(os.environ)
+    archive_env.pop("DITTONORSRC", None)
+    archive_env.pop("COPYFILE_DISABLE", None)
+    try:
+        if progress_callback:
+            progress_callback(0, 1)
+        with subprocess.Popen(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=archive_env,
+        ) as process:
+            try:
+                while True:
+                    try:
+                        _, error = process.communicate(timeout=0.1)
+                        break
+                    except subprocess.TimeoutExpired:
+                        if progress_callback:
+                            progress_callback(0, 1)
+            except BaseException:
+                process.kill()
+                process.communicate()
+                raise
+            if process.returncode != 0:
+                detail = error.decode("utf-8", errors="replace").strip()
+                raise OSError(f"macOS bundle backup failed: {detail}")
+        if temporary_path.stat().st_size == 0:
+            raise OSError("macOS bundle backup is empty")
+        if progress_callback:
+            progress_callback(1, 1)
+        os.replace(temporary_path, destination)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
+def _create_application_backup(
+    source: Path,
+    destination: Path,
+    progress_callback: Callable[[int, int], None] | None = None,
+) -> None:
+    """Back up the running installation, including the outer macOS bundle."""
+    if sys.platform == "darwin" and "__compiled__" in globals():
+        bundle = source.parent.parent
+        if (
+            source.name != "MacOS"
+            or source.parent.name != "Contents"
+            or bundle.suffix.lower() != ".app"
+            or not (bundle / "Contents" / "Info.plist").is_file()
+            or not (source / "RimSort").is_file()
+        ):
+            raise OSError(f"Cannot locate complete macOS application bundle: {source}")
+        _create_macos_bundle_backup(bundle, destination, progress_callback)
+    else:
+        create_zip_backup(source, destination, progress_callback)
+
+
 class _BackupWorker(QThread):
     progress = Signal(int, int)
 
@@ -145,7 +230,7 @@ class _BackupWorker(QThread):
         try:
             if self.isInterruptionRequested():
                 raise InterruptedError("Backup cancelled")
-            create_zip_backup(self.source, self.destination, report_progress)
+            _create_application_backup(self.source, self.destination, report_progress)
         except Exception as error:
             self.error = str(error)
             logger.exception("Application backup failed")
@@ -2693,8 +2778,14 @@ class UpdateManager(QObject):
         self._show_progress_widget(self._progress_widget, cancellable=False)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")  # noqa: DTZ005
+        extension = (
+            ".tar.gz"
+            if sys.platform == "darwin" and "__compiled__" in globals()
+            else ".zip"
+        )
         backup_path = (
-            AppInfo().application_backups_folder / f"RimSort_Backup_{timestamp}.zip"
+            AppInfo().application_backups_folder
+            / f"RimSort_Backup_{timestamp}{extension}"
         )
         worker = _BackupWorker(AppInfo().application_folder, backup_path)
         loop = QEventLoop()
@@ -2778,7 +2869,10 @@ class UpdateManager(QObject):
 
         try:
             # Get all backup files
-            backup_files = list(app_backup_folder.glob("RimSort_Backup_*.zip"))
+            backup_files = [
+                *app_backup_folder.glob("RimSort_Backup_*.zip"),
+                *app_backup_folder.glob("RimSort_Backup_*.tar.gz"),
+            ]
             if len(backup_files) <= max_backups:
                 logger.debug(
                     f"Backup count ({len(backup_files)}) is within limit ({max_backups})"
