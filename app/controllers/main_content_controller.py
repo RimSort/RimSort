@@ -745,9 +745,6 @@ class MainContentController(QObject):
             logger.info("Update databases on startup is disabled.")
             return
 
-        if not check_internet_connection():
-            return
-
         settings = self.settings
         http_tasks: list[DatabaseDownloadTask] = []
 
@@ -817,6 +814,7 @@ class MainContentController(QObject):
 
         full_repo_path = Path(base_path) / parsed.repo_name
 
+        self.view.status_signal.emit(self.tr("Updating databases..."))
         if full_repo_path.exists():
             logger.info(f"Updating existing database repository: {full_repo_path}")
             self._on_update_repos_silent([full_repo_path])
@@ -893,6 +891,7 @@ class MainContentController(QObject):
         self._http_download_worker.progress.connect(
             lambda msg: logger.info(f"HTTP DB download: {msg}")
         )
+        self.view.status_signal.emit(self.tr("Updating databases..."))
         logger.info(f"Starting HTTP download for {len(tasks)} database(s)")
         self._http_download_worker.start()
 
@@ -924,6 +923,11 @@ class MainContentController(QObject):
             logger.warning(
                 f"HTTP DB update: {len(failed)} database(s) failed: {', '.join(failed)}"
             )
+        self.view.status_signal.emit(
+            self.tr("Failed to update databases")
+            if failed
+            else self.tr("Database updates finished")
+        )
 
     def _notify_http_result_interactive(
         self, updated: list[str], up_to_date: list[str], failed: list[str]

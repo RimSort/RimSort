@@ -56,6 +56,8 @@ The left side of the main window. Displays general information from a selected m
 
 While refreshing, the loading animation fits the available panel space and its progress text wraps to keep the window at its current size.
 
+Checking for RimSort or Workshop mod updates also shows a loading animation and status text while the request runs in the background. A slow or unavailable connection should leave the window responsive. Automatic database updates run in the background and report their activity in the status area.
+
 ## Mod lists
 
 Certain errors/warnings are produced based on dependency presence, incompatibilities, load rules, and any potential updates found.
