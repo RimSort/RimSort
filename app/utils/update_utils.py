@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QEventLoop, QObject, QThread, Signal
+from PySide6.QtCore import QEventLoop, QMetaObject, QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.utils import http
@@ -122,6 +122,10 @@ class UpdateDownloadError(UpdateError):
 
 class UpdateExtractionError(UpdateError):
     """Raised when extraction fails."""
+
+
+class _NormalizationCancelled(UpdateError):
+    """Stop an update when the application quits during normalization."""
 
 
 class UpdateScriptLaunchError(UpdateError):
@@ -1322,6 +1326,8 @@ class UpdateManager(QObject):
                 # Extract or save with progress window
                 try:
                     self._extract_update_with_progress(is_msi, is_tar_gz)
+                except _NormalizationCancelled:
+                    raise
                 except Exception as e:
                     logger.error(f"Extraction/preparation failed: {e}")
                     raise UpdateExtractionError(f"Extraction failed: {e!s}") from e
@@ -1377,6 +1383,8 @@ class UpdateManager(QObject):
                 update_source_path, log_path, needs_elevation, is_msi
             )
 
+        except _NormalizationCancelled:
+            logger.info("Update stopped because the application is shutting down")
         except UpdateDownloadError as e:
             logger.exception("Update download failed")
             dialogue.show_warning(
@@ -1852,6 +1860,13 @@ class UpdateManager(QObject):
         # Use a thread and event loop to keep UI responsive during normalization
         normalization_result: dict[str, Any] = {"success": False, "error": None}
         loop = QEventLoop()
+        application = QApplication.instance()
+        shutting_down = False
+
+        def on_application_quit() -> None:
+            nonlocal shutting_down
+            shutting_down = True
+            loop.quit()
 
         def worker_func() -> None:
             try:
@@ -1861,23 +1876,39 @@ class UpdateManager(QObject):
                 normalization_result["error"] = e
             finally:
                 logger.debug("Structure normalization worker thread completed")
-                loop.quit()
+                QMetaObject.invokeMethod(
+                    loop, "quit", Qt.ConnectionType.QueuedConnection
+                )
 
         thread = threading.Thread(target=worker_func, daemon=False)
-        thread.start()
-
-        loop.exec()
-
+        if application is not None:
+            application.aboutToQuit.connect(on_application_quit)
         try:
-            if self._progress_widget:
-                self._progress_widget.close()
-                # Remove from panel if it was added there
-                if self.mod_info_panel:
-                    self.mod_info_panel.panel.removeWidget(self._progress_widget)
-                    # Restore panel visibility
-                    self.mod_info_panel.info_panel_frame.show()
-        except Exception:  # noqa: S110
-            pass
+            thread.start()
+            if loop.exec() == -1:
+                # The quit signal may predate this operation's observer.
+                shutting_down = True
+        finally:
+            if thread.ident is not None:
+                thread.join()
+            if application is not None:
+                application.aboutToQuit.disconnect(on_application_quit)
+            try:
+                if self._progress_widget:
+                    self._progress_widget.close()
+                    # Remove from panel if it was added there
+                    if self.mod_info_panel:
+                        self.mod_info_panel.panel.removeWidget(self._progress_widget)
+                        # Restore panel visibility
+                        if not shutting_down:
+                            self.mod_info_panel.info_panel_frame.show()
+            except Exception:  # noqa: S110
+                pass
+
+        if shutting_down:
+            raise _NormalizationCancelled(
+                "Structure normalization interrupted by application shutdown"
+            ) from normalization_result["error"]
 
         if not normalization_result["success"]:
             error = normalization_result["error"]
