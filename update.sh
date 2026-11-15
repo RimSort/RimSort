@@ -5,6 +5,7 @@
 # This script safely updates RimSort by replacing the current installation
 # with files from a temporary directory.
 # Usage: update.sh <temp_update_path> [log_path] [install_dir]
+# On macOS, install_dir must be the original application bundle.
 # ========================================================================
 
 set -euo pipefail # Exit on error, undefined variables, and pipe failures
@@ -73,9 +74,6 @@ verify_checksum() {
 	return 0
 }
 
-# Trap errors to exit cleanly
-trap 'log_error "Update failed. Exiting."; exit 1' ERR
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -85,20 +83,100 @@ NC='\033[0m' # No Color
 
 # Logging functions with timestamps
 log_info() {
-	echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S') INFO]${NC} $1"
+	printf '%b[%s INFO]%b %s\n' "$BLUE" "$(date '+%Y-%m-%d %H:%M:%S')" "$NC" "$1"
 }
 
 log_success() {
-	echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S') SUCCESS]${NC} $1"
+	printf '%b[%s SUCCESS]%b %s\n' "$GREEN" "$(date '+%Y-%m-%d %H:%M:%S')" "$NC" "$1"
 }
 
 log_warning() {
-	echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S') WARNING]${NC} $1"
+	printf '%b[%s WARNING]%b %s\n' "$YELLOW" "$(date '+%Y-%m-%d %H:%M:%S')" "$NC" "$1"
 }
 
 log_error() {
-	echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S') ERROR]${NC} $1"
+	printf '%b[%s ERROR]%b %s\n' "$RED" "$(date '+%Y-%m-%d %H:%M:%S')" "$NC" "$1"
 }
+
+TRANSACTION_DIR=""
+INSTALL_TARGET=""
+INSTALL_DEVICE=""
+BACKUP_PATH=""
+DIRECTORY_REPLACEMENT=false
+UPDATE_COMMITTED=false
+APPIMAGE_BACKUP_OWNED=false
+APPIMAGE_BACKUP_READY=false
+
+device_id() {
+	if [ "$OS" = "Darwin" ]; then
+		stat -f '%d' "$1"
+	else
+		stat -c '%d' "$1"
+	fi
+}
+
+check_install_device() {
+	if [ "$(device_id "$INSTALL_TARGET")" = "$INSTALL_DEVICE" ] &&
+		[ "$(device_id "$(dirname "$INSTALL_TARGET")")" = "$INSTALL_DEVICE" ]; then
+		return 0
+	fi
+	log_error "Installation and parent must remain on the same filesystem. Update mounted installation roots manually."
+	return 1
+}
+
+cleanup_update() {
+	local status="$1"
+	local preserve_recovery=false
+	trap - EXIT HUP INT TERM
+	set +e
+
+	if ! $UPDATE_COMMITTED && $DIRECTORY_REPLACEMENT && [ -d "$BACKUP_PATH" ]; then
+		if [ "$(device_id "$BACKUP_PATH" 2>/dev/null)" != "$INSTALL_DEVICE" ] ||
+			[ "$(device_id "$(dirname "$INSTALL_TARGET")" 2>/dev/null)" != "$INSTALL_DEVICE" ]; then
+			log_error "Recovery filesystem changed; automatic restoration is unsafe."
+			preserve_recovery=true
+		elif [ -e "$INSTALL_TARGET" ] || [ -L "$INSTALL_TARGET" ]; then
+			log_error "Cannot restore over an existing destination: $INSTALL_TARGET"
+			preserve_recovery=true
+		elif mv "$BACKUP_PATH" "$(dirname "$INSTALL_TARGET")/"; then
+			log_warning "Restored the previous installation: $INSTALL_TARGET"
+		else
+			log_error "Could not restore the previous installation."
+			preserve_recovery=true
+		fi
+	fi
+
+	if $APPIMAGE_BACKUP_OWNED && ! $APPIMAGE_BACKUP_READY; then
+		if [ "$(device_id "$BACKUP_PATH" 2>/dev/null)" = "$INSTALL_DEVICE" ]; then
+			rm -f "$BACKUP_PATH" || log_warning "Could not remove incomplete backup: $BACKUP_PATH"
+		else
+			log_warning "Could not safely remove incomplete backup: $BACKUP_PATH"
+		fi
+	fi
+	if $preserve_recovery; then
+		log_error "Previous installation preserved at: $BACKUP_PATH"
+		log_error "Recovery files retained in: $TRANSACTION_DIR"
+		status=1
+	elif [ -n "$TRANSACTION_DIR" ]; then
+		if [ "$(device_id "$TRANSACTION_DIR" 2>/dev/null)" = "$INSTALL_DEVICE" ]; then
+			rm -rf "$TRANSACTION_DIR" || log_warning "Could not remove recovery directory: $TRANSACTION_DIR"
+		else
+			log_warning "Could not safely remove recovery directory: $TRANSACTION_DIR"
+		fi
+	fi
+	if [ "$status" -ne 0 ]; then
+		log_error "Update failed."
+		if $APPIMAGE_BACKUP_READY; then
+			log_error "Previous AppImage preserved at: $BACKUP_PATH"
+		fi
+	fi
+	exit "$status"
+}
+
+trap 'cleanup_update "$?"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Function to kill RimSort process safely
 kill_rimsort() {
@@ -129,14 +207,63 @@ set_permissions() {
 	log_info "Setting executable permissions..."
 
 	if [ "$OS" = "Darwin" ]; then
-		chmod +x "$target_dir/Contents/MacOS/RimSort" 2>/dev/null || log_warning "Could not set permissions for RimSort"
+		if [ ! -f "$target_dir/Contents/MacOS/RimSort" ]; then
+			log_error "Replacement RimSort executable is missing."
+			return 1
+		fi
+		chmod +x "$target_dir/Contents/MacOS/RimSort"
 		chmod +x "$target_dir/Contents/MacOS/todds/todds" 2>/dev/null || log_warning "Could not set permissions for todds"
 		chmod +x "$target_dir/Contents/MacOS/QtWebEngineProcess" 2>/dev/null || log_warning "Could not set permissions for QtWebEngineProcess"
 	else
-		chmod +x "$target_dir/$EXECUTABLE_NAME" 2>/dev/null || log_warning "Could not set permissions for $EXECUTABLE_NAME"
+		if [ ! -f "$target_dir/$EXECUTABLE_NAME" ]; then
+			log_error "Replacement RimSort executable is missing."
+			return 1
+		fi
+		chmod +x "$target_dir/$EXECUTABLE_NAME"
 		chmod +x "$target_dir/todds/todds" 2>/dev/null || log_warning "Could not set permissions for todds"
 		chmod +x "$target_dir/QtWebEngineProcess" 2>/dev/null || log_warning "Could not set permissions for QtWebEngineProcess"
 	fi
+}
+
+replace_directory() {
+	local source_path
+	local name
+	INSTALL_TARGET="$(cd "$1" && pwd -P)"
+	source_path="$(cd "$2" && pwd -P)"
+	if [ "$INSTALL_TARGET" = "/" ]; then
+		log_error "Cannot replace the filesystem root."
+		return 1
+	fi
+	case "$source_path/" in
+	"$INSTALL_TARGET/"*)
+		log_error "Update source must be outside the installation."
+		return 1
+		;;
+	esac
+	case "$INSTALL_TARGET/" in
+	"$source_path/"*)
+		log_error "Installation must be outside the update source."
+		return 1
+		;;
+	esac
+
+	INSTALL_DEVICE="$(device_id "$INSTALL_TARGET")"
+	check_install_device
+	TRANSACTION_DIR="$(mktemp -d "$(dirname "$INSTALL_TARGET")/.rimsort-update.XXXXXX")"
+	name="$(basename "$INSTALL_TARGET")"
+	mkdir "$TRANSACTION_DIR/new" "$TRANSACTION_DIR/old"
+	local staged_path="$TRANSACTION_DIR/new/$name"
+	BACKUP_PATH="$TRANSACTION_DIR/old/$name"
+	DIRECTORY_REPLACEMENT=true
+	log_info "Recovery directory: $TRANSACTION_DIR"
+	cp -a "$source_path/." "$staged_path"
+	set_permissions "$staged_path"
+	check_install_device
+	kill_rimsort
+	mv "$INSTALL_TARGET" "$TRANSACTION_DIR/old/"
+	mv "$staged_path" "$(dirname "$INSTALL_TARGET")/"
+	UPDATE_COMMITTED=true
+	log_success "New installation activated: $INSTALL_TARGET"
 }
 
 # Function to launch application
@@ -194,10 +321,18 @@ log_info "TMPDIR: ${TMPDIR:-not set}"
 if [ "$OS" = "Darwin" ]; then
 	# macOS detected
 	EXECUTABLE_NAME="RimSort.app"
-	SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"            # .../RimSort.app/Contents/MacOS
-	APP_BUNDLE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")" # .../RimSort.app
-	INSTALL_PARENT_DIR="$(dirname "$APP_BUNDLE_DIR")"      # Parent of .app (e.g. /Applications)
-	INSTALL_DIR="$APP_BUNDLE_DIR"                          # For common messaging
+	APP_BUNDLE_DIR="${3:-}"
+	if [[ "$APP_BUNDLE_DIR" != /* ]] || [ ! -d "$APP_BUNDLE_DIR" ]; then
+		log_error "An existing absolute application bundle path is required as the third argument."
+		exit 1
+	fi
+	APP_BUNDLE_DIR="$(cd "$APP_BUNDLE_DIR" && pwd -P)"
+	if [[ "$APP_BUNDLE_DIR" != *.app ]] || [ ! -f "$APP_BUNDLE_DIR/Contents/MacOS/RimSort" ]; then
+		log_error "Invalid RimSort application bundle: $APP_BUNDLE_DIR"
+		exit 1
+	fi
+	INSTALL_PARENT_DIR="$(dirname "$APP_BUNDLE_DIR")"
+	INSTALL_DIR="$APP_BUNDLE_DIR"
 	UPDATE_SOURCE_FOLDER="$TEMP_UPDATE_PATH"
 
 	log_info "macOS detected"
@@ -216,8 +351,10 @@ else
 	log_info "Update source: $UPDATE_SOURCE_FOLDER"
 fi
 
-# Kill running processes
-kill_rimsort
+if $DRY_RUN; then
+	log_info "DRY RUN: Would stage $TEMP_UPDATE_PATH and replace ${APPIMAGE:-$INSTALL_DIR}"
+	exit 0
+fi
 
 # ======================================================================
 # AppImage self-update mode
@@ -229,9 +366,6 @@ if [ -n "${APPIMAGE:-}" ]; then
 	NEW_APPIMAGE="$TEMP_UPDATE_PATH"
 	BACKUP_PATH="${APPIMAGE}.bak"
 
-	# Override the generic ERR trap with an AppImage-specific recovery hint
-	trap 'log_error "AppImage update failed. If your AppImage is missing, restore from: $BACKUP_PATH"; exit 1' ERR
-
 	log_info "AppImage update mode"
 	log_info "Current AppImage: $APPIMAGE"
 	log_info "New AppImage: $NEW_APPIMAGE"
@@ -241,31 +375,53 @@ if [ -n "${APPIMAGE:-}" ]; then
 		log_error "New AppImage file not found: $NEW_APPIMAGE"
 		exit 1
 	fi
+	if [ "$NEW_APPIMAGE" -ef "$APPIMAGE" ]; then
+		log_error "Update source is the installed AppImage."
+		exit 1
+	fi
 
 	# Validate write permission to AppImage directory
-	APPIMAGE_DIR="$(dirname "$APPIMAGE")"
+	APPIMAGE_DIR="$(cd "$(dirname "$APPIMAGE")" && pwd -P)"
 	if [ ! -w "$APPIMAGE_DIR" ]; then
 		log_error "No write permission to AppImage directory: $APPIMAGE_DIR"
 		log_error "Move RimSort to a user-writable location or update manually."
 		exit 1
 	fi
+	if [ -e "$BACKUP_PATH" ] || [ -L "$BACKUP_PATH" ]; then
+		log_error "Backup already exists: $BACKUP_PATH"
+		exit 1
+	fi
 
-	# Rename current AppImage to .bak (serves as backup)
+	INSTALL_TARGET="$APPIMAGE"
+	INSTALL_DEVICE="$(device_id "$INSTALL_TARGET")"
+	check_install_device
+	TRANSACTION_DIR="$(mktemp -d "$APPIMAGE_DIR/.rimsort-update.XXXXXX")"
+	mkdir "$TRANSACTION_DIR/new"
+	STAGED_APPIMAGE="$TRANSACTION_DIR/new/$(basename "$APPIMAGE")"
+	cp -p "$NEW_APPIMAGE" "$STAGED_APPIMAGE"
+	chmod +x "$STAGED_APPIMAGE"
+	check_install_device
+
 	log_info "Backing up current AppImage to: $BACKUP_PATH"
-	if $DRY_RUN; then
-		log_info "DRY RUN: Would rename $APPIMAGE -> $BACKUP_PATH"
-	else
-		mv "$APPIMAGE" "$BACKUP_PATH"
+	if ! ln -P "$APPIMAGE" "$BACKUP_PATH" 2>/dev/null; then
+		if ! (
+			set -C
+			: >"$BACKUP_PATH"
+		) 2>/dev/null; then
+			log_error "Backup already exists or cannot be created: $BACKUP_PATH"
+			exit 1
+		fi
+		APPIMAGE_BACKUP_OWNED=true
+		cp -Pp "$APPIMAGE" "$BACKUP_PATH"
 	fi
+	APPIMAGE_BACKUP_READY=true
 
-	# Move new AppImage into place
 	log_info "Installing new AppImage to: $APPIMAGE"
-	if $DRY_RUN; then
-		log_info "DRY RUN: Would move $NEW_APPIMAGE -> $APPIMAGE"
-	else
-		mv "$NEW_APPIMAGE" "$APPIMAGE"
-		chmod +x "$APPIMAGE"
-	fi
+	check_install_device
+	kill_rimsort
+	mv "$STAGED_APPIMAGE" "$APPIMAGE_DIR/"
+	UPDATE_COMMITTED=true
+	rm -f "$NEW_APPIMAGE" || log_warning "Could not remove update source: $NEW_APPIMAGE"
 
 	log_success "AppImage replaced successfully"
 
@@ -286,7 +442,6 @@ if [ -n "${APPIMAGE:-}" ]; then
 
 	log_success "AppImage update completed successfully!"
 	echo "========================================================================"
-	trap - ERR
 	exit 0
 fi
 
@@ -304,8 +459,8 @@ if [ -d "$UPDATE_SOURCE_FOLDER/RimSort" ]; then
 	log_info "Adjusted update source to subdirectory: $UPDATE_SOURCE_FOLDER"
 fi
 
-# On macOS, adjust source if it contains a RimSort.app bundle so rsync copies the
-# bundle contents rather than nesting RimSort.app inside the target .app directory.
+# On macOS, adjust the source if it contains a RimSort.app bundle to copy its
+# contents rather than nesting RimSort.app inside the target .app directory.
 if [ "$OS" = "Darwin" ] && [ -d "$UPDATE_SOURCE_FOLDER/RimSort.app" ]; then
 	UPDATE_SOURCE_FOLDER="$UPDATE_SOURCE_FOLDER/RimSort.app"
 	log_info "Adjusted update source to .app bundle: $UPDATE_SOURCE_FOLDER"
@@ -347,11 +502,6 @@ log_info "Performing update..."
 log_info "Source: $UPDATE_SOURCE_FOLDER"
 log_info "Target: $INSTALL_DIR"
 
-RSYNC_OPTS="-av"
-if $DRY_RUN; then
-	RSYNC_OPTS="$RSYNC_OPTS --dry-run"
-fi
-
 if [ "$OS" = "Darwin" ]; then
 	# macOS update process
 	log_info "Starting macOS update process"
@@ -361,45 +511,16 @@ if [ "$OS" = "Darwin" ]; then
 		exit 1
 	fi
 
-	TARGET_BUNDLE="$INSTALL_PARENT_DIR/$EXECUTABLE_NAME"
-	if [ -d "$TARGET_BUNDLE" ]; then
-		log_info "Removing old app bundle: $TARGET_BUNDLE"
-		if ! $DRY_RUN && ! rm -rf "$TARGET_BUNDLE"; then
-			log_error "Failed to remove old app bundle at $TARGET_BUNDLE"
-			exit 1
-		fi
-		if $DRY_RUN; then
-			log_info "DRY RUN: Would remove $TARGET_BUNDLE"
-		else
-			log_success "Old app bundle removed"
-		fi
-	fi
-
-	log_info "Syncing new app bundle to: $TARGET_BUNDLE"
-	mkdir -p "$INSTALL_PARENT_DIR"
-	if ! rsync "$RSYNC_OPTS" "$UPDATE_SOURCE_FOLDER/" "$TARGET_BUNDLE/"; then
-		log_error "Failed to sync update files to $TARGET_BUNDLE"
-		exit 1
-	fi
-	log_success "New app bundle synced"
-
-	# Set permissions on the newly installed app bundle
-	set_permissions "$TARGET_BUNDLE"
-	launch_app "$TARGET_BUNDLE"
+	TARGET_BUNDLE="$APP_BUNDLE_DIR"
+	replace_directory "$TARGET_BUNDLE" "$UPDATE_SOURCE_FOLDER"
+	LAUNCH_PATH="$TARGET_BUNDLE"
 
 else
 	# Linux update process
 	log_info "Starting Linux update process"
 
-	log_info "Syncing update files with rsync"
-	if ! rsync "$RSYNC_OPTS" --delete "$UPDATE_SOURCE_FOLDER/" "$INSTALL_DIR/"; then
-		log_error "Failed to sync update files to $INSTALL_DIR"
-		exit 1
-	fi
-	log_success "Update files synced"
-
-	set_permissions "$INSTALL_DIR"
-	launch_app "$INSTALL_DIR/$EXECUTABLE_NAME"
+	replace_directory "$INSTALL_DIR" "$UPDATE_SOURCE_FOLDER"
+	LAUNCH_PATH="$INSTALL_DIR/$EXECUTABLE_NAME"
 fi
 
 # Clean up temporary files
@@ -411,11 +532,9 @@ else
 	log_warning "Could not remove temporary folder: $UPDATE_SOURCE_FOLDER"
 fi
 
+launch_app "$LAUNCH_PATH"
 log_success "RimSort update completed successfully!"
 echo "========================================================================
 "
 
-# Clear trap on successful exit
-trap - ERR
-
-exit 0
+cleanup_update 0
