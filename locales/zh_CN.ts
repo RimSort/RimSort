@@ -6286,6 +6286,14 @@ Please reach out to us for support at: {support_url}</source>
         <source>Backing up files: {current} / {total}</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>No compatible update download was found. Your installation has not been changed.&lt;br&gt;&lt;br&gt;Check &lt;a href="https://github.com/RimSort/RimSort/releases"&gt;RimSort releases&lt;/a&gt; for a download matching your operating system and CPU architecture.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;&lt;br&gt;AppImage installations require a compatible AppImage download.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>

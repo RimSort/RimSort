@@ -17,6 +17,8 @@ There are two types of RimSort releases. Stable releases, and edge releases. Edg
 
 When downloading a release, make sure to select the file more appropriate for your operating system, CPU architecture, and needs. Launch instructions may be platform specific.
 
+In-app updates also require a download matching your operating system and CPU architecture. AppImage installations require another AppImage; the updater does not switch them to a ZIP or tar.gz installation. If no compatible download is available, the update check stops before downloading or changing your installation and provides a link to the releases page for manual updates.
+
 [Stable Release][Stable Release]{: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Edge Release][Edge Release]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
