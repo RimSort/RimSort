@@ -604,7 +604,9 @@ class ModernModsTable(QWidget):
         )
         self.sort_button.clicked.connect(self._toggle_sort)
         self.filter_button = FilterButton(self)
-        self.filter_button.filter_panel.filters_changed.connect(self._apply_search)
+        self.filter_button.filter_panel.filters_changed.connect(
+            lambda: self._apply_search(self.search_box.text())
+        )
         search_row.addWidget(self.sort_button)
         search_row.addWidget(self.filter_button)
         layout.addLayout(search_row)
@@ -1370,7 +1372,17 @@ class ModernModsTable(QWidget):
             return
         uuid = item.data(COL_NAME, Qt.ItemDataRole.UserRole)
         is_group = uuid == "group"
-        category_name = item.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+        if is_group:
+            category_name = item.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+        else:
+            # On a mod row this role holds the source item; the category
+            # name lives on the group parent's roles
+            parent = item.parent()
+            category_name = (
+                parent.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+                if parent is not None
+                else None
+            )
         # Right-clicking a row OUTSIDE the selection does not select it
         # in Qt - make it the sole selection, so the mirrored actions
         # never target an outdated selection
@@ -1574,9 +1586,14 @@ class ModernModsTable(QWidget):
             # selections spell some labels differently, so match on the
             # stem both spellings reduce to
             target = _action_stem(action_text)
-            for act in list(menu_self.actions()):
+            stack = list(menu_self.actions())
+            while stack:
+                act = stack.pop()
                 if _action_stem(act.text()) == target:
                     return act
+                submenu = act.menu()
+                if isinstance(submenu, QMenu):
+                    stack.extend(submenu.actions())
             return None
 
         original_exec_ = QMenu.exec_
@@ -1687,6 +1704,10 @@ class ModernModsTable(QWidget):
         matched: dict[str, CustomListWidgetItemMetadata] = {}
         for uuid, data, category in self._iter_list_mods():
             if category["name"] != category_name:
+                continue
+            # A member's hand-picked color outranks its category: the
+            # sweep leaves it (and its persisted value) untouched
+            if getattr(data, "mod_color_hand_picked", False):
                 continue
             data.mod_color = QColor(color)
             matched[uuid] = data
