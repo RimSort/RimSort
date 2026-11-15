@@ -8,6 +8,7 @@ sections) lives in this subclass so classic is never touched.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from PySide6.QtCore import Qt
@@ -22,7 +23,26 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.models.metadata.metadata_structure import AboutXmlMod
 from app.views.mod_info_panel import ModInfoPanel
+
+
+def _active_incompatibilities(
+    mod: Any, active_pids: set[str]
+) -> tuple[set[str], set[str]]:
+    """(declared, reverse-only) incompatibility package ids that are in
+    the active list, from the same rule sets the active-list summary
+    reads. Declared are ones this mod declared itself; reverse-only are
+    ones carried by community or user rules."""
+    overall = {
+        str(pid)
+        for pid in mod.overall_rules.incompatible_with
+        if str(pid) in active_pids
+    }
+    about = {
+        str(pid) for pid in mod.about_rules.incompatible_with if str(pid) in active_pids
+    }
+    return overall & about, overall - about
 
 
 class ModernModInfoPanel(ModInfoPanel):
@@ -30,10 +50,55 @@ class ModernModInfoPanel(ModInfoPanel):
     arranged as collapsible cards under a full-width cover image, with
     separator lines under each metadata row (the Modern UI mock)."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        active_uuids_provider: Callable[[], list[str]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
+        # The active list's uuids drive the incompatibilities card; the
+        # panel never reaches into the mods panel itself
+        self._active_uuids_provider = active_uuids_provider
         self._row_separators: list[tuple[QFrame, QWidget | None]] = []
         self._modernize_layout()
+
+    def display_mod_info(self, uuid: str) -> None:
+        super().display_mod_info(uuid)
+        self._update_incompatibilities(uuid)
+        self._sync_row_separators()
+
+    def _update_incompatibilities(self, uuid: str) -> None:
+        """Keep the Incompatibilities card reporting what the rules
+        analysis actually finds for the selected mod, instead of the
+        clean status the card was built with."""
+        clean_text = self.tr("No incompatibilities detected")
+        mod = self.metadata_controller.get_mod(uuid)
+        if self._active_uuids_provider is None:
+            self.incompatibilities_label.setText(clean_text)
+            return
+        active_uuids = self._active_uuids_provider()
+        if not isinstance(mod, AboutXmlMod) or uuid not in active_uuids:
+            # Only active mods go through the rules analysis, matching
+            # the active-list summary
+            self.incompatibilities_label.setText(clean_text)
+            return
+        pid_to_name: dict[str, str] = {}
+        active_pids: set[str] = set()
+        for active_uuid in active_uuids:
+            active_mod = self.metadata_controller.get_mod(active_uuid)
+            if isinstance(active_mod, AboutXmlMod):
+                pid = str(active_mod.package_id)
+                active_pids.add(pid)
+                pid_to_name[pid] = active_mod.name
+        declared, reverse_only = _active_incompatibilities(mod, active_pids)
+        lines: list[str] = []
+        if declared:
+            names = ", ".join(sorted(pid_to_name.get(pid, pid) for pid in declared))
+            lines.append(f"{self.tr('Incompatible with')}: {names}")
+        if reverse_only:
+            names = ", ".join(sorted(pid_to_name.get(pid, pid) for pid in reverse_only))
+            lines.append(f"{self.tr('Declared incompatible by other mods')}: {names}")
+        self.incompatibilities_label.setText("\n".join(lines) or clean_text)
 
     def _modernize_layout(self) -> None:
         """Transform the freshly built classic panel into the modern
@@ -180,7 +245,3 @@ class ModernModInfoPanel(ModInfoPanel):
         header.setChecked(True)
         header.setStyleSheet("text-align: left; font-weight: 600; border: none;")
         return header
-
-    def display_mod_info(self, uuid: str) -> None:
-        super().display_mod_info(uuid)
-        self._sync_row_separators()

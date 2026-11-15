@@ -55,12 +55,14 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from shiboken6 import Shiboken
 
 from app.models.filter_state import FilterState
 from app.models.metadata.metadata_structure import ModType
 from app.sort.mod_sorting import FolderSizeRequestWorker
-from app.utils.aux_db_utils import auxdb_update_all_mod_colors
+from app.utils.aux_db_utils import auxdb_get_all_tags, auxdb_update_all_mod_colors
 from app.utils.categories_utils import save_categories
+from app.utils.event_bus import EventBus
 from app.views.filter_panel import FilterButton
 from app.views.mods_panel import ModListIcons, TagEditDialog
 
@@ -94,12 +96,61 @@ _DATA_COLUMNS: dict[str, str] = {
 
 _BLOCKED_MENU_ACTIONS = frozenset({"Add divider here"})
 
+# Row roles: uuid (UserRole), source item (UserRole + 1), sort keys
+# (UserRole + 2 on data columns), icon tooltips (UserRole + 3), group
+# colors (UserRole + 4), row metadata (_ROLE_METADATA). The metadata is
+# stored directly because it outlives the backing list items, which
+# list rebuilds delete and recreate.
+_ROLE_METADATA = Qt.ItemDataRole.UserRole + 5
+
 
 def _action_stem(text: str) -> str:
     """Single and multi selections spell some classic labels differently
     ("Change mod color" / "Change mod colors"); this reduces both to
     their common stem for matching."""
     return text.casefold().replace("(s)", "s").removesuffix("s")
+
+
+def _live_source_item(candidate: object) -> CustomListWidgetItem | None:
+    """The row's backing list item, but only while its C++ object is
+    alive: Refresh and the other rebuilds delete and recreate the list
+    items, and touching a deleted wrapper crashes."""
+    if candidate is None or isinstance(candidate, str):
+        return None
+    if not Shiboken.isValid(candidate):
+        return None
+    return cast("CustomListWidgetItem", candidate)
+
+
+def _source_filter_fails(mod: object, filter_state: FilterState) -> bool:
+    """The classic source matching rules: git and steamcmd mods count as
+    local and also match their own dedicated source keys."""
+    mod_type = getattr(mod, "mod_type", None)
+    _type_to_source = {
+        ModType.LUDEON: "expansion",
+        ModType.STEAM_WORKSHOP: "workshop",
+        ModType.LOCAL: "local",
+        ModType.GIT: "local",
+        ModType.STEAM_CMD: "local",
+        ModType.UNKNOWN: "local",
+    }
+    source = _type_to_source.get(cast("ModType", mod_type), "local")
+    if source in filter_state.sources:
+        return False
+    if mod_type == ModType.GIT and "git_repo" in filter_state.sources:
+        return False
+    return not (mod_type == ModType.STEAM_CMD and "steamcmd" in filter_state.sources)
+
+
+def _type_filter_fails(mod: object, filter_state: FilterState) -> bool:
+    """The popup's C# Mods / XML-only constraint, applied the way the
+    classic list applies it."""
+    if filter_state.mod_type == "all":
+        return False
+    is_csharp = bool(getattr(mod, "c_sharp_mod", False))
+    return (filter_state.mod_type == "csharp" and not is_csharp) or (
+        filter_state.mod_type == "xml" and is_csharp
+    )
 
 
 # List-level classic menu options that belong to the RIGHT panel only;
@@ -380,15 +431,10 @@ class CenteredIconDelegate(QStyledItemDelegate):
         style = widget.style() if widget else QApplication.style()
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, widget)
         rect = option.rect
-        # The Default column's OWN index roles carry uuid + source item
-        # (stored in _make_mod_row) - reading them from another column's
-        # roles was why every slot painted as a dash
-        source_item = index.data(Qt.ItemDataRole.UserRole + 1)
-        data = (
-            source_item.data(Qt.ItemDataRole.UserRole)
-            if source_item is not None
-            else None
-        )
+        # Row metadata is stored in its own role on the Default and Name
+        # columns: it survives list rebuilds that delete the backing
+        # items the old source-item lookup dereferenced
+        data = index.data(_ROLE_METADATA)
         # Three fixed 28px sections aligned to the column's left edge
         # under the "Default" header
         slot_w = 28
@@ -486,12 +532,7 @@ class CenteredIconDelegate(QStyledItemDelegate):
                 rect.height(),
             )
             if warn_rect.contains(event.pos()):
-                source_item = index.data(Qt.ItemDataRole.UserRole + 1)
-                data = (
-                    source_item.data(Qt.ItemDataRole.UserRole)
-                    if source_item is not None
-                    else None
-                )
+                data = index.data(_ROLE_METADATA)
                 if data is not None and (
                     data.warnings or data.errors or data.mismatch or data.invalid
                 ):
@@ -675,6 +716,14 @@ class ModernModsTable(QWidget):
             # Warning toggles (menu or classic row icons) recalculate
             # without touching the lists - refresh the Default columns
             list_widget.recalculate_warnings_signal.connect(self.schedule_refresh)
+            # Saved tags selectable in the Modern popup, refreshed on
+            # the same trigger the classic filter buttons use
+            list_widget.tags_changed_signal.connect(self._refresh_tag_filter)
+        # A metadata refresh deletes and recreates the backing list
+        # items and rescans the folders: drop the tree and the size
+        # caches before that happens, then re-read selectable tags after
+        EventBus().refresh_started.connect(self._on_metadata_refresh_starting)
+        EventBus().refresh_finished.connect(self._refresh_tag_filter)
 
         self._setup_columns()
         self.refresh()
@@ -684,12 +733,7 @@ class ModernModsTable(QWidget):
     ) -> None:
         """A click on a Default column's warning slot toggles that mod's
         warning - the classic icon click, through the owning list."""
-        source_item = index.data(Qt.ItemDataRole.UserRole + 1)
-        data = (
-            source_item.data(Qt.ItemDataRole.UserRole)
-            if source_item is not None
-            else None
-        )
+        data = index.data(_ROLE_METADATA)
         if data is None:
             return
         uuid = data.path
@@ -704,6 +748,25 @@ class ModernModsTable(QWidget):
         )
         source_list.toggle_warning(package_id, uuid)
         self.schedule_refresh()
+
+    def _on_metadata_refresh_starting(self) -> None:
+        """Drop the tree's rows and the folder-size caches the moment a
+        metadata refresh begins: the rebuild deletes the backing list
+        items the rows reference, and the on-disk folder sizes may have
+        changed since they were last computed."""
+        self.tree.clear()
+        self._uuid_rows.clear()
+        self._folder_sizes.clear()
+        self._folder_size_requested.clear()
+
+    def _refresh_tag_filter(self) -> None:
+        """Reload the popup's selectable tags from the aux database."""
+        try:
+            tags = auxdb_get_all_tags(self.settings)
+        except Exception as e:
+            logger.debug(f"Unable to load tag filter list: {e}")
+            tags = []
+        self.filter_button.filter_panel.set_available_tags(tags)
 
     def _stop_folder_size_thread(self) -> None:
         self._folder_size_thread.quit()
@@ -980,6 +1043,7 @@ class ModernModsTable(QWidget):
         for column in self._default_columns:
             row.setData(column, Qt.ItemDataRole.UserRole, uuid)
             row.setData(column, Qt.ItemDataRole.UserRole + 1, source_item)
+            row.setData(column, _ROLE_METADATA, data)
         # Category is a SLOT column: plain selectable text
         # fills whichever slot is named "Category", if any - its color
         # plus the dividers are all the middle panel needs
@@ -1003,6 +1067,7 @@ class ModernModsTable(QWidget):
                 self._apply_status_icons(row, data)
         row.setData(COL_NAME, Qt.ItemDataRole.UserRole, uuid)
         row.setData(COL_NAME, Qt.ItemDataRole.UserRole + 1, source_item)
+        row.setData(COL_NAME, _ROLE_METADATA, data)
         return row
 
     def _apply_status_icons(
@@ -1210,11 +1275,13 @@ class ModernModsTable(QWidget):
         uuid = item.data(COL_NAME, Qt.ItemDataRole.UserRole)
         if not uuid:
             return
-        source_item = item.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+        source_item = _live_source_item(
+            item.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+        )
         if source_item is None:
             return
         want_active = item.checkState(COL_CHECK) == Qt.CheckState.Checked
-        data = source_item.data(Qt.ItemDataRole.UserRole)
+        data = item.data(COL_NAME, _ROLE_METADATA)
         if data is None:
             return
         is_active = data.list_type == "Active"
@@ -1267,8 +1334,10 @@ class ModernModsTable(QWidget):
             # Group rows carry the category name at the item slot; the
             # info panel only accepts real CustomListWidgetItems
             return
-        source_item = current.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-        if source_item is not None and not isinstance(source_item, str):
+        source_item = _live_source_item(
+            current.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+        )
+        if source_item is not None:
             self.mod_info_signal.emit(uuid, source_item)
 
     def _search_text_for(self, uuid: str, row: QTreeWidgetItem) -> str:
@@ -1276,12 +1345,11 @@ class ModernModsTable(QWidget):
         field = getattr(self, "_search_field", "Name")
         if field == "Name":
             return row.text(COL_NAME)
-        mod = self.mods_panel.metadata_controller.get_mod(uuid)
-        source_item = row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-        data = source_item.data(Qt.ItemDataRole.UserRole) if source_item else None
+        data = row.data(COL_NAME, _ROLE_METADATA)
         if field == "Tags":
             tags = getattr(data, "mod_tags", None) or []
             return " ".join(str(t) for t in tags)
+        mod = self.mods_panel.metadata_controller.get_mod(uuid)
         if mod is None:
             return ""
         if field == "PackageId":
@@ -1308,16 +1376,21 @@ class ModernModsTable(QWidget):
         needle = text.casefold().strip()
         filter_state = self.filter_button.filter_panel.filter_state
         sources_locked = filter_state.sources != FilterState.ALL_SOURCES
+        type_locked = filter_state.mod_type != "all"
         for uuid, row in self._uuid_rows.items():
             haystack = self._search_text_for(uuid, row)
             hidden = bool(needle) and needle not in haystack.casefold()
-            if not hidden and sources_locked:
-                hidden = self._fails_source_filter(uuid, filter_state)
+            if not hidden and (sources_locked or type_locked):
+                mod = self.mods_panel.metadata_controller.get_mod(uuid)
+                if (
+                    sources_locked
+                    and _source_filter_fails(mod, filter_state)
+                    or type_locked
+                    and _type_filter_fails(mod, filter_state)
+                ):
+                    hidden = True
             if not hidden:
-                source_item = row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-                data = (
-                    source_item.data(Qt.ItemDataRole.UserRole) if source_item else None
-                )
+                data = row.data(COL_NAME, _ROLE_METADATA)
                 mod_tags = set(getattr(data, "mod_tags", None) or [])
                 hidden = not filter_state.matches_tags(mod_tags)
             row.setHidden(hidden)
@@ -1331,35 +1404,36 @@ class ModernModsTable(QWidget):
             )
             group.setHidden(bool(needle) and not any_visible)
 
-    def _fails_source_filter(self, uuid: str, filter_state: FilterState) -> bool:
-        """Mirror the classic source mapping: a mod whose source is not in
-        the FilterPanel's enabled set is hidden."""
-        mod = self.mods_panel.metadata_controller.get_mod(uuid)
-        mod_type = getattr(mod, "mod_type", None)
-        _type_to_source = {
-            ModType.LUDEON: "expansion",
-            ModType.STEAM_WORKSHOP: "workshop",
-            ModType.LOCAL: "local",
-            ModType.GIT: "local",
-            ModType.STEAM_CMD: "local",
-            ModType.UNKNOWN: "local",
-        }
-        source = _type_to_source.get(cast("ModType", mod_type), "local")
-        return source not in filter_state.sources
-
     def _selected_center_rows(
         self,
     ) -> Iterator[tuple[QTreeWidgetItem, str, Any]]:
         """(tree row, uuid, source list item) for every selected mod
-        row; group rows and rows without a backing item are skipped."""
+        row; group rows and rows without a live backing item are
+        skipped."""
         for selected_row in self.tree.selectedItems():
             row_uuid = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole)
             if not row_uuid or row_uuid == "group":
                 continue
-            row_source = selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-            if row_source is None or isinstance(row_source, str):
+            row_source = _live_source_item(
+                selected_row.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+            )
+            if row_source is None:
                 continue
             yield selected_row, str(row_uuid), row_source
+
+    def _selection_toggle_flip(self) -> set[str]:
+        """Classic multi-toggle semantics over the whole center
+        selection: when every selected mod already has warnings off they
+        all flip back on, otherwise the un-toggled ones flip off."""
+        states: list[tuple[str, bool]] = []
+        for _row, uuid, row_source in self._selected_center_rows():
+            data = row_source.data(Qt.ItemDataRole.UserRole)
+            if data is None:
+                continue
+            states.append((uuid, bool(data.warning_toggled)))
+        if states and all(toggled for _uuid, toggled in states):
+            return {uuid for uuid, _toggled in states}
+        return {uuid for uuid, toggled in states if not toggled}
 
     def _on_context_menu(self, pos: QPoint) -> None:
         """The center's menu = the source list's FULL classic menu (tags,
@@ -1407,8 +1481,10 @@ class ModernModsTable(QWidget):
                 self._match_colors_to_categories()
             return
 
-        source_item = item.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
-        if source_item is None or isinstance(source_item, str):
+        source_item = _live_source_item(
+            item.data(COL_NAME, Qt.ItemDataRole.UserRole + 1)
+        )
+        if source_item is None:
             return
         data = source_item.data(Qt.ItemDataRole.UserRole)
         if data is None:
@@ -1437,6 +1513,53 @@ class ModernModsTable(QWidget):
                 row_source.setSelected(True)
             else:
                 other_items.append(row_source)
+
+        # Cross-list selections compute bulk state over the WHOLE center
+        # selection, never per backing list: the warning toggle follows
+        # one direction, and the tag dialog starts from the selection's
+        # common tags. Single-list selections run classic untouched.
+        toggle_plan: dict[str, set[str] | None] = {"flip": None}
+
+        def bind_planned_toggle(
+            original: Callable[[str, str], None],
+        ) -> Callable[[str, str], None]:
+            def planned(packageid: str, uuid: str) -> None:
+                flip = toggle_plan["flip"]
+                if flip is None:
+                    flip = self._selection_toggle_flip()
+                    toggle_plan["flip"] = flip
+                if uuid in flip:
+                    original(packageid, uuid)
+
+            return planned
+
+        other_list = (
+            self.mods_panel.inactive_mods_list
+            if source_list is self.mods_panel.active_mods_list
+            else self.mods_panel.active_mods_list
+        )
+        patched_toggle_lists: list[ModListWidget] = []
+        original_common_tags: Callable[[list[str]], set[str]] | None = None
+        if other_items:
+            for list_widget in (source_list, other_list):
+                list_widget.toggle_warning = bind_planned_toggle(  # type: ignore[assignment,method-assign]
+                    list_widget.toggle_warning
+                )
+                patched_toggle_lists.append(list_widget)
+            bound_common_tags = source_list.get_common_selected_tags
+            original_common_tags = bound_common_tags
+
+            def center_common_tags(uuids: list[str]) -> set[str]:
+                # Seed the tag dialog from the full center selection so
+                # the recorded answer fits every selected mod
+                center_uuids = [
+                    row_uuid for _row, row_uuid, _src in self._selected_center_rows()
+                ]
+                if center_uuids:
+                    return bound_common_tags(center_uuids)
+                return bound_common_tags(uuids)
+
+            source_list.get_common_selected_tags = center_common_tags  # type: ignore[method-assign]
 
         captured: dict[str, Any] = {"result": None}
         dialog_state: dict[str, Any] = {"color": None, "tag_code": None, "tags": None}
@@ -1542,6 +1665,10 @@ class ModernModsTable(QWidget):
             )
             TagEditDialog.exec = original_tag_exec  # type: ignore[method-assign]
             TagEditDialog.selected_tags = original_tag_tags  # type: ignore[method-assign]
+            for patched_list in patched_toggle_lists:
+                del patched_list.toggle_warning
+            if original_common_tags is not None:
+                del source_list.get_common_selected_tags
 
         result = captured.get("result")
         if result is None or result not in center_actions:
@@ -1590,6 +1717,11 @@ class ModernModsTable(QWidget):
             while stack:
                 act = stack.pop()
                 if _action_stem(act.text()) == target:
+                    # Signal-driven actions (the deletion menu) only run
+                    # through triggered, which a real click would have
+                    # emitted; the handler chain's own actions carry no
+                    # slots, so nothing runs twice
+                    act.trigger()
                     return act
                 submenu = act.menu()
                 if isinstance(submenu, QMenu):
@@ -1698,9 +1830,10 @@ class ModernModsTable(QWidget):
         return self._category_for(display_name, package_id)
 
     def _sweep_category_color(self, category_name: str, color: QColor) -> None:
-        """Recolor every mod in the category, exactly like a manual color
-        change: aux db updated, in-memory metadata updated, classic row
-        widgets rebuilt so the right panel repaints."""
+        """Recolor every category-driven member of the category: the
+        in-memory metadata is updated and the classic row widgets are
+        rebuilt, but nothing is persisted, because the color derives
+        from the category."""
         matched: dict[str, CustomListWidgetItemMetadata] = {}
         for uuid, data, category in self._iter_list_mods():
             if category["name"] != category_name:
@@ -1716,10 +1849,16 @@ class ModernModsTable(QWidget):
 
     def _match_colors_to_categories(self) -> None:
         """Every mod takes its category's color across both lists;
-        Uncategorized mods are cleared back to the default styling."""
+        Uncategorized mods are cleared back to the default styling.
+        Explicit overrides are released so the categories own the
+        colors from here on."""
         colors: dict[str, QColor | None] = {}
         datas: dict[str, CustomListWidgetItemMetadata] = {}
+        released: set[str] = set()
         for uuid, data, category in self._iter_list_mods():
+            if getattr(data, "mod_color_hand_picked", False):
+                data.mod_color_hand_picked = False
+                released.add(uuid)
             if category["name"] == UNCATEGORIZED:
                 color = None
             else:
@@ -1728,18 +1867,25 @@ class ModernModsTable(QWidget):
             colors[uuid] = color
             datas[uuid] = data
 
-        self._apply_mod_colors(colors, datas)
+        self._apply_mod_colors(colors, datas, clear_overrides=released)
 
     def _apply_mod_colors(
         self,
         colors: dict[str, QColor | None],
         datas: dict[str, CustomListWidgetItemMetadata],
+        clear_overrides: set[str] | None = None,
     ) -> None:
-        """Persist a uuid->color mapping to the aux db and rebuild the
-        affected classic row widgets."""
+        """Apply a uuid->color mapping to the in-memory metadata and
+        rebuild the affected classic row widgets. Only override
+        releases touch the aux db: a stored color reads back as
+        hand-picked on the next refresh, and category-derived colors
+        must never become overrides."""
         if not colors:
             return
-        auxdb_update_all_mod_colors(self.settings, colors)
+        if clear_overrides:
+            auxdb_update_all_mod_colors(
+                self.settings, {uuid: None for uuid in clear_overrides}
+            )
         for uuid, data in datas.items():
             if data is None:
                 continue

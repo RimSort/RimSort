@@ -51,9 +51,14 @@ def load_categories(settings_categories_file: str) -> dict[str, Any]:
     RimWorld) on first use."""
     path = get_categories_path(settings_categories_file)
     if not path.exists():
-        logger.info(f"Creating default categories file: {path}")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(DEFAULT_CATEGORIES, indent=4), encoding="utf-8")
+        try:
+            logger.info(f"Creating default categories file: {path}")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(DEFAULT_CATEGORIES, indent=4), encoding="utf-8")
+        except OSError as e:
+            # An unwritable or unreachable parent directory must not stop
+            # the main window from opening; run on the defaults instead
+            logger.warning(f"Failed to create categories file {path}: {e}")
         return DEFAULT_CATEGORIES
     try:
         data = json.loads(path.read_text(encoding="utf-8"))

@@ -1455,7 +1455,11 @@ This basically preserves your mod coloring, user notes etc. for this many second
             slot_combobox.setSizePolicy(
                 QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
             )
-            slot_combobox.addItems([self.tr(c) for c in available_columns])
+            # The display label is translated, the item data keeps the
+            # stable identifier the table matches on, so a translated
+            # label never reaches the saved settings
+            for column in available_columns:
+                slot_combobox.addItem(self.tr(column), column)
             slot_layout.addWidget(slot_combobox)
             self.active_columns_comboboxes.append(slot_combobox)
 

@@ -77,6 +77,7 @@ class ModernMainContent(MainContent):
         self.mod_info_panel = ModernModInfoPanel(
             settings=self.settings,
             metadata_controller=self.metadata_controller,
+            active_uuids_provider=lambda: list(self.mods_panel.active_mods_list.paths),
         )
         self.mod_info_container = QWidget()
         self.mod_info_container.setLayout(self.mod_info_panel.panel)
@@ -247,8 +248,13 @@ class ModernMainContent(MainContent):
                 layout.setContentsMargins(
                     4, margins.top(), margins.right(), margins.bottom()
                 )
-            # Slide the whole widget 2px left toward the checkboxes
-            widget.move(widget.x() - 2, widget.y())
+            # Slide the whole widget 2px left toward the checkboxes. The
+            # target comes from the row's own geometry so repeated
+            # rebuilds land on the same spot instead of drifting further
+            # left each pass
+            row_rect = list_widget.visualItemRect(item)
+            if row_rect.isValid():
+                widget.move(row_rect.left() - 2, row_rect.y())
             widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
             # A hand-picked color outranks the category: the row keeps
             # its own color and this pass touches only geometry

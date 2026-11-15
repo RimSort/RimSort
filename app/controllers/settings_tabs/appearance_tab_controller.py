@@ -90,8 +90,13 @@ class AppearanceTabController(BaseTabController):
                 if slot < len(self.settings.active_columns)
                 else "None"
             )
-            if combobox.findText(column) >= 0:
-                combobox.setCurrentText(column)
+            # Match on the stable identifier; a translated label (or an
+            # identifier saved by an older version) still resolves when
+            # the display text happens to match
+            index = combobox.findData(column)
+            if index < 0:
+                index = combobox.findText(column)
+            combobox.setCurrentIndex(max(0, index))
         self.dialog.categories_file_input.setText(self.settings.categories_file)
         row_style = "Striped" if self.settings.modern_ui_striped_rows else "Plain"
         if self.dialog.modern_row_style_combobox.findText(row_style) >= 0:
@@ -189,8 +194,10 @@ class AppearanceTabController(BaseTabController):
     def update_model_from_view(self) -> None:
         # Profile
         self.settings.profile_format = self.dialog.profile_format_combobox.currentText()
+        # Save the stable identifier, never the translated display label
         self.settings.active_columns = [
-            combobox.currentText() for combobox in self.dialog.active_columns_comboboxes
+            str(combobox.currentData() or "None")
+            for combobox in self.dialog.active_columns_comboboxes
         ]
         self.settings.categories_file = self.dialog.categories_file_input.text()
         self.settings.modern_ui_striped_rows = (
