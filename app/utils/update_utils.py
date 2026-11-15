@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import ctypes
+import errno
 import os
 import platform
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -379,19 +382,37 @@ class TarExtractThread(QThread):
                     return
 
                 update_interval = max(1, total // 100)
+                sidecars: set[Path] = set()
+
+                def extraction_filter(
+                    member: tarfile.TarInfo, destination: str
+                ) -> tarfile.TarInfo | None:
+                    filtered = tarfile.data_filter(member, destination)
+                    if (
+                        sys.platform == "darwin"
+                        and filtered is not None
+                        and Path(filtered.name).name.startswith("._")
+                    ):
+                        sidecars.add(Path(destination) / filtered.name)
+                    return filtered
 
                 for i, member in enumerate(members):
                     if self._should_abort:
                         self.finished.emit(False, "Operation aborted")
                         return
 
-                    tf.extract(member, self.target_path, filter="data")
+                    tf.extract(member, self.target_path, filter=extraction_filter)
 
                     if i % update_interval == 0 or i == total - 1:
                         percent = int((i + 1) / total * 100)
                         self.progress.emit(
                             percent, f"Extracting: {i + 1} / {total} files"
                         )
+
+            if sys.platform == "darwin":
+                self._restore_macos_metadata(sidecars)
+            if self._should_abort:
+                raise InterruptedError("Operation aborted")
 
             elapsed = time.perf_counter() - start
             self.finished.emit(
@@ -400,9 +421,104 @@ class TarExtractThread(QThread):
                 f"Time elapsed: {elapsed:.2f} seconds",
             )
 
+        except InterruptedError:
+            self.finished.emit(False, "Operation aborted")
         except Exception as e:
             logger.exception("tar.gz extraction failed")
             self.finished.emit(False, f"Extraction error: {e!s}")
+
+    def _restore_macos_metadata(self, sidecars: set[Path]) -> None:
+        """Unpack AppleDouble metadata after safely extracting archive members."""
+        if not sidecars:
+            return
+        root = Path(self.target_path).resolve()
+        native = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True)
+        copyfile = native.copyfile
+        copyfile.argtypes = [
+            ctypes.c_char_p,
+            ctypes.c_char_p,
+            ctypes.c_void_p,
+            ctypes.c_uint32,
+        ]
+        copyfile.restype = ctypes.c_int
+        native.copyfile_state_alloc.argtypes = []
+        native.copyfile_state_alloc.restype = ctypes.c_void_p
+        native.copyfile_state_set.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_uint32,
+            ctypes.c_void_p,
+        ]
+        native.copyfile_state_set.restype = ctypes.c_int
+        native.copyfile_state_free.argtypes = [ctypes.c_void_p]
+        native.copyfile_state_free.restype = ctypes.c_int
+        callback_type = ctypes.CFUNCTYPE(
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+            ctypes.c_char_p,
+            ctypes.c_void_p,
+            use_errno=True,
+        )
+        native_error = 0
+
+        def on_status(
+            _what: int,
+            stage: int,
+            _state: int | None,
+            _source: bytes | None,
+            _destination: bytes | None,
+            _context: int | None,
+        ) -> int:
+            nonlocal native_error
+            # COPYFILE_ERR must be recorded: later ACL work can clear the result.
+            if stage == 3:
+                native_error = ctypes.get_errno() or errno.EIO
+                return 2  # COPYFILE_QUIT
+            return 2 if self._should_abort else 0  # COPYFILE_QUIT / COPYFILE_CONTINUE
+
+        callback = callback_type(on_status)
+        # copyfile.h: COPYFILE_UNPACK | COPYFILE_NOFOLLOW_SRC | COPYFILE_NOFOLLOW_DST.
+        flags = (1 << 23) | (1 << 18) | (1 << 19)
+        paths = {path.parent.resolve() / path.name for path in sidecars}
+        for sidecar in sorted(paths, key=lambda path: len(path.parts), reverse=True):
+            if self._should_abort:
+                raise InterruptedError("Operation aborted")
+            if not sidecar.is_relative_to(root):
+                raise UpdateExtractionError(f"Metadata outside staging: {sidecar}")
+            if not stat.S_ISREG(sidecar.lstat().st_mode):
+                continue
+            with sidecar.open("rb") as stream:
+                if stream.read(8) != b"\x00\x05\x16\x07\x00\x02\x00\x00":
+                    continue
+            destination = sidecar.with_name(sidecar.name[2:])
+            if not destination.resolve().is_relative_to(root):
+                raise UpdateExtractionError(
+                    f"Metadata target outside staging: {destination}"
+                )
+            if not destination.exists() and not destination.is_symlink():
+                raise UpdateExtractionError(f"Missing metadata target: {destination}")
+            state = native.copyfile_state_alloc()
+            if not state:
+                raise MemoryError("Failed to allocate macOS metadata state")
+            try:
+                # COPYFILE_STATE_STATUS_CB is 6 in copyfile.h.
+                if native.copyfile_state_set(state, 6, callback) != 0:
+                    error = ctypes.get_errno() or errno.EIO
+                    raise OSError(error, os.strerror(error), str(sidecar))
+                native_error = 0
+                result = copyfile(
+                    os.fsencode(sidecar), os.fsencode(destination), state, flags
+                )
+                if self._should_abort:
+                    raise InterruptedError("Operation aborted")
+                if result != 0 or native_error:
+                    error = native_error or ctypes.get_errno() or errno.EIO
+                    raise OSError(error, os.strerror(error), str(sidecar))
+            finally:
+                native.copyfile_state_free(state)
+            sidecar.unlink()
 
     def stop(self) -> None:
         """Signal the thread to abort extraction on next iteration."""

@@ -57,6 +57,9 @@ Windows
 macOS
 {: .label .label-red }
 
+Built-in macOS updates preserve the downloaded app's signing metadata. If that
+metadata cannot be restored during extraction, RimSort stops the update.
+
 {: .important }
 > You may get an error saying that RimSort is "damaged" from Gatekeeper.
 > Apple has it's own Runtime Protection called [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web) that can cause issues when trying to run RimSort (or execute dependent libs)!
