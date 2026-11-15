@@ -131,23 +131,13 @@ SAMPLE_ASSETS_WITH_TAR_GZ: list[dict[str, Any]] = [
 
 def _make_platform_mgr(
     system: str,
-    arch: str = "64bit",
-    *,
-    bind_appimage: bool = False,
+    arch: str = "x64",
 ) -> UpdateManager:
-    """Build a mock UpdateManager with real asset-selection methods bound."""
-    mgr = MagicMock(spec=UpdateManager)
+    """Create a real selector with controlled platform information."""
+    mgr = UpdateManager(MagicMock(), None)
     mgr._system = system
     mgr._arch = arch
     mgr._cached_patterns = UpdateManager._platform_patterns[system]
-    mgr._find_best_asset_match = UpdateManager._find_best_asset_match.__get__(mgr)
-    mgr._get_platform_download_url = UpdateManager._get_platform_download_url.__get__(
-        mgr
-    )
-    mgr._asset_matches = UpdateManager._asset_matches.__get__(mgr)
-    mgr._is_in_protected_path = MagicMock(return_value=False)
-    if bind_appimage:
-        mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
     return mgr
 
 
@@ -156,7 +146,7 @@ class TestAssetSelection:
     def _linux_update_manager(self, monkeypatch: pytest.MonkeyPatch) -> UpdateManager:
         """Create an UpdateManager-like object with Linux AppImage settings."""
         monkeypatch.setenv("APPIMAGE", "/home/user/RimSort.AppImage")
-        return _make_platform_mgr("Linux", bind_appimage=True)
+        return _make_platform_mgr("Linux")
 
     def test_prefers_appimage_when_running_as_appimage(
         self,
@@ -173,7 +163,7 @@ class TestAssetSelection:
         assert result["is_appimage"] is True
         assert result["url"] == "https://example.com/rimsort.AppImage"
 
-    def test_falls_back_to_zip_when_no_appimage_asset(
+    def test_rejects_archive_when_no_appimage_asset(
         self,
         _linux_update_manager: UpdateManager,
         monkeypatch: pytest.MonkeyPatch,
@@ -189,9 +179,7 @@ class TestAssetSelection:
         result = _linux_update_manager._get_platform_download_url(
             assets_without_appimage
         )
-        assert result is not None
-        assert result["is_appimage"] is False
-        assert result["url"] == "https://example.com/ubuntu.zip"
+        assert result is None
 
     def test_no_appimage_selection_when_not_appimage(
         self, monkeypatch: pytest.MonkeyPatch
@@ -258,8 +246,7 @@ class TestTarGzAssetSelection:
 
 class TestFindAppImageAsset:
     def test_matches_arch_specific(self) -> None:
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
+        mgr = _make_platform_mgr("Linux")
 
         result = mgr._find_appimage_asset(SAMPLE_ASSETS, ["x86_64", "amd64"])
         assert result is not None
@@ -267,20 +254,17 @@ class TestFindAppImageAsset:
         assert "AppImage" in result["name"]
 
     def test_returns_none_when_no_appimage(self) -> None:
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
+        mgr = _make_platform_mgr("Linux")
 
         assets = [a for a in SAMPLE_ASSETS if not a["name"].endswith(".AppImage")]
         result = mgr._find_appimage_asset(assets, ["x86_64"])
         assert result is None
 
-    def test_fallback_without_arch_match(self) -> None:
-        mgr = MagicMock(spec=UpdateManager)
-        mgr._find_appimage_asset = UpdateManager._find_appimage_asset.__get__(mgr)
+    def test_rejects_mismatched_architecture(self) -> None:
+        mgr = _make_platform_mgr("Linux")
 
         result = mgr._find_appimage_asset(SAMPLE_ASSETS, ["aarch64"])
-        assert result is not None
-        assert result["is_appimage"] is True
+        assert result is None
 
 
 # ---------------------------------------------------------------------------
