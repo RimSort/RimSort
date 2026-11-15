@@ -40,7 +40,11 @@ def manager_factory(
         bits = "32bit" if machine in ("i386", "i686", "x86") else "64bit"
         monkeypatch.setattr(update_utils.platform, "architecture", lambda: (bits, ""))
         monkeypatch.setattr(SystemInfo, "_instance", None)
-        manager = UpdateManager(Settings(), None)
+        content = MagicMock()
+        content.do_threaded_loading_animation.side_effect = (
+            lambda gif_path, target, text: target()
+        )
+        manager = UpdateManager(Settings(), content)
         monkeypatch.setattr(manager, "_is_in_protected_path", lambda: False)
         monkeypatch.setattr(manager, "_check_needs_elevation", lambda: False)
         return manager
