@@ -6300,6 +6300,14 @@ Please reach out to us for support at: {support_url}</source>
         <source>&lt;br&gt;&lt;br&gt;AppImage installations require a compatible AppImage download.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>RimSort could not read its current version, so it cannot safely check for updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download a stable release manually from &lt;a href=&quot;https://github.com/RimSort/RimSort/releases/latest&quot;&gt;the RimSort releases page&lt;/a&gt;.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>

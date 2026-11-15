@@ -123,6 +123,7 @@ def test_release_check_keeps_events_and_restores_controls(
     failure: bool,
 ) -> None:
     window, content, enabled = network_window
+    AppInfo()._app_version = "1.0.0"
     manager = update_utils.UpdateManager(content.settings, content)
     started, release = Event(), Event()
     threads: list[bool] = []
@@ -240,6 +241,7 @@ def test_closing_during_release_check_does_not_show_result(
     failure: bool,
 ) -> None:
     window, content, _ = network_window
+    AppInfo()._app_version = "1.0.0"
     manager = update_utils.UpdateManager(content.settings, content)
     monkeypatch.setattr(manager, "_validate_prerequisites", lambda: True)
     monkeypatch.setattr(manager, "_check_needs_elevation", lambda: False)

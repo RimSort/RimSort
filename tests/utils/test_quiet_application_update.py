@@ -20,6 +20,77 @@ from app.utils.app_info import AppInfo
 from app.utils.update_utils import UpdateManager
 
 
+@pytest.mark.usefixtures("qapp")
+@pytest.mark.parametrize("quiet", [False, True], ids=["manual", "background"])
+@pytest.mark.parametrize(
+    "current, tag, prerelease, draft, available",
+    [
+        ("1.0.0", "v1.1.0", False, False, True),
+        ("v1.1.0", "v1.1.0", False, False, False),
+        ("1.2.0", "v1.1.0", False, False, False),
+        ("v1.18.0-edge8+6ec4b9b", "v1.17.4", False, False, False),
+        ("v1.18.0-edge8+6ec4b9b", "v1.18.0", False, False, True),
+        ("v1.18.0-edge8", "v1.19.0", False, False, True),
+        ("v1.18.0-edge0", "v1.18.0", False, False, True),
+        ("1.1.0+6ec4b9b", "v1.1.0", False, False, False),
+        ("invalid", "v1.1.0", False, False, None),
+        ("Unknown version", "v1.1.0", False, False, None),
+        ("v1.18.0-edge8+[]", "v1.17.4", False, False, None),
+        ("v1.18.0-auto8", "v1.17.4", False, False, None),
+        ("1.0.0", "v1.1.0", True, False, None),
+        ("1.0.0", "v1.1.0", False, True, None),
+        ("1.0.0", "v1.1.0rc1", False, False, None),
+        ("1.0.0", "v1.1.0.dev1", False, False, None),
+        ("1.0.0", "v1.1.0-edge8", False, False, None),
+        ("1.0.0", "Edge", True, False, None),
+    ],
+)
+def test_checks_only_offer_newer_stable_releases(
+    updater: UpdateManager,
+    release_response: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    quiet: bool,
+    current: str,
+    tag: str,
+    prerelease: bool,
+    draft: bool,
+    available: bool | None,
+) -> None:
+    AppInfo()._app_version = current
+    payload = release_response.json.return_value
+    payload.update(tag_name=tag, prerelease=prerelease, draft=draft)
+    for asset in payload["assets"]:
+        asset["name"] = asset["name"].replace("v1.1.0", tag)
+    prompt = MagicMock(return_value=True)
+    install = MagicMock()
+    warnings = MagicMock()
+    monkeypatch.setattr(updater, "_check_needs_elevation", lambda: False)
+    monkeypatch.setattr(updater, "_prompt_user_for_update", prompt)
+    monkeypatch.setattr(updater, "_handle_update_process", install)
+    monkeypatch.setattr(update_utils.dialogue, "show_warning", warnings)
+    confirmation = MagicMock(return_value=QMessageBox.StandardButton.No)
+    monkeypatch.setattr(
+        update_utils.dialogue, "show_dialogue_conditional", confirmation
+    )
+    tags: list[str] = []
+    updater.update_available.connect(tags.append)
+
+    if quiet:
+        updater._quiet_check_worker()
+        expected = [tag] if available else [""] if available is False else []
+        assert tags == expected
+        warnings.assert_not_called()
+        confirmation.assert_not_called()
+        prompt.assert_not_called()
+        install.assert_not_called()
+    else:
+        updater.do_check_for_update()
+        assert prompt.call_count == int(available is True)
+        assert install.call_count == int(available is True)
+        if available is None:
+            warnings.assert_called_once()
+
+
 @pytest.fixture
 def updater(monkeypatch: pytest.MonkeyPatch) -> Generator[UpdateManager]:
     monkeypatch.delenv("RIMSORT_DISABLE_UPDATER", raising=False)
