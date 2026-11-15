@@ -123,6 +123,39 @@ in Terminal before replacing the bundle.
 
 <img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/28567881/7731911b-cc7c-47c8-9c34-6f925fc5b188">
 
+### Restore a macOS update backup
+
+With **Create backup before RimSort update** enabled, macOS backups contain the
+complete `.app` bundle, including executable permissions, symbolic links, and
+signing metadata. The `.tar.gz` archive contains the app's original bundle name.
+Normal installations store backups under
+`~/Library/Application Support/RimSort/backups/rimsort_installation/`.
+
+To recover, quit RimSort and create a new, empty recovery folder. Extract with
+macOS's metadata-aware archive tool:
+
+```sh
+mkdir "/path/to/new-recovery-folder" &&
+  /usr/bin/tar --mac-metadata --acls --xattrs \
+    -xpf "/path/to/RimSort_Backup_timestamp.tar.gz" \
+    -C "/path/to/new-recovery-folder"
+```
+
+Verify the restored bundle, substituting its actual name:
+
+```sh
+/usr/bin/codesign --verify --deep --strict "/path/to/new-recovery-folder/RimSort.app"
+```
+
+If verification succeeds, move the restored `.app` to the desired installation
+location. Preserve the previous app separately rather than merging bundles, and
+keep it and the archive until the restored app starts successfully. If verification
+fails, obtain a fresh release instead of replacing your installation with it.
+
+The maximum-backup setting counts both new `.tar.gz` archives and older ZIPs.
+Older backups containing only the contents of `Contents/MacOS` are incomplete
+and cannot restore an entire application bundle.
+
 ## Linux
 
 {: .d-inline-block}
