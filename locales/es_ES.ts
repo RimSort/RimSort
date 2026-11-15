@@ -6259,6 +6259,26 @@ Comuníquese con nosotros para obtener apoyo en:  {development_guide_url} {suppo
         <source>Checking for RimSort updates...</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Creating Backup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. Waiting for the backup to stop...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. The update was stopped.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create a backup before updating. Do you want to continue without a backup?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backing up files: {current} / {total}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>

@@ -6189,6 +6189,26 @@ Please reach out to us for support at: {support_url}</source>
         <source>Checking for RimSort updates...</source>
         <translation>Checking for RimSort updates...</translation>
     </message>
+    <message>
+        <source>Creating Backup</source>
+        <translation>Creating Backup</translation>
+    </message>
+    <message>
+        <source>Backup timed out. Waiting for the backup to stop...</source>
+        <translation>Backup timed out. Waiting for the backup to stop...</translation>
+    </message>
+    <message>
+        <source>Backup timed out. The update was stopped.</source>
+        <translation>Backup timed out. The update was stopped.</translation>
+    </message>
+    <message>
+        <source>Failed to create a backup before updating. Do you want to continue without a backup?</source>
+        <translation>Failed to create a backup before updating. Do you want to continue without a backup?</translation>
+    </message>
+    <message>
+        <source>Backing up files: {current} / {total}</source>
+        <translation>Backing up files: {current} / {total}</translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>
