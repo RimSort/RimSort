@@ -17,6 +17,7 @@ from functools import partial
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any, TypedDict, cast
+from uuid import uuid4
 
 import requests
 from loguru import logger
@@ -1591,11 +1592,8 @@ class UpdateManager(QObject):
         Returns:
             Path to the created temporary directory
         """
-        temp_base = (
-            Path(gettempdir())
-            / f"RimSort_update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"  # noqa: DTZ005
-        )
-        temp_base.mkdir(exist_ok=True)
+        temp_base = Path(gettempdir()) / f"RimSort_update_{uuid4().hex}"
+        temp_base.mkdir()
         return temp_base
 
     def _extract_zip(self, content: bytes, temp_base: Path) -> int:
