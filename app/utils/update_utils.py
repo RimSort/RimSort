@@ -593,7 +593,16 @@ class UpdateManager(QObject):
                 if appimage_path is not None
                 else AppInfo().application_folder
             )
-            self._elevation_needed = not os.access(install_folder, os.W_OK)
+            if appimage_path is not None:
+                replacement_parent = install_folder
+            elif self._system == "Darwin":
+                replacement_parent = install_folder.parents[2]
+            else:
+                replacement_parent = install_folder.parent
+            self._elevation_needed = not (
+                os.access(install_folder, os.W_OK)
+                and os.access(replacement_parent, os.W_OK)
+            )
             return self._elevation_needed
 
     def _is_in_protected_path(self) -> bool:

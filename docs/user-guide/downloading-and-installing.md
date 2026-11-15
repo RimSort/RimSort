@@ -39,6 +39,27 @@ startup checks under **Update → Check for Updates on Startup**.
 
 With **Create backup before RimSort update** enabled, RimSort creates a backup before installing an application update. If backup creation fails, choose **No** to stop the update or **Yes** to continue without a new backup. Existing backups are retained when creating a new backup fails. A timed-out backup stops the update.
 
+## Update recovery on macOS and Linux
+
+The updater prepares a replacement beside the current installation before
+switching to it. Copy or permission failures leave the current installation in
+place. If a directory switch fails, the updater attempts to restore the previous
+installation. When restoration is blocked, it preserves the recovery files and
+prints their paths in the updater log. Keep those files until you have restored
+or verified your installation.
+
+Directory updates need write access to the installation's parent folder and
+enough space for the staged replacement. An installation directory that cannot
+be renamed, such as a mounted filesystem's root, needs a manual update. A forced
+termination or power loss during the directory switch can also require manual
+restoration from the logged recovery directory. Replacement success does not
+verify that the new application has completed a healthy startup.
+
+AppImage updates retain the previous file as `.bak`, with copying used when a
+hard-link backup is unavailable. An existing `.bak` is preserved and blocks
+another update; verify it before removing it and retrying. The existing startup
+cleanup removes the backup when RimSort next starts.
+
 ## Windows
 
 {: .d-inline-block}

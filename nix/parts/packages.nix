@@ -88,6 +88,7 @@
         ../../tests
         ../../pyproject.toml
         ../../translation_helper.py
+        ../../update.sh
       ];
       mkSrc =
         name: fileset:

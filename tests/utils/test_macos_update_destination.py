@@ -60,9 +60,10 @@ def test_macos_launcher_preserves_bundle_destination(
 def script_environment(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> dict[str, str]:
-    rsync = shutil.which("rsync")
-    if os.name != "posix" or shutil.which("bash") is None or rsync is None:
-        pytest.skip("Requires a POSIX shell and rsync")
+    bash_command = shutil.which("bash")
+    copy_command = shutil.which("cp")
+    if os.name != "posix" or bash_command is None or copy_command is None:
+        pytest.skip("Requires a POSIX shell and cp")
     commands = tmp_path / "commands"
     commands.mkdir()
     trace = tmp_path / "commands.log"
@@ -72,12 +73,19 @@ def script_environment(
         "sleep": ":",
         "open": ":",
         "pgrep": ":",
-        "rsync": f'exec {shlex.quote(rsync)} "$@"',
+        "cp": f'exec {shlex.quote(copy_command)} "$@"',
+        "stat": (
+            f"exec {shlex.quote(sys.executable)} -c "
+            "'import os, sys; print(os.lstat(sys.argv[-1]).st_dev)' \"$@\""
+        ),
     }
     for name, body in bodies.items():
         command = commands / name
         command.write_text(
-            '#!/bin/bash\nprintf "%s\\n" "$0" >> "$COMMAND_TRACE"\n' + body + "\n"
+            f"#!{bash_command}\n"
+            + 'printf "%s\\n" "$0" >> "$COMMAND_TRACE"\n'
+            + body
+            + "\n"
         )
         command.chmod(0o755)
     monkeypatch.delenv("APPIMAGE", raising=False)
@@ -178,7 +186,7 @@ def test_script_rejects_invalid_destination_before_stopping_app(
     assert result.returncode != 0
     trace = Path(script_environment["COMMAND_TRACE"]).read_text()
     assert "killall" not in trace
-    assert "rsync" not in trace
+    assert "cp" not in trace
     assert (source / "marker").read_text() == "preserve"
 
 
