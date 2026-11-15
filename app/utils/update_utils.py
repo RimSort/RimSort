@@ -20,11 +20,16 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 import requests
 from loguru import logger
-from PySide6.QtCore import QEventLoop, QObject, QThread, Signal
+from PySide6.QtCore import QEventLoop, QObject, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.utils import http
 from app.utils.app_info import AppInfo
+from app.utils.system_info import (
+    SystemInfo,
+    UnsupportedArchitectureError,
+    UnsupportedOperatingSystemError,
+)
 from app.utils.zip_extractor import (
     BadZipFile,
     ZipExtractThread,
@@ -72,7 +77,6 @@ WINDOWS_PROTECTED_TOKENS = [
 # Thread timeouts and waits
 BACKUP_TIMEOUT_SECONDS = 600  # 10 minutes for backup
 EXTRACTION_THREAD_TIMEOUT_MS = 5000  # 5 seconds for thread cleanup
-THREAD_JOIN_TIMEOUT = 5  # 5 seconds for thread join
 
 # Platform-specific constants
 # Note: TEMP_DIR_DARWIN and TEMP_DIR_DEFAULT are unused and can be removed
@@ -126,6 +130,30 @@ class UpdateExtractionError(UpdateError):
 
 class UpdateScriptLaunchError(UpdateError):
     """Raised when launching update script fails."""
+
+
+class _BackupWorker(QThread):
+    progress = Signal(int, int)
+
+    def __init__(self, source: Path, destination: Path) -> None:
+        super().__init__()
+        self.source = source
+        self.destination = destination
+        self.error: str | None = None
+
+    def run(self) -> None:
+        def report_progress(current: int, total: int) -> None:
+            if self.isInterruptionRequested():
+                raise InterruptedError("Backup cancelled")
+            self.progress.emit(current, total)
+
+        try:
+            if self.isInterruptionRequested():
+                raise InterruptedError("Backup cancelled")
+            create_zip_backup(self.source, self.destination, report_progress)
+        except Exception as error:
+            self.error = str(error)
+            logger.exception("Application backup failed")
 
 
 class ReleaseInfo(TypedDict):
@@ -458,28 +486,25 @@ class UpdateManager(QObject):
     download_complete = Signal(bool, str)  # success, error_message
     update_available = Signal(str)
 
+    _architecture_patterns = {  # noqa: RUF012
+        "x64": ["x86_64", "amd64", "x64"],
+        "x86": ["x86", "i386", "i686"],
+        "arm64": ["arm64", "aarch64"],
+    }
+
     # Class-level cached platform patterns for performance
     _platform_patterns = {  # noqa: RUF012
         "Darwin": {
             "patterns": ["Darwin", "macOS", "Mac"],
-            "arch_patterns": {
-                "arm64": ["arm64", "arm", "apple"],
-                "x86_64": ["x86_64", "i386", "intel"],
-            },
+            "arch_patterns": _architecture_patterns,
         },
         "Linux": {
             "patterns": ["Linux", "Ubuntu"],
-            "arch_patterns": {
-                "64bit": ["x86_64", "amd64"],
-                "32bit": ["i386", "x86"],
-            },
+            "arch_patterns": _architecture_patterns,
         },
         "Windows": {
             "patterns": ["Windows", "Win"],
-            "arch_patterns": {
-                "64bit": ["x86_64", "x64", "amd64"],
-                "32bit": ["x86", "i386"],
-            },
+            "arch_patterns": _architecture_patterns,
         },
     }
 
@@ -517,12 +542,12 @@ class UpdateManager(QObject):
         self._elevation_needed: bool | None = None  # Cache elevation check result
         # Cache platform info to avoid repeated calls
         self._system = platform.system()
-        # On macOS, platform.architecture()[0] returns "64bit" for both Intel and
-        # ARM, so use platform.machine() which returns "arm64" or "x86_64".
-        if self._system == "Darwin":
-            self._arch = platform.machine()
-        else:
-            self._arch = platform.architecture()[0]
+        try:
+            architecture = SystemInfo().architecture
+            self._arch = architecture.name.lower() if architecture is not None else ""
+        except (UnsupportedArchitectureError, UnsupportedOperatingSystemError) as error:
+            logger.warning(f"Cannot select an application update: {error}")
+            self._arch = ""
         # Cache platform patterns for performance
         self._cached_patterns = self._platform_patterns.get(self._system, None)
         self._download_cancelled = False
@@ -941,11 +966,19 @@ class UpdateManager(QObject):
                 logger.warning("No compatible application release asset found")
                 if not quiet:
                     system_info = f"{platform.system()} {platform.architecture()[0]} {platform.machine()}"
+                    information = self.tr(
+                        'No compatible update download was found. Your installation has not been changed.<br><br>Check <a href="https://github.com/RimSort/RimSort/releases">RimSort releases</a> for a download matching your operating system and CPU architecture.'
+                    )
+                    if AppInfo().is_appimage:
+                        information += self.tr(
+                            "<br><br>AppImage installations require a compatible AppImage download."
+                        )
                     dialogue.show_warning(
                         title=self.tr(ERR_NO_VALID_RELEASE_TITLE),
                         text=self.tr(ERR_NO_VALID_RELEASE_TEXT).format(
                             system_info=system_info
                         ),
+                        information=information,
                     )
                 return None
 
@@ -1033,21 +1066,27 @@ class UpdateManager(QObject):
         asset_name_lower = asset_name.lower()
 
         # Early return if extension doesn't match
-        if not asset_name_lower.endswith(extension):
+        if not asset_name_lower.endswith(extension.lower()):
             return False
 
         # Check system patterns
-        if not any(pattern.lower() in asset_name_lower for pattern in patterns):
+        if patterns and not any(
+            re.search(
+                rf"(?<![a-z0-9]){re.escape(pattern.lower())}(?![a-z0-9])",
+                asset_name_lower,
+            )
+            for pattern in patterns
+        ):
             return False
 
-        # If architecture is required, check arch patterns
-        return not (
-            require_arch
-            and arch_patterns
-            and not any(
-                pattern.lower() in asset_name_lower for pattern in arch_patterns
+        # Release filenames end in the architecture before the package extension.
+        if require_arch:
+            stem = asset_name_lower[: -len(extension)]
+            return bool(arch_patterns) and any(
+                re.search(rf"(?<![a-z0-9]){re.escape(pattern.lower())}$", stem)
+                for pattern in arch_patterns or []
             )
-        )
+        return True
 
     def _get_platform_download_url(
         self, assets: list[dict[str, Any]], needs_elevation: bool = False
@@ -1070,15 +1109,11 @@ class UpdateManager(QObject):
         arch_patterns_dict = cast(
             dict[str, list[str]], self._cached_patterns["arch_patterns"]
         )
-        arch_patterns = arch_patterns_dict.get(self._arch, [])
+        arch_patterns = arch_patterns_dict.get(self._arch.lower(), [])
 
-        # AppImage mode: prefer .AppImage asset, fall back to ZIP
+        # AppImage installations must be replaced with another AppImage.
         if self._system == "Linux" and AppInfo().is_appimage:
-            logger.info("AppImage mode: looking for .AppImage asset first")
-            candidate = self._find_appimage_asset(assets, arch_patterns)
-            if candidate:
-                return candidate
-            logger.warning("No .AppImage asset found in release, falling back to ZIP")
+            return self._find_appimage_asset(assets, arch_patterns)
 
         # Determine preferred extension order
         if self._system == "Windows" and self._is_in_protected_path():
@@ -1123,9 +1158,6 @@ class UpdateManager(QObject):
         Returns:
             Dictionary with 'url', 'name', and 'is_msi' keys, or None if no match
         """
-        candidate = None
-
-        # Single pass: prefer arch-specific match, fallback to system-only
         for asset in assets:
             asset_name = str(asset.get("name", ""))
             download_url = asset.get("browser_download_url")
@@ -1150,29 +1182,12 @@ class UpdateManager(QObject):
                         "url": str(download_url),
                         "name": asset_name,
                         "is_msi": preferred_extension == MSI_EXTENSION,
-                        "is_appimage": False,
+                        "is_appimage": preferred_extension == APPIMAGE_EXTENSION,
                         "is_tar_gz": preferred_extension == TAR_GZ_EXTENSION,
                     },
                 )
-            elif download_url and self._asset_matches(
-                asset, system_patterns, preferred_extension, require_arch=False
-            ):
-                logger.debug(
-                    f"Found system-only matching asset: {asset_name} -> {download_url}"
-                )
-                if candidate is None:  # Only set if no arch-specific found
-                    candidate = cast(
-                        DownloadInfo,
-                        {
-                            "url": str(download_url),
-                            "name": asset_name,
-                            "is_msi": preferred_extension == MSI_EXTENSION,
-                            "is_appimage": False,
-                            "is_tar_gz": preferred_extension == TAR_GZ_EXTENSION,
-                        },
-                    )
 
-        return candidate
+        return None
 
     def _find_appimage_asset(
         self,
@@ -1183,51 +1198,12 @@ class UpdateManager(QObject):
         Find an AppImage asset from the release.
 
         AppImage filenames use the format ``RimSort-{version}-{arch}.AppImage``
-        and don't contain "Linux"/"Ubuntu", so we match only on extension and
-        optionally on architecture.
+        and don't contain "Linux"/"Ubuntu", so require the package extension
+        and architecture without a system-name token.
         """
-        for asset in assets:
-            asset_name = str(asset.get("name", ""))
-            download_url = asset.get("browser_download_url")
-            if not download_url or not asset_name.lower().endswith(
-                APPIMAGE_EXTENSION.lower()
-            ):
-                continue
-
-            asset_name_lower = asset_name.lower()
-            if arch_patterns and any(
-                p.lower() in asset_name_lower for p in arch_patterns
-            ):
-                logger.debug(f"Found arch-specific AppImage asset: {asset_name}")
-                return cast(
-                    DownloadInfo,
-                    {
-                        "url": str(download_url),
-                        "name": asset_name,
-                        "is_msi": False,
-                        "is_appimage": True,
-                        "is_tar_gz": False,
-                    },
-                )
-
-        # Fallback: return any AppImage regardless of arch
-        for asset in assets:
-            asset_name = str(asset.get("name", ""))
-            download_url = asset.get("browser_download_url")
-            if download_url and asset_name.lower().endswith(APPIMAGE_EXTENSION.lower()):
-                logger.debug(f"Found AppImage asset (no arch match): {asset_name}")
-                return cast(
-                    DownloadInfo,
-                    {
-                        "url": str(download_url),
-                        "name": asset_name,
-                        "is_msi": False,
-                        "is_appimage": True,
-                        "is_tar_gz": False,
-                    },
-                )
-
-        return None
+        return self._find_best_asset_match(
+            assets, [], arch_patterns, APPIMAGE_EXTENSION
+        )
 
     def _on_download_cancel(self) -> None:
         self._download_cancelled = True
@@ -1370,11 +1346,12 @@ class UpdateManager(QObject):
                 return
 
             # AppImage updates use .bak rename as the backup — skip ZIP backup
-            if not is_appimage and self.settings.enable_backup_before_update:
-                # Create backup of current installation with progress window
-                self._create_backup_with_progress()
-                # Clean up old backups after successful backup creation
-                self._cleanup_old_backups()
+            if (
+                not is_appimage
+                and self.settings.enable_backup_before_update
+                and not self._create_backup_with_progress()
+            ):
+                return
 
             # Prepare for update script execution
             logger.info("Preparing to launch update...")
@@ -2662,96 +2639,97 @@ class UpdateManager(QObject):
         except Exception:
             logger.exception("Error cleaning up progress widget")
 
-    def _create_backup_with_progress(self) -> None:
-        """Create a backup with a progress widget."""
+    def _create_backup_with_progress(self) -> bool:
+        """Create a backup and return whether the update may proceed."""
         self._progress_widget = TaskProgressWindow(
-            title="Creating Backup",
+            title=self.tr("Creating Backup"),
             show_message=True,
             show_percent=True,
         )
         self._progress_widget.set_message(
             self.tr("Creating backup... (this may take several minutes)")
         )
+        progress_widget = self._progress_widget
 
         # Show progress widget (backup cannot be cancelled)
         self._show_progress_widget(self._progress_widget, cancellable=False)
 
-        # Run backup in a thread (not daemon - ensure proper cleanup)
-        backup_thread = threading.Thread(target=self._create_backup)
-        backup_thread.daemon = False
-        backup_thread.start()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")  # noqa: DTZ005
+        backup_path = (
+            AppInfo().application_backups_folder / f"RimSort_Backup_{timestamp}.zip"
+        )
+        worker = _BackupWorker(AppInfo().application_folder, backup_path)
+        loop = QEventLoop()
+        timer = QTimer()
+        timer.setSingleShot(True)
+        timed_out = False
+        quitting = False
 
-        # Wait for thread to complete with timeout
-        start_time = time.time()
-        while backup_thread.is_alive():
-            QApplication.processEvents()
-            time.sleep(1)
-            elapsed = time.time() - start_time
-            if elapsed > BACKUP_TIMEOUT_SECONDS:
-                logger.warning(f"Backup thread timeout after {elapsed:.0f} seconds")
-                break
-
-        # Ensure thread is joined before cleanup
-        backup_thread.join(timeout=THREAD_JOIN_TIMEOUT)
-        if backup_thread.is_alive():
-            logger.warning("Backup thread still alive after join timeout")
-
-        self._hide_progress_widget(self._progress_widget)
-
-    def _create_backup(self) -> None:
-        """
-        Create a compressed backup of the current RimSort installation as a ZIP file.
-        Updates progress widget during backup.
-        """
-        app_folder = AppInfo().application_folder
-        app_backup_folder = AppInfo().application_backups_folder
-
-        # Generate backup ZIP filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # noqa: DTZ005
-        backup_filename = f"RimSort_Backup_{timestamp}.zip"
-        backup_path = app_backup_folder / backup_filename
-
-        logger.info("Creating backup of RimSort installation")
-
-        def update_backup_progress(current: int, total: int) -> None:
-            """Update progress widget during backup (thread-safe)."""
-            if self._progress_widget and total > 0:
-                percent = int((current / total) * 100)
-                message = f"Backing up files: {current} / {total}"
-                # Use emit for thread safety, or call directly if on main thread
-                try:
-                    self._progress_widget.update_progress(percent, message)
-                except Exception as e:
-                    logger.debug(f"Error updating backup progress: {e}")
-
-        try:
-            # Create ZIP backup of the application folder with progress updates
-            create_zip_backup(
-                app_folder, backup_path, progress_callback=update_backup_progress
+        def timeout() -> None:
+            nonlocal timed_out
+            timed_out = True
+            worker.requestInterruption()
+            progress_widget.set_message(
+                self.tr("Backup timed out. Waiting for the backup to stop...")
             )
 
-            # Verify backup was created
-            if backup_path.exists():
-                backup_size = backup_path.stat().st_size
-                logger.info(
-                    f"Backup created successfully ({backup_size / (1024 * 1024):.2f} MB)"
-                )
-            else:
-                logger.warning("Backup file not created")
+        def shutdown() -> None:
+            nonlocal quitting
+            quitting = True
+            worker.requestInterruption()
 
-        except Exception as e:
-            logger.warning(f"Failed to create backup: {e}")
-            logger.error(f"Backup creation error traceback: {traceback.format_exc()}")
-            # show dialog and ask user to if they want to proceed with update anyway
+        worker.progress.connect(
+            self._on_backup_progress, Qt.ConnectionType.QueuedConnection
+        )
+        worker.finished.connect(loop.quit, Qt.ConnectionType.QueuedConnection)
+        timer.timeout.connect(timeout)
+        app = QApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(shutdown)
+        try:
+            timer.start(int(BACKUP_TIMEOUT_SECONDS * 1000))
+            worker.start()
+            loop.exec()
+        finally:
+            timer.stop()
+            worker.requestInterruption()
+            worker.wait()
+            worker.progress.disconnect(self._on_backup_progress)
+            if app is not None:
+                app.aboutToQuit.disconnect(shutdown)
+            self._hide_progress_widget(self._progress_widget)
+            self._progress_widget = None
+
+        if quitting:
+            return False
+        if timed_out:
+            dialogue.show_warning(
+                title=self.tr(ERR_BACKUP_FAILED_TITLE),
+                text=self.tr("Backup timed out. The update was stopped."),
+            )
+            return False
+        if worker.error is not None:
             answer = dialogue.show_dialogue_conditional(
                 title=self.tr(ERR_BACKUP_FAILED_TITLE),
-                text=self.tr(ERR_BACKUP_FAILED_TEXT),
-                information=f"{e}",
-                details=f"{traceback.format_exc()}",
+                text=self.tr(
+                    "Failed to create a backup before updating. Do you want to continue without a backup?"
+                ),
+                information=worker.error,
             )
-            if answer != QMessageBox.StandardButton.Yes:
-                return
-            # Continue with update even if backup fails
+            return answer == QMessageBox.StandardButton.Yes
+
+        self._cleanup_old_backups()
+        return True
+
+    @Slot(int, int)
+    def _on_backup_progress(self, current: int, total: int) -> None:
+        if self._progress_widget is not None and total > 0:
+            self._progress_widget.update_progress(
+                int(current / total * 100),
+                self.tr("Backing up files: {current} / {total}").format(
+                    current=current, total=total
+                ),
+            )
 
     def _cleanup_old_backups(self) -> None:
         """
