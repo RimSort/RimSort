@@ -322,3 +322,9 @@ jobs:
       contents: read
     needs: build
     uses: ./.github/workflows/test_builds.yml
+
+  post-build-msi-test:
+    permissions:
+      contents: read
+    needs: build
+    uses: ./.github/workflows/test_msi.yml
