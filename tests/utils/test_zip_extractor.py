@@ -1,4 +1,5 @@
 import os
+import stat
 import zipfile
 from pathlib import Path
 
@@ -126,3 +127,24 @@ def test_unreadable_subdirectory_fails_backup(
     with pytest.raises(PermissionError, match="Unreadable subdirectory"):
         create_zip_backup(source, destination)
     assert not destination.exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file permissions")
+@pytest.mark.parametrize("mode", [0o755, 0o640])
+def test_backup_preserves_file_permissions(tmp_path: Path, mode: int) -> None:
+    source = tmp_path / "source"
+    file = source / "nested/RimSort"
+    file.parent.mkdir(parents=True)
+    payload = b"application payload" * 100
+    file.write_bytes(payload)
+    file.chmod(mode)
+    os.utime(file, (1, 1))
+    destination = tmp_path / "backup.zip"
+
+    create_zip_backup(source, destination)
+
+    with zipfile.ZipFile(destination) as archive:
+        info = archive.getinfo("nested/RimSort")
+        assert stat.S_IMODE(info.external_attr >> 16) == mode
+        assert info.compress_type == zipfile.ZIP_DEFLATED
+        assert archive.read(info) == payload

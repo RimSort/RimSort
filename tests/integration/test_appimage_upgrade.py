@@ -82,7 +82,7 @@ sys.excepthook = probe['fail_fast']
 (root / 'install/RimSort.AppImage.bak').write_bytes(b'previous')
 probe['configure'](root)
 (root / 'events/begin').touch()
-def perform(self, url, tag, is_msi, is_appimage=False):
+def perform(self, url, tag, is_msi, is_appimage=False, is_tar_gz=False):
     if not (url == 'http://test.invalid/candidate.AppImage' and is_appimage):
         raise RuntimeError('Incorrect updater handoff')
     (root / 'events/performed').touch()
@@ -104,7 +104,9 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def download_baseline(destination: Path, url: str = BASELINE_URL) -> None:
+def download_baseline(
+    destination: Path, url: str = BASELINE_URL, checksum: str = BASELINE_SHA256
+) -> None:
     partial_path = destination.with_suffix(".partial")
     try:
         with (
@@ -112,8 +114,8 @@ def download_baseline(destination: Path, url: str = BASELINE_URL) -> None:
             partial_path.open("wb") as output,
         ):
             shutil.copyfileobj(response, output)
-        if digest(partial_path) != BASELINE_SHA256:
-            raise RuntimeError("Baseline AppImage SHA256 mismatch")
+        if digest(partial_path) != checksum:
+            raise RuntimeError("Baseline download SHA256 mismatch")
         partial_path.replace(destination)
         destination.chmod(0o755)
     finally:
@@ -139,7 +141,9 @@ def write_executable(path: Path, script: str) -> None:
 
 
 @contextmanager
-def serve(directory: Path) -> Generator[tuple[str, list[str]]]:
+def serve(
+    directory: Path, filename: str = "candidate.AppImage"
+) -> Generator[tuple[str, list[str]]]:
     requests: list[str] = []
 
     class Handler(SimpleHTTPRequestHandler):
@@ -152,7 +156,7 @@ def serve(directory: Path) -> Generator[tuple[str, list[str]]]:
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        yield f"http://127.0.0.1:{server.server_port}/candidate.AppImage", requests
+        yield f"http://127.0.0.1:{server.server_port}/{filename}", requests
     finally:
         server.shutdown()
         server.server_close()
@@ -170,8 +174,7 @@ def owned_processes(root: Path) -> list[psutil.Process]:
     return result
 
 
-@contextmanager
-def isolated_environment(root: Path) -> Generator[dict[str, str]]:
+def clean_environment() -> dict[str, str]:
     env = os.environ.copy()
     for key in (
         "PYTHONPATH",
@@ -179,8 +182,15 @@ def isolated_environment(root: Path) -> Generator[dict[str, str]]:
         "APPIMAGE",
         "APPDIR",
         "APPIMAGE_EXTRACT_AND_RUN",
+        "__PYVENV_LAUNCHER__",
     ):
         env.pop(key, None)
+    return env
+
+
+@contextmanager
+def isolated_environment(root: Path) -> Generator[dict[str, str]]:
+    env = clean_environment()
     env.update(
         RIMSORT_APPIMAGE_TEST_ROOT=str(root),
         RIMSORT_DEV="1",

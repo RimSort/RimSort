@@ -16,6 +16,8 @@ import pytest
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
+from tests.integration.msi_helpers import require_windows_ci, run_msi
+
 DATABASE = Path(__file__).with_name("msi_database.ps1")
 LAUNCHER = Path(__file__).with_name("msi_launch.py")
 BASELINE_SHA256 = "35ebb1903bfedbac20ed450648bfb7c67e3c7dab3b450313efc5a3d14d2657da"
@@ -26,6 +28,7 @@ UPGRADE_CODE = "{D4F7C3B9-8A5E-4E52-BB9F-3C2D1F7A9E24}"
 class Package:
     path: Path
     code: str
+    package_code: str
     component: str
     files: frozenset[str]
 
@@ -95,7 +98,11 @@ def inspect_package(path: Path) -> Package:
     assert properties["UpgradeCode"].upper() == UPGRADE_CODE
     files = payload_paths(data["directories"], data["components"], data["files"])
     return Package(
-        path, properties["ProductCode"], files["rimsort.exe"], frozenset(files)
+        path,
+        properties["ProductCode"],
+        data["package"],
+        files["rimsort.exe"],
+        frozenset(files),
     )
 
 
@@ -271,40 +278,17 @@ def stop_owned_apps(root: Path) -> None:
     assert not alive, "Owned GUI processes survived cleanup"
 
 
-def run_msi(
-    root: Path,
-    phase: str,
-    arguments: list[str],
-    properties: dict[str, Path] | None = None,
-) -> int:
-    command = subprocess.list2cmdline(
-        [
-            "msiexec.exe",
-            *arguments,
-            "/qn",
-            "/norestart",
-            "/L*V",
-            str(root / f"{phase}-msi.log"),
-        ]
-    )
-    # Windows Installer requires NAME="value", not "NAME=value".
-    for name, value in (properties or {}).items():
-        command += f' {name}="{value}"'
-    return subprocess.run(
-        command,
-        check=False,
-        timeout=240,
-    ).returncode
-
-
 def print_diagnostics(root: Path) -> None:
     paths = [*root.glob("*.log"), *(root / "profile/logs").glob("*.log")]
     for path in sorted(paths):
         raw = path.read_bytes()
         encoding = "utf-16" if raw.startswith(b"\xff\xfe") else "utf-8"
-        print(
-            f"\n{path.relative_to(root)}\n{raw.decode(encoding, errors='replace')[-12000:]}"
-        )
+        text = raw.decode(encoding, errors="replace")
+        print(f"\n{path.relative_to(root)}")
+        failure = text.find("Return value 3")
+        if failure >= 0:
+            print(text[max(0, failure - 4000) : failure + 200])
+        print(text[-12000:])
 
 
 def install(root: Path, phase: str, package: Package, qtbot: QtBot) -> None:
@@ -339,15 +323,7 @@ def test_native_windows_msi_install_upgrade(
     candidate_arg = os.environ.get("RIMSORT_MSI_CANDIDATE")
     if sys.platform != "win32" or not candidate_arg:
         pytest.skip("Requires Windows CI and real MSI inputs")
-    assert (
-        os.environ.get("GITHUB_ACTIONS") == "true"
-        and os.environ.get("RUNNER_OS") == "Windows"
-    )
-    assert tmp_path.resolve().is_relative_to(Path(os.environ["RUNNER_TEMP"]).resolve())
-    shell32 = ctypes.WinDLL("shell32")
-    shell32.IsUserAnAdmin.argtypes = []
-    shell32.IsUserAnAdmin.restype = wintypes.BOOL
-    assert shell32.IsUserAnAdmin(), "MSI CI requires an already elevated runner"
+    require_windows_ci(tmp_path)
     root = tmp_path / "MSI path 'test'"
     root.mkdir()
     (root / "tmp").mkdir()
@@ -523,11 +499,18 @@ def test_failed_gui_diagnostics_include_live_app_log(
     log = tmp_path / "profile/logs/RimSort.log"
     log.parent.mkdir(parents=True)
     log.write_text("GUI stopped before initialization completed", encoding="utf-8")
-    (tmp_path / "install-msi.log").write_bytes("Installer detail".encode("utf-16"))
+    (tmp_path / "install-msi.log").write_bytes(
+        (
+            "Actual MSI failure\nAction ended: Return value 3\n"
+            + "padding" * 2000
+            + "\nInstaller detail"
+        ).encode("utf-16")
+    )
     print_diagnostics(tmp_path)
     output = capsys.readouterr().out
     assert "GUI stopped before initialization completed" in output
     assert "Installer detail" in output
+    assert "Actual MSI failure" in output
 
 
 def test_database_errors_preserve_com_details(monkeypatch: pytest.MonkeyPatch) -> None:

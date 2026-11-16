@@ -21,21 +21,9 @@ def report(root: Path, name: str, data: dict[str, object]) -> None:
     temporary.replace(destination)
 
 
-def configure(root: Path) -> None:
+def configure_settings(root: Path) -> dict[str, str]:
     from app.models.settings import Settings
-    from app.utils import app_info
 
-    require(hasattr(app_info, "__compiled__"), "Probe imported source application")
-    info = app_info.AppInfo()
-    image = info.appimage_path
-    if image is None or not image.is_relative_to(root):
-        raise RuntimeError("Wrong AppImage path")
-    require(info.app_storage_folder.is_relative_to(root), "Profile escaped test root")
-    require(info.user_log_folder.is_relative_to(root), "Logs escaped test root")
-    require(Path(os.environ["APPDIR"]).is_relative_to(root), "Mount escaped test root")
-    require(
-        image.with_suffix(".AppImage.bak").is_file(), "Helper deleted recovery copy"
-    )
     settings = Settings()
     settings.language = "en_US"
     settings.check_for_update_startup = False
@@ -45,6 +33,7 @@ def configure(root: Path) -> None:
     settings.watchdog_toggle = False
     settings.auto_load_player_log_on_startup = False
     settings.debug_logging_enabled = True
+    settings.enable_backup_before_update = True
     instance = settings.instances[settings.current_instance]
     instance.initial_setup = False
     instance.steamcmd_ignore = True
@@ -70,18 +59,38 @@ def configure(root: Path) -> None:
         "<li>ludeon.rimworld</li></activeMods></ModsConfigData>"
     )
     settings.save()
+    return {"database": str(settings.aux_db_path)}
+
+
+def configure(root: Path) -> None:
+    from app.utils import app_info
+
+    require(hasattr(app_info, "__compiled__"), "Probe imported source application")
+    info = app_info.AppInfo()
+    image = info.appimage_path
+    if image is None or not image.is_relative_to(root):
+        raise RuntimeError("Wrong AppImage path")
+    require(info.app_storage_folder.is_relative_to(root), "Profile escaped test root")
+    require(info.user_log_folder.is_relative_to(root), "Logs escaped test root")
+    require(Path(os.environ["APPDIR"]).is_relative_to(root), "Mount escaped test root")
+    require(
+        image.with_suffix(".AppImage.bak").is_file(), "Helper deleted recovery copy"
+    )
+    configured = configure_settings(root)
     report(
         root,
         "configured.json",
         {
             "version": info.app_version,
-            "database": str(settings.aux_db_path),
+            "database": configured["database"],
             "mount": os.environ["APPDIR"],
         },
     )
 
 
-def update(root: Path, url: str) -> None:
+def update(
+    root: Path, url: str, kind: str = "appimage", rejected: bool = False
+) -> None:
     from PySide6.QtCore import QTimer
     from PySide6.QtWidgets import QMessageBox
 
@@ -103,7 +112,15 @@ def update(root: Path, url: str) -> None:
         report(root, "confirmed.json", {"accepted": True})
         return QMessageBox.StandardButton.Yes
 
-    dialogue.show_warning = unexpected
+    def warning(*args: object, **kwargs: object) -> None:
+        require(
+            rejected
+            and kwargs.get("title") in {"Extraction failed", "Download failed"},
+            f"Unexpected update warning: {args}, {kwargs}",
+        )
+        report(root, "rejected.json", {"title": kwargs["title"]})
+
+    dialogue.show_warning = warning if rejected else unexpected
     dialogue.show_fatal_error = unexpected
     dialogue.show_dialogue_conditional = confirm
 
@@ -116,12 +133,22 @@ def update(root: Path, url: str) -> None:
             controller.settings, content, content.mod_info_panel
         )
         try:
-            manager._perform_update(url, "v99.0.0", False, is_appimage=True)
+            manager._perform_update(
+                url,
+                "v99.0.0",
+                kind == "msi",
+                is_appimage=kind == "appimage",
+                is_tar_gz=kind == "tar",
+            )
         except SystemExit as error:
             require(error.code in (None, 0), "Updater requested an error exit")
             controller.app.quit()
         else:
-            raise RuntimeError("Update returned without installer handoff")
+            require(
+                rejected and (root / "events/rejected.json").exists(),
+                "Update returned without installer handoff",
+            )
+            controller.app.quit()
 
     command_timer.timeout.connect(begin_update)
 

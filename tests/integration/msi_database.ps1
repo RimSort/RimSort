@@ -1,8 +1,9 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Inspect', 'Transform', 'State', 'Related')][string]$Mode,
+    [ValidateSet('Inspect', 'Transform', 'State', 'Related', 'Clone')][string]$Mode,
     [string]$MsiPath,
     [string]$TransformPath,
+    [string]$CopyPath,
     [string]$PythonPath,
     [string]$LaunchArguments,
     [string]$ProductCode,
@@ -56,8 +57,20 @@ $installer = New-Object -ComObject WindowsInstaller.Installer
 $database = $null
 $reference = $null
 $workingCopy = $null
+$summary = $null
 try {
-    if ($Mode -eq 'Related') {
+    if ($Mode -eq 'Clone') {
+        Copy-Item -LiteralPath $MsiPath -Destination $CopyPath
+        $database = Invoke-ComMember $installer 'OpenDatabase' 'InvokeMethod' @($CopyPath, 1)
+        $newProduct = ([guid]::NewGuid()).ToString('B').ToUpperInvariant()
+        Write-MsiRow $installer $database "UPDATE ``Property`` SET ``Value`` = ? WHERE ``Property`` = 'ProductCode'" @($newProduct)
+        $summary = Invoke-ComMember $database 'SummaryInformation' 'GetProperty' @(20)
+        $newPackage = ([guid]::NewGuid()).ToString('B').ToUpperInvariant()
+        [void](Invoke-ComMember $summary 'Property' 'SetProperty' @(9, $newPackage))
+        [void](Invoke-ComMember $summary 'Persist' 'InvokeMethod')
+        [void](Invoke-ComMember $database 'Commit' 'InvokeMethod')
+        @{ product = $newProduct } | ConvertTo-Json -Compress
+    } elseif ($Mode -eq 'Related') {
         $products = Invoke-ComMember $installer 'RelatedProducts' 'GetProperty' @($UpgradeCode)
         $result = @()
         if ($null -ne $products) {
@@ -73,12 +86,14 @@ try {
         @{ state = $state; executable = $location } | ConvertTo-Json -Compress
     } elseif ($Mode -eq 'Inspect') {
         $database = Invoke-ComMember $installer 'OpenDatabase' 'InvokeMethod' @($MsiPath, 0)
+        $summary = Invoke-ComMember $database 'SummaryInformation' 'GetProperty' @(0)
         $properties = @{}
         foreach ($row in (Read-MsiRows $database 'SELECT `Property`, `Value` FROM `Property`' 2)) {
             $properties[$row[0]] = $row[1]
         }
         @{
             properties = $properties
+            package = [string](Invoke-ComMember $summary 'Property' 'GetProperty' @(9))
             directories = Read-MsiRows $database 'SELECT `Directory`, `Directory_Parent`, `DefaultDir` FROM `Directory`' 3
             components = Read-MsiRows $database 'SELECT `Component`, `ComponentId`, `Directory_` FROM `Component`' 3
             files = Read-MsiRows $database 'SELECT `FileName`, `Component_` FROM `File`' 2
@@ -102,7 +117,7 @@ try {
         [void](Invoke-ComMember $database 'CreateTransformSummaryInfo' 'InvokeMethod' @($reference, $TransformPath, 0, 3))
     }
 } finally {
-    foreach ($item in @($database, $reference, $installer)) {
+    foreach ($item in @($summary, $database, $reference, $installer)) {
         if ($null -ne $item) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($item) }
     }
     if ($workingCopy -and (Test-Path -LiteralPath $workingCopy)) {

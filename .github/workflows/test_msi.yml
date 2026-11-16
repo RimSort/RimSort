@@ -20,6 +20,7 @@ jobs:
             New-Item -ItemType Directory -Path (Join-Path $testRoot $name) | Out-Null
           }
           "MSI_TEST_ROOT=$testRoot" >> $env:GITHUB_ENV
+          "RIMSORT_UPGRADE_ROOT=$testRoot" >> $env:GITHUB_ENV
           "TMP=$testRoot\tmp" >> $env:GITHUB_ENV
           "TEMP=$testRoot\tmp" >> $env:GITHUB_ENV
           "UV_CACHE_DIR=$testRoot\cache\uv" >> $env:GITHUB_ENV
@@ -82,7 +83,7 @@ jobs:
           Remove-Item Env:VIRTUAL_ENV, Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
           uv sync --locked --dev
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_windows_msi.py -k native_windows_msi --basetemp="$env:MSI_TEST_ROOT\pytest" -s
+          uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_windows_msi.py tests/integration/test_updater_msi.py -k 'native_windows_msi or native_msi_updater' --basetemp="$env:MSI_TEST_ROOT\pytest" -s
           exit $LASTEXITCODE
 
       - name: Remove disposable MSI workspace
