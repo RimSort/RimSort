@@ -1,7 +1,8 @@
 import os
 import sys
 
-from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTranslator
+from loguru import logger
+from PySide6.QtCore import QCoreApplication, QLibraryInfo, QObject, QTimer, QTranslator
 from PySide6.QtWidgets import QApplication
 
 import app.utils.globals as app_globals
@@ -166,7 +167,32 @@ class AppController(QObject):
         # event loop would block forever with no visible windows.
         if not self.main_window.isVisible():
             return 0
-        return self.app.exec()
+        if not AppInfo().is_appimage:
+            return self.app.exec()
+
+        startup_timer = QTimer(self)
+        startup_timer.setSingleShot(True)
+        startup_timer.timeout.connect(self._cleanup_appimage_backup)
+        startup_timer.start(0)
+        try:
+            return self.app.exec()
+        finally:
+            startup_timer.stop()
+
+    def _cleanup_appimage_backup(self) -> None:
+        """Remove the previous AppImage after GUI startup completes."""
+        if not self.main_window.isVisible():
+            return
+        appimage = AppInfo().appimage_path
+        if appimage is None:
+            return
+        bak = appimage.with_suffix(appimage.suffix + ".bak")
+        if bak.exists():
+            try:
+                bak.unlink()
+                logger.info(f"Cleaned up old AppImage backup: {bak}")
+            except OSError as e:
+                logger.warning(f"Failed to clean up AppImage backup {bak}: {e}")
 
     def shutdown_watchdog(self) -> None:
         """Initiates the shutdown procedure for the watchdog."""

@@ -59,7 +59,7 @@ class TestAppInfoAppImage:
         monkeypatch.delenv("APPIMAGE", raising=False)
         assert AppInfo().appimage_path is None
 
-    def test_bak_cleanup_on_startup(
+    def test_metadata_initialization_preserves_backup(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         fake = tmp_path / "RimSort.AppImage"
@@ -69,7 +69,7 @@ class TestAppInfoAppImage:
         monkeypatch.setenv("APPIMAGE", str(fake))
 
         AppInfo()
-        assert not bak.exists()
+        assert bak.read_text() == "old version"
 
     def test_bak_cleanup_does_nothing_when_no_bak(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path

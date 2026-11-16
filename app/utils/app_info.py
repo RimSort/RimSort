@@ -163,9 +163,6 @@ class AppInfo:
             self._user_rules_file.parent.mkdir(parents=True, exist_ok=True)
             atomic_json_dump(DEFAULT_USER_RULES, str(self._user_rules_file), indent=4)
 
-        # AppImage: clean up .bak from a previous successful update
-        self._cleanup_appimage_backup()
-
         self._is_initialized: bool = True
 
     @property
@@ -392,16 +389,3 @@ class AppInfo:
         if appimage:
             return Path(appimage)
         return None
-
-    def _cleanup_appimage_backup(self) -> None:
-        """Remove leftover ``.bak`` file from a previous AppImage update."""
-        appimage = self.appimage_path
-        if appimage is None:
-            return
-        bak = appimage.with_suffix(appimage.suffix + ".bak")
-        if bak.exists():
-            try:
-                bak.unlink()
-                logger.info(f"Cleaned up old AppImage backup: {bak}")
-            except OSError as e:
-                logger.warning(f"Failed to clean up AppImage backup {bak}: {e}")

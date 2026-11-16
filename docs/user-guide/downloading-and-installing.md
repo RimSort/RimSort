@@ -68,8 +68,9 @@ verify that the new application has completed a healthy startup.
 
 AppImage updates retain the previous file as `.bak`, with copying used when a
 hard-link backup is unavailable. An existing `.bak` is preserved and blocks
-another update; verify it before removing it and retrying. The existing startup
-cleanup removes the backup when RimSort next starts.
+another update; verify it before removing it and retrying. The backup is removed
+after RimSort completes GUI startup. Failed startup or closing during initial
+loading preserves it for recovery.
 
 ## Windows
 
@@ -188,7 +189,7 @@ chmod +x RimSort-*.AppImage
 
 **Desktop integration:** For automatic desktop menu integration and easy updates, consider [AppImageLauncher](https://github.com/TheAssassin/AppImageLauncher). It registers AppImages with your desktop environment so they appear in your application menu and can be launched like any other installed app.
 
-**Self-updates:** When running as an AppImage, RimSort's built-in updater replaces the AppImage file in place (the old version is backed up to `.bak` and cleaned up on the next launch).
+**Self-updates:** When running as an AppImage, RimSort's built-in updater replaces the AppImage file in place. The old version is backed up to `.bak` and removed after the updated application completes startup. If startup fails or you close the window during initial loading, the backup remains available for recovery.
 
 ### Ubuntu Tarball
 

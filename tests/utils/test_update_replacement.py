@@ -13,7 +13,11 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QMainWindow
+from pytestqt.qtbot import QtBot
 
+from app.controllers.app_controller import AppController
 from app.utils.app_info import AppInfo
 from app.utils.update_utils import UpdateManager
 
@@ -360,6 +364,34 @@ def test_appimage_backup_copy_fallback(installer: Callable[[str], Installer]) ->
     assert result.returncode == 0, result.stdout + result.stderr
     assert update.old.read_bytes() == b"new"
     assert update.old.with_suffix(".AppImage.bak").read_bytes() == b"old"
+
+
+def test_successful_startup_allows_next_appimage_update(
+    installer: Callable[[str], Installer],
+    monkeypatch: pytest.MonkeyPatch,
+    qtbot: QtBot,
+) -> None:
+    update = installer("appimage")
+    first = update.run()
+    assert first.returncode == 0, first.stdout + first.stderr
+    backup = update.old.with_suffix(".AppImage.bak")
+    assert backup.read_bytes() == b"old"
+    monkeypatch.setenv("APPIMAGE", str(update.old))
+    controller = AppController.__new__(AppController)
+    QObject.__init__(controller)
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    window.show()
+    controller.main_window = MagicMock(wraps=window)
+
+    controller._cleanup_appimage_backup()
+
+    assert not backup.exists()
+    update.payload.write_bytes(b"next version")
+    second = update.run()
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert update.old.read_bytes() == b"next version"
+    assert backup.read_bytes() == b"new"
 
 
 @pytest.mark.parametrize("system", ["Darwin", "Linux"])
