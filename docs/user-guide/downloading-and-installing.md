@@ -45,6 +45,11 @@ manually.
 
 With **Create backup before RimSort update** enabled, RimSort creates a backup before installing an application update. If backup creation fails, choose **No** to stop the update or **Yes** to continue without a new backup. Existing backups are retained when creating a new backup fails. A timed-out backup stops the update.
 
+If files cannot be moved while preparing a downloaded archive, RimSort stops the
+update before backup cleanup or installation. The existing installation and
+backups remain unchanged; retry the update after resolving the file access or
+disk space problem.
+
 ## Update recovery on macOS and Linux
 
 The updater prepares a replacement beside the current installation before

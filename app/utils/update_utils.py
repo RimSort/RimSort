@@ -2262,25 +2262,21 @@ class UpdateManager(QObject):
 
         Returns:
             Number of items successfully moved
+
+        Raises:
+            OSError: If an item cannot be moved
         """
         moved_items = 0
         for item in source_dir.iterdir():
-            if not item.exists():
-                logger.warning(f"Item {item} does not exist, skipping")
-                continue
             dest = dest_dir / item.name
-            try:
-                if dest.exists():
-                    if dest.is_dir():
-                        shutil.rmtree(dest)
-                    else:
-                        dest.unlink()
-                # Move item to the specific destination path (not just to the directory)
-                shutil.move(str(item), str(dest))
-                moved_items += 1
-            except (OSError, FileNotFoundError) as e:
-                logger.warning(f"Failed to move {item} to {dest}: {e}. Skipping item.")
-                continue
+            if dest.exists():
+                if dest.is_dir():
+                    shutil.rmtree(dest)
+                else:
+                    dest.unlink()
+            # Move item to the specific destination path (not just to the directory)
+            shutil.move(str(item), str(dest))
+            moved_items += 1
         return moved_items
 
     def _validate_executable_presence(
