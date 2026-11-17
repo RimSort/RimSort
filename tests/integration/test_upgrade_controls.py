@@ -10,8 +10,14 @@ from pathlib import Path
 import psutil
 import pytest
 
+from tests.integration import native_filesystem
 from tests.integration.archive_probe import msi_process
-from tests.integration.test_packaged_upgrade import unpack
+from tests.integration.native_filesystem import (
+    exhaust_volume,
+    limited_volume,
+    windows_read_lock,
+)
+from tests.integration.test_packaged_upgrade import install_baseline, unpack
 from tests.integration.upgrade_process import contained, launch, stop, terminal
 
 
@@ -150,3 +156,138 @@ def test_restore_zip_layout_and_executable_mode(
     restored = unpack(archive, tmp_path / "restored")
     assert (restored / "RimSort").read_bytes() == b"executable fixture"
     assert os.access(restored / "RimSort", os.X_OK)
+
+
+@pytest.mark.parametrize("operation", ["lock", "volume", "exhaust"])
+def test_filesystem_controls_refuse_non_ci_execution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str
+) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    with pytest.raises(RuntimeError, match="disposable native CI runner"):
+        if operation == "lock":
+            with windows_read_lock(tmp_path, tmp_path / "RimSort.exe"):
+                pytest.fail("Unscoped file lock was acquired")
+        elif operation == "volume":
+            with limited_volume(tmp_path, 128 * 1024 * 1024):
+                pytest.fail("Unscoped filesystem was mounted")
+        else:
+            exhaust_volume(tmp_path, tmp_path)
+
+
+@pytest.fixture
+def ci_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
+    owner = tmp_path / "task"
+    root = owner / "case"
+    root.mkdir(parents=True)
+    monkeypatch.setenv("RIMSORT_UPGRADE_ROOT", str(owner))
+    return root
+
+
+@pytest.fixture
+def linux_ci_root(ci_root: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setattr(sys, "platform", "linux")
+    return ci_root
+
+
+def test_filesystem_controls_refuse_a_mount_outside_owned_root(
+    tmp_path: Path, linux_ci_root: Path
+) -> None:
+    with (
+        pytest.raises(RuntimeError, match="escaped its runner task root"),
+        limited_volume(tmp_path, 128 * 1024 * 1024),
+    ):
+        pytest.fail("Unowned filesystem was mounted")
+
+
+def test_exhaustion_refuses_an_unowned_filesystem(
+    linux_ci_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = linux_ci_root
+    volume = root / "volume"
+    volume.mkdir()
+    monkeypatch.setattr(
+        native_filesystem,
+        "mount_identity",
+        lambda _: {"source": "user-volume", "fstype": "ext4", "target": str(volume)},
+    )
+    with pytest.raises(RuntimeError, match="isolated Linux mount"):
+        exhaust_volume(root, volume)
+    assert list(volume.iterdir()) == []
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX mount safety control")
+def test_volume_cleanup_refuses_a_changed_mount(
+    linux_ci_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = linux_ci_root
+    foreign = {
+        "source": "user-volume",
+        "fstype": "tmpfs",
+        "target": str(root / "volume"),
+    }
+    states = iter([None, foreign, foreign])
+    monkeypatch.setattr(native_filesystem, "mount_identity", lambda _: next(states))
+    calls: list[list[str]] = []
+
+    def command(_root: Path, args: list[str], *_args: object, **_kwargs: object) -> int:
+        calls.append(args)
+        return 0
+
+    monkeypatch.setattr(native_filesystem, "run_external", command)
+    with (
+        pytest.raises(RuntimeError, match="Refusing to unmount"),
+        limited_volume(root, 128 * 1024 * 1024),
+    ):
+        pytest.fail("Foreign mount was accepted")
+    assert len(calls) == 1 and calls[0][:3] == ["sudo", "-n", "mount"]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Native Win32 file sharing")
+def test_windows_lock_allows_backup_reads_and_releases(
+    ci_root: Path,
+) -> None:
+    root = ci_root
+    target = root / "RimSort.exe"
+    target.write_bytes(b"previous executable")
+    with windows_read_lock(root, target):
+        assert target.read_bytes() == b"previous executable"
+        with pytest.raises(PermissionError):
+            target.write_bytes(b"replacement executable")
+    target.write_bytes(b"replacement executable")
+    assert target.read_bytes() == b"replacement executable"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Native Windows command parser")
+def test_windows_baseline_installer_preserves_spaced_arguments(
+    ci_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = ci_root
+    (root / "events").mkdir()
+    (root / "events/configured.json").write_text(
+        json.dumps({"backups": str(root / "backups")})
+    )
+    bootstrap = root / "script with spaces"
+    bootstrap.mkdir()
+    (bootstrap / "update.bat").write_text('@echo off\n> "%~2" echo %~1\nexit /b 23\n')
+    installed = root / "installed with spaces"
+    installed.mkdir()
+    stage = root / "stage with spaces"
+    stage.mkdir()
+    monkeypatch.setattr(
+        "tests.integration.test_packaged_upgrade.run_external", lambda *_args, **_kw: 0
+    )
+    monkeypatch.setattr(
+        "tests.integration.test_packaged_upgrade.unpack", lambda *_args: stage
+    )
+    child = install_baseline(
+        root, installed, bootstrap, root / "input.zip", dict(os.environ)
+    )
+    try:
+        assert child.wait(timeout=15) == 23
+    finally:
+        if child.poll() is None:
+            child.terminate()
+            child.wait(timeout=15)
+    assert (root / "profile/logs/updater.log").read_text().strip() == str(stage)

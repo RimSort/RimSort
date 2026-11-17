@@ -33,6 +33,34 @@ and restored bundles must pass strict signature verification.
 ZIP recovery backups retain source file permissions, including the Linux executable
 bit. Recovery uses the archived permissions; it does not repair modes in the harness.
 
+## Native filesystem failures
+
+The same Windows and Ubuntu jobs also run `test_native_filesystem_failure`:
+
+- Windows holds a real Win32 read-sharing handle on the stable installation's
+  executable. Backups can read it, but writes fail with sharing violation 32.
+  The current compiled backup service saves the old installation, then the real
+  batch installer and Robocopy attempt to install the different CI executable.
+  The test requires a failed installer result and the OS sharing-violation diagnostic.
+- Linux installs the CI application on a separate, size-limited tmpfs under the
+  test root, then fills that filesystem leaving only 1 MiB free. A real allocation
+  must fail with `ENOSPC` before the actual installer attempts its staged copy.
+  The test requires a nonzero result, a no-space diagnostic and unchanged old files.
+
+Both cases verify complete backups, user-file preservation, absence of a successful
+relaunch, and normal GUI startup/quit after restoring the backup. They exercise the
+current compiled backup service and installer directly; download and extraction
+orchestration remain covered by the archive matrix above. Process-stop adapters
+remain scoped, while Robocopy and `cp` use the actual operating-system behavior.
+
+Linux mounts only the task-owned bounded tmpfs using the disposable runner's sudo.
+Mount identity is checked before filling or unmounting; teardown stops owned processes
+before unmounting and refuses to delete a still-mounted fixture. The mount-table writes
+are OS-managed changes on the disposable runner. This models filesystem capacity
+exhaustion, not physical media failure, and never fills the runner's main filesystem.
+
+## MSI handoff
+
 `tests/integration/test_updater_msi.py` adds the current packaged updater's download,
 backup and MSI handoff to the installer-first Windows job. It installs the real CI
 candidate, then upgrades to a test copy with fresh ProductCode and PackageCode GUIDs.
