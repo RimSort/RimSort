@@ -11,7 +11,7 @@ import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
+from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 
 from loguru import logger
 from PySide6.QtCore import QThread, Signal
@@ -194,7 +194,7 @@ def create_zip_backup(
     """Create a compressed ZIP backup of a directory.
 
     Recursively archives all files in source_dir to a single ZIP file
-    with compression. Empty directories are not included.
+    with compression and file permissions. Empty directories are not included.
 
     Args:
         source_dir: Source directory to backup
@@ -246,7 +246,10 @@ def create_zip_backup(
                 # This avoids file lock issues when the file is in use
                 with open(file_path, "rb") as f:
                     file_data = f.read()
-                zipf.writestr(str(arcname), file_data)
+                info = ZipInfo.from_file(
+                    file_path, str(arcname), strict_timestamps=False
+                )
+                zipf.writestr(info, file_data, compress_type=ZIP_DEFLATED)
                 # Update progress
                 if progress_callback:
                     progress_callback(current_file, total_files)

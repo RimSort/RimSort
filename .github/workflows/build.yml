@@ -328,3 +328,9 @@ jobs:
       contents: read
     needs: build
     uses: ./.github/workflows/test_msi.yml
+
+  post-build-upgrade-test:
+    permissions:
+      contents: read
+    needs: build
+    uses: ./.github/workflows/test_upgrades.yml
