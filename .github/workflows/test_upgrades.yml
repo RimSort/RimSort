@@ -108,9 +108,9 @@ jobs:
           uv sync --locked --dev
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           if ($IsLinux) {
-            xvfb-run -a -s '-screen 0 1280x720x24' uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_packaged_upgrade.py -k native_packaged_upgrade --basetemp="$env:RIMSORT_UPGRADE_ROOT/pytest" -s
+            xvfb-run -a -s '-screen 0 1280x720x24' uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_packaged_upgrade.py -k 'native_packaged_upgrade or native_filesystem_failure' --basetemp="$env:RIMSORT_UPGRADE_ROOT/pytest" -s
           } else {
-            uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_packaged_upgrade.py -k native_packaged_upgrade --basetemp="$env:RIMSORT_UPGRADE_ROOT/pytest" -s
+            uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_packaged_upgrade.py -k 'native_packaged_upgrade or native_filesystem_failure' --basetemp="$env:RIMSORT_UPGRADE_ROOT/pytest" -s
           }
           exit $LASTEXITCODE
 

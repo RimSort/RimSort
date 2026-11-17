@@ -3,6 +3,7 @@
 import ctypes
 import json
 import os
+import re
 import shlex
 import shutil
 import stat
@@ -11,13 +12,19 @@ import sys
 import tarfile
 import zipfile
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
 import psutil
 import pytest
 
+from tests.integration.native_filesystem import (
+    MIB,
+    exhaust_volume,
+    limited_volume,
+    windows_read_lock,
+)
 from tests.integration.test_appimage_upgrade import (
     clean_environment,
     digest,
@@ -361,6 +368,21 @@ def configure(root: Path, target: Path, env: dict[str, str]) -> None:
     assert (root / "events/configured.json").exists()
 
 
+def launch_and_close(root: Path, target: Path, env: dict[str, str]) -> None:
+    (root / "profile/logs/RimSort.log").unlink(missing_ok=True)
+    with (root / "recovered-app.log").open("w") as output:
+        child = subprocess.Popen(
+            [str(target)], env=env, cwd=root, stdout=output, stderr=subprocess.STDOUT
+        )
+        try:
+            healthy_and_close(root, target)
+            assert child.wait(timeout=30) == 0
+        finally:
+            if child.poll() is None:
+                stop_processes([psutil.Process(child.pid)])
+                child.wait(timeout=15)
+
+
 def update(
     root: Path,
     target: Path,
@@ -447,8 +469,9 @@ def install_baseline(
     log = root / "profile/logs/updater.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     arguments = [str(script), str(staged), str(log)]
+    command: str | list[str]
     if sys.platform == "win32":
-        command = ["cmd.exe", "/c", *arguments]
+        command = f'cmd.exe /d /s /c "{subprocess.list2cmdline(arguments)}"'
     else:
         command = ["/bin/bash", *arguments, str(installed)]
     with (root / "installer.log").open("w") as output:
@@ -609,21 +632,7 @@ def test_native_packaged_upgrade(
             if sys.platform != "win32" or scenario in {"corrupt", "copy"}:
                 log.unlink(missing_ok=True)
             if scenario in {"corrupt", "copy"}:
-                with (root / "recovered-app.log").open("w") as output:
-                    child = subprocess.Popen(
-                        [str(executable(installed))],
-                        env=env,
-                        cwd=root,
-                        stdout=output,
-                        stderr=subprocess.STDOUT,
-                    )
-                    try:
-                        healthy_and_close(root, executable(installed))
-                        assert child.wait(timeout=30) == 0
-                    finally:
-                        if child.poll() is None:
-                            stop_processes([psutil.Process(child.pid)])
-                            child.wait(timeout=15)
+                launch_and_close(root, executable(installed), env)
             else:
                 (root / "events/release").touch()
                 healthy_and_close(root, executable(installed))
@@ -655,4 +664,112 @@ def test_native_packaged_upgrade(
             stop_processes([psutil.Process(installer.pid)])
             installer.wait(timeout=15)
         stop_all(root)
+        shutil.rmtree(root)
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(
+            "windows-lock",
+            marks=pytest.mark.skipif(
+                sys.platform != "win32", reason="Native Win32 lock"
+            ),
+        ),
+        pytest.param(
+            "linux-enospc",
+            marks=pytest.mark.skipif(
+                sys.platform != "linux", reason="Native Linux mount"
+            ),
+        ),
+    ],
+)
+def test_native_filesystem_failure(
+    archive_inputs: Inputs, tmp_path: Path, failure: str
+) -> None:
+    inputs = archive_inputs
+    root = tmp_path / "Filesystem failure with spaces"
+    root.mkdir()
+    installer: subprocess.Popen[bytes] | None = None
+    try:
+        with ExitStack() as resources:
+            previous = (
+                inputs.baseline if failure == "windows-lock" else inputs.candidate
+            )
+            volume: Path | None = None
+            if failure == "linux-enospc":
+                size = sum(
+                    path.stat().st_size
+                    for path in previous.rglob("*")
+                    if path.is_file()
+                )
+                capacity = max(128 * MIB, (size // MIB + 65) * MIB)
+                volume = resources.enter_context(limited_volume(root, capacity))
+                installed = volume / "install"
+            else:
+                installed = root / "install"
+            env = resources.enter_context(
+                environment(root, executable(installed), "filesystem")
+            )
+            bootstrap = root / "bootstrap" / inputs.candidate.name
+            shutil.copytree(inputs.candidate, bootstrap, symlinks=True)
+            configure(root, executable(bootstrap), env)
+            shutil.copytree(previous, installed, symlinks=True)
+            sentinels = [
+                root / "profile/data/keep.txt",
+                root / "fixture/local/keep.txt",
+            ]
+            if failure == "windows-lock":
+                sentinels.append(installed / "user/keep.txt")
+            for path in sentinels:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("preserve user data")
+            original = manifest(installed)
+            if failure == "windows-lock":
+                target = executable(installed)
+                assert digest(target) != digest(executable(inputs.candidate))
+                resources.enter_context(windows_read_lock(root, target))
+            else:
+                assert volume is not None
+                assert exhaust_volume(root, volume) <= MIB
+            installer = install_baseline(
+                root, installed, bootstrap, inputs.archive, env
+            )
+            try:
+                assert installer.wait(timeout=120) != 0
+            finally:
+                if installer.poll() is None:
+                    stop_processes([psutil.Process(installer.pid)])
+                    installer.wait(timeout=15)
+            log = read(root / "profile/logs/updater.log")
+            output = read(root / "installer.log")
+            if failure == "windows-lock":
+                result = re.search(r"Robocopy completed with exit code: (\d+)", log)
+                assert result is not None and int(result[1]) >= 8
+                assert "0x00000020" in output
+                assert "Update failed during file copy" in log
+                assert "Launching RimSort" not in log
+            else:
+                assert "No space left on device" in output
+                assert "Update failed" in output
+                assert manifest(installed) == original
+            assert "update completed and launched successfully" not in log
+            assert not (root / "events/relaunch.json").exists()
+            config = json.loads((root / "events/configured.json").read_text())
+            backups = list(Path(config["backups"]).glob("RimSort_Backup_*.zip"))
+            assert len(backups) == 1
+            restored = verify_backup(root, backups[0], original)
+            assert all(path.read_text() == "preserve user data" for path in sentinels)
+        launch_and_close(root, executable(restored), env)
+        assert manifest(restored) == original
+    except BaseException:
+        print_diagnostics(root)
+        raise
+    finally:
+        if installer is not None and installer.poll() is None:
+            stop_processes([psutil.Process(installer.pid)])
+            installer.wait(timeout=15)
+        stop_all(root)
+        if (root / "volume").is_mount():
+            raise RuntimeError("Refusing to delete a fixture with a live mount")
         shutil.rmtree(root)
