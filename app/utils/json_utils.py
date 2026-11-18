@@ -41,7 +41,9 @@ def _clear_read_only_flag(destination: str) -> bool:
     return True
 
 
-def _replace_with_retry(source: str, destination: str) -> None:
+def _replace_with_retry(
+    source: str, destination: str, *, clear_read_only: bool = True
+) -> None:
     """Replace a file, tolerating short-lived Windows file locks."""
     attempt = 0
     cleared_read_only = False
@@ -53,7 +55,11 @@ def _replace_with_retry(source: str, destination: str) -> None:
             # A read-only destination can never be replaced, so clearing the
             # attribute is not a retry: it is tried again right away, which
             # leaves the lock backoff budget untouched.
-            if not cleared_read_only and _clear_read_only_flag(destination):
+            if (
+                clear_read_only
+                and not cleared_read_only
+                and _clear_read_only_flag(destination)
+            ):
                 cleared_read_only = True
                 continue
             if attempt == _REPLACE_ATTEMPTS - 1:
