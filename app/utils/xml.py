@@ -1,12 +1,19 @@
+import errno
 import gzip
 import os
+import stat
+import sys
+import tempfile
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from typing import Any
 from xml.dom import minidom
 
 import zstandard as zstd
 from bs4 import BeautifulSoup
 from loguru import logger
+
+from app.utils.json_utils import _replace_with_retry
 
 
 def etree_to_dict(t: Any) -> dict[str, Any]:
@@ -127,11 +134,41 @@ def xml_path_to_json(path: str) -> dict[str, Any]:
     return data
 
 
+def _write_xml_atomically(path: str, xml: str) -> None:
+    """Write beside the resolved target so replacement preserves symlinks."""
+    target = os.path.realpath(path, strict=os.path.ALLOW_MISSING)
+    try:
+        mode = stat.S_IMODE(os.stat(target).st_mode)
+    except FileNotFoundError:
+        mode = None
+    else:
+        if sys.platform == "win32":
+            os.close(os.open(target, os.O_WRONLY))
+        elif not os.access(target, os.W_OK):
+            raise PermissionError(errno.EACCES, os.strerror(errno.EACCES), path)
+
+    fd, temporary = tempfile.mkstemp(suffix=".xml", dir=os.path.dirname(target))
+    try:
+        try:
+            with open(fd, "w", encoding="utf-8", closefd=False) as stream:
+                stream.write(xml)
+                stream.flush()
+                os.fsync(fd)
+        finally:
+            os.close(fd)
+        if mode is not None:
+            os.chmod(temporary, mode)
+        _replace_with_retry(temporary, target, clear_read_only=False)
+    except BaseException:
+        Path(temporary).unlink(missing_ok=True)
+        raise
+
+
 def json_to_xml_write(
     data: dict[str, Any], path: str, raise_errs: bool = False
 ) -> None:
     """
-    Write dictionary data to an XML file.
+    Write dictionary data to an XML file atomically.
 
     :param data: Dictionary data to write.
     :param path: Path to write the XML file to.
@@ -143,8 +180,7 @@ def json_to_xml_write(
         rough_string = ET.tostring(root, encoding="utf-8")
         # Use minidom for pretty printing since ET doesn't have pretty_print
         reparsed = minidom.parseString(rough_string)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(reparsed.toprettyxml(indent="  ", encoding=None))
+        _write_xml_atomically(path, reparsed.toprettyxml(indent="  ", encoding=None))
     except Exception as e:
         if raise_errs:
             raise
