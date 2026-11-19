@@ -141,6 +141,18 @@ class TestMenuBarAppendAction:
             mock_event_bus.return_value.do_append_mod_list.emit.assert_called_once()
 
 
+def test_analyze_conflicts_action_emits_event(
+    menu_bar_instance: MenuBar, mock_settings_controller: MagicMock
+) -> None:
+    with patch("app.controllers.menu_bar_controller.EventBus") as bus:
+        controller = MenuBarController(
+            menu_bar_instance, mock_settings_controller.settings, lambda: None
+        )
+        menu_bar_instance.analyze_conflicts_action.trigger()
+        bus.return_value.do_analyze_conflicts.emit.assert_called_once()
+        assert controller is not None
+
+
 class TestMenuBarModlistHistory:
     """Test the Mod List History menu action."""
 

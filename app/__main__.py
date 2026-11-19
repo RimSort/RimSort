@@ -30,6 +30,11 @@ import os
 import platform
 import sys
 import traceback
+
+if "--rcd-worker" in sys.argv:
+    from app.services.conflict_detector_worker import main as worker_main
+
+    raise SystemExit(worker_main())
 from logging import WARNING, getLogger
 from multiprocessing import freeze_support
 from types import TracebackType

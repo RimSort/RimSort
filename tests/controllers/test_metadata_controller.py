@@ -135,6 +135,43 @@ def test_metadata_controller_refresh(metadata_controller_p: MetadataController) 
     assert len(metadata_controller_p.metadata_mediator.mods_metadata) > 0
 
 
+def test_metadata_refresh_started_precedes_reset_and_refreshed(
+    metadata_controller_p: MetadataController,
+) -> None:
+    events: list[str] = []
+    controller = metadata_controller_p
+    controller.metadata_refresh_started.connect(lambda: events.append("started"))
+    controller.metadata_refreshed.connect(lambda: events.append("refreshed"))
+    original_reset = controller.reset_paths
+
+    def record_reset() -> None:
+        events.append("reset")
+        original_reset()
+
+    with patch.object(controller, "reset_paths", side_effect=record_reset):
+        controller.refresh_metadata()
+        controller.refresh_metadata()
+
+    assert events == ["started", "reset", "refreshed"] * 2
+
+
+def test_metadata_refresh_started_emitted_even_if_reset_fails(
+    metadata_controller: MetadataController,
+) -> None:
+    events: list[str] = []
+    metadata_controller.metadata_refresh_started.connect(
+        lambda: events.append("started")
+    )
+    with (
+        patch.object(
+            metadata_controller, "reset_paths", side_effect=RuntimeError("reset")
+        ),
+        pytest.raises(RuntimeError, match="reset"),
+    ):
+        metadata_controller.refresh_metadata()
+    assert events == ["started"]
+
+
 def test_metadata_controller_get_metadata_with_path(
     metadata_controller_p: MetadataController,
 ) -> None:

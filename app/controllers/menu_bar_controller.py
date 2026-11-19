@@ -44,6 +44,10 @@ class MenuBarController(QObject):
                 self.settings.check_for_update_startup
             )
 
+        self.menu_bar.analyze_conflicts_action.triggered.connect(
+            EventBus().do_analyze_conflicts.emit
+        )
+
         # Settings menu
         self.menu_bar.settings_action.triggered.connect(self._show_settings_dialog)
 
