@@ -679,9 +679,7 @@ class MainContent(QObject):
                 u for u in current_inactive_paths if u in inactive_set
             ]
             preserved_set = set(preserved_inactive)
-            new_inactive = [
-                u for u in inactive_mods_uuids if u not in preserved_set
-            ]
+            new_inactive = [u for u in inactive_mods_uuids if u not in preserved_set]
             self.mods_panel.inactive_mods_list.recreate_mod_list(
                 list_type="Inactive",
                 uuids=preserved_inactive + new_inactive,

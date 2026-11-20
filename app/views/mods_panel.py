@@ -748,7 +748,6 @@ class ModListItemInner(QWidget):
         ):
             self._resize_text_after_icon_toggle()
         # Recalculate the widget label's styling based on item data
-                # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
         if item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
