@@ -41,6 +41,7 @@ from app.models.divider import is_divider_uuid
 from app.models.instance import Instance
 from app.models.metadata.metadata_structure import AboutXmlMod, ModType
 from app.models.settings import Settings
+from app.services.conflict_snapshot import snapshot_active_mods
 from app.services.dependency_resolver import build_dependencies_dialog_context
 from app.services.game_layout_service import (
     get_game_content_candidates,
@@ -103,6 +104,7 @@ from app.views.mods_panel import (
 )
 from app.views.settings_dialog import SettingsDialog
 from app.views.task_progress_window import TaskProgressWindow
+from app.windows.conflict_report_dialog import ConflictReportDialog
 from app.windows.duplicate_mods_panel import DuplicateModsPanel
 from app.windows.ignore_json_editor import IgnoreJsonEditor
 from app.windows.missing_dependencies_dialog import MissingDependenciesDialog
@@ -222,6 +224,7 @@ class MainContent(QObject):
         )
         EventBus().do_export_mod_list_to_rentry.connect(self._do_upload_list_rentry)
         EventBus().do_open_modlist_history.connect(self._do_open_modlist_history)
+        EventBus().do_analyze_conflicts.connect(self._do_analyze_conflicts)
         EventBus().do_upload_log.connect(self._upload_file)
         EventBus().do_open_default_editor.connect(self._open_in_default_editor)
         EventBus().do_download_all_mods_via_steamcmd.connect(
@@ -358,6 +361,30 @@ class MainContent(QObject):
         self._active_loading_loop: QEventLoop | None = None
         self._loading_aborted: bool = False
         self._refresh_in_progress: bool = False
+        self.conflict_report_dialog: ConflictReportDialog | None = None
+
+    @Slot()
+    def _do_analyze_conflicts(self) -> None:
+        dialog = self.conflict_report_dialog
+        if dialog is not None:
+            if dialog.isVisible() or dialog.runner._process is not None:
+                dialog.show()
+                dialog.raise_()
+                dialog.activateWindow()
+                return
+            dialog.deleteLater()
+        active_list = self.mods_panel.active_mods_list
+        snapshot = snapshot_active_mods(
+            active_list, self.metadata_controller, self.settings.current_instance
+        )
+        self.conflict_report_dialog = ConflictReportDialog(
+            active_list,
+            self.metadata_controller,
+            lambda: self.settings.current_instance,
+            snapshot,
+            parent=self.main_layout_frame,
+        )
+        self.conflict_report_dialog.show()
 
     @classmethod
     def instance(cls, *args: Any, **kwargs: Any) -> MainContent:

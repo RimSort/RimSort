@@ -78,6 +78,7 @@ class MenuBar(QObject):
         self.wiki_action: QAction
         self.github_action: QAction
         self.show_translation_status_action: QAction
+        self.analyze_conflicts_action: QAction
         self.auto_add_translations_action: QAction
         self.check_for_updates_action: QAction | None = None
         self.check_for_updates_on_startup_action: QAction | None = None
@@ -298,6 +299,9 @@ class MenuBar(QObject):
             QMenu: The created "View" menu.
         """
         view_menu = self.menu_bar.addMenu(self.tr("View"))
+        self.analyze_conflicts_action = self._add_action(
+            view_menu, self.tr("Analyze Mod Conflicts")
+        )
         self.show_translation_status_action = self._add_action(
             view_menu, self.tr("Show Translation Status"), checkable=True
         )

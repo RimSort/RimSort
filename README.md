@@ -44,6 +44,60 @@ With [direnv](https://direnv.net/) (and ideally [nix-direnv](https://github.com/
 
 See `flake.nix` and `nix/parts/` for the plumbing.
 
+## Conflict analysis (source development)
+
+In a source checkout configured with the compatible native conflict detector,
+choose **View → Analyze Mod Conflicts** to scan the current active list in
+its displayed order, including unsaved changes. The report is best effort:
+no findings do not prove that the mod list is conflict-free. Review the
+findings and scan diagnostics; the summary shows the number of parsed mods and
+mods involved in conflicts, distinct from the snapshot's usable input count.
+The findings view opens on the highest non-empty severity bucket (errors,
+otherwise warnings, otherwise info). You can then combine severity toggles,
+a target search, a finding-type selector, and the affected-mod sidebar without
+rerunning the detector. The sidebar lists only mods that participate in
+reported findings and shows report-wide error/warning/info counts per mod;
+those counts are not additive because one finding can involve several mods.
+Selecting a finding opens a structured inspector with translated severity,
+target, mechanism, participant mod actions, and reported outcome details.
+Technical details are built only when their collapsed section is opened for
+the selected finding; raw finding data has a separate lazy disclosure.
+Reset filters clears the
+mod/text/type filters and restores that initial severity choice.
+Scan notes live on their own tab and show a scan-wide attention count even for
+complete scans. The notes tab is independent from the current finding filters;
+ordinary informational diagnostics stay available there without changing the
+incomplete or stale status, and additional raw note data also stays behind an
+explicit disclosure.
+An incomplete result means input or analysis was skipped or degraded. A stale
+result means the active snapshot may have changed; run the analysis again.
+Changes on disk may not always be detected. If the game version is unknown,
+version-specific content may be skipped and the result is marked incomplete.
+Known native diagnostic codes use translatable templates; unknown codes fall
+back to the native message, and embedded error details may remain untranslated.
+
+The scan runs in a separate worker. Use **Cancel scan** or close the dialog to
+request cancellation; termination may take time, and cancellation does not
+produce a completed report. Inputs and reports have no application-defined
+size caps: large XML files, managed assemblies, or many findings can consume
+substantial memory or exhaust it, including in the RimSort process.
+
+For Linux source development, build the compatible detector checkout's debug
+FFI library and supply its absolute path before starting RimSort:
+
+```sh
+cd /path/to/rimworld-conflict-detector
+cargo build --locked -p rcd-ffi
+cd /path/to/RimSort
+RIMSORT_DEV=1 RIMSORT_RCD_LIBRARY=/absolute/path/to/rimworld-conflict-detector/target/debug/librcd_ffi.so uv run python -m app
+```
+
+The override is for uncompiled development mode only; the library must match
+the integration's expected FFI and report schema. A missing or unloadable
+library causes the scan to fail. Bundling and packaged distribution of this
+integration are not yet supported or verified; the existing release and Nix
+installation instructions above do not imply that they include the detector.
+
 ## Contributing
 
 Bugs and feature requests are tracked in the [Issues][Issues] section of this repo. If you run into a bug or have a feature suggestion, feel free to create an Issue here yourself!
