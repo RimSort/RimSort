@@ -23,6 +23,7 @@ class DownloadRimWorldDialog(QDialog):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setObjectName("DownloadRimWorldDialog")
         self.setWindowTitle(self.tr("Download RimWorld Version"))
         self.setMinimumWidth(400)
         self.version_service = VersionDataService()
@@ -61,6 +62,7 @@ class DownloadRimWorldDialog(QDialog):
 
         # Download Button
         self.download_button = QPushButton(self.tr("Download"))
+        self.download_button.setObjectName("downloadButton")
         self.download_button.clicked.connect(self._on_download)
 
         # Add a note explaining the console will appear
