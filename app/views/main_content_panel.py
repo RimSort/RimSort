@@ -672,14 +672,30 @@ class MainContent(QObject):
         if saved_dividers:
             self.mods_panel.active_mods_list.restore_dividers(saved_dividers)
         # Use current UI state from the combobox and button for inactive mods.
-        sort_key = ModsPanelSortKey[self.mods_panel.inactive_mods_sort_key]
-        descending = self.mods_panel.inactive_sort_descending
-        self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
-            list_type="inactive",
-            uuids=inactive_mods_uuids,
-            key=sort_key,
-            descending=descending,
-        )
+        current_inactive_paths = self.mods_panel.inactive_mods_list.paths
+        if self.settings.save_inactive_mods_sort_state and current_inactive_paths:
+            inactive_set = set(inactive_mods_uuids)
+            preserved_inactive = [
+                u for u in current_inactive_paths if u in inactive_set
+            ]
+            preserved_set = set(preserved_inactive)
+            new_inactive = [
+                u for u in inactive_mods_uuids if u not in preserved_set
+            ]
+            self.mods_panel.inactive_mods_list.recreate_mod_list(
+                list_type="Inactive",
+                uuids=preserved_inactive + new_inactive,
+                filtering=True,
+            )
+        else:
+            sort_key = ModsPanelSortKey[self.mods_panel.inactive_mods_sort_key]
+            descending = self.mods_panel.inactive_sort_descending
+            self.mods_panel.inactive_mods_list.recreate_mod_list_and_sort(
+                list_type="Inactive",
+                uuids=inactive_mods_uuids,
+                key=sort_key,
+                descending=descending,
+            )
         self.mods_panel.active_mods_list._latest_save_package_ids = None
         self.mods_panel.inactive_mods_list._latest_save_package_ids = None
         self.mods_panel.recalculate_list_errors_warnings("Active")
@@ -1945,6 +1961,10 @@ class MainContent(QObject):
             return False
         finally:
             EventBus().do_save_button_animation_stop.emit()
+            if self.mods_panel.active_mods_list.selectedItems():
+                self.mods_panel.active_mods_list.setFocus()
+            elif self.mods_panel.inactive_mods_list.selectedItems():
+                self.mods_panel.inactive_mods_list.setFocus()
 
     def _do_restore(self) -> None:
         """
