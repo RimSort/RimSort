@@ -11,6 +11,7 @@ from app.controllers.metadata_db_controller import AuxMetadataController
 from app.models.metadata.metadata_structure import AboutXmlMod, ListedMod
 from app.models.settings import Settings
 from app.utils.aux_db_utils import auxdb_get_mod_tags
+from app.utils.custom_list_widget_item_metadata import _category_color_for
 from app.utils.generic import scanpath
 
 # Simple in-memory cache for folder sizes: {mod_path: (mtime, size_bytes)}
@@ -320,6 +321,19 @@ def _get_path_to_color_map(
                     path_to_color[path] = aux_entry.color_hex
     except Exception as e:
         logger.warning(f"Failed to fetch auxiliary metadata for batch: {e}")
+    # Category membership colors the mod everywhere: mods
+    # without a hand-picked color sort by their category's color, the
+    # same resolver the metadata constructor injects
+    for path in paths:
+        if path in path_to_color:
+            continue
+        try:
+            color = _category_color_for(settings, path)
+        except Exception as e:
+            logger.warning(f"Category color mapping for sorting failed: {e}")
+            break
+        if color is not None:
+            path_to_color[path] = color.name().lower()
     return path_to_color
 
 
@@ -553,7 +567,7 @@ class FolderSizeRequestWorker(QObject):
     Runs in a non-GUI QThread so that computing a (potentially large) folder
     size can never block the GUI thread when a mod is clicked. Requests are
     queued and processed sequentially; results carry a request id so callers
-    can discard stale replies for previously displayed mods.
+    can discard replies for previously displayed mods.
 
     Signals:
         requested: Emitted by the caller to queue (uuid, request_id)

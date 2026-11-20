@@ -35,6 +35,11 @@ ALLOWED: set[str] = {
     # Platform-guarded: find_steam_folder only defined on win32
     "app/controllers/settings_controller.py: from app.utils.win_find_steam import find_steam_folder",
     "app/utils/steam/availability.py: from app.utils.win_find_steam import find_steam_folder",
+    # AppInfo in restart_application: same generic -> app_info chain as
+    # the privatebin import above
+    "app/utils/generic.py: from app.utils.app_info import AppInfo",
+    # Modern UI modules are only loaded when that profile is active
+    "app/views/main_window.py: from app.views.modern.modern_main_content import ModernMainContent",
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parent
