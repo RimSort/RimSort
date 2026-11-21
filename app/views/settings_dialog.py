@@ -900,6 +900,16 @@ This basically preserves your mod coloring, user notes etc. for this many second
             self.show_duplicate_mods_warning_checkbox
         )
 
+        self.clear_ignored_duplicate_mods_button = QPushButton(
+            self.tr("Clear ignored duplicate mods")
+        )
+        self.clear_ignored_duplicate_mods_button.setToolTip(
+            self.tr("Show the duplicate mods warning again for package IDs you ignored")
+        )
+        modlist_option_group_box_layout.addWidget(
+            self.clear_ignored_duplicate_mods_button
+        )
+
         # Recently updated mods indicator checkbox
         self.mod_list_updated_indicator_checkbox = QCheckBox(
             self.tr("Show recently updated mods indicator")

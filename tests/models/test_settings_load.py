@@ -149,6 +149,20 @@ def test_load_creates_missing_settings_file(tmp_path: Path) -> None:
     assert json.loads(settings_file.read_text(encoding="utf-8"))["instances"]
 
 
+def test_ignored_duplicate_mods_round_trip(tmp_path: Path) -> None:
+    """Ignored duplicate mods survive a save and load."""
+    settings_file = tmp_path / "settings.json"
+    settings = _make_settings(settings_file)
+    settings.load()
+    settings.ignored_duplicate_mods = {"a.mod": ["/x", "/y"]}
+    settings.save()
+
+    reloaded = _make_settings(settings_file)
+    reloaded.load()
+
+    assert reloaded.ignored_duplicate_mods == {"a.mod": ["/x", "/y"]}
+
+
 @pytest.mark.skipif(
     sys.platform != "win32", reason="Read-only file attribute is Windows-only"
 )
