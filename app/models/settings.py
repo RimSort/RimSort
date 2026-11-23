@@ -177,6 +177,41 @@ class Settings(QObject):
         self.enable_themes: bool = True
         self.theme_name: str = "RimPy"
 
+        # Profile (mod-management UI format)
+        # "RimSort" = classic layout, "RimSort - Modern UI" = modern layout
+        self.profile_format: str = "RimSort"
+
+        # Active Columns: exactly 6 slots, each naming a column shown in the
+        # modern center table. Slot 1 defaults to RimSort's bundled
+        # "Default" column; remaining slots default to "None".
+        self.active_columns: list[str] = [
+            "Default",
+            "Mod/Game Version",
+            "Author",
+            "Modified Time/Workshop Updated",
+            "Folder Size",
+            "Version",
+        ]
+
+        # Categories: path to the shareable categories file. Empty = the
+        # default location in app storage (created with a "Core" category
+        # holding RimWorld on first use).
+        self.categories_file: str = ""
+
+        # Modern UI row style: striped (alternating) or plain background
+        self.modern_ui_striped_rows: bool = False
+
+        # Modern UI category divider style: "solid" (flat MO2-style
+        # blocks, no gradients) or "neon" (the gradient + slash chips)
+        self.modern_ui_category_style: str = "solid"
+
+        # Modern UI category text alignment: "left", "center", or "right"
+        self.modern_ui_category_text_align: str = "center"
+
+        # Modern UI active-mod coloring: "default" (RimSort's native
+        # mod color display) or "double_gradient" (the centered fade)
+        self.modern_ui_active_mod_style: str = "double_gradient"
+
         self.font_family: str = QApplication.font().family()
         self.font_size: int = 12
 

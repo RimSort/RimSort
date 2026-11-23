@@ -1,0 +1,135 @@
+/* Modern UI profile palette - the mock's dark navy, blue accents.
+   Scoped under #ModernMainPanel so RimSort themes stay untouched outside. */
+
+#ModernMainPanel {
+  background: #0b1320;
+}
+#ModernMainPanel QFrame#ModernLeftPanel,
+#ModernMainPanel QFrame#ModernRightPanel,
+#ModernMainPanel QFrame#ModernCenterPanel {
+  background: #111b2b;
+  border: 1px solid #23324a;
+  border-radius: 8px;
+}
+/* Only the named modern labels take the slate color - classic row
+   widgets and info-panel values keep their own theme colors */
+#ModernMainPanel QLabel#ModernPanelHeader {
+  color: #e6edf6;
+  font-weight: 600;
+  background: transparent;
+}
+#ModernMainPanel QLabel#ModernCountChip {
+  color: #93a4bd;
+  background: #0c1626;
+  border: 1px solid #23324a;
+  border-radius: 9px;
+  padding: 1px 8px;
+}
+#ModernMainPanel QLabel#ModernPanelSublabel {
+  color: #5e6f88;
+}
+#ModernMainPanel QLineEdit#ModernSearchBox {
+  background: #0c1626;
+  color: #e6edf6;
+  border: 1px solid #23324a;
+  border-radius: 6px;
+  padding: 4px 8px;
+  selection-background-color: #3b82f6;
+}
+#ModernMainPanel QTreeWidget {
+  background: #162234;
+  /* Only visible when her Theme Settings (Modern UI) picks "Striped";
+     ignored while alternating row colors are off */
+  alternate-background-color: #1a2740;
+  color: #e6edf6;
+  border: 1px solid #1a2638;
+  border-radius: 6px;
+  outline: 0;
+}
+#ModernMainPanel QTreeWidget::item {
+  min-height: 24px;
+}
+#ModernMainPanel QTreeWidget::item:selected {
+  background: #23324a;
+  color: #e6edf6;
+}
+#ModernMainPanel QTreeWidget::item:hover {
+  background: #1e3048;
+}
+#ModernMainPanel QHeaderView::section {
+  background: #0c1626;
+  color: #93a4bd;
+  border: none;
+  padding: 5px 6px;
+  font-weight: 600;
+}
+/* The empty area right of the last header section blends in instead of
+   showing the default grey band */
+#ModernMainPanel QHeaderView {
+  background: #0c1626;
+  border: none;
+}
+#ModernMainPanel QSplitter::handle {
+  background: #0d1726;
+}
+#ModernMainPanel QSplitter::handle:hover {
+  background: #3b82f6;
+}
+#ModernMainPanel QListWidget {
+  background: #162234;
+  color: #e6edf6;
+  border: 1px solid #1a2638;
+  border-radius: 6px;
+  outline: 0;
+}
+#ModernMainPanel QListWidget::item {
+  border-radius: 4px;
+  margin: 1px 2px;
+}
+#ModernMainPanel QListWidget::item:selected {
+  background: #23324a;
+  color: #e6edf6;
+}
+#ModernMainPanel QListWidget::item:hover {
+  background: #1e3048;
+}
+#ModernMainPanel QScrollArea {
+  background: transparent;
+  border: none;
+}
+#ModernMainPanel QScrollArea > QWidget > QWidget {
+  background: transparent;
+}
+#ModernMainPanel QScrollBar:vertical {
+  background: #0c1626;
+  width: 10px;
+  border-radius: 5px;
+}
+#ModernMainPanel QScrollBar::handle:vertical {
+  background: #243349;
+  border-radius: 5px;
+  min-height: 30px;
+}
+#ModernMainPanel QScrollBar::handle:vertical:hover {
+  background: #3b82f6;
+}
+#ModernMainPanel QScrollBar::add-line:vertical,
+#ModernMainPanel QScrollBar::sub-line:vertical {
+  height: 0;
+}
+/* Left panel section cards (mock's mini containers) */
+#ModernLeftPanel QFrame#sectionCard {
+    background: #131c2e;
+    border: 1px solid #23324a;
+    border-radius: 8px;
+}
+#ModernLeftPanel QToolButton {
+    background: transparent;
+    border: none;
+    color: #e6edf6;
+    font-weight: 600;
+    padding: 2px;
+}
+#ModernLeftPanel QToolButton:hover {
+    color: #93a4bd;
+}

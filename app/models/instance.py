@@ -6,6 +6,18 @@ from app.utils.app_info import AppInfo
 from app.utils.constants import DEFAULT_INSTANCE_NAME, INSTANCE_FOLDER_NAME
 
 
+def _default_steamcmd_install_path() -> str:
+    # Deferred: calling AppInfo() at class-definition time froze the
+    # AppInfo singleton during module import, before __main__ processes
+    # the --dev flag - which silently sent every dev run to production
+    # storage. Evaluate per-instantiation instead.
+    return str(
+        Path(
+            AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / DEFAULT_INSTANCE_NAME
+        )
+    )
+
+
 class Instance(msgspec.Struct):
     """
     Data model for a RimWorld game instance.
@@ -21,10 +33,8 @@ class Instance(msgspec.Struct):
     workshop_folder: str = ""
     run_args: str = ""
     steamcmd_auto_clear_depot_cache: bool = True
-    steamcmd_install_path: str = str(
-        Path(
-            AppInfo().app_storage_folder / INSTANCE_FOLDER_NAME / DEFAULT_INSTANCE_NAME
-        )
+    steamcmd_install_path: str = msgspec.field(
+        default_factory=_default_steamcmd_install_path
     )
     steamcmd_ignore: bool = False
     steam_client_integration: bool = False
