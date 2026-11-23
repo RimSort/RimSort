@@ -28,6 +28,18 @@
               "steam"
               "steam-unwrapped"
             ];
+          # checkov (the IaC linter for .github/workflows) pulls
+          # python3.14-ecdsa, which nixpkgs marks insecure for CVE-2024-23342:
+          # a timing side-channel in ECDSA signing (Minerva) that can recover
+          # private key material from enough signatures.
+          #
+          # Accepted because checkov is a developer-time lint tool, is not part
+          # of the rimsort runtime closure, and never signs anything. Drop this
+          # if checkov ever leaves the hook set.
+          #
+          # nixpkgs pins the name, so a bump that renames it fails loudly here
+          # instead of silently.
+          permittedInsecurePackages = [ "python3.14-ecdsa-0.19.2" ];
         };
       };
     };
