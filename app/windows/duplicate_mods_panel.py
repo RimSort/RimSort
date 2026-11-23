@@ -1,10 +1,32 @@
 from loguru import logger
 
 from app.controllers.metadata_controller import MetadataController
+from app.utils.button_factory import ButtonConfig, ButtonType
 from app.utils.mod_info import ModInfo
 from app.windows.base_mods_panel import (
     BaseModsPanel,
 )
+
+
+def filter_ignored_duplicates(
+    duplicate_mods: dict[str, list[str]],
+    ignored: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    """
+    Remove duplicate groups the user ignored, unless their paths have changed.
+
+    :param duplicate_mods: Package ID mapped to the paths of its copies.
+    :param ignored: Lowercased package ID mapped to the sorted paths seen when
+        the user ignored it.
+    :return: A new dict with only the groups that should still be shown.
+    """
+    visible: dict[str, list[str]] = {}
+    for packageid, paths in duplicate_mods.items():
+        if ignored.get(packageid.lower()) == sorted(paths):
+            logger.info(f"Ignoring duplicate mods for package ID: {packageid}")
+            continue
+        visible[packageid] = paths
+    return visible
 
 
 class DuplicateModsPanel(BaseModsPanel):
@@ -33,7 +55,7 @@ class DuplicateModsPanel(BaseModsPanel):
             duplicate_mods: Dictionary mapping package IDs to lists of UUIDs of duplicate mods.
         """
         logger.debug("Initializing DuplicateModsPanel")
-        self.duplicate_mods = duplicate_mods
+        self.duplicate_mods = dict(duplicate_mods)
 
         super().__init__(
             object_name="duplicateModsPanel",
@@ -50,6 +72,13 @@ class DuplicateModsPanel(BaseModsPanel):
         button_configs = self._get_base_button_configs()
         self._extend_button_configs_with_steam_actions(button_configs)
         button_configs.append(
+            ButtonConfig(
+                button_type=ButtonType.CUSTOM,
+                text=self.tr("Ignore Selected"),
+                custom_callback=self._ignore_selected,
+            )
+        )
+        button_configs.append(
             self._create_delete_button_config(self.tr("Delete Selected Mods"))
         )
         self._setup_buttons_from_config(button_configs)
@@ -60,6 +89,39 @@ class DuplicateModsPanel(BaseModsPanel):
 
         # TODO: let user configure window launch state and size from settings controller
         self.showNormal()
+
+    def _ignore_selected(self) -> None:
+        """
+        Stop warning about the package IDs of the checked rows.
+
+        The whole package ID group is ignored, even if only one row is checked.
+        The warning comes back when the copies of that package ID change.
+        """
+        selected_paths = {
+            path
+            for row in self._get_selected_row_indices()
+            if (path := self._get_key_from_row(row)) is not None
+        }
+        packageids = [
+            packageid
+            for packageid, paths in self.duplicate_mods.items()
+            if selected_paths.intersection(paths)
+        ]
+        if not packageids:
+            logger.info("Ignore requested with no duplicate mods selected")
+            return
+
+        for packageid in packageids:
+            self.settings.ignored_duplicate_mods[packageid.lower()] = sorted(
+                self.duplicate_mods.pop(packageid)
+            )
+        self.settings.save()
+        logger.info(f"Ignored duplicate mods for package IDs: {packageids}")
+
+        if self.duplicate_mods:
+            self._populate_from_metadata()
+        else:
+            self.close()
 
     def _populate_from_metadata(self) -> None:
         """

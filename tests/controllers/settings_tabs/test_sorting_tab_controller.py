@@ -145,3 +145,64 @@ class TestSortingTabUpdateModel:
 
         assert settings.mod_list_updated_indicator is True
         assert settings.mod_list_updated_threshold_days == 14
+
+
+class TestClearIgnoredDuplicateMods:
+    """The clear button empties the ignore list only when settings are applied."""
+
+    def test_button_enabled_only_with_ignores(
+        self, sorting_tab: tuple[SortingTabController, Settings, MagicMock]
+    ) -> None:
+        controller, settings, dialog = sorting_tab
+        settings.ignored_duplicate_mods = {}
+        controller.update_view_from_model()
+        dialog.clear_ignored_duplicate_mods_button.setEnabled.assert_called_with(False)
+
+        settings.ignored_duplicate_mods = {"a.mod": ["/x", "/y"]}
+        controller.update_view_from_model()
+        dialog.clear_ignored_duplicate_mods_button.setEnabled.assert_called_with(True)
+
+    def test_clear_applied_on_save(
+        self, sorting_tab: tuple[SortingTabController, Settings, MagicMock]
+    ) -> None:
+        controller, settings, _dialog = sorting_tab
+        settings.ignored_duplicate_mods = {"a.mod": ["/x", "/y"]}
+
+        controller._on_clear_ignored_duplicate_mods_clicked()
+        controller.update_model_from_view()
+
+        assert settings.ignored_duplicate_mods == {}
+
+    def test_reopening_dialog_discards_pending_clear(
+        self, sorting_tab: tuple[SortingTabController, Settings, MagicMock]
+    ) -> None:
+        controller, settings, _dialog = sorting_tab
+        settings.ignored_duplicate_mods = {"a.mod": ["/x", "/y"]}
+
+        controller._on_clear_ignored_duplicate_mods_clicked()
+        controller.update_view_from_model()
+        controller.update_model_from_view()
+
+        assert settings.ignored_duplicate_mods == {"a.mod": ["/x", "/y"]}
+
+    def test_no_clear_keeps_ignores(
+        self, sorting_tab: tuple[SortingTabController, Settings, MagicMock]
+    ) -> None:
+        controller, settings, _dialog = sorting_tab
+        settings.ignored_duplicate_mods = {"a.mod": ["/x", "/y"]}
+
+        controller.update_model_from_view()
+
+        assert settings.ignored_duplicate_mods == {"a.mod": ["/x", "/y"]}
+
+
+def test_clear_button_click_is_connected(
+    sorting_tab: tuple[SortingTabController, Settings, MagicMock],
+) -> None:
+    controller, _settings, dialog = sorting_tab
+
+    controller.connect_signals()
+
+    dialog.clear_ignored_duplicate_mods_button.clicked.connect.assert_called_once_with(
+        controller._on_clear_ignored_duplicate_mods_clicked
+    )
