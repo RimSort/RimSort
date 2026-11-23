@@ -457,7 +457,7 @@ class ModListItemInner(QWidget):
         self._hovered = False
         if self._selected:
             return
-        if self.mod_color is None:
+        if self.filtered or self.mod_color is None:
             self.setStyleSheet("")
         else:
             self.handle_mod_color_change(init=True)
@@ -660,6 +660,7 @@ class ModListItemInner(QWidget):
         Repolish the widget items
         """
         item_data = item.data(Qt.ItemDataRole.UserRole)
+        self.filtered = bool(item_data["filtered"])
         error_tooltip = item_data["errors"]
         warning_tooltip = item_data["warnings"]
 
@@ -748,12 +749,16 @@ class ModListItemInner(QWidget):
             self._resize_text_after_icon_toggle()
         # Recalculate the widget label's styling based on item data
         widget_object_name = self.main_label.objectName()
-        if item_data["mod_color"] is not None:
-            self.handle_mod_color_change(item)
-            new_widget_object_name = "ListItemLabelCustomColor"
-        elif item_data["filtered"]:
+        if item_data["filtered"]:
             new_widget_object_name = "ListItemLabelFiltered"
-            self.handle_mod_color_reset()
+            self.setStyleSheet("")
+        elif item_data["mod_color"] is not None:
+            if not self._selected:
+                self.handle_mod_color_change(item)
+            else:
+                self.mod_color = item_data["mod_color"]
+                self.setStyleSheet("")
+            new_widget_object_name = "ListItemLabelCustomColor"
         elif error_tooltip or warning_tooltip:
             soft_warning = bool(item_data.__dict__.get("soft_warning", False))
             if soft_warning and not error_tooltip:
@@ -3049,6 +3054,7 @@ class ModListWidget(QListWidget):
                 widget.update_translation_status(has_translation)
 
             # Ensure initial icon states reflect current item data
+            widget.set_selected(item.isSelected())
             widget.repolish(item)
 
     def check_widgets_visible(self) -> None:
@@ -4013,6 +4019,22 @@ class ModListWidget(QListWidget):
         :param filtering: if True, UUIDs are already sorted; skip sorting
         """
         logger.info(f"Internally recreating {list_type} mod list")
+        selected_uuids: set[str] = set()
+        for item in self.selectedItems():
+            item_data = item.data(Qt.ItemDataRole.UserRole)
+            if item_data is not None and not getattr(item_data, "is_divider", False):
+                selected_uuids.add(item_data["path"])
+
+        current_uuid: str | None = None
+        curr_item = self.currentItem()
+        if curr_item is not None:
+            curr_data = curr_item.data(Qt.ItemDataRole.UserRole)
+            if curr_data is not None and not getattr(curr_data, "is_divider", False):
+                current_uuid = curr_data["path"]
+
+        scroll_pos = self.verticalScrollBar().value()
+        had_focus = self.hasFocus()
+
         # Skip sorting if UUIDs are already filtered/sorted (filtering=True)
         if not filtering:
             # Sort inactive mods using saved settings if enabled
@@ -4099,6 +4121,22 @@ class ModListWidget(QListWidget):
             self.handle_rows_removed, Qt.ConnectionType.QueuedConnection
         )
         # Enable updates and repaint
+        if selected_uuids or current_uuid:
+            for row in range(self.count()):
+                item = self.item(row)
+                item_data = item.data(Qt.ItemDataRole.UserRole)
+                if item_data is None or getattr(item_data, "is_divider", False):
+                    continue
+                item_uuid = item_data["path"]
+                if item_uuid in selected_uuids:
+                    item.setSelected(True)
+                if item_uuid == current_uuid:
+                    self.setCurrentItem(item)
+            if had_focus:
+                self.setFocus()
+
+        self.verticalScrollBar().setValue(scroll_pos)
+
         self.setUpdatesEnabled(True)
         self.repaint()
         # Load visible widgets after rebuild completes
