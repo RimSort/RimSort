@@ -50,6 +50,7 @@ class MetadataController(QObject):
     mod_deleted_signal = Signal(str)
     mod_metadata_updated_signal = Signal(str)
     show_warning_signal = Signal(str, str, str, str)
+    metadata_refresh_started = Signal()
     metadata_refreshed = Signal()
     steam_db_updated = Signal()
 
@@ -115,6 +116,7 @@ class MetadataController(QObject):
     @Slot()
     def refresh_metadata(self) -> None:
         """Refresh the metadata."""
+        self.metadata_refresh_started.emit()
         self.reset_paths()
         prefer_versioned = self.settings.prefer_versioned_about_tags
         case_insensitive = self.settings.case_insensitive_about_xml_lookup

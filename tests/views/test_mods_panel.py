@@ -1,5 +1,6 @@
+import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,12 +8,14 @@ from PySide6.QtCore import QModelIndex, QPointF, QSize, Qt
 from PySide6.QtGui import QColor, QDropEvent
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
+from app.models.divider import DividerData
 from app.models.metadata.metadata_structure import (
     AboutXmlMod,
     CaseInsensitiveSet,
     CaseInsensitiveStr,
 )
 from app.models.settings import Settings
+from app.services.conflict_snapshot import snapshot_active_mods
 from app.utils.app_info import AppInfo
 from app.utils.custom_list_widget_item import CustomListWidgetItem
 from app.utils.custom_list_widget_item_metadata import CustomListWidgetItemMetadata
@@ -74,6 +77,125 @@ def _make_active_mod_list(
         widget.addItem(item)
 
     return widget
+
+
+def make_two_mod_list(qtbot: Any, tmp_path: Path) -> tuple[ModListWidget, Path, Path]:
+    first, second = tmp_path / "first", tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    mods = {
+        str(first): AboutXmlMod(name="First", _mod_path=first),
+        str(second): AboutXmlMod(name="Second", _mod_path=second),
+    }
+    widget = _make_active_mod_list(qtbot, mods, list(mods))
+    controller = cast(MagicMock, widget.metadata_controller)
+    controller.get_mod.side_effect = mods.get
+    controller.game_version = "1.7"
+    return widget, first, second
+
+
+def test_conflict_snapshot_uses_live_unsaved_order(qtbot: Any, tmp_path: Path) -> None:
+    widget, first, second = make_two_mod_list(qtbot, tmp_path)
+    widget.insertItem(0, widget.takeItem(1))
+    snapshot = snapshot_active_mods(widget, widget.metadata_controller, "instance-a")
+    assert widget.paths == [str(first), str(second)]
+    assert snapshot.mod_paths == (str(second), str(first))
+    assert snapshot.issues == ()
+    assert snapshot.game_version == "1.7"
+    assert snapshot.instance_id == "instance-a"
+
+
+def test_conflict_snapshot_includes_hidden_and_unrendered_rows_and_skips_dividers(
+    qtbot: Any, tmp_path: Path
+) -> None:
+    widget, first, second = make_two_mod_list(qtbot, tmp_path)
+    divider = CustomListWidgetItem()
+    divider.setData(
+        Qt.ItemDataRole.UserRole,
+        DividerData(uuid="divider", name="Divider"),
+        avoid_emit=True,
+    )
+    widget.insertItem(1, divider)
+    widget.item(0).setHidden(True)
+    assert widget.itemWidget(widget.item(1)) is None
+    assert widget.itemWidget(widget.item(2)) is None
+    snapshot = snapshot_active_mods(widget, widget.metadata_controller, "instance-a")
+    assert snapshot.mod_paths == (str(first), str(second))
+    assert not snapshot.issues
+
+
+def test_conflict_snapshot_reports_unusable_rows(qtbot: Any, tmp_path: Path) -> None:
+    widget, first, second = make_two_mod_list(qtbot, tmp_path)
+    cast(MagicMock, widget.metadata_controller).get_mod.side_effect = {
+        str(second): AboutXmlMod(name="Missing", _mod_path=tmp_path / "missing")
+    }.get
+    snapshot = snapshot_active_mods(widget, widget.metadata_controller, "instance-a")
+    assert snapshot.mod_paths == ()
+    assert [issue.path for issue in snapshot.issues] == [str(first), str(second)]
+    assert all(issue.message for issue in snapshot.issues)
+
+
+@pytest.mark.skipif(
+    os.name == "nt", reason="surrogate-escaped byte paths are Unix-specific"
+)
+def test_conflict_snapshot_rejects_non_utf8_path(qtbot: Any, tmp_path: Path) -> None:
+    widget, first, second = make_two_mod_list(qtbot, tmp_path)
+    bad = tmp_path / os.fsdecode(b"invalid-\xff")
+    bad.mkdir()
+    mod = AboutXmlMod(name="Bad", _mod_path=bad)
+    cast(MagicMock, widget.metadata_controller).get_mod.side_effect = {
+        str(first): mod,
+        str(second): AboutXmlMod(name="Second", _mod_path=second),
+    }.get
+    snapshot = snapshot_active_mods(widget, widget.metadata_controller, "instance-a")
+    assert snapshot.mod_paths == (str(second),)
+    assert len(snapshot.issues) == 1
+    assert snapshot.issues[0].path == str(first)
+    assert snapshot.issues[0].message
+
+
+@pytest.mark.skipif(os.name == "nt", reason="surrogate-escaped paths are Unix-specific")
+def test_conflict_snapshot_retains_non_utf8_row_key(qtbot: Any, tmp_path: Path) -> None:
+    bad = tmp_path / os.fsdecode(b"invalid-\xff")
+    bad.mkdir()
+    key = str(bad)
+    mods = {key: AboutXmlMod(name="Bad", _mod_path=bad)}
+    widget = _make_active_mod_list(qtbot, mods, [key])
+    controller = cast(MagicMock, widget.metadata_controller)
+    controller.get_mod.side_effect = mods.get
+    controller.game_version = "1.7"
+    snapshot = snapshot_active_mods(widget, controller, "instance-a")
+    assert snapshot.mod_paths == ()
+    assert len(snapshot.issues) == 1
+    assert snapshot.issues[0].path == key
+
+
+@pytest.mark.parametrize("version", ["", "  ", "Unknown", "uNkNoWn", " Unknown "])
+def test_conflict_snapshot_normalizes_unknown_version(
+    qtbot: Any, tmp_path: Path, version: str
+) -> None:
+    widget, first, _ = make_two_mod_list(qtbot, tmp_path)
+    widget.takeItem(1)
+    cast(MagicMock, widget.metadata_controller).game_version = version
+    snapshot = snapshot_active_mods(widget, widget.metadata_controller, "instance-a")
+    assert snapshot.mod_paths == (str(first),)
+    assert snapshot.game_version is None
+    widget.takeItem(0)
+    assert (
+        snapshot_active_mods(widget, widget.metadata_controller, "instance-a").mod_paths
+        == ()
+    )
+
+
+def test_conflict_snapshot_reports_row_without_path(qtbot: Any, tmp_path: Path) -> None:
+    widget, _, _ = make_two_mod_list(qtbot, tmp_path)
+    item = CustomListWidgetItem()
+    item.setData(Qt.ItemDataRole.UserRole, {}, avoid_emit=True)
+    widget.addItem(item)
+    snapshot = snapshot_active_mods(widget, widget.metadata_controller, "instance-a")
+    assert len(snapshot.issues) == 1
+    assert snapshot.issues[0].path is None
+    assert snapshot.issues[0].message
 
 
 class TestTagEditDialog:
