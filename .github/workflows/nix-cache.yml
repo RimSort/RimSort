@@ -34,7 +34,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Nix
-        uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31
+        uses: cachix/install-nix-action@bb0495a1086c46893eee56f32fd192dfe4a15bb9 # v31
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
