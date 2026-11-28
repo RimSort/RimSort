@@ -20,6 +20,7 @@ def _create_recording_script(script_path: Path) -> Path:
         '#!/bin/sh\nprintf \'%s\\n\' "$@" > "${0}.received"\n',
         encoding="utf-8",
     )
+    script_path.chmod(0o755)
     return Path(f"{script_path}.received")
 
 
@@ -289,8 +290,11 @@ class TestLaunchPosixUpdateScript:
         install_dir = tmp_path / "install dir &; special"
         args_repr = [str(script), str(temp), str(log), str(install_dir)]
 
+        manager = MagicMock()
+        manager._system = "Linux"
+
         _launch_posix_script_and_assert_args(
-            MagicMock(spec=UpdateManager),
+            manager,
             script,
             args_repr,
             temp,
