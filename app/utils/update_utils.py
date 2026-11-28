@@ -215,7 +215,7 @@ class ScriptConfig:
         )
 
     @staticmethod
-    def _build_bash_command(base_args: list[str], needs_elevation: bool) -> list[str]:
+    def _build_direct_command(base_args: list[str], needs_elevation: bool) -> list[str]:
         """
         Build a command list for launching update script directly.
         Used as primary method for modern terminal emulators and standalone execution.
@@ -287,23 +287,24 @@ class ScriptConfig:
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
             terminal_cmd = f'/bin/bash {quoted_args}; read -p "Press enter to close"'
             script_cmd = f"sudo {terminal_cmd}" if needs_elevation else terminal_cmd
+            script_cmd_escaped = script_cmd.replace("\\", "\\\\").replace('"', '\\"')
             return [
                 "osascript",
                 "-e",
-                f'tell app "Terminal" to do script "{script_cmd}"',
+                f'tell app "Terminal" to do script "{script_cmd_escaped}"',
             ]
         elif self.platform == "Windows":
             if needs_elevation:
                 # Properly escape paths for PowerShell with special characters and spaces
                 # Paths need to be quoted for cmd.exe which is the actual executor
-                script_dir = str(script_path.parent)
+                install_dir = str(base_args[3])
                 script_file = str(script_path)
                 temp_path = str(base_args[1])
                 log_path = str(base_args[2])
 
                 # Build the cmd command with properly quoted arguments
                 # Using double quotes for cmd.exe path arguments
-                cmd_command = f'cd /d "{script_dir}" && "{script_file}" "{temp_path}" "{log_path}"'
+                cmd_command = f'cd /d "{install_dir}" && "{script_file}" "{temp_path}" "{log_path}"'
 
                 # Escape single quotes in cmd_command for PowerShell (double them)
                 cmd_command_escaped = cmd_command.replace("'", "''")
@@ -329,9 +330,9 @@ class ScriptConfig:
                     str(base_args[2]),
                 ]
         elif self.platform == "Linux":
-            # Linux: Try direct bash execution first (primary method)
-            cmd = self._build_bash_command(base_args, needs_elevation)
-            logger.debug("Linux: Using direct bash command (primary method)")
+            # Linux: Try direct script execution first (primary method)
+            cmd = self._build_direct_command(base_args, needs_elevation)
+            logger.debug("Linux: Using direct script execution (primary method)")
             return cmd
         else:
             raise ValueError(f"Unsupported platform: {self.platform}")
@@ -2265,11 +2266,13 @@ class UpdateManager(QObject):
                 cwd=cwd,
             )
         else:
-            logger.debug(f"Launching update script with arguments: {args_repr}")
+            script_args = " ".join(f'"{arg}"' for arg in args_repr[2:])
+            cmdline = f'cmd /d /k "{script_args}"'
+            logger.debug(f"Launching update script with command: {cmdline}")
 
             # Use CREATE_NEW_CONSOLE to ensure visible console window without shell=True
             p = subprocess.Popen(
-                args_repr,
+                cmdline,
                 creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
                 cwd=cwd,
             )
