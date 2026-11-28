@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,6 +8,7 @@ from app.utils.generic import (
     check_valid_http_git_url,
     extract_git_dir_name,
     extract_git_user_or_org,
+    platform_specific_open,
     restart_application,
 )
 
@@ -39,6 +41,127 @@ def test_check_valid_http_git_url() -> None:
     assert check_valid_http_git_url("https://github.com/org/RimSort.git") is True
 
     assert check_valid_http_git_url("http://github.com/org/RimSort.git/") is True
+
+
+class TestPlatformSpecificOpen:
+    @pytest.mark.parametrize("platform", ["win32", "darwin", "linux"])
+    @pytest.mark.parametrize("as_string", [False, True])
+    def test_missing_path_warns_without_opening(
+        self, tmp_path: Path, platform: str, as_string: bool
+    ) -> None:
+        missing = tmp_path / "missing" / "mods"
+        path = str(missing) if as_string else missing
+        with (
+            patch("app.utils.generic.sys") as mock_sys,
+            patch("app.utils.generic.os.startfile", create=True) as startfile,
+            patch("app.utils.generic.subprocess.Popen") as popen,
+            patch("app.utils.generic.dialogue.show_warning") as warning,
+        ):
+            mock_sys.platform = platform
+
+            platform_specific_open(path)
+
+            warning.assert_called_once_with(
+                title="Path not found",
+                text="The selected path does not exist.",
+                details=str(missing),
+            )
+            startfile.assert_not_called()
+            popen.assert_not_called()
+
+    @pytest.mark.parametrize("winerror", [2, 3])
+    def test_windows_path_disappearing_during_open_warns(
+        self, tmp_path: Path, winerror: int
+    ) -> None:
+        error = FileNotFoundError("Path disappeared")
+        with (
+            patch.object(error, "winerror", winerror, create=True),
+            patch("app.utils.generic.sys") as mock_sys,
+            patch(
+                "app.utils.generic.os.startfile", create=True, side_effect=error
+            ) as startfile,
+            patch("app.utils.generic.subprocess.Popen") as popen,
+            patch("app.utils.generic.dialogue.show_warning") as warning,
+        ):
+            mock_sys.platform = "win32"
+
+            platform_specific_open(tmp_path)
+
+            startfile.assert_called_once_with(str(tmp_path))
+            warning.assert_called_once_with(
+                title="Path not found",
+                text="The selected path does not exist.",
+                details=str(tmp_path),
+            )
+            popen.assert_not_called()
+
+    @pytest.mark.parametrize("platform", ["win32", "darwin", "linux"])
+    @pytest.mark.parametrize("target", ["directory", "file", "steam_uri", "app"])
+    def test_existing_paths_and_uris_keep_platform_dispatch(
+        self, tmp_path: Path, platform: str, target: str
+    ) -> None:
+        match target:
+            case "directory":
+                path = str(tmp_path)
+            case "file":
+                file = tmp_path / "About.xml"
+                file.touch()
+                path = str(file)
+            case "app":
+                app = tmp_path / "RimWorld.app"
+                app.mkdir()
+                path = str(app)
+            case _:
+                path = "steam://validate/294100"
+        with (
+            patch("app.utils.generic.sys") as mock_sys,
+            patch("app.utils.generic.os.startfile", create=True) as startfile,
+            patch("app.utils.generic.subprocess.Popen") as popen,
+            patch("app.utils.generic.dialogue.show_warning") as warning,
+        ):
+            mock_sys.platform = platform
+
+            platform_specific_open(path)
+
+            warning.assert_not_called()
+            if platform == "win32":
+                startfile.assert_called_once_with(path)
+                popen.assert_not_called()
+            else:
+                startfile.assert_not_called()
+                if platform == "darwin":
+                    command = ["open", path]
+                    if target == "app":
+                        command.append("-R")
+                    popen.assert_called_once_with(command)
+                else:
+                    popen.assert_called_once()
+                    assert popen.call_args.args == (["xdg-open", path],)
+                    assert popen.call_args.kwargs["env"]["LD_LIBRARY_PATH"] == ""
+
+    @pytest.mark.parametrize("winerror", [-2147221003, 5])
+    def test_windows_other_errors_keep_existing_behavior(
+        self, tmp_path: Path, winerror: int
+    ) -> None:
+        error = OSError("Cannot open")
+        with (
+            patch.object(error, "winerror", winerror, create=True),
+            patch("app.utils.generic.sys") as mock_sys,
+            patch("app.utils.generic.os.startfile", create=True, side_effect=error),
+            patch("app.utils.generic.subprocess.Popen") as popen,
+            patch("app.utils.generic.dialogue.show_warning") as warning,
+        ):
+            mock_sys.platform = "win32"
+
+            if winerror == -2147221003:
+                platform_specific_open(tmp_path)
+                popen.assert_called_once_with(["notepad.exe", str(tmp_path)])
+            else:
+                with pytest.raises(OSError) as caught:
+                    platform_specific_open(tmp_path)
+                assert caught.value is error
+                popen.assert_not_called()
+            warning.assert_not_called()
 
 
 class TestRestartApplication:

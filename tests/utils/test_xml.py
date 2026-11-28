@@ -1,6 +1,13 @@
+import errno
 import gzip
+import os
+import sys
 import xml.etree.ElementTree as ET
+from collections.abc import Iterator
+from contextlib import contextmanager
+from io import TextIOWrapper
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import zstandard as zstd
@@ -118,11 +125,179 @@ class TestXmlPathToJson:
 
 class TestJsonToXmlWrite:
     def test_write_and_read_roundtrip(self, tmp_path: Path) -> None:
-        data = {"config": {"setting": "value"}}
-        out_path = str(tmp_path / "output.xml")
-        json_to_xml_write(data, out_path)
-        result = xml_path_to_json(out_path)
-        assert result == data
+        data = {"ModsConfigData": {"activeMods": {"li": ["ludeon.rimworld", "é.mod"]}}}
+        target = tmp_path / "ModsConfig.xml"
+        json_to_xml_write(data, str(target), raise_errs=True)
+
+        expected_xml = (
+            '<?xml version="1.0" ?>\n'
+            "<ModsConfigData>\n"
+            "  <activeMods>\n"
+            "    <li>ludeon.rimworld</li>\n"
+            "    <li>é.mod</li>\n"
+            "  </activeMods>\n"
+            "</ModsConfigData>\n"
+        )
+        assert target.read_bytes() == expected_xml.replace("\n", os.linesep).encode(
+            "utf-8"
+        )
+        assert xml_path_to_json(str(target)) == data
+        assert list(tmp_path.iterdir()) == [target]
+
+    def test_mid_write_failure_preserves_config(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        target = tmp_path / "ModsConfig.xml"
+        original = b"<ModsConfigData><activeMods/></ModsConfigData>\n"
+        target.write_bytes(original)
+        mode = target.stat().st_mode
+
+        @contextmanager
+        def failing_open(
+            file: str | int, mode: str, *, encoding: str, closefd: bool = True
+        ) -> Iterator[TextIOWrapper]:
+            assert mode == "w"
+            with open(file, "w", encoding=encoding, closefd=closefd) as stream:
+                write = stream.write
+
+                def write_prefix_then_fail(data: str) -> int:
+                    write(data[:10])
+                    stream.flush()
+                    raise OSError("injected disk write failure")
+
+                with patch.object(stream, "write", side_effect=write_prefix_then_fail):
+                    yield stream
+
+        monkeypatch.setattr("app.utils.xml.open", failing_open, raising=False)
+        with pytest.raises(OSError, match="injected disk write failure"):
+            json_to_xml_write(
+                {"ModsConfigData": {"version": "1.6"}}, str(target), raise_errs=True
+            )
+
+        assert target.read_bytes() == original
+        assert target.stat().st_mode == mode
+        assert list(tmp_path.iterdir()) == [target]
+
+    def test_stream_open_failure_closes_and_removes_staging_file(
+        self, tmp_path: Path
+    ) -> None:
+        target = tmp_path / "ModsConfig.xml"
+        original = b"<ModsConfigData/>"
+        target.write_bytes(original)
+
+        with (
+            patch(
+                "app.utils.xml.open",
+                side_effect=PermissionError("injected stream open failure"),
+                create=True,
+            ) as failed_open,
+            pytest.raises(PermissionError, match="injected stream open failure"),
+        ):
+            json_to_xml_write(
+                {"ModsConfigData": {"version": "1.6"}}, str(target), raise_errs=True
+            )
+        assert failed_open.call_args is not None
+        fd = failed_open.call_args.args[0]
+        with pytest.raises(OSError) as error:
+            os.fstat(fd)
+        assert error.value.errno == errno.EBADF
+        assert target.read_bytes() == original
+        assert list(tmp_path.iterdir()) == [target]
+
+    def test_replace_failure_preserves_config(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        target = tmp_path / "ModsConfig.xml"
+        original = b"<ModsConfigData><activeMods/></ModsConfigData>\n"
+        target.write_bytes(original)
+        mode = target.stat().st_mode
+        data = {"ModsConfigData": {"version": "1.6"}}
+
+        def fail_replace(source: str, destination: str) -> None:
+            staging = Path(source)
+            assert staging.parent == target.parent.resolve()
+            assert xml_path_to_json(source) == data
+            assert Path(destination).read_bytes() == original
+            raise PermissionError("injected replacement failure")
+
+        monkeypatch.setattr(os, "replace", fail_replace)
+        with (
+            patch("app.utils.json_utils.time.sleep") as sleep,
+            pytest.raises(PermissionError, match="injected replacement failure"),
+        ):
+            json_to_xml_write(data, str(target), raise_errs=True)
+
+        assert sleep.call_count == 4
+        assert target.read_bytes() == original
+        assert target.stat().st_mode == mode
+        assert list(tmp_path.iterdir()) == [target]
+
+    def test_write_through_config_symlink(self, tmp_path: Path) -> None:
+        config_dir = tmp_path / "data"
+        config_dir.mkdir()
+        target = config_dir / "ModsConfig.xml"
+        target.write_bytes(b"<ModsConfigData/>")
+        if sys.platform != "win32":
+            target.chmod(0o640)
+        mode = target.stat().st_mode
+
+        link = tmp_path / "ModsConfig.xml"
+        link_target = target.relative_to(tmp_path)
+        try:
+            link.symlink_to(link_target)
+        except OSError as error:
+            if getattr(error, "winerror", None) == 1314:
+                pytest.skip(
+                    "Windows symlink creation requires Developer Mode or privilege"
+                )
+            raise
+
+        data = {"ModsConfigData": {"version": "1.6"}}
+        json_to_xml_write(data, str(link), raise_errs=True)
+
+        assert link.readlink() == link_target
+        assert target.stat().st_mode == mode
+        assert xml_path_to_json(str(target)) == data
+        assert list(config_dir.iterdir()) == [target]
+
+    def test_write_preserves_locked_config(self, tmp_path: Path) -> None:
+        if sys.platform != "win32":
+            pytest.skip("Windows file sharing semantics")
+        target = tmp_path / "ModsConfig.xml"
+        original = b"<ModsConfigData/>"
+        target.write_bytes(original)
+        before = target.stat()
+
+        with target.open("rb"), pytest.raises(PermissionError):
+            json_to_xml_write(
+                {"ModsConfigData": {"version": "1.6"}}, str(target), raise_errs=True
+            )
+
+        assert target.read_bytes() == original
+        assert target.stat().st_file_attributes == before.st_file_attributes
+        assert list(tmp_path.iterdir()) == [target]
+
+    def test_write_preserves_read_only_config(self, tmp_path: Path) -> None:
+        target = tmp_path / "ModsConfig.xml"
+        original = b"<ModsConfigData/>"
+        target.write_bytes(original)
+        target.chmod(0o444)
+        before = target.stat()
+        try:
+            if os.access(target, os.W_OK):
+                pytest.skip("Process can write to read-only files")
+            with pytest.raises(PermissionError):
+                json_to_xml_write(
+                    {"ModsConfigData": {"version": "1.6"}}, str(target), raise_errs=True
+                )
+            assert target.read_bytes() == original
+            after = target.stat()
+            assert after.st_mode == before.st_mode
+            if sys.platform == "win32":
+                assert after.st_file_attributes == before.st_file_attributes
+            assert list(tmp_path.iterdir()) == [target]
+        finally:
+            target.chmod(0o600)
 
     def test_write_raises_on_error_when_requested(self, tmp_path: Path) -> None:
         with pytest.raises(Exception):  # noqa: B017

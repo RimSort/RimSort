@@ -7,10 +7,11 @@ This module provides:
 
 import os
 import shutil
+import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
+from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 
 from loguru import logger
 from PySide6.QtCore import QThread, Signal
@@ -193,7 +194,7 @@ def create_zip_backup(
     """Create a compressed ZIP backup of a directory.
 
     Recursively archives all files in source_dir to a single ZIP file
-    with compression. Empty directories are not included.
+    with compression and file permissions. Empty directories are not included.
 
     Args:
         source_dir: Source directory to backup
@@ -210,7 +211,7 @@ def create_zip_backup(
     source_path = Path(source_dir)
     backup_file = Path(backup_path)
 
-    if not source_path.exists():
+    if not source_path.is_dir():
         logger.error(f"Source directory does not exist: {source_path}")
         raise OSError(f"Source directory does not exist: {source_path}")
 
@@ -220,7 +221,11 @@ def create_zip_backup(
     # First pass: collect all files and count total for progress reporting
     logger.info(f"Scanning {source_path} for files to backup...")
     file_list = []
-    for root, dirs, files in os.walk(source_path):
+
+    def scan_error(error: OSError) -> None:
+        raise error
+
+    for root, dirs, files in os.walk(source_path, onerror=scan_error):
         for file in files:
             file_path = Path(root) / file
             arcname = file_path.relative_to(source_path)
@@ -229,19 +234,27 @@ def create_zip_backup(
     total_files = len(file_list)
     logger.info(f"Found {total_files} files to backup")
 
-    # Second pass: write files to ZIP with progress updates
-    with ZipFile(backup_file, "w", ZIP_DEFLATED) as zipf:
-        for current_file, (file_path, arcname) in enumerate(file_list, 1):
-            try:
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{backup_file.name}.", suffix=".partial", dir=backup_file.parent
+    )
+    os.close(fd)
+    temporary_path = Path(temporary_name)
+    try:
+        with ZipFile(temporary_path, "w", ZIP_DEFLATED) as zipf:
+            for current_file, (file_path, arcname) in enumerate(file_list, 1):
                 # Read file into memory first, then write to ZIP
                 # This avoids file lock issues when the file is in use
                 with open(file_path, "rb") as f:
                     file_data = f.read()
-                zipf.writestr(str(arcname), file_data)
+                info = ZipInfo.from_file(
+                    file_path, str(arcname), strict_timestamps=False
+                )
+                zipf.writestr(info, file_data, compress_type=ZIP_DEFLATED)
                 # Update progress
                 if progress_callback:
                     progress_callback(current_file, total_files)
-            except Exception as e:
-                logger.error(f"Failed to add {file_path} to backup: {e}")
+        os.replace(temporary_path, backup_file)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
     logger.info(f"Created backup: {backup_file}")

@@ -224,3 +224,38 @@ If you need to drive Nuitka directly (for example, for local iteration), note th
 `freeze_application()` in `distribute.py` first adds the `SteamworksPy` submodule to
 `PYTHONPATH` and then compiles the `app/` package. Prefer the `distribute.py` script
 for real builds rather than invoking Nuitka by hand.
+
+### Native AppImage upgrade and recovery tests
+
+The Ubuntu 22.04 post-build job runs `tests/integration/test_appimage_upgrade.py`
+against the actual candidate AppImage under Xvfb and FUSE. It checks:
+
+- Pinned stable v1.17.4 upgrading to the candidate, including HTTP download,
+  installer handoff, replacement, normal candidate startup and clean shutdown.
+- The candidate's own updater performing another replacement. This uses the same
+  candidate bytes, bypassing release selection, to exercise the current updater.
+- A failed candidate startup retaining its previous AppImage. The test restores
+  that backup, undoes its injected fixture database corruption, and verifies a
+  normal launch and clean shutdown.
+- Preservation of fixture user files and backup cleanup after successful startup.
+
+The baseline download is checked against a pinned SHA256. A local HTTP server
+supplies the candidate. The installing GUI uses the existing helper entrypoint to
+configure disposable settings and accept the installation confirmation; replacement
+and recovered apps use their ordinary entrypoints. Process termination is restricted
+to the test GUI, and a relaunch barrier allows deterministic startup-failure injection.
+The actual download, staging, installer script, replacement and application startup
+are exercised. Release discovery and privileged installations are outside this test.
+
+On an x86_64 Linux host with FUSE, Xvfb, xdotool and the Qt system libraries installed:
+
+```shell
+RIMSORT_APPIMAGE_CANDIDATE=/absolute/path/RimSort.AppImage \
+  xvfb-run -a uv run --frozen --no-sync pytest --no-qt-log \
+  tests/integration/test_appimage_upgrade.py -s
+```
+
+Run as a regular user. Native cases skip when the candidate environment variable is
+absent or the host is not Linux; harness control tests remain part of the normal
+suite. All app profiles, mounts and test installations are temporary. These tests
+do not establish Windows MSI behavior or Linux elevation/cancellation behavior.

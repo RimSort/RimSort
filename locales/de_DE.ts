@@ -2470,6 +2470,18 @@ Manage mods installed from GitHub releases.</source>
         <source>{count} repositories were updated with their latest commits:</source>
         <translation>{count} Repositories wurden mit ihren neuesten Commits aktualisiert:</translation>
     </message>
+    <message>
+        <source>Updating databases...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update databases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Database updates finished</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -2532,6 +2544,10 @@ Sie können dies in den Einstellungen unter der Registerkarte Erweitert ändern.
     <message>
         <source>Player Log</source>
         <translation>Spielerprotokoll</translation>
+    </message>
+    <message>
+        <source>RimSort {version} is available. Click to update.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3385,6 +3401,12 @@ Bitte wählen Sie in der folgenden Tabelle Ihre bevorzugte Mod -Variante aus.Sie
     <message>
         <source>You have selected {len} mods for unsubscribe.</source>
         <translation>Sie haben {len} Mods für Abmeldung ausgewählt.</translation>
+    </message>
+    <message>
+        <source>
+Waylith provides compatibility stubs for 1.6</source>
+        <translation>
+Waylith stellt Kompatibilitäts-Stubs für 1.6 bereit</translation>
     </message>
     <message>
         <source>Startup impact: {time}</source>
@@ -5477,6 +5499,13 @@ Bitte wählen Sie eine der folgenden Optionen, um fortzufahren.</translation>
     </message>
 </context>
 <context>
+    <name>Status</name>
+    <message>
+        <source>Update available</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SteamBrowser</name>
     <message>
         <source>Add Mods by Workshop ID</source>
@@ -6225,6 +6254,46 @@ Bitte wenden Sie sich an uns, um Unterstützung bei:  zu erhalten {development_g
         <source>&lt;br&gt;Successfully retrieved latest release.&lt;br&gt;The update will be installed from: {update_source_path}</source>
         <translation>&lt;br&gt;Neueste Version erfolgreich abgerufen.&lt;br&gt;Das Update wird installiert von: {update_source_path}</translation>
     </message>
+    <message>
+        <source>Checking for RimSort updates...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Creating Backup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. Waiting for the backup to stop...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backup timed out. The update was stopped.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create a backup before updating. Do you want to continue without a backup?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Backing up files: {current} / {total}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No compatible update download was found. Your installation has not been changed.&lt;br&gt;&lt;br&gt;Check &lt;a href="https://github.com/RimSort/RimSort/releases"&gt;RimSort releases&lt;/a&gt; for a download matching your operating system and CPU architecture.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;&lt;br&gt;AppImage installations require a compatible AppImage download.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RimSort could not read its current version, so it cannot safely check for updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Download a stable release manually from &lt;a href=&quot;https://github.com/RimSort/RimSort/releases/latest&quot;&gt;the RimSort releases page&lt;/a&gt;.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>UseThisInsteadPanel</name>
@@ -6477,6 +6546,19 @@ The following table displays Workshop mods available for update from Steam.</sou
     <message>
         <source>RimSort was unable to read the supplied mods list because it may be invalid or missing.</source>
         <translation>RIMSORT konnte die gelieferte Mods -Liste nicht lesen, da sie möglicherweise ungültig oder fehlt.</translation>
+    </message>
+</context>
+<context>
+    <name>platform_specific_open</name>
+    <message>
+        <location filename="../app/utils/generic.py" line="484"/>
+        <source>Path not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/utils/generic.py" line="485"/>
+        <source>The selected path does not exist.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

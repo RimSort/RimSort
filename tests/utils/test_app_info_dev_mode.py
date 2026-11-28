@@ -148,3 +148,30 @@ class TestDevModeCustomDir:
         monkeypatch.setenv("RIMSORT_DEV_DIR", str(custom_dir))
         info = AppInfo()
         assert info.app_storage_folder != custom_dir / "data"
+
+
+@pytest.mark.usefixtures("_suppress_mock_app_info")
+@pytest.mark.parametrize(
+    "version_string, commit, expected",
+    [
+        ("v1.18.0-edge8", "6ec4b9b0123456789", "v1.18.0-edge8+6ec4b9b"),
+        ("v1.18.0-edge8", "abc", "v1.18.0-edge8+abc"),
+        ("v1.18.0-edge8+6ec4b9b", "6ec4b9b0123456789", "v1.18.0-edge8+6ec4b9b"),
+        ("v1.18.0-edge8", "", "v1.18.0-edge8"),
+        ("v1.17.4", "6ec4b9b0123456789", "v1.17.4"),
+    ],
+)
+def test_version_metadata_uses_commit_text_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    version_string: str,
+    commit: str,
+    expected: str,
+) -> None:
+    monkeypatch.setenv("RIMSORT_DEV", "1")
+    monkeypatch.setenv("RIMSORT_DEV_DIR", str(tmp_path / "data"))
+    (tmp_path / "fake_repo" / "version.xml").write_text(
+        f"<root><version>{version_string}</version><commit>{commit}</commit></root>"
+    )
+
+    assert AppInfo().app_version == expected

@@ -96,10 +96,10 @@ class AppInfo:
                 self._app_version = ver.text
 
             # If edge in version_string, append short sha
-            if "edge" in self._app_version.lower():
+            if "edge" in self._app_version.lower() and "+" not in self._app_version:
                 commit = root.find("commit")
                 if commit is not None and commit.text is not None:
-                    self._app_version += f"+{commit[:7]}"
+                    self._app_version += f"+{commit.text[:7]}"
 
         # Define important directories — dev mode redirects to a local folder
         # so that running from source never touches production data.
@@ -162,9 +162,6 @@ class AppInfo:
         if not self._user_rules_file.exists():
             self._user_rules_file.parent.mkdir(parents=True, exist_ok=True)
             atomic_json_dump(DEFAULT_USER_RULES, str(self._user_rules_file), indent=4)
-
-        # AppImage: clean up .bak from a previous successful update
-        self._cleanup_appimage_backup()
 
         self._is_initialized: bool = True
 
@@ -392,16 +389,3 @@ class AppInfo:
         if appimage:
             return Path(appimage)
         return None
-
-    def _cleanup_appimage_backup(self) -> None:
-        """Remove leftover ``.bak`` file from a previous AppImage update."""
-        appimage = self.appimage_path
-        if appimage is None:
-            return
-        bak = appimage.with_suffix(appimage.suffix + ".bak")
-        if bak.exists():
-            try:
-                bak.unlink()
-                logger.info(f"Cleaned up old AppImage backup: {bak}")
-            except OSError as e:
-                logger.warning(f"Failed to clean up AppImage backup {bak}: {e}")

@@ -103,6 +103,10 @@ class TestUpdateCheckUsesToken:
         manager = update_utils.UpdateManager.__new__(update_utils.UpdateManager)
         manager.settings = MagicMock()
         manager.settings.github_token = token
+        manager.main_content = MagicMock()
+        manager.main_content.do_threaded_loading_animation.side_effect = (
+            lambda gif_path, target, text: target()
+        )
         return manager
 
     def _response(self) -> Any:

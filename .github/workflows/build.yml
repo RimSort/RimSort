@@ -87,7 +87,7 @@ jobs:
 
       - name: Get semantic version
         id: sem_version
-        uses: PaulHatch/semantic-version@v6.0.5
+        uses: PaulHatch/semantic-version@v6.0.7
         with:
           version_format: "${{ inputs.version_format }}"
           change_path: "app libs submodules themes"
@@ -318,5 +318,19 @@ jobs:
       filename: ${{ steps.filename.outputs.FILENAME }}
 
   post-build-test:
+    permissions:
+      contents: read
     needs: build
     uses: ./.github/workflows/test_builds.yml
+
+  post-build-msi-test:
+    permissions:
+      contents: read
+    needs: build
+    uses: ./.github/workflows/test_msi.yml
+
+  post-build-upgrade-test:
+    permissions:
+      contents: read
+    needs: build
+    uses: ./.github/workflows/test_upgrades.yml

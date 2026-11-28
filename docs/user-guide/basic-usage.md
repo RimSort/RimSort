@@ -26,6 +26,10 @@ The main menu bar is, depending on your operating system and desktop environment
 
 To merge a mod list with your current active list, use `File > Append Mod List...`. The mods from the selected file that are not already in your active list will be appended to it.
 
+## Player Log
+
+In the **Player Log** tab, scroll the left panel to reach the file controls, filters, and quick navigation when the window is short. The log view scrolls independently.
+
 ## Settings panel
 
 You can enter the settings panel from the main menu bar using `File > Settings... ` In this window, you'll find multiple tabs, each labeled.
@@ -42,11 +46,17 @@ On Windows and Linux, select the installation directory. On macOS, select the ga
 
 Keep the selected bundle as **Game Location** and use the detected content directory’s `Mods` folder as **Local Mods**. There is no need to create a `Mods` symlink inside the bundle. If an existing workaround symlink points to the correct `Mods` directory, RimSort accepts it without changing the link. Cloning a split-layout installation copies the resolved game content directory, including the selected bundle, rather than copying only the bundle.
 
+On macOS, **Game location → Choose…** selects the `.app` bundle itself, including games installed on an external drive. You can also enter the full bundle path directly in the **Game location** field.
+
 If the executable is valid but the content directory cannot be identified, Settings accepts the game location with a diagnostic. An explicitly selected, existing local-mods directory is retained. Check the locations listed in the diagnostic: missing content prevents reliable version and official-module discovery. These discovery rules cover both macOS layouts; a different installation layout should be inspected rather than worked around by moving files.
 
 ## Mod info panel
 
 The left side of the main window. Displays general information from a selected mod, with its preview image if found.
+
+While refreshing, the loading animation fits the available panel space and its progress text wraps to keep the window at its current size.
+
+Checking for RimSort or Workshop mod updates also shows a loading animation and status text while the request runs in the background. A slow or unavailable connection should leave the window responsive. Automatic database updates run in the background and report their activity in the status area.
 
 ## Mod lists
 
@@ -84,6 +94,7 @@ Steam Workshop Metadata
   - Dependency metadata that is available on Steam - mod developers list DLC dependencies as well as additional mod dependencies on Steam.
     - In an ideal world, this can be taken care of completely by proper About.xml creation. However, SteamDB can supplement the available data if this is not done.
   - Some local metadata is included from mods' About.xml. This includes PackageId and gameVersions.
+    - For legacy mods with an author and name but no PackageId, RimSort generates the same ID as RimWorld, using the author, name, and description. Successfully generated IDs are excluded from the missing PackageId warning. This does not edit the mod's About.xml or make an outdated mod compatible with newer game versions.
     - Providing a complete database, this allows the user to be able to sometimes find mod dependencies even without having the mods already downloaded.
       - When trying to import a mod list that contains mods that are not already available locally, in order to try to lookup PackageId -> PublishedFileId, SteamDB is necessary.
 

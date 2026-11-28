@@ -9,6 +9,8 @@ permissions: {}
 
 jobs:
   test:
+    permissions:
+      contents: read
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -146,3 +148,59 @@ jobs:
             echo "AppImage ran successfully"
           fi
         shell: bash
+
+      - name: Check out AppImage validation source
+        if: matrix.platform == 'Ubuntu-22.04'
+        uses: actions/checkout@v7
+        with:
+          path: validation-source
+          persist-credentials: false
+
+      - name: Set up Python for AppImage validation
+        if: matrix.platform == 'Ubuntu-22.04'
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: validation-source/pyproject.toml
+
+      - name: Set up uv for AppImage validation
+        if: matrix.platform == 'Ubuntu-22.04'
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false
+
+      - name: Install AppImage GUI test dependencies
+        if: matrix.platform == 'Ubuntu-22.04'
+        shell: bash
+        run: |
+          sudo apt-get install -y xvfb xdotool libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-keysyms1 libxcb-shape0
+
+      - name: Validate native AppImage upgrade and recovery
+        if: matrix.platform == 'Ubuntu-22.04'
+        working-directory: validation-source
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          TEST_ROOT=$(mktemp -d "$RUNNER_TEMP/rimsort-appimage.XXXXXX")
+          export TMPDIR="$TEST_ROOT/tmp"
+          export XDG_CACHE_HOME="$TEST_ROOT/cache"
+          export XDG_CONFIG_HOME="$TEST_ROOT/config"
+          export XDG_DATA_HOME="$TEST_ROOT/data"
+          export UV_CACHE_DIR="$TEST_ROOT/uv-cache"
+          export UV_PROJECT_ENVIRONMENT="$PWD/.venv"
+          export RIMSORT_DEV=1
+          export RIMSORT_DEV_DIR="$TEST_ROOT/profile"
+          export QT_QPA_PLATFORM=xcb
+          mkdir -p "$TMPDIR" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"
+          unset VIRTUAL_ENV PYTHONPATH PYTHONHOME
+          mapfile -t CANDIDATES < <(find "$GITHUB_WORKSPACE/appimage-test" -type f -name '*.AppImage')
+          if [[ ${#CANDIDATES[@]} != 1 ]]; then
+            echo "Expected exactly one candidate AppImage" >&2
+            exit 1
+          fi
+          export RIMSORT_APPIMAGE_CANDIDATE="${CANDIDATES[0]}"
+          uv sync --locked --dev
+          xvfb-run -a -s '-screen 0 1280x720x24' \
+            uv run --frozen --no-sync pytest --no-qt-log \
+            tests/integration/test_appimage_upgrade.py -k native_appimage_upgrade \
+            --basetemp="$TEST_ROOT/pytest" -s

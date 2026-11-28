@@ -1,11 +1,14 @@
 import itertools
 import os
 import re
+import struct
 import traceback
 from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 from typing import Any
+from xml.dom import Node, minidom
+from xml.parsers.expat import ExpatError, ParserCreate
 
 import msgspec
 from loguru import logger
@@ -268,10 +271,165 @@ def _set_mod_invalid(mod: ListedMod, message: str) -> ListedMod:
     return mod
 
 
+def _generate_legacy_package_id(mod_data: dict[str, Any]) -> str | None:
+    """Match RimWorld's legacy ID using untrimmed metadata and UTF-16 characters."""
+    if "packageId" in mod_data:
+        package_id = value_extractor(mod_data["packageId"], strip_str=False)
+        if package_id != "":
+            return None
+
+    author = value_extractor(mod_data.get("author", False), strip_str=False)
+    name = value_extractor(mod_data.get("name", False), strip_str=False)
+    description = value_extractor(
+        mod_data.get("description", "No description provided."), strip_str=False
+    )
+    if (
+        not isinstance(author, str)
+        or not author.strip()
+        or not isinstance(name, str)
+        or not name.strip()
+        or not isinstance(description, str)
+    ):
+        return None
+
+    suffix = "none"
+    if description:
+        stable_hash = 23
+        for (code,) in struct.iter_unpack(
+            "<H", description.encode("utf-16-le", errors="surrogatepass")
+        ):
+            stable_hash = (stable_hash * 31 + code) & 0xFFFFFFFF
+        if stable_hash >= 0x80000000:
+            stable_hash -= 0x100000000
+        suffix = str(abs(stable_hash))[:3]
+
+    parts = []
+    for part in (author + suffix, name):
+        converted = []
+        for (code,) in struct.iter_unpack(
+            "<H", part.encode("utf-16-le", errors="surrogatepass")
+        ):
+            if code >= 128 or not chr(code).isalnum():
+                code = code % 25 + 65
+            converted.append(chr(code))
+        parts.append("".join(converted))
+    return ".".join(parts)
+
+
+def _raw_legacy_xml_text(xml_data: bytes) -> dict[str, list[tuple[int, str]]]:
+    """Retain literal line endings, which Expat's character handler normalizes."""
+    tags: list[str] = []
+    chunks: dict[str, list[tuple[int, list[str]]]] = {}
+    in_cdata = False
+
+    def collect(text: str) -> None:
+        if len(tags) == 2:
+            nodes = chunks.setdefault(tags[-1], [])
+            if not in_cdata and (not nodes or nodes[-1][0] != Node.TEXT_NODE):
+                nodes.append((Node.TEXT_NODE, []))
+            nodes[-1][1].append(text)
+
+    def start_cdata() -> None:
+        nonlocal in_cdata
+        in_cdata = True
+        if len(tags) == 2:
+            chunks.setdefault(tags[-1], []).append((Node.CDATA_SECTION_NODE, []))
+
+    def end_cdata() -> None:
+        nonlocal in_cdata
+        in_cdata = False
+
+    parser = ParserCreate()
+    parser.StartElementHandler = lambda name, _attrs: tags.append(name)
+    parser.EndElementHandler = lambda _name: tags.pop()
+    parser.StartCdataSectionHandler = start_cdata
+    parser.EndCdataSectionHandler = end_cdata
+    parser.DefaultHandlerExpand = collect
+    parser.Parse(xml_data, True)
+    return {
+        tag: [(kind, "".join(parts)) for kind, parts in nodes]
+        for tag, nodes in chunks.items()
+    }
+
+
+def _decode_xml_reference(match: re.Match[str]) -> str:
+    reference = match.group(1)
+    if reference.startswith("#"):
+        digits = reference[1:]
+        base = 10
+        if digits.startswith("x"):
+            digits = digits[1:]
+            base = 16
+        return chr(int(digits, base))
+    return {"amp": "&", "lt": "<", "gt": ">", "quot": '"', "apos": "'"}[reference]
+
+
+def _legacy_package_id_from_xml(path: Path) -> str | None:
+    """Read original text before the general XML reader strips display values."""
+    try:
+        xml_data = path.read_bytes()
+        document = minidom.parseString(xml_data)
+        if document.doctype is not None:
+            document.unlink()
+            return None
+        raw_text = _raw_legacy_xml_text(xml_data)
+    except ExpatError, OSError, LookupError, ValueError:
+        return None
+    with document:
+        root = document.documentElement
+        if root is None:
+            return None
+        raw_data = {}
+        seen: set[str] = set()
+        for element in root.childNodes:
+            if not isinstance(element, minidom.Element):
+                continue
+            tag = element.tagName
+            if tag not in ("packageId", "author", "name", "description"):
+                continue
+            if tag in seen:
+                return None
+            seen.add(tag)
+            if element.getAttribute("IsNull").lower() == "true":
+                if tag in ("author", "name"):
+                    return None
+                raw_data[tag] = ""
+                continue
+            preserve_space = (
+                element.getAttribute("xml:space") or root.getAttribute("xml:space")
+            ) == "preserve"
+            if any(not isinstance(child, minidom.Text) for child in element.childNodes):
+                return None
+            content = []
+            for kind, value in raw_text.get(tag, []):
+                is_whitespace = False
+                if kind == Node.TEXT_NODE:
+                    decimal_reference = re.search(r"&#[0-9]+;", value) is not None
+                    value = re.sub(
+                        r"&(#x[0-9a-fA-F]+|#[0-9]+|amp|lt|gt|quot|apos);",
+                        _decode_xml_reference,
+                        value,
+                    )
+                    is_whitespace = not value.strip(" \t\r\n") and not decimal_reference
+                    if is_whitespace and not preserve_space:
+                        continue
+                content.append((value, is_whitespace))
+            if not content:
+                raw_data[tag] = ""
+            elif len(content) == 1:
+                value, is_whitespace = content[0]
+                if is_whitespace:
+                    continue
+                raw_data[tag] = value
+            elif tag != "description":
+                return None
+    return _generate_legacy_package_id(raw_data)
+
+
 def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     """
     Parse the basic fields from the mod_data and set them on the mod object.
-    If package_id is missing or invalid, the sentinel value is assigned instead.
+    Missing legacy IDs are generated when possible; unresolved IDs get a sentinel.
 
     :param mod_data: Dictionary with string keys to be used as the data source.
     :param mod: ListedMod the Listed mod that is the target of data being filled.
@@ -280,8 +438,11 @@ def _parse_basic(mod_data: dict[str, Any], mod: AboutXmlMod) -> AboutXmlMod:
     package_id = value_extractor(mod_data.get("packageId", False))
     if isinstance(package_id, str) and package_id.strip():
         mod.package_id = CaseInsensitiveStr(package_id)
+    elif legacy_id := _generate_legacy_package_id(mod_data):
+        mod.package_id = CaseInsensitiveStr(legacy_id)
     else:
         mod.package_id = CaseInsensitiveStr(DEFAULT_MISSING_PACKAGEID)
+    if mod.package_id == DEFAULT_MISSING_PACKAGEID:
         logger.warning(
             f"packageId missing or invalid: {package_id}. Assigned sentinel '{DEFAULT_MISSING_PACKAGEID}'."
         )
@@ -700,6 +861,11 @@ def _create_about_mod_from_xml(
     if not mod_data:
         logger.error(f"Could not parse {mod_xml_path}.")
         return False, AboutXmlMod(valid=False)
+
+    package_id = value_extractor(mod_data.get("packageId", False))
+    if not isinstance(package_id, str) or not package_id:
+        legacy_id = _legacy_package_id_from_xml(mod_xml_path)
+        mod_data["packageId"] = legacy_id or DEFAULT_MISSING_PACKAGEID
 
     valid, mod = create_about_mod(mod_data, target_version, prefer_versioned)
 

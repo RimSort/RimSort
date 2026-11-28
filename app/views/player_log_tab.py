@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QProgressBar,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QSplitter,
     QTextEdit,
@@ -467,7 +468,15 @@ class PlayerLogTab(QWidget):
         self.horizontal_splitter.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
-        self.horizontal_splitter.addWidget(self.left_panel)
+        self.left_scroll_area = QScrollArea()
+        self.left_scroll_area.setWidgetResizable(True)
+        self.left_scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self.left_scroll_area.setMinimumWidth(350)
+        self.left_scroll_area.setMaximumWidth(500)
+        self.left_scroll_area.setWidget(self.left_panel)
+        self.left_panel.setAutoFillBackground(False)
+        self.left_scroll_area.viewport().setAutoFillBackground(False)
+        self.horizontal_splitter.addWidget(self.left_scroll_area)
         self.horizontal_splitter.addWidget(self.middle_panel)
         self.horizontal_splitter.setSizes([400, 1250])
         self.horizontal_splitter.setStretchFactor(0, 0)
@@ -479,8 +488,6 @@ class PlayerLogTab(QWidget):
     def _init_left_panel(self) -> None:
         """Initialize the left panel UI components with improved layout."""
         self.left_panel = QWidget()
-        self.left_panel.setMinimumWidth(350)
-        self.left_panel.setMaximumWidth(500)
         self.left_panel.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )

@@ -255,27 +255,19 @@ class MissingModPropertiesPanel(BaseModsPanel):
         translated_title = self.tr(title)
         translated_message = self.tr(message)
 
-        if message_type == "warning":
-            QMessageBox.warning(
-                self,
-                translated_title,
-                translated_message,
-                QMessageBox.StandardButton.Ok,
-            )
-        elif message_type == "critical":
-            QMessageBox.critical(
-                self,
-                translated_title,
-                translated_message,
-                QMessageBox.StandardButton.Ok,
-            )
-        else:
-            QMessageBox.information(
-                self,
-                translated_title,
-                translated_message,
-                QMessageBox.StandardButton.Ok,
-            )
+        icon = {
+            "warning": QMessageBox.Icon.Warning,
+            "critical": QMessageBox.Icon.Critical,
+        }.get(message_type, QMessageBox.Icon.Information)
+        dialogue = QMessageBox(
+            icon,
+            translated_title,
+            translated_message,
+            QMessageBox.StandardButton.Ok,
+            self,
+        )
+        dialogue.setObjectName("dialogue")
+        dialogue.exec()
 
     def _populate_from_metadata(self) -> None:
         """

@@ -2,7 +2,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.utils.mod_info import DATABASE, LOCAL, STEAM, STEAM_CMD, UNKNOWN, ModInfo
+from app.utils.mod_info import (
+    DATABASE,
+    LOCAL,
+    STEAM,
+    STEAM_CMD,
+    UNKNOWN,
+    ModInfo,
+    parse_major_minor,
+)
 
 
 class TestModInfoInit:
@@ -225,3 +233,20 @@ class TestTimeProperties:
     def test_updated_on_workshop_none(self) -> None:
         info = self._make_info()
         assert info.updated_on_workshop == UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        ("1.6", (1, 6)),
+        (" 1.10 ", (1, 10)),
+        ("1.6.4", (1, 6)),
+        ("1", None),
+        ("", None),
+        ("Unknown", None),
+        ("bogus", None),
+        ("1.x", None),
+    ],
+)
+def test_parse_major_minor(version: str, expected: tuple[int, int] | None) -> None:
+    assert parse_major_minor(version) == expected

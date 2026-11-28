@@ -1,0 +1,110 @@
+name: Test MSI Installation
+on:
+  workflow_call: null
+
+permissions: {}
+
+jobs:
+  validate-msi:
+    permissions:
+      contents: read
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Prepare isolated MSI workspace
+        shell: pwsh
+        run: |
+          $testRoot = Join-Path $env:RUNNER_TEMP ("rimsort-msi-" + [guid]::NewGuid().ToString('N'))
+          New-Item -ItemType Directory -Path $testRoot | Out-Null
+          foreach ($name in @('tmp', 'cache', 'app-data', 'downloads', 'extracted')) {
+            New-Item -ItemType Directory -Path (Join-Path $testRoot $name) | Out-Null
+          }
+          "MSI_TEST_ROOT=$testRoot" >> $env:GITHUB_ENV
+          "RIMSORT_UPGRADE_ROOT=$testRoot" >> $env:GITHUB_ENV
+          "TMP=$testRoot\tmp" >> $env:GITHUB_ENV
+          "TEMP=$testRoot\tmp" >> $env:GITHUB_ENV
+          "UV_CACHE_DIR=$testRoot\cache\uv" >> $env:GITHUB_ENV
+          "UV_PYTHON_INSTALL_DIR=$testRoot\cache\python" >> $env:GITHUB_ENV
+          "RIMSORT_DEV=1" >> $env:GITHUB_ENV
+          "RIMSORT_DEV_DIR=$testRoot\app-data\profile" >> $env:GITHUB_ENV
+
+      - name: Fetch matching validation source
+        shell: pwsh
+        run: |
+          $repoPath = Join-Path $env:MSI_TEST_ROOT 'repo'
+          $sourceUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY.git"
+          git clone --no-checkout --depth 1 $sourceUrl $repoPath
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git -C $repoPath fetch --depth 1 origin $env:GITHUB_SHA
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git -C $repoPath checkout --detach FETCH_HEAD
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git -C $repoPath submodule update --init --recursive
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Download MSI candidate
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: Windows_x86_64_msi
+          path: ${{ env.MSI_TEST_ROOT }}/downloads/candidate
+
+      - name: Download expected candidate payload
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: Windows_x86_64
+          path: ${{ env.MSI_TEST_ROOT }}/downloads/payload
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ${{ env.MSI_TEST_ROOT }}/repo/pyproject.toml
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false
+
+      - name: Validate MSI installation and upgrade
+        id: validate
+        working-directory: ${{ env.MSI_TEST_ROOT }}/repo
+        shell: pwsh
+        run: |
+          $baseline = Join-Path $env:MSI_TEST_ROOT 'downloads\baseline.msi'
+          Invoke-WebRequest -Uri 'https://github.com/RimSort/RimSort/releases/download/v1.17.4/RimSort-v1.17.4-Windows_x86_64.msi' -OutFile $baseline
+          $candidates = @(Get-ChildItem "$env:MSI_TEST_ROOT\downloads\candidate" -Filter '*.msi' -File -Recurse)
+          $archives = @(Get-ChildItem "$env:MSI_TEST_ROOT\downloads\payload" -Filter '*.tar' -File -Recurse)
+          if ($candidates.Count -ne 1 -or $archives.Count -ne 1) { throw 'Ambiguous MSI inputs' }
+          tar -xf $archives[0].FullName -C "$env:MSI_TEST_ROOT\extracted"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $env:RIMSORT_MSI_BASELINE = $baseline
+          $env:RIMSORT_MSI_CANDIDATE = $candidates[0].FullName
+          $env:RIMSORT_MSI_EXPECTED_DIR = "$env:MSI_TEST_ROOT\extracted\RimSort"
+          $env:UV_PROJECT_ENVIRONMENT = "$PWD\.venv"
+          Remove-Item Env:VIRTUAL_ENV, Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
+          uv sync --locked --dev
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          uv run --frozen --no-sync pytest --no-qt-log tests/integration/test_windows_msi.py tests/integration/test_updater_msi.py -k 'native_windows_msi or native_msi_updater' --basetemp="$env:MSI_TEST_ROOT\pytest" -s
+          exit $LASTEXITCODE
+
+      - name: Remove disposable MSI workspace
+        if: ${{ always() && steps.validate.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          $testRoot = $env:MSI_TEST_ROOT
+          if (-not $testRoot -or -not (Test-Path -LiteralPath $testRoot)) { exit 0 }
+          $item = Get-Item -LiteralPath $testRoot
+          if ($item.Parent.FullName -ne (Get-Item -LiteralPath $env:RUNNER_TEMP).FullName -or
+              $item.Name -notmatch '^rimsort-msi-[0-9a-f]{32}$' -or
+              ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Refusing to remove a workspace outside the owned MSI task root'
+          }
+          $helper = Join-Path $testRoot 'repo\tests\integration\msi_database.ps1'
+          if (Test-Path -LiteralPath $helper) {
+            $registered = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $helper -Mode Related -UpgradeCode '{D4F7C3B9-8A5E-4E52-BB9F-3C2D1F7A9E24}'
+            if ($LASTEXITCODE -or @($registered | ConvertFrom-Json).Count) {
+              Write-Warning 'MSI cleanup is incomplete; keep its workspace until the runner is discarded.'
+              exit 0
+            }
+          }
+          try { Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction Stop }
+          catch { Write-Warning "Workspace cleanup deferred to runner disposal: $_" }

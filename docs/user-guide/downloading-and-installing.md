@@ -17,8 +17,22 @@ There are two types of RimSort releases. Stable releases, and edge releases. Edg
 
 When downloading a release, make sure to select the file more appropriate for your operating system, CPU architecture, and needs. Launch instructions may be platform specific.
 
+In-app updates also require a download matching your operating system and CPU architecture. AppImage installations require another AppImage; the updater does not switch them to a ZIP or tar.gz installation. If no compatible download is available, the update check stops before downloading or changing your installation and provides a link to the releases page for manual updates.
+
 [Stable Release][Stable Release]{: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Edge Release][Edge Release]{: .btn .fs-5 .mb-4 .mb-md-0 }
+
+RimSort checks for updates quietly on startup. When a newer release is available,
+an **Update available** button appears in the bottom status area. Click it to open
+the update dialog, or choose **Update → Check for Updates…** to check manually.
+Automatic checks do not open update or connection-error dialogs. You can disable
+startup checks under **Update → Check for Updates on Startup**.
+
+The built-in updater offers stable releases only. Edge builds remain manual
+downloads. An installed Edge build can update to its corresponding stable
+release or a newer one, but an older stable release is not offered. If RimSort
+cannot read the installed version, use the stable download link above to update
+manually.
 
 ## Table of Contents
 
@@ -26,6 +40,37 @@ When downloading a release, make sure to select the file more appropriate for yo
 
 1. TOC
 {:toc}
+
+## Updating RimSort
+
+With **Create backup before RimSort update** enabled, RimSort creates a backup before installing an application update. If backup creation fails, choose **No** to stop the update or **Yes** to continue without a new backup. Existing backups are retained when creating a new backup fails. A timed-out backup stops the update.
+
+If files cannot be moved while preparing a downloaded archive, RimSort stops the
+update before backup cleanup or installation. The existing installation and
+backups remain unchanged; retry the update after resolving the file access or
+disk space problem.
+
+## Update recovery on macOS and Linux
+
+The updater prepares a replacement beside the current installation before
+switching to it. Copy or permission failures leave the current installation in
+place. If a directory switch fails, the updater attempts to restore the previous
+installation. When restoration is blocked, it preserves the recovery files and
+prints their paths in the updater log. Keep those files until you have restored
+or verified your installation.
+
+Directory updates need write access to the installation's parent folder and
+enough space for the staged replacement. An installation directory that cannot
+be renamed, such as a mounted filesystem's root, needs a manual update. A forced
+termination or power loss during the directory switch can also require manual
+restoration from the logged recovery directory. Replacement success does not
+verify that the new application has completed a healthy startup.
+
+AppImage updates retain the previous file as `.bak`, with copying used when a
+hard-link backup is unavailable. An existing `.bak` is preserved and blocks
+another update; verify it before removing it and retrying. The backup is removed
+after RimSort completes GUI startup. Failed startup or closing during initial
+loading preserves it for recovery.
 
 ## Windows
 
@@ -50,6 +95,9 @@ Windows
 
 macOS
 {: .label .label-red }
+
+Built-in macOS updates preserve the downloaded app's signing metadata. If that
+metadata cannot be restored during extraction, RimSort stops the update.
 
 {: .important }
 > You may get an error saying that RimSort is "damaged" from Gatekeeper.
@@ -78,7 +126,44 @@ macOS
 - Use the `xattr` command to circumvent [Gatekeeper](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web) and whitelist `RimSort.app` and `libsteam_api.dylib`
 - Open the app bundle: `RimSort.app`
 
+In-app updates preserve the current application bundle's location and name.
+If that location requires administrator access, the updater requests permission
+in Terminal before replacing the bundle.
+
 <img alt="Macpreview" src="https://github.com/RimSort/RimSort/assets/28567881/7731911b-cc7c-47c8-9c34-6f925fc5b188">
+
+### Restore a macOS update backup
+
+With **Create backup before RimSort update** enabled, macOS backups contain the
+complete `.app` bundle, including executable permissions, symbolic links, and
+signing metadata. The `.tar.gz` archive contains the app's original bundle name.
+Normal installations store backups under
+`~/Library/Application Support/RimSort/backups/rimsort_installation/`.
+
+To recover, quit RimSort and create a new, empty recovery folder. Extract with
+macOS's metadata-aware archive tool:
+
+```sh
+mkdir "/path/to/new-recovery-folder" &&
+  /usr/bin/tar --mac-metadata --acls --xattrs \
+    -xpf "/path/to/RimSort_Backup_timestamp.tar.gz" \
+    -C "/path/to/new-recovery-folder"
+```
+
+Verify the restored bundle, substituting its actual name:
+
+```sh
+/usr/bin/codesign --verify --deep --strict "/path/to/new-recovery-folder/RimSort.app"
+```
+
+If verification succeeds, move the restored `.app` to the desired installation
+location. Preserve the previous app separately rather than merging bundles, and
+keep it and the archive until the restored app starts successfully. If verification
+fails, obtain a fresh release instead of replacing your installation with it.
+
+The maximum-backup setting counts both new `.tar.gz` archives and older ZIPs.
+Older backups containing only the contents of `Contents/MacOS` are incomplete
+and cannot restore an entire application bundle.
 
 ## Linux
 
@@ -104,7 +189,7 @@ chmod +x RimSort-*.AppImage
 
 **Desktop integration:** For automatic desktop menu integration and easy updates, consider [AppImageLauncher](https://github.com/TheAssassin/AppImageLauncher). It registers AppImages with your desktop environment so they appear in your application menu and can be launched like any other installed app.
 
-**Self-updates:** When running as an AppImage, RimSort's built-in updater replaces the AppImage file in place (the old version is backed up to `.bak` and cleaned up on the next launch).
+**Self-updates:** When running as an AppImage, RimSort's built-in updater replaces the AppImage file in place. The old version is backed up to `.bak` and removed after the updated application completes startup. If startup fails or you close the window during initial loading, the backup remains available for recovery.
 
 ### Ubuntu Tarball
 

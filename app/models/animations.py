@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.models.image_label import ImageLabel
+
 
 class AnimationLabel(QLabel):
     """
@@ -95,17 +97,21 @@ class LoadingAnimation(QWidget):
 
         # Label and layout
         self._layout = QVBoxLayout(self)
-        self.movie = QMovie(self.gif_path)
-        self.movie.frameChanged.connect(self.check_animation_stop)
-        self.movie.start()
-
-        self.label = QLabel()
+        self.label = ImageLabel()
+        self.label.setMinimumSize(1, 1)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setMovie(self.movie)
         self._layout.addWidget(self.label)
         self.setLayout(self._layout)
 
+        self.movie = QMovie(self.gif_path)
+        self.movie.frameChanged.connect(self._update_frame)
+        self.movie.start()
+
         logger.debug("Finished LoadingAnimation initialization")
+
+    def _update_frame(self, frame_number: int) -> None:
+        self.label.setPixmap(self.movie.currentPixmap())
+        self.check_animation_stop(frame_number)
 
     def check_animation_stop(self, frame_number: int) -> None:
         """Checks if the animation should stop."""

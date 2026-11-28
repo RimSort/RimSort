@@ -1,5 +1,6 @@
 from loguru import logger
-from PySide6.QtWidgets import QFrame, QHBoxLayout
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QPushButton
 
 from app.models.animations import AnimationLabel
 
@@ -12,8 +13,7 @@ class Status:
 
     def __init__(self) -> None:
         """
-        Initialize the Status view. Construct the layout
-        add the single fading text widget.
+        Construct the fading status text and application update indicator.
         """
         logger.info("Initializing Status")
 
@@ -23,7 +23,7 @@ class Status:
 
         # Create the main layout for the view
         self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(10, 1, 0, 2)
+        self.layout.setContentsMargins(10, 1, 10, 2)
 
         # The main layout is contained inside the QFrame
         self.frame.setLayout(self.layout)
@@ -33,7 +33,13 @@ class Status:
         self.status_text.setObjectName("StatusLabel")
 
         # Add the widget to the base layout
-        self.layout.addWidget(self.status_text)
+        self.layout.addWidget(self.status_text, 1)
+        self.update_available_button = QPushButton(
+            QCoreApplication.translate("Status", "Update available")
+        )
+        self.update_available_button.setObjectName("ApplicationUpdateButton")
+        self.update_available_button.hide()
+        self.layout.addWidget(self.update_available_button)
 
         logger.debug("Finished Status initialization")
 
