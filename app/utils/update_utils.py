@@ -320,7 +320,7 @@ class ScriptConfig:
         needs_elevation: bool = False,
         install_dir: Path | None = None,
         update_manager: UpdateManager | None = None,
-    ) -> str | list[str]:
+    ) -> list[str]:
         """
         Get the appropriate arguments for launching the update script based on platform and elevation needs.
 
@@ -333,7 +333,7 @@ class ScriptConfig:
             update_manager: UpdateManager instance (for backwards compatibility, not used)
 
         Returns:
-            Arguments string or list for subprocess
+            Argument list for subprocess
         """
         base_args = [str(script_path), str(temp_path), str(log_path)]
         if self.platform == "Windows":
@@ -346,67 +346,45 @@ class ScriptConfig:
         )
 
     @staticmethod
-    def _build_bash_command(base_args: list[str], needs_elevation: bool) -> str:
+    def _build_direct_command(base_args: list[str], needs_elevation: bool) -> list[str]:
         """
-        Build a bash command string for launching update script directly.
+        Build a command list for launching update script directly.
         Used as primary method for modern terminal emulators and standalone execution.
 
-        Args:
-            base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
-            needs_elevation: Whether to use sudo
-
-        Returns:
-            Command string for executing the update script
+        :param base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
+        :param needs_elevation: Whether to use sudo
+        :return: Command list for executing the update script
         """
-        quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
         if needs_elevation:
-            return f"sudo {quoted_args}"
-        else:
-            return quoted_args
+            return ["sudo", *base_args]
+        return list(base_args)
 
     @staticmethod
     def _build_terminal_command(
         terminal: str, base_args: list[str], needs_elevation: bool
-    ) -> str:
-        """
-        Build terminal-specific command string for launching update script.
+    ) -> list[str]:
+        """Build terminal-specific command list for launching update script.
+
         Used as fallback if direct bash execution is not available.
 
-        Args:
-            terminal: Name of the terminal emulator (e.g., "gnome-terminal", "kitty")
-            base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
-            needs_elevation: Whether to use sudo
-
-        Returns:
-            Command string for the terminal emulator
-
-        Raises:
-            ValueError: If terminal emulator is unknown
+        :param terminal: Name of the terminal emulator (e.g., "gnome-terminal", "kitty")
+        :param base_args: Base arguments list [script_path, temp_path, log_path, install_dir?]
+        :param needs_elevation: Whether to use sudo
+        :return: Command list for the terminal emulator
+        :raises ValueError: If terminal emulator is unknown
         """
         quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
-        cmd_with_pause = f'{quoted_args}; read -p \\"Press enter to close\\"'
+        if needs_elevation:
+            inner_cmd = f"sudo {quoted_args}"
+        else:
+            inner_cmd = f'{quoted_args}; read -p "Press enter to close"'
 
-        # gnome-terminal uses -- instead of -e
         if terminal == "gnome-terminal":
-            if needs_elevation:
-                return f'gnome-terminal -- bash -c "sudo {quoted_args}"'
-            else:
-                return f'gnome-terminal -- bash -c "{cmd_with_pause}"'
-
-        # konsole, xterm, x-terminal-emulator, and kitty use -e or equivalent
+            return ["gnome-terminal", "--", "bash", "-c", inner_cmd]
         elif terminal in ["konsole", "xterm", "x-terminal-emulator", "kitty"]:
-            if needs_elevation:
-                return f'{terminal} -e bash -c "sudo {quoted_args}"'
-            else:
-                return f'{terminal} -e bash -c "{cmd_with_pause}"'
-
-        # xfce4-terminal and mate-terminal need nested quoting
+            return [terminal, "-e", "bash", "-c", inner_cmd]
         elif terminal in ["xfce4-terminal", "mate-terminal"]:
-            if needs_elevation:
-                return f"{terminal} -e \"bash -c 'sudo {quoted_args}'\""
-            else:
-                return f"{terminal} -e \"bash -c '{cmd_with_pause}'\""
-
+            return [terminal, "-e", f"bash -c {shlex.quote(inner_cmd)}"]
         else:
             raise ValueError(f"Unknown terminal emulator: {terminal}")
 
@@ -416,7 +394,7 @@ class ScriptConfig:
         script_path: Path,
         needs_elevation: bool,
         update_manager: UpdateManager | None = None,
-    ) -> str | list[str]:
+    ) -> list[str]:
         """
         Build platform-specific arguments for launching the update script.
 
@@ -431,7 +409,7 @@ class ScriptConfig:
             update_manager: UpdateManager instance (required for Linux fallback detection)
 
         Returns:
-            Arguments string or list for subprocess
+            Argument list for subprocess
 
         Raises:
             ValueError: If platform is unsupported
@@ -440,30 +418,39 @@ class ScriptConfig:
             quoted_args = " ".join(shlex.quote(arg) for arg in base_args)
             terminal_cmd = f'/bin/bash {quoted_args}; read -p "Press enter to close"'
             script_cmd = f"sudo {terminal_cmd}" if needs_elevation else terminal_cmd
-            script_cmd = script_cmd.replace("\\", "\\\\").replace('"', '\\"')
-            applescript = f'tell app "Terminal" to do script "{script_cmd}"'
-            return f"osascript -e {shlex.quote(applescript)}"
+            script_cmd_escaped = script_cmd.replace("\\", "\\\\").replace('"', '\\"')
+            return [
+                "osascript",
+                "-e",
+                f'tell app "Terminal" to do script "{script_cmd_escaped}"',
+            ]
         elif self.platform == "Windows":
             if needs_elevation:
                 # Properly escape paths for PowerShell with special characters and spaces
                 # Paths need to be quoted for cmd.exe which is the actual executor
-                script_dir = str(script_path.parent)
+                install_dir = str(base_args[3])
                 script_file = str(script_path)
                 temp_path = str(base_args[1])
                 log_path = str(base_args[2])
 
                 # Build the cmd command with properly quoted arguments
                 # Using double quotes for cmd.exe path arguments
-                cmd_command = f'cd /d "{script_dir}" && "{script_file}" "{temp_path}" "{log_path}"'
+                cmd_command = f'cd /d "{install_dir}" && "{script_file}" "{temp_path}" "{log_path}"'
 
                 # Escape single quotes in cmd_command for PowerShell (double them)
                 cmd_command_escaped = cmd_command.replace("'", "''")
 
-                return (
-                    f"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"Start-Process cmd -ArgumentList @('/k', "
-                    f"'{cmd_command_escaped}') "
-                    f'-Verb RunAs -WindowStyle Normal"'
-                )
+                return [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-Command",
+                    (
+                        f"Start-Process cmd -ArgumentList @('/k', '{cmd_command_escaped}') "
+                        f"-Verb RunAs -WindowStyle Normal"
+                    ),
+                ]
             else:
                 # Return as list - subprocess will handle proper quoting
                 return [
@@ -474,9 +461,9 @@ class ScriptConfig:
                     str(base_args[2]),
                 ]
         elif self.platform == "Linux":
-            # Linux: Try direct bash execution first (primary method)
-            cmd = self._build_bash_command(base_args, needs_elevation)
-            logger.debug("Linux: Using direct bash command (primary method)")
+            # Linux: Try direct script execution first (primary method)
+            cmd = self._build_direct_command(base_args, needs_elevation)
+            logger.debug("Linux: Using direct script execution (primary method)")
             return cmd
         else:
             raise ValueError(f"Unsupported platform: {self.platform}")
@@ -2539,7 +2526,7 @@ class UpdateManager(QObject):
     def _launch_windows_update_script(
         self,
         script_path: Path,
-        args_repr: str | list[str],
+        args_repr: list[str],
         needs_elevation: bool,
     ) -> subprocess.Popen[Any]:
         """
@@ -2555,47 +2542,20 @@ class UpdateManager(QObject):
         """
         cwd = str(AppInfo().application_folder)
         if needs_elevation:
-            # Use PowerShell to run as administrator
+            # Use PowerShell to run as administrator without shell=True
             p = subprocess.Popen(
                 args_repr,
-                shell=True,
                 cwd=cwd,
             )
         else:
-            # Convert list args to string command for proper window display and argument passing
-            if isinstance(args_repr, list):
-                # Build command string with proper quoting for Windows batch execution
-                # Always quote path arguments to handle spaces and special characters
-                cmd_parts = []
-                for i, arg in enumerate(args_repr):
-                    arg_str = str(arg)
+            script_args = " ".join(f'"{arg}"' for arg in args_repr[2:])
+            cmdline = f'cmd /d /k "{script_args}"'
+            logger.debug(f"Launching update script with command: {cmdline}")
 
-                    # First two items are 'cmd' and '/k' flags, don't quote them
-                    if i < 2:
-                        cmd_parts.append(arg_str)
-                    else:
-                        # Quote all remaining arguments (paths) to ensure proper handling
-                        # of spaces and special characters in usernames/paths
-                        cmd_parts.append(f'"{arg_str}"')
-                cmd_str = " ".join(cmd_parts)
-
-                # Need to enclose script and its args in quotes
-                # cmd /k ""update.bat" "temp_update_path" "log_path""
-                cmd_str = cmd_str.replace("/k ", '/k "', 1)
-                cmd_str = cmd_str + '"'
-            else:
-                cmd_str = args_repr
-
-            logger.debug(f"Launching update script with command: {cmd_str}")
-
-            # Use 'start' command to ensure visible console window
-            # Quote the working directory for paths with spaces
-            start_cmd = f'start "RimSort Update" /D "{cwd}" {cmd_str}'
-            logger.debug(f"Using start command: {start_cmd}")
-
+            # Use CREATE_NEW_CONSOLE to ensure visible console window without shell=True
             p = subprocess.Popen(
-                start_cmd,
-                shell=True,
+                cmdline,
+                creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0x00000010),
                 cwd=cwd,
             )
         return p
@@ -2603,7 +2563,7 @@ class UpdateManager(QObject):
     def _launch_posix_update_script(
         self,
         script_path: Path,
-        args_repr: str | list[str],
+        args_repr: list[str],
         needs_elevation: bool,
         update_source_path: Path,
         log_path: Path,
@@ -2664,7 +2624,6 @@ class UpdateManager(QObject):
             logger.debug(f"Attempting primary launch method on {self._system}")
             p = subprocess.Popen(
                 args_repr,
-                shell=True,
                 cwd=str(AppInfo().application_folder),
             )
             logger.info(
@@ -2695,7 +2654,6 @@ class UpdateManager(QObject):
 
                     p = subprocess.Popen(
                         fallback_cmd,
-                        shell=True,
                         cwd=str(AppInfo().application_folder),
                     )
                     logger.info(
@@ -2802,7 +2760,7 @@ class UpdateManager(QObject):
 
     def _get_script_info(
         self, update_source_path: Path, log_path: Path, needs_elevation: bool
-    ) -> tuple[Path, str | list[str], bool | None, Path]:
+    ) -> tuple[Path, list[str], bool | None, Path]:
         """
         Get the script path, arguments representation, and session flag for the platform.
 
